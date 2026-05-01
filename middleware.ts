@@ -13,6 +13,7 @@ export async function middleware(req: NextRequest) {
     "/api/payments/superkey-webhook",
     "/api/display",
     "/api/test",
+    "/api/cron",
   ];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 

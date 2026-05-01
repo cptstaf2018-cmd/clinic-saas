@@ -11,6 +11,7 @@ interface Settings {
   whatsappPhoneNumberId: string;
   whatsappAccessToken: string;
   whatsappWelcomeMessage: string;
+  clinicId?: string;
 }
 
 type Tab = "profile" | "whatsapp" | "reminders" | "security";
@@ -270,6 +271,23 @@ export default function SettingsPage() {
           </Section>
 
           <Section title="إعدادات WasenderAPI" description="اربط رقم الواتساب الخاص بعيادتك عبر WasenderAPI">
+            {settings.clinicId && (
+              <div className="bg-gray-900 rounded-xl p-3 mb-4">
+                <p className="text-xs text-gray-400 mb-1">رابط الـ Webhook — أدخله في لوحة WasenderAPI:</p>
+                <div className="flex items-center gap-2">
+                  <code className="text-xs text-green-400 flex-1 break-all font-mono">
+                    {`https://clinicplt.vercel.app/api/whatsapp/${settings.clinicId}`}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/api/whatsapp/${settings.clinicId}`)}
+                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-lg shrink-0 transition-colors"
+                  >
+                    نسخ
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 text-xs text-blue-700">
               للحصول على API Key: سجّل في{" "}
               <a href="https://wasenderapi.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">

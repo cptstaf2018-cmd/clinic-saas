@@ -9,6 +9,7 @@ export async function GET() {
   const clinic = await db.clinic.findUnique({
     where: { id: session.user.clinicId },
     select: {
+      id: true,
       name: true,
       whatsappNumber: true,
       logoUrl: true,
@@ -23,6 +24,7 @@ export async function GET() {
 
   return NextResponse.json({
     ...clinic,
+    clinicId: clinic.id,
     whatsappAccessToken: clinic.whatsappAccessToken ? "••••••••" : "",
   });
 }
