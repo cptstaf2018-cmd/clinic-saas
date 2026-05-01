@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
+import { loginAction } from "./actions";
 
 function LoginForm() {
   const params = useSearchParams();
@@ -15,45 +16,14 @@ function LoginForm() {
     setLoading(true);
     setError("");
 
-    const form = new FormData(e.currentTarget);
-    const email = form.get("email") as string;
-    const password = form.get("password") as string;
+    const formData = new FormData(e.currentTarget);
+    const result = await loginAction(formData);
 
-    try {
-      // Get CSRF token
-      const csrfRes = await fetch("/api/auth/csrf");
-      const { csrfToken } = await csrfRes.json();
-
-      // POST to NextAuth credentials endpoint
-      const res = await fetch("/api/auth/callback/credentials", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          email,
-          password,
-          csrfToken,
-          callbackUrl: "/dashboard",
-          json: "true",
-        }),
-        redirect: "manual",
-      });
-
-      // On success: 302 to /dashboard (no error param)
-      // On failure: 302 to /login?error=...
-      const location = res.headers.get("location") ?? "";
-      const isError = location.includes("error=") || location.includes("/login");
-
-      if ((res.status === 302 || res.ok) && !isError) {
-        window.location.href = "/dashboard";
-        return;
-      }
-
-      setError("الإيميل أو كلمة المرور غير صحيحة");
-    } catch {
-      setError("حدث خطأ، حاول مجدداً");
+    if (result) {
+      setError(result);
+      setLoading(false);
     }
-
-    setLoading(false);
+    // If no result returned, server redirected to /dashboard
   }
 
   return (
@@ -71,16 +41,30 @@ function LoginForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">الإيميل</label>
-            <input name="email" type="email" required className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input
+              name="email"
+              type="email"
+              required
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
-            <input name="password" type="password" required className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input
+              name="password"
+              type="password"
+              required
+              className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
             {loading ? "جاري الدخول..." : "دخول"}
           </button>
         </form>
