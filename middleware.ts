@@ -4,7 +4,16 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const publicPaths = ["/login", "/register", "/display", "/api/auth", "/api/whatsapp", "/api/payments/superkey-webhook", "/api/test"];
+  const publicPaths = [
+    "/login",
+    "/register",
+    "/display",
+    "/api/auth",
+    "/api/whatsapp",
+    "/api/payments/superkey-webhook",
+    "/api/display",
+    "/api/test",
+  ];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
   if (isPublic) return NextResponse.next();
