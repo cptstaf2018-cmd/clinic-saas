@@ -47,7 +47,7 @@ export default async function DashboardLayout({
     { href: "/dashboard", label: "مواعيد اليوم" },
     { href: "/dashboard/patients", label: "المرضى" },
     { href: "/dashboard/working-hours", label: "أوقات العمل" },
-    { href: "/dashboard/bot-settings", label: "إعدادات البوت" },
+    { href: "/dashboard/settings", label: "الإعدادات" },
     { href: "/dashboard/subscription", label: "الاشتراك" },
   ];
 

@@ -8,11 +8,15 @@ datasource db {
 }
 
 model Clinic {
-  id             String         @id @default(cuid())
-  name           String
-  whatsappNumber String         @unique
-  botEnabled     Boolean        @default(true)
-  createdAt      DateTime       @default(now())
+  id                      String         @id @default(cuid())
+  name                    String
+  whatsappNumber          String         @unique
+  logoUrl                 String?
+  botEnabled              Boolean        @default(true)
+  whatsappPhoneNumberId   String?
+  whatsappAccessToken     String?
+  whatsappWelcomeMessage  String?
+  createdAt               DateTime       @default(now())
   users          User[]
   patients       Patient[]
   appointments   Appointment[]

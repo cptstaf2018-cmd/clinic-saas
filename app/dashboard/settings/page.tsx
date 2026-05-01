@@ -1,0 +1,376 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+
+interface Settings {
+  name: string;
+  whatsappNumber: string;
+  logoUrl: string;
+  botEnabled: boolean;
+  whatsappPhoneNumberId: string;
+  whatsappAccessToken: string;
+  whatsappWelcomeMessage: string;
+}
+
+type Tab = "profile" | "whatsapp" | "reminders" | "security";
+
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: "profile",   label: "ملف العيادة",     icon: "🏥" },
+  { id: "whatsapp",  label: "واتساب بزنس",     icon: "💬" },
+  { id: "reminders", label: "التذكيرات",        icon: "🔔" },
+  { id: "security",  label: "الأمان",           icon: "🔒" },
+];
+
+function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+      <div className="mb-4">
+        <h3 className="font-bold text-gray-900 text-base">{title}</h3>
+        {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const inputCls = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white";
+
+export default function SettingsPage() {
+  const [tab, setTab] = useState<Tab>("profile");
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState("");
+  const [error, setError] = useState("");
+
+  // Logo
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  // Reminders
+  const [reminding, setReminding] = useState(false);
+  const [remindResult, setRemindResult] = useState("");
+
+  // Password
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwSaved, setPwSaved] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/clinic/settings")
+      .then((r) => r.json())
+      .then((d) => { setSettings(d); setLogoPreview(d.logoUrl || ""); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function saveSettings(patch: Partial<Settings>) {
+    setSaving(true); setError(""); setSaved("");
+    const res = await fetch("/api/clinic/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    if (res.ok) {
+      setSettings((prev) => prev ? { ...prev, ...patch } : prev);
+      setSaved("تم الحفظ بنجاح ✓");
+      setTimeout(() => setSaved(""), 3000);
+    } else {
+      const d = await res.json();
+      setError(d.error ?? "حدث خطأ");
+    }
+    setSaving(false);
+  }
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoPreview(URL.createObjectURL(file));
+    setUploadingLogo(true);
+    const form = new FormData();
+    form.append("logo", file);
+    const res = await fetch("/api/clinic/logo", { method: "POST", body: form });
+    if (res.ok) {
+      const { url } = await res.json();
+      setSettings((prev) => prev ? { ...prev, logoUrl: url } : prev);
+      setLogoPreview(url);
+      setSaved("تم رفع الشعار بنجاح ✓");
+      setTimeout(() => setSaved(""), 3000);
+    } else {
+      const d = await res.json();
+      setError(d.error ?? "فشل رفع الشعار");
+    }
+    setUploadingLogo(false);
+  }
+
+  async function sendRemindAll() {
+    setReminding(true); setRemindResult("");
+    const res = await fetch("/api/clinic/remind-all", { method: "POST" });
+    const d = await res.json();
+    setRemindResult(d.message ?? `تم الإرسال`);
+    setReminding(false);
+  }
+
+  async function changePassword() {
+    setPwError(""); setPwSaved(false);
+    if (newPw !== confirmPw) { setPwError("كلمتا المرور غير متطابقتين"); return; }
+    if (newPw.length < 6) { setPwError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
+    const res = await fetch("/api/clinic/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
+    });
+    if (res.ok) {
+      setPwSaved(true);
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+    } else {
+      const d = await res.json();
+      setPwError(d.error ?? "حدث خطأ");
+    }
+  }
+
+  if (loading) return <div className="p-6 text-gray-400 text-sm text-center">جاري التحميل...</div>;
+  if (!settings) return <div className="p-6 text-red-400 text-sm text-center">خطأ في تحميل الإعدادات</div>;
+
+  return (
+    <div className="p-4 md:p-6 max-w-2xl mx-auto" dir="rtl">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900">الإعدادات</h1>
+        <p className="text-sm text-gray-400 mt-0.5">إدارة معلومات وإعدادات عيادتك</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 mb-6 overflow-x-auto">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => { setTab(t.id); setSaved(""); setError(""); }}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex-1 justify-center ${
+              tab === t.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <span>{t.icon}</span> {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Status messages */}
+      {saved && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-4">{saved}</div>}
+      {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">{error}</div>}
+
+      {/* ── PROFILE TAB ── */}
+      {tab === "profile" && (
+        <>
+          <Section title="شعار العيادة" description="يظهر في واجهة النظام ورسائل الواتساب">
+            <div className="flex items-center gap-5">
+              <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">
+                {logoPreview ? (
+                  <img src={logoPreview} alt="logo" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-3xl">🏥</span>
+                )}
+              </div>
+              <div>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {uploadingLogo ? "جاري الرفع..." : "رفع شعار"}
+                </button>
+                <p className="text-xs text-gray-400 mt-1.5">JPG, PNG, SVG — حد أقصى 2MB</p>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+              </div>
+            </div>
+          </Section>
+
+          <Section title="معلومات العيادة">
+            <Field label="اسم العيادة">
+              <input
+                className={inputCls}
+                value={settings.name}
+                onChange={(e) => setSettings({ ...settings, name: e.target.value })}
+              />
+            </Field>
+            <Field label="رقم واتساب العيادة">
+              <input
+                className={inputCls}
+                value={settings.whatsappNumber}
+                onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
+                placeholder="07701234567"
+                dir="ltr"
+              />
+            </Field>
+            <button
+              onClick={() => saveSettings({ name: settings.name, whatsappNumber: settings.whatsappNumber })}
+              disabled={saving}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ المعلومات"}
+            </button>
+          </Section>
+        </>
+      )}
+
+      {/* ── WHATSAPP TAB ── */}
+      {tab === "whatsapp" && (
+        <>
+          <Section title="حالة البوت">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-800">الرد التلقائي على المرضى</p>
+                <p className={`text-xs mt-0.5 ${settings.botEnabled ? "text-green-600" : "text-red-500"}`}>
+                  {settings.botEnabled ? "✅ البوت مفعّل" : "❌ البوت معطّل"}
+                </p>
+              </div>
+              <button
+                onClick={() => saveSettings({ botEnabled: !settings.botEnabled })}
+                disabled={saving}
+                className={`px-5 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  settings.botEnabled
+                    ? "bg-red-100 text-red-600 hover:bg-red-200"
+                    : "bg-green-100 text-green-700 hover:bg-green-200"
+                }`}
+              >
+                {settings.botEnabled ? "تعطيل" : "تفعيل"}
+              </button>
+            </div>
+          </Section>
+
+          <Section title="رسالة الترحيب" description="تُرسل لكل مريض جديد يتواصل مع البوت">
+            <Field label="نص الرسالة">
+              <textarea
+                className={`${inputCls} resize-none`}
+                rows={3}
+                value={settings.whatsappWelcomeMessage}
+                onChange={(e) => setSettings({ ...settings, whatsappWelcomeMessage: e.target.value })}
+                placeholder="مرحباً بك في عيادتنا! اكتب اسمك الكريم للمتابعة..."
+              />
+            </Field>
+            <button
+              onClick={() => saveSettings({ whatsappWelcomeMessage: settings.whatsappWelcomeMessage })}
+              disabled={saving}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ رسالة الترحيب"}
+            </button>
+          </Section>
+
+          <Section title="إعدادات Meta WhatsApp Business API" description="احصل على هذه البيانات من Meta Business Manager">
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 text-xs text-blue-700">
+              للحصول على هذه البيانات: اذهب إلى <strong>Meta Business Manager</strong> ← <strong>WhatsApp</strong> ← <strong>API Setup</strong>
+            </div>
+            <Field label="Phone Number ID">
+              <input
+                className={inputCls}
+                value={settings.whatsappPhoneNumberId}
+                onChange={(e) => setSettings({ ...settings, whatsappPhoneNumberId: e.target.value })}
+                placeholder="123456789012345"
+                dir="ltr"
+                autoComplete="off"
+              />
+            </Field>
+            <Field label="Access Token">
+              <input
+                className={inputCls}
+                type="password"
+                value={settings.whatsappAccessToken}
+                onChange={(e) => setSettings({ ...settings, whatsappAccessToken: e.target.value })}
+                placeholder="EAAxxxxxxxxxxxxxxxx..."
+                dir="ltr"
+                autoComplete="new-password"
+              />
+              <p className="text-xs text-gray-400 mt-1">يُحفظ مشفراً ولا يُعرض مجدداً</p>
+            </Field>
+            <button
+              onClick={() => saveSettings({
+                whatsappPhoneNumberId: settings.whatsappPhoneNumberId,
+                whatsappAccessToken: settings.whatsappAccessToken,
+              })}
+              disabled={saving}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ إعدادات API"}
+            </button>
+          </Section>
+        </>
+      )}
+
+      {/* ── REMINDERS TAB ── */}
+      {tab === "reminders" && (
+        <>
+          <Section title="إرسال تذكير جماعي" description="إرسال تذكير واتساب لجميع مرضى اليوم دفعة واحدة">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4 text-xs text-yellow-800">
+              سيتم إرسال تذكير لكل مريض لديه موعد اليوم بحالة (معلق أو مؤكد)
+            </div>
+            {remindResult && (
+              <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-3">
+                {remindResult} ✓
+              </div>
+            )}
+            <button
+              onClick={sendRemindAll}
+              disabled={reminding}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            >
+              {reminding ? "جاري الإرسال..." : "📤 إرسال تذكير لجميع مرضى اليوم"}
+            </button>
+          </Section>
+
+          <Section title="التذكيرات التلقائية" description="تعمل تلقائياً للباقة المتوسطة والمميزة">
+            <div className="space-y-3">
+              {[
+                { label: "تذكير قبل 24 ساعة", desc: "يُرسل تلقائياً في اليوم السابق للموعد", active: true },
+                { label: "تذكير قبل ساعة",    desc: "يُرسل تلقائياً قبل ساعة من الموعد",    active: true },
+              ].map((r) => (
+                <div key={r.label} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{r.label}</p>
+                    <p className="text-xs text-gray-400">{r.desc}</p>
+                  </div>
+                  <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">نشط</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        </>
+      )}
+
+      {/* ── SECURITY TAB ── */}
+      {tab === "security" && (
+        <Section title="تغيير كلمة المرور">
+          <Field label="كلمة المرور الحالية">
+            <input className={inputCls} type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} />
+          </Field>
+          <Field label="كلمة المرور الجديدة">
+            <input className={inputCls} type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="6 أحرف على الأقل" />
+          </Field>
+          <Field label="تأكيد كلمة المرور الجديدة">
+            <input className={inputCls} type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} />
+          </Field>
+          {pwError && <p className="text-red-500 text-sm mb-3">{pwError}</p>}
+          {pwSaved && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-3">تم تغيير كلمة المرور بنجاح ✓</div>}
+          <button
+            onClick={changePassword}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+          >
+            تغيير كلمة المرور
+          </button>
+        </Section>
+      )}
+    </div>
+  );
+}
