@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,19 +16,41 @@ function LoginForm() {
     setError("");
 
     const form = new FormData(e.currentTarget);
-    const result = await signIn("credentials", {
-      email: form.get("email"),
-      password: form.get("password"),
-      redirect: false,
-    });
+    const email = form.get("email") as string;
+    const password = form.get("password") as string;
 
-    if (result?.error) {
+    try {
+      // Get CSRF token
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfRes.json();
+
+      // POST to NextAuth credentials endpoint
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          email,
+          password,
+          csrfToken,
+          callbackUrl: "/dashboard",
+          json: "true",
+        }),
+        redirect: "manual",
+      });
+
+      // Any 3xx or 2xx means success
+      if (res.status === 302 || res.status === 200 || res.ok) {
+        // Force full page navigation so middleware picks up the new cookie
+        window.location.href = "/dashboard";
+        return;
+      }
+
       setError("الإيميل أو كلمة المرور غير صحيحة");
-      setLoading(false);
-      return;
+    } catch {
+      setError("حدث خطأ، حاول مجدداً");
     }
 
-    router.push("/dashboard");
+    setLoading(false);
   }
 
   return (
