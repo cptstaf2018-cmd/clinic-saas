@@ -44,7 +44,8 @@ export default async function DashboardLayout({
   const subStatus = clinic?.subscription?.status ?? "trial";
 
   const navItems = [
-    { href: "/dashboard", label: "مواعيد اليوم" },
+    { href: "/dashboard", label: "اليوم" },
+    { href: "/dashboard/appointments", label: "الحجوزات" },
     { href: "/dashboard/patients", label: "المرضى" },
     { href: "/dashboard/working-hours", label: "أوقات العمل" },
     { href: "/dashboard/settings", label: "الإعدادات" },
