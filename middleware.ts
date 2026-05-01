@@ -9,9 +9,13 @@ export async function middleware(req: NextRequest) {
 
   if (isPublic) return NextResponse.next();
 
+  const isSecure = req.nextUrl.protocol === "https:";
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+    cookieName: isSecure
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token",
   });
 
   if (!token) {
