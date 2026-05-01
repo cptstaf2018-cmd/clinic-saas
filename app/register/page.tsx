@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { loginAction } from "@/app/login/actions";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -15,17 +14,19 @@ export default function RegisterPage() {
     setError("");
 
     const form = new FormData(e.currentTarget);
-    const data = {
-      clinicName: form.get("clinicName"),
-      whatsappNumber: form.get("whatsappNumber"),
-      email: form.get("email"),
-      password: form.get("password"),
-    };
+    const email = form.get("email") as string;
+    const password = form.get("password") as string;
 
+    // Step 1: Register the clinic
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        clinicName: form.get("clinicName"),
+        whatsappNumber: form.get("whatsappNumber"),
+        email,
+        password,
+      }),
     });
 
     const json = await res.json();
@@ -35,7 +36,18 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/login?registered=1");
+    // Step 2: Auto sign-in as the new clinic (clears any existing session)
+    const loginData = new FormData();
+    loginData.append("email", email);
+    loginData.append("password", password);
+    const loginErr = await loginAction(loginData);
+
+    if (loginErr) {
+      // Registration succeeded but auto-login failed — go to login page
+      window.location.href = "/login?registered=1";
+      return;
+    }
+    // loginAction handles the redirect to /dashboard
   }
 
   return (
