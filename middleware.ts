@@ -1,28 +1,31 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = req.auth;
 
-  const publicPaths = ["/login", "/register", "/display"];
+  const publicPaths = ["/login", "/register", "/display", "/api/auth", "/api/whatsapp", "/api/payments/superkey-webhook"];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
-  if (!session && !isPublic) {
+  if (isPublic) return NextResponse.next();
+
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+  if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (session?.user.role === "superadmin" && pathname.startsWith("/dashboard")) {
+  if (token.role === "superadmin" && pathname.startsWith("/dashboard")) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
-  if (session?.user.role !== "superadmin" && pathname.startsWith("/admin")) {
+  if (token.role !== "superadmin" && pathname.startsWith("/admin")) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api/cron|_next/static|_next/image|favicon.ico).*)"],
 };
