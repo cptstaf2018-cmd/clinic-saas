@@ -1,6 +1,5 @@
 // WasenderAPI Webhook Handler
 // Each clinic configures: https://clinicplt.vercel.app/api/whatsapp/[clinicId]
-// Payload: { event: "messages.received", data: { messages: { key: { cleanedSenderPn }, messageBody } } }
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -8,11 +7,18 @@ import { sendWhatsApp } from "@/lib/whatsapp";
 
 const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣"];
 
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("964")) return `0${digits.slice(3)}`;
+  if (digits.startsWith("07")) return digits;
+  return digits;
+}
+
 function generateSlots(startTime: string, endTime: string, takenTimes: Date[]): string[] {
-  const [startH] = startTime.split(":").map(Number);
-  const [endH] = endTime.split(":").map(Number);
-  const startMin = startH * 60 + Number(startTime.split(":")[1]);
-  const endMin = endH * 60 + Number(endTime.split(":")[1]);
+  const [startH, startM] = startTime.split(":").map(Number);
+  const [endH, endM] = endTime.split(":").map(Number);
+  const startMin = startH * 60 + startM;
+  const endMin = endH * 60 + endM;
 
   const takenSet = new Set(
     takenTimes.map((d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`)
@@ -37,27 +43,54 @@ function formatSlot(time: string): string {
   return `${String(dh).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
 }
 
-async function getSlotsMessage(clinicId: string): Promise<{ message: string; slots: string[] }> {
-  const today = new Date();
-  const wh = await db.workingHours.findUnique({
-    where: { clinicId_dayOfWeek: { clinicId, dayOfWeek: today.getDay() } },
-  });
+// Looks ahead up to 7 days for the next available day with open slots
+async function getNextSlotsMessage(
+  clinicId: string
+): Promise<{ message: string; slots: string[]; datePrefix: string }> {
+  for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
+    const target = new Date();
+    target.setDate(target.getDate() + daysAhead);
+    target.setHours(0, 0, 0, 0);
 
-  if (!wh?.isOpen) return { message: "عذراً، العيادة مغلقة اليوم 🚫", slots: [] };
+    const wh = await db.workingHours.findUnique({
+      where: { clinicId_dayOfWeek: { clinicId, dayOfWeek: target.getDay() } },
+    });
+    if (!wh?.isOpen) continue;
 
-  const start = new Date(today); start.setHours(0, 0, 0, 0);
-  const end = new Date(today); end.setHours(23, 59, 59, 999);
+    const dayEnd = new Date(target);
+    dayEnd.setHours(23, 59, 59, 999);
 
-  const taken = await db.appointment.findMany({
-    where: { clinicId, date: { gte: start, lte: end }, status: { not: "cancelled" } },
-    select: { date: true },
-  });
+    const taken = await db.appointment.findMany({
+      where: { clinicId, date: { gte: target, lte: dayEnd }, status: { not: "cancelled" } },
+      select: { date: true },
+    });
 
-  const slots = generateSlots(wh.startTime, wh.endTime, taken.map((a: { date: Date }) => a.date));
-  if (!slots.length) return { message: "عذراً، لا تتوفر مواعيد متاحة اليوم 😔", slots: [] };
+    const slots = generateSlots(wh.startTime, wh.endTime, taken.map((a: { date: Date }) => a.date));
+    if (!slots.length) continue;
 
-  const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
-  return { message: `اختر الوقت المناسب:\n${lines.join("\n")}`, slots };
+    const isToday = daysAhead === 0;
+    const isTomorrow = daysAhead === 1;
+    const dayLabel = isToday
+      ? "اليوم"
+      : isTomorrow
+      ? "غداً"
+      : target.toLocaleDateString("ar-IQ", { weekday: "long" });
+
+    const dateStr = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
+
+    const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
+    return {
+      message: `المواعيد المتاحة ${dayLabel}:\n${lines.join("\n")}`,
+      slots,
+      datePrefix: dateStr,
+    };
+  }
+
+  return {
+    message: "عذراً، لا تتوفر مواعيد متاحة خلال الأسبوع القادم 😔",
+    slots: [],
+    datePrefix: "",
+  };
 }
 
 export async function POST(
@@ -73,13 +106,11 @@ export async function POST(
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  // Only handle incoming messages
   const event = body["event"] as string;
   if (event !== "messages.received") {
     return NextResponse.json({ ok: true });
   }
 
-  // Extract message data
   const messages = (body["data"] as Record<string, unknown>)?.["messages"] as Record<string, unknown>;
   if (!messages) return NextResponse.json({ ok: true });
 
@@ -89,13 +120,9 @@ export async function POST(
 
   if (fromMe || !messageBody) return NextResponse.json({ ok: true });
 
-  // Phone number from cleanedSenderPn
-  const rawPhone = (key?.["cleanedSenderPn"] as string ?? "").replace(/\D/g, "");
-  const phone = rawPhone.startsWith("964") ? `0${rawPhone.slice(3)}` : rawPhone;
+  const phone = normalizePhone(key?.["cleanedSenderPn"] as string ?? "");
+  if (!phone || phone.length < 7) return NextResponse.json({ ok: true });
 
-  if (!phone) return NextResponse.json({ ok: true });
-
-  // Load clinic with its API key
   const clinic = await db.clinic.findUnique({
     where: { id: clinicId },
     include: { subscription: true },
@@ -121,11 +148,11 @@ export async function POST(
     return NextResponse.json({ ok: true });
   }
 
-  // Session management
-  let session = await db.whatsappSession.findUnique({
+  const session = await db.whatsappSession.findUnique({
     where: { clinicId_phone: { clinicId, phone } },
   });
 
+  // ── No active session → start conversation ────────────────────────────────
   if (!session || session.step === "done") {
     const patient = await db.patient.findUnique({
       where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
@@ -141,20 +168,21 @@ export async function POST(
     if (patient) {
       const upcoming = patient.appointments[0];
       if (upcoming) {
-        const dateStr = upcoming.date.toLocaleDateString("ar-IQ", { year: "numeric", month: "long", day: "numeric" });
+        const dateStr = upcoming.date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
         const timeStr = upcoming.date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
         await db.whatsappSession.upsert({
           where: { clinicId_phone: { clinicId, phone } },
           update: { step: "confirm_new" },
           create: { clinicId, phone, step: "confirm_new" },
         });
-        await reply(`أهلاً ${patient.name}! 👋\nلديك موعد بتاريخ ${dateStr} الساعة ${timeStr} ✅\nهل تريد حجز موعد جديد؟ أرسل (نعم)`);
+        await reply(`أهلاً ${patient.name}! 👋\nلديك موعد ${dateStr} الساعة ${timeStr} ✅\nهل تريد حجز موعد جديد؟ (نعم / لا)`);
       } else {
-        const { message, slots } = await getSlotsMessage(clinicId);
+        const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
+        const step = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${patient.id}` : "done";
         await db.whatsappSession.upsert({
           where: { clinicId_phone: { clinicId, phone } },
-          update: { step: slots.length ? `awaiting_slot:${slots.join(",")}:${patient.id}` : "done" },
-          create: { clinicId, phone, step: slots.length ? `awaiting_slot:${slots.join(",")}:${patient.id}` : "done" },
+          update: { step },
+          create: { clinicId, phone, step },
         });
         await reply(`أهلاً ${patient.name}! 👋\n${message}`);
       }
@@ -164,7 +192,7 @@ export async function POST(
         update: { step: "awaiting_name" },
         create: { clinicId, phone, step: "awaiting_name" },
       });
-      const welcome = clinic.whatsappWelcomeMessage || "أهلاً! اكتب اسمك الكريم لتسجيلك في النظام 📝";
+      const welcome = clinic.whatsappWelcomeMessage || "أهلاً بك! 👋\nاكتب اسمك الكريم لتسجيلك في النظام 📝";
       await reply(welcome);
     }
     return NextResponse.json({ ok: true });
@@ -172,60 +200,87 @@ export async function POST(
 
   const step = session.step;
 
+  // ── Awaiting patient name ─────────────────────────────────────────────────
   if (step === "awaiting_name") {
-    const newPatient = await db.patient.create({ data: { clinicId, name: messageBody, whatsappPhone: phone } });
-    const { message, slots } = await getSlotsMessage(clinicId);
+    const newPatient = await db.patient.upsert({
+      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
+      update: { name: messageBody },
+      create: { clinicId, name: messageBody, whatsappPhone: phone },
+    });
+    const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
+    const nextStep = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${newPatient.id}` : "done";
     await db.whatsappSession.update({
       where: { id: session.id },
-      data: { step: slots.length ? `awaiting_slot:${slots.join(",")}:${newPatient.id}` : "done" },
+      data: { step: nextStep },
     });
-    await reply(slots.length ? message : `تم تسجيلك ${messageBody}! 🎉\n${message}`);
+    if (slots.length) {
+      await reply(`تم تسجيلك ${messageBody}! 🎉\n${message}`);
+    } else {
+      await reply(`تم تسجيلك ${messageBody}! 🎉\nعذراً، لا تتوفر مواعيد حالياً. سنعلمك عند توفر مواعيد جديدة.`);
+    }
     return NextResponse.json({ ok: true });
   }
 
-  if (step.startsWith("awaiting_slot:")) {
-    const parts = step.split(":");
-    const patientId = parts[parts.length - 1];
-    const slots = parts.slice(1, parts.length - 1).join(":").split(",");
+  // ── Awaiting slot selection ───────────────────────────────────────────────
+  if (step.startsWith("awaiting_slot|")) {
+    // format: awaiting_slot|YYYY-MM-DD|HH:mm,HH:mm,...|patientId
+    const parts = step.split("|");
+    const datePrefix = parts[1]; // YYYY-MM-DD
+    const slots = parts[2].split(","); // ["09:00","09:30",...]
+    const patientId = parts[3];
     const choice = parseInt(messageBody, 10);
 
     if (isNaN(choice) || choice < 1 || choice > slots.length) {
-      await reply(`يرجى إرسال رقم من 1 إلى ${slots.length} لاختيار الموعد.`);
+      const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
+      await reply(`يرجى إرسال رقم من 1 إلى ${slots.length} لاختيار الموعد:\n${lines.join("\n")}`);
       return NextResponse.json({ ok: true });
     }
 
+    const [year, month, day] = datePrefix.split("-").map(Number);
     const [h, m] = slots[choice - 1].split(":").map(Number);
-    const date = new Date(); date.setHours(h, m, 0, 0);
+    const date = new Date(year, month - 1, day, h, m, 0, 0);
 
-    const start = new Date(); start.setHours(0, 0, 0, 0);
-    const end = new Date(); end.setHours(23, 59, 59, 999);
+    const dayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const dayEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
     const last = await db.appointment.findFirst({
-      where: { clinicId, date: { gte: start, lte: end }, queueNumber: { not: null } },
+      where: { clinicId, date: { gte: dayStart, lte: dayEnd }, queueNumber: { not: null } },
       orderBy: { queueNumber: "desc" },
     });
+
+    // Check if slot is still available (race condition guard)
+    const conflict = await db.appointment.findFirst({
+      where: { clinicId, date, status: { not: "cancelled" } },
+    });
+    if (conflict) {
+      const { message: newMsg, slots: newSlots, datePrefix: newPrefix } = await getNextSlotsMessage(clinicId);
+      const nextStep = newSlots.length ? `awaiting_slot|${newPrefix}|${newSlots.join(",")}|${patientId}` : "done";
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: nextStep } });
+      await reply(`عذراً، هذا الوقت محجوز. ${newMsg}`);
+      return NextResponse.json({ ok: true });
+    }
 
     await db.appointment.create({
       data: { clinicId, patientId, date, queueNumber: (last?.queueNumber ?? 0) + 1 },
     });
     await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
 
-    const dateStr = date.toLocaleDateString("ar-IQ", { year: "numeric", month: "long", day: "numeric" });
+    const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
     const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
-    await reply(`✅ تم حجز موعدك بنجاح!\nالتاريخ: ${dateStr}\nالوقت: ${timeStr}\nنراك قريباً 🏥`);
+    await reply(`✅ تم حجز موعدك بنجاح!\n📅 ${dateStr}\n⏰ ${timeStr}\nنراك قريباً 🏥`);
     return NextResponse.json({ ok: true });
   }
 
+  // ── Confirm new booking ───────────────────────────────────────────────────
   if (step === "confirm_new") {
-    if (messageBody === "نعم") {
+    const normalized = messageBody.toLowerCase().trim();
+    if (normalized === "نعم" || normalized === "yes" || normalized === "1") {
       const patient = await db.patient.findUnique({
         where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
       });
       if (patient) {
-        const { message, slots } = await getSlotsMessage(clinicId);
-        await db.whatsappSession.update({
-          where: { id: session.id },
-          data: { step: slots.length ? `awaiting_slot:${slots.join(",")}:${patient.id}` : "done" },
-        });
+        const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
+        const nextStep = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${patient.id}` : "done";
+        await db.whatsappSession.update({ where: { id: session.id }, data: { step: nextStep } });
         await reply(message);
       }
     } else {
@@ -235,7 +290,8 @@ export async function POST(
     return NextResponse.json({ ok: true });
   }
 
+  // ── Unknown step → reset ──────────────────────────────────────────────────
   await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
-  await reply("أهلاً! أرسل أي رسالة للبدء.");
+  await reply("أهلاً! أرسل أي رسالة للبدء من جديد.");
   return NextResponse.json({ ok: true });
 }
