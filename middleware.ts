@@ -31,15 +31,48 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (token.role === "superadmin" && pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/admin", req.url));
+  // 🔒 CRITICAL: Enforce role-based routing
+  const userRole = token.role as string;
+  const clinicId = token.clinicId as string | null;
+
+  // SUPERADMIN checks
+  if (userRole === "superadmin") {
+    // ✅ superadmin MUST NOT have clinicId
+    if (clinicId) {
+      console.warn(`[SECURITY] Superadmin has clinicId: ${clinicId}`);
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    // ✅ Only /admin is allowed
+    if (!pathname.startsWith("/admin") && !pathname.startsWith("/api/admin")) {
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
+    return NextResponse.next();
   }
 
-  if (token.role !== "superadmin" && pathname.startsWith("/admin")) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  // CLINIC STAFF checks
+  if (userRole === "doctor" || userRole === "staff") {
+    // ✅ MUST have clinicId
+    if (!clinicId) {
+      console.warn(`[SECURITY] Clinic staff missing clinicId: ${token.email}`);
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    // ✅ /admin is FORBIDDEN
+    if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
+      console.warn(
+        `[SECURITY] Clinic staff tried to access /admin: ${token.email}`
+      );
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    // ✅ Only /dashboard is allowed
+    if (!pathname.startsWith("/dashboard") && !pathname.startsWith("/api/")) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // Unknown role - deny access
+  console.warn(`[SECURITY] Unknown role: ${userRole}`);
+  return NextResponse.redirect(new URL("/login", req.url));
 }
 
 export const config = {

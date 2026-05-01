@@ -97,6 +97,23 @@ export async function POST(req: Request) {
   const to: string = body["To"] ?? "";
   const messageBody: string = (body["Body"] ?? "").trim();
 
+  // Check for media (images, audio, files) — reject non-text messages
+  const hasMedia = Object.keys(body).some(
+    (key) => key.startsWith("MediaUrl") || key.startsWith("MediaContentType")
+  );
+  if (hasMedia) {
+    return twimlReply(
+      "عذراً، البوت يقبل رسائل نصية فقط 📝\nيرجى إرسال رسالة نصية."
+    );
+  }
+
+  // Reject if no text message
+  if (!messageBody) {
+    return twimlReply(
+      "عذراً، يرجى إرسال رسالة نصية 📝"
+    );
+  }
+
   const phone = from.replace("whatsapp:", "");
   const clinicWhatsapp = to.replace("whatsapp:", "");
 
@@ -108,6 +125,11 @@ export async function POST(req: Request) {
 
   if (!clinic) {
     return twimlReply("عذراً، هذا الرقم غير مسجل في النظام.");
+  }
+
+  // Check if bot is enabled
+  if (!clinic.botEnabled) {
+    return twimlReply("عذراً، خدمة البوت معطلة حالياً. تواصل مع العيادة مباشرة.");
   }
 
   // Check subscription

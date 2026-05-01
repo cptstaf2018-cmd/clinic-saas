@@ -33,6 +33,9 @@ export default async function DashboardLayout({
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  // Prevent superadmin from accessing clinic dashboard
+  if (session.user.role === "superadmin") redirect("/admin");
+
   const clinicId = session.user.clinicId;
   if (!clinicId) redirect("/login");
 
@@ -44,6 +47,7 @@ export default async function DashboardLayout({
     { href: "/dashboard", label: "مواعيد اليوم" },
     { href: "/dashboard/patients", label: "المرضى" },
     { href: "/dashboard/working-hours", label: "أوقات العمل" },
+    { href: "/dashboard/bot-settings", label: "إعدادات البوت" },
     { href: "/dashboard/subscription", label: "الاشتراك" },
   ];
 
