@@ -56,6 +56,7 @@ model Patient {
   appointments  Appointment[]
 
   @@unique([clinicId, whatsappPhone])
+  @@index([clinicId])
 }
 
 model Appointment {
@@ -71,28 +72,34 @@ model Appointment {
   reminder24hSent Boolean  @default(false)
   reminder1hSent  Boolean  @default(false)
   createdAt       DateTime @default(now())
+
+  @@index([clinicId])
+  @@index([clinicId, date])
+  @@index([clinicId, status])
 }
 
 model WorkingHours {
   id        String  @id @default(cuid())
   clinicId  String
   clinic    Clinic  @relation(fields: [clinicId], references: [id])
-  dayOfWeek Int     // 0=Sunday, 1=Monday, ... 6=Saturday
-  startTime String  // "09:00"
-  endTime   String  // "17:00"
+  dayOfWeek Int
+  startTime String
+  endTime   String
   isOpen    Boolean @default(true)
 
   @@unique([clinicId, dayOfWeek])
+  @@index([clinicId])
 }
 
 model WhatsappSession {
   id        String   @id @default(cuid())
   clinicId  String
   phone     String
-  step      String   // awaiting_name | awaiting_slot | done
+  step      String
   updatedAt DateTime @updatedAt
 
   @@unique([clinicId, phone])
+  @@index([clinicId])
 }
 
 model Payment {
@@ -100,8 +107,11 @@ model Payment {
   clinicId  String
   clinic    Clinic   @relation(fields: [clinicId], references: [id])
   amount    Int
-  method    String   // manual | superkey
-  status    String   @default("pending") // pending | approved | rejected
+  method    String
+  status    String   @default("pending")
   reference String?
   createdAt DateTime @default(now())
+
+  @@index([clinicId])
+  @@index([status])
 }
