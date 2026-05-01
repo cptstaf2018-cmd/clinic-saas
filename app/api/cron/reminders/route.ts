@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       reminder24hSent: false,
       date: { gte: now, lte: in24h },
     },
-    include: { patient: true, clinic: true },
+    include: { patient: true, clinic: { select: { name: true, whatsappAccessToken: true } } },
   });
 
   for (const appt of appointments24h) {
@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
 
     await sendWhatsApp(
       appt.patient.whatsappPhone,
-      `تذكير بموعدك 🔔\nعيادة: ${appt.clinic.name}\nالتاريخ: ${dateStr}\nالوقت: ${timeStr}\nنراك غداً! 🏥`
+      `تذكير بموعدك 🔔\nعيادة: ${appt.clinic.name}\nالتاريخ: ${dateStr}\nالوقت: ${timeStr}\nنراك غداً! 🏥`,
+      appt.clinic.whatsappAccessToken ?? undefined
     );
 
     await db.appointment.update({
@@ -64,7 +65,7 @@ export async function GET(req: NextRequest) {
       reminder1hSent: false,
       date: { gte: now, lte: in1h },
     },
-    include: { patient: true, clinic: true },
+    include: { patient: true, clinic: { select: { name: true, whatsappAccessToken: true } } },
   });
 
   for (const appt of appointments1h) {
@@ -75,7 +76,8 @@ export async function GET(req: NextRequest) {
 
     await sendWhatsApp(
       appt.patient.whatsappPhone,
-      `موعدك بعد ساعة ⏰\nعيادة: ${appt.clinic.name}\nالوقت: ${timeStr}\nلا تتأخر! 😊`
+      `موعدك بعد ساعة ⏰\nعيادة: ${appt.clinic.name}\nالوقت: ${timeStr}\nلا تتأخر! 😊`,
+      appt.clinic.whatsappAccessToken ?? undefined
     );
 
     await db.appointment.update({

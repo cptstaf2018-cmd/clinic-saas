@@ -269,41 +269,42 @@ export default function SettingsPage() {
             </button>
           </Section>
 
-          <Section title="إعدادات Meta WhatsApp Business API" description="احصل على هذه البيانات من Meta Business Manager">
+          <Section title="إعدادات WasenderAPI" description="اربط رقم الواتساب الخاص بعيادتك عبر WasenderAPI">
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 text-xs text-blue-700">
-              للحصول على هذه البيانات: اذهب إلى <strong>Meta Business Manager</strong> ← <strong>WhatsApp</strong> ← <strong>API Setup</strong>
+              للحصول على API Key: سجّل في{" "}
+              <a href="https://wasenderapi.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
+                wasenderapi.com
+              </a>{" "}
+              ← أنشئ Session ← اربط رقمك بالـ QR Code ← انسخ الـ API Key
             </div>
-            <Field label="Phone Number ID">
-              <input
-                className={inputCls}
-                value={settings.whatsappPhoneNumberId}
-                onChange={(e) => setSettings({ ...settings, whatsappPhoneNumberId: e.target.value })}
-                placeholder="123456789012345"
-                dir="ltr"
-                autoComplete="off"
-              />
-            </Field>
-            <Field label="Access Token">
+            <Field label="WasenderAPI Key">
               <input
                 className={inputCls}
                 type="password"
                 value={settings.whatsappAccessToken}
                 onChange={(e) => setSettings({ ...settings, whatsappAccessToken: e.target.value })}
-                placeholder="EAAxxxxxxxxxxxxxxxx..."
+                placeholder="أدخل API Key من WasenderAPI..."
                 dir="ltr"
                 autoComplete="new-password"
               />
-              <p className="text-xs text-gray-400 mt-1">يُحفظ مشفراً ولا يُعرض مجدداً</p>
+              <p className="text-xs text-gray-400 mt-1">يُحفظ بأمان ولا يُعرض مجدداً</p>
             </Field>
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs mb-3 ${
+              settings.whatsappAccessToken && settings.whatsappAccessToken !== "••••••••"
+                ? "bg-green-50 border border-green-200 text-green-700"
+                : settings.whatsappAccessToken === "••••••••"
+                ? "bg-green-50 border border-green-200 text-green-700"
+                : "bg-gray-50 border border-gray-200 text-gray-500"
+            }`}>
+              <span>{settings.whatsappAccessToken ? "✅" : "⚪"}</span>
+              <span>{settings.whatsappAccessToken ? "API Key محفوظ — البوت جاهز للإرسال" : "لم يتم إدخال API Key بعد"}</span>
+            </div>
             <button
-              onClick={() => saveSettings({
-                whatsappPhoneNumberId: settings.whatsappPhoneNumberId,
-                whatsappAccessToken: settings.whatsappAccessToken,
-              })}
+              onClick={() => saveSettings({ whatsappAccessToken: settings.whatsappAccessToken })}
               disabled={saving}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
-              {saving ? "جاري الحفظ..." : "حفظ إعدادات API"}
+              {saving ? "جاري الحفظ..." : "حفظ API Key"}
             </button>
           </Section>
         </>

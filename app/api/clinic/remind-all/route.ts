@@ -37,10 +37,7 @@ export async function POST() {
     return NextResponse.json({ sent: 0, message: "لا توجد مواعيد اليوم" });
   }
 
-  const config =
-    clinic.whatsappPhoneNumberId && clinic.whatsappAccessToken
-      ? { phoneNumberId: clinic.whatsappPhoneNumberId, accessToken: clinic.whatsappAccessToken }
-      : undefined;
+  const apiKey = clinic.whatsappAccessToken ?? undefined;
 
   let sent = 0;
   for (const apt of appointments) {
@@ -48,7 +45,7 @@ export async function POST() {
     await sendWhatsApp(
       apt.patient.whatsappPhone,
       `تذكير بموعدك اليوم 🔔\nعيادة: ${clinic.name}\nالوقت: ${timeStr}\nنراك قريباً 🏥`,
-      config
+      apiKey
     );
     sent++;
   }

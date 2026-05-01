@@ -1,53 +1,38 @@
-interface ClinicWhatsAppConfig {
-  phoneNumberId: string;
-  accessToken: string;
+// WasenderAPI — https://wasenderapi.com
+// Auth: Bearer API key | Endpoint: POST /api/send-message
+// Phone format: E.164 e.g. +9647701234567
+
+function toE164Iraq(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("964")) return `+${digits}`;
+  if (digits.startsWith("0")) return `+964${digits.slice(1)}`;
+  return `+964${digits}`;
 }
 
 export async function sendWhatsApp(
   to: string,
   message: string,
-  clinicConfig?: ClinicWhatsAppConfig
+  apiKey?: string
 ): Promise<void> {
-  // Normalize phone number — remove leading zeros, add country code
-  const phone = to.startsWith("0") ? "964" + to.slice(1) : to;
+  const key = apiKey || process.env.WHATSAPP_API_KEY || process.env.WHATSAPP_API_TOKEN;
+  const phone = toE164Iraq(to);
 
-  if (clinicConfig?.phoneNumberId && clinicConfig?.accessToken) {
-    // Meta Cloud API (per-clinic WhatsApp Business)
-    await fetch(
-      `https://graph.facebook.com/v18.0/${clinicConfig.phoneNumberId}/messages`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${clinicConfig.accessToken}`,
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: phone,
-          type: "text",
-          text: { body: message },
-        }),
-      }
-    );
+  if (!key) {
+    console.log(`[WhatsApp DEV] To: ${phone}\n${message}`);
     return;
   }
 
-  // Fallback: global env vars
-  const apiUrl = process.env.WHATSAPP_API_URL;
-  const apiToken = process.env.WHATSAPP_API_TOKEN;
+  const res = await fetch("https://www.wasenderapi.com/api/send-message", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({ to: phone, text: message }),
+  });
 
-  if (apiUrl && apiToken) {
-    await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiToken}`,
-      },
-      body: JSON.stringify({ to: phone, message }),
-    });
-    return;
+  if (!res.ok) {
+    const err = await res.text();
+    console.error(`[WhatsApp] Send failed: ${res.status} ${err}`);
   }
-
-  // Dev mode — just log
-  console.log(`[WhatsApp DEV] To: ${phone}\n${message}`);
 }

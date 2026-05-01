@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
   const appointment = await db.appointment.findFirst({
     where: { id: appointmentId, clinicId },
-    include: { patient: true, clinic: true },
+    include: { patient: true, clinic: { select: { name: true, whatsappAccessToken: true } } },
   });
 
   if (!appointment) {
@@ -33,7 +33,8 @@ export async function POST(req: Request) {
 
   await sendWhatsApp(
     appointment.patient.whatsappPhone,
-    `تذكير بموعدك 🔔\nعيادة: ${appointment.clinic.name}\nالتاريخ: ${dateStr}\nالوقت: ${timeStr}\nنراك قريباً! 🏥`
+    `تذكير بموعدك 🔔\nعيادة: ${appointment.clinic.name}\nالتاريخ: ${dateStr}\nالوقت: ${timeStr}\nنراك قريباً! 🏥`,
+    appointment.clinic.whatsappAccessToken ?? undefined
   );
 
   return NextResponse.json({ success: true });
