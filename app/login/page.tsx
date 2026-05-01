@@ -38,9 +38,12 @@ function LoginForm() {
         redirect: "manual",
       });
 
-      // Any 3xx or 2xx means success
-      if (res.status === 302 || res.status === 200 || res.ok) {
-        // Force full page navigation so middleware picks up the new cookie
+      // On success: 302 to /dashboard (no error param)
+      // On failure: 302 to /login?error=...
+      const location = res.headers.get("location") ?? "";
+      const isError = location.includes("error=") || location.includes("/login");
+
+      if ((res.status === 302 || res.ok) && !isError) {
         window.location.href = "/dashboard";
         return;
       }
