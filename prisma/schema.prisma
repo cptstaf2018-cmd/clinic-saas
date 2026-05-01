@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Clinic {
+  id             String         @id @default(cuid())
+  name           String
+  whatsappNumber String         @unique
+  createdAt      DateTime       @default(now())
+  users          User[]
+  patients       Patient[]
+  appointments   Appointment[]
+  payments       Payment[]
+  workingHours   WorkingHours[]
+  subscription   Subscription?
+}
+
+model User {
+  id           String   @id @default(cuid())
+  clinicId     String?
+  clinic       Clinic?  @relation(fields: [clinicId], references: [id])
+  email        String   @unique
+  passwordHash String
+  role         String   @default("doctor") // doctor | staff | superadmin
+  createdAt    DateTime @default(now())
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  clinicId  String   @unique
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  plan      String   @default("trial") // trial | basic | standard | premium
+  status    String   @default("trial") // trial | active | inactive
+  startDate DateTime @default(now())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Patient {
+  id            String        @id @default(cuid())
+  clinicId      String
+  clinic        Clinic        @relation(fields: [clinicId], references: [id])
+  name          String
+  whatsappPhone String
+  createdAt     DateTime      @default(now())
+  appointments  Appointment[]
+
+  @@unique([clinicId, whatsappPhone])
+}
+
+model Appointment {
+  id              String   @id @default(cuid())
+  clinicId        String
+  clinic          Clinic   @relation(fields: [clinicId], references: [id])
+  patientId       String
+  patient         Patient  @relation(fields: [patientId], references: [id])
+  date            DateTime
+  status          String   @default("pending") // pending | confirmed | completed | cancelled
+  queueNumber     Int?
+  queueStatus     String   @default("waiting") // waiting | current | done
+  reminder24hSent Boolean  @default(false)
+  reminder1hSent  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model WorkingHours {
+  id        String  @id @default(cuid())
+  clinicId  String
+  clinic    Clinic  @relation(fields: [clinicId], references: [id])
+  dayOfWeek Int     // 0=Sunday, 1=Monday, ... 6=Saturday
+  startTime String  // "09:00"
+  endTime   String  // "17:00"
+  isOpen    Boolean @default(true)
+
+  @@unique([clinicId, dayOfWeek])
+}
+
+model WhatsappSession {
+  id        String   @id @default(cuid())
+  clinicId  String
+  phone     String
+  step      String   // awaiting_name | awaiting_slot | done
+  updatedAt DateTime @updatedAt
+
+  @@unique([clinicId, phone])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  amount    Int
+  method    String   // manual | superkey
+  status    String   @default("pending") // pending | approved | rejected
+  reference String?
+  createdAt DateTime @default(now())
+}
