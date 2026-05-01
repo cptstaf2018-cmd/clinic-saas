@@ -22,7 +22,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const body: { action: "approve" | "reject" } = await req.json();
+  const body: { action: "approve" | "reject"; plan?: string; durationDays?: number } = await req.json();
 
   const payment = await db.payment.findUnique({ where: { id } });
   if (!payment) {
@@ -30,18 +30,20 @@ export async function PATCH(
   }
 
   if (body.action === "approve") {
+    const plan = body.plan ?? "basic";
+    const days = body.durationDays ?? 30;
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setDate(expiresAt.getDate() + days);
 
     await db.$transaction([
       db.payment.update({ where: { id }, data: { status: "approved" } }),
       db.subscription.upsert({
         where: { clinicId: payment.clinicId },
-        update: { status: "active", expiresAt },
+        update: { status: "active", plan, expiresAt },
         create: {
           clinicId: payment.clinicId,
           status: "active",
-          plan: "basic",
+          plan,
           expiresAt,
         },
       }),

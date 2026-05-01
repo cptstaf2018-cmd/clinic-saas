@@ -29,9 +29,18 @@ const METHOD_LABELS: Record<string, string> = {
   superkey: "SuperKey",
 };
 
+const PLAN_OPTIONS = [
+  { value: "basic", label: "أساسية — 35,000 د.ع" },
+  { value: "standard", label: "متوسطة — 45,000 د.ع" },
+  { value: "premium", label: "مميزة — 55,000 د.ع" },
+];
+
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [approving, setApproving] = useState<string | null>(null);
+  const [plan, setPlan] = useState<Record<string, string>>({});
+  const [duration, setDuration] = useState<Record<string, string>>({});
 
   const fetchPayments = async () => {
     const res = await fetch("/api/admin/payments");
@@ -43,11 +52,26 @@ export default function AdminPaymentsPage() {
     fetchPayments();
   }, []);
 
-  const handleAction = async (id: string, action: "approve" | "reject") => {
+  const handleApprove = async (id: string) => {
+    setApproving(id);
     await fetch(`/api/admin/payments/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({
+        action: "approve",
+        plan: plan[id] ?? "basic",
+        durationDays: parseInt(duration[id] ?? "30", 10),
+      }),
+    });
+    setApproving(null);
+    fetchPayments();
+  };
+
+  const handleReject = async (id: string) => {
+    await fetch(`/api/admin/payments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reject" }),
     });
     fetchPayments();
   };
@@ -97,19 +121,48 @@ export default function AdminPaymentsPage() {
                 </td>
                 <td className="px-4 py-3">
                   {payment.status === "pending" && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleAction(payment.id, "approve")}
-                        className="px-3 py-1 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 transition-colors"
+                    <div className="flex flex-col gap-2 min-w-[200px]">
+                      <select
+                        value={plan[payment.id] ?? "basic"}
+                        onChange={(e) =>
+                          setPlan((p) => ({ ...p, [payment.id]: e.target.value }))
+                        }
+                        className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
                       >
-                        موافقة
-                      </button>
-                      <button
-                        onClick={() => handleAction(payment.id, "reject")}
-                        className="px-3 py-1 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700 transition-colors"
-                      >
-                        رفض
-                      </button>
+                        {PLAN_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={1}
+                          max={365}
+                          value={duration[payment.id] ?? "30"}
+                          onChange={(e) =>
+                            setDuration((d) => ({ ...d, [payment.id]: e.target.value }))
+                          }
+                          className="border border-gray-200 rounded-lg px-2 py-1 text-xs w-16 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        />
+                        <span className="text-xs text-gray-500">يوم</span>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleApprove(payment.id)}
+                          disabled={approving === payment.id}
+                          className="px-3 py-1 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 transition-colors disabled:opacity-50"
+                        >
+                          {approving === payment.id ? "..." : "موافقة"}
+                        </button>
+                        <button
+                          onClick={() => handleReject(payment.id)}
+                          className="px-3 py-1 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700 transition-colors"
+                        >
+                          رفض
+                        </button>
+                      </div>
                     </div>
                   )}
                 </td>

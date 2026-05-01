@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import Link from "next/link";
 
 export default async function AdminLayout({
@@ -31,7 +31,13 @@ export default async function AdminLayout({
         >
           المدفوعات
         </Link>
-        <form action="/api/auth/signout" method="POST" className="mt-auto">
+        <form
+          className="mt-auto"
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/login" });
+          }}
+        >
           <button
             type="submit"
             className="w-full text-right px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-red-400 hover:text-white"

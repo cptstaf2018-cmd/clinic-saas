@@ -16,45 +16,30 @@ export async function POST() {
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Find the next waiting appointment (lowest queueNumber)
+  // Mark current patient as done
+  await db.appointment.updateMany({
+    where: { clinicId, queueStatus: "current", date: { gte: startOfDay, lte: endOfDay } },
+    data: { queueStatus: "done" },
+  });
+
+  // Find next waiting patient (lowest queueNumber)
   const next = await db.appointment.findFirst({
     where: {
       clinicId,
-      date: { gte: startOfDay, lte: endOfDay },
       queueStatus: "waiting",
-      status: { not: "cancelled" },
+      status: { in: ["pending", "confirmed"] },
+      date: { gte: startOfDay, lte: endOfDay },
     },
     orderBy: { queueNumber: "asc" },
   });
 
   if (!next) {
-    return NextResponse.json(
-      { error: "لا يوجد موعد في قائمة الانتظار" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "لا يوجد مريض في الانتظار" }, { status: 404 });
   }
 
-  // Move previous "current" to "done" and set next to "current" in a transaction
-  await db.$transaction([
-    db.appointment.updateMany({
-      where: {
-        clinicId,
-        date: { gte: startOfDay, lte: endOfDay },
-        queueStatus: "current",
-      },
-      data: { queueStatus: "done" },
-    }),
-    db.appointment.update({
-      where: { id: next.id },
-      data: { queueStatus: "current" },
-    }),
-  ]);
-
-  const updated = await db.appointment.findUnique({
+  const updated = await db.appointment.update({
     where: { id: next.id },
-    include: {
-      patient: { select: { id: true, name: true, whatsappPhone: true } },
-    },
+    data: { queueStatus: "current" },
   });
 
   return NextResponse.json(updated);

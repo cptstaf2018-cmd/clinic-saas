@@ -40,6 +40,7 @@ export default function TodayAppointmentsClient({
 }) {
   const [appointments, setAppointments] = useState(initial);
   const [loading, setLoading] = useState<string | null>(null);
+  const [reminded, setReminded] = useState<Set<string>>(new Set());
   const router = useRouter();
 
   async function patchAppointment(
@@ -68,6 +69,22 @@ export default function TodayAppointmentsClient({
       );
     } catch {
       alert("حدث خطأ أثناء التحديث");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function sendReminder(id: string) {
+    setLoading(id + "_remind");
+    try {
+      await fetch("/api/appointments/remind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: id }),
+      });
+      setReminded((prev) => new Set(prev).add(id));
+    } catch {
+      alert("فشل إرسال التذكير");
     } finally {
       setLoading(null);
     }
@@ -195,6 +212,15 @@ export default function TodayAppointmentsClient({
                       className="text-xs bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
                       إلغاء
+                    </button>
+                  )}
+                  {apt.status !== "cancelled" && apt.status !== "completed" && (
+                    <button
+                      onClick={() => sendReminder(apt.id)}
+                      disabled={loading === apt.id + "_remind" || reminded.has(apt.id)}
+                      className="text-xs bg-yellow-50 hover:bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+                    >
+                      {reminded.has(apt.id) ? "تم التذكير ✓" : "تذكير"}
                     </button>
                   )}
                 </div>
