@@ -46,6 +46,18 @@ model OtpCode {
   @@index([phone])
 }
 
+model InvitationCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  note      String?
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  clinicId  String?
+  createdAt DateTime  @default(now())
+
+  @@index([code])
+}
+
 model Subscription {
   id        String   @id @default(cuid())
   clinicId  String   @unique

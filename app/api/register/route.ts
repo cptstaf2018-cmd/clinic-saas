@@ -3,28 +3,22 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
-  const { clinicName, phone, password, otp } = await req.json();
+  const { clinicName, phone, password, invitationCode } = await req.json();
 
-  if (!clinicName || !phone || !password || !otp) {
+  if (!clinicName || !phone || !password || !invitationCode) {
     return NextResponse.json({ error: "جميع الحقول مطلوبة" }, { status: 400 });
   }
 
-  // Verify OTP
-  const otpRecord = await db.otpCode.findFirst({
-    where: {
-      phone: phone.trim(),
-      used: false,
-      expiresAt: { gt: new Date() },
-    },
-    orderBy: { createdAt: "desc" },
+  // Verify invitation code
+  const codeRecord = await db.invitationCode.findUnique({
+    where: { code: invitationCode.trim().toUpperCase() },
   });
 
-  if (!otpRecord) {
-    return NextResponse.json({ error: "الكود غير صحيح أو منتهي الصلاحية" }, { status: 400 });
+  if (!codeRecord) {
+    return NextResponse.json({ error: "كود الدعوة غير صحيح" }, { status: 400 });
   }
-
-  if (otpRecord.code !== otp.trim()) {
-    return NextResponse.json({ error: "الكود غير صحيح" }, { status: 400 });
+  if (codeRecord.used) {
+    return NextResponse.json({ error: "كود الدعوة مستخدم مسبقاً" }, { status: 400 });
   }
 
   // Check clinic not already registered
@@ -37,7 +31,6 @@ export async function POST(req: NextRequest) {
   const trialExpiresAt = new Date();
   trialExpiresAt.setDate(trialExpiresAt.getDate() + 3);
 
-  // Create clinic — no email required
   const clinic = await db.clinic.create({
     data: {
       name: clinicName,
@@ -51,10 +44,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Mark OTP as used
-  await db.otpCode.update({
-    where: { id: otpRecord.id },
-    data: { used: true },
+  // Mark code as used
+  await db.invitationCode.update({
+    where: { id: codeRecord.id },
+    data: { used: true, usedAt: new Date(), clinicId: clinic.id },
   });
 
   return NextResponse.json({ success: true, clinicId: clinic.id });

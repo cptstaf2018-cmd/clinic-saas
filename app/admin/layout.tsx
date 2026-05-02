@@ -38,6 +38,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               href: "/admin/payments", label: "المدفوعات",
               icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             },
+            {
+              href: "/admin/codes", label: "كودات التسجيل",
+              icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M8 10h8"/><path d="M8 14h5"/></svg>
+            },
           ].map((item) => (
             <Link
               key={item.href} href={item.href}
