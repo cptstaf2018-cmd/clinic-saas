@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { loginAction } from "@/app/login/actions";
 
 function MedicalCross() {
   return (
@@ -67,12 +66,8 @@ export default function RegisterPage() {
       const json = await res.json();
       if (!res.ok) { setError(json.error); setLoading(false); return; }
 
-      // Auto login
-      const loginData = new FormData();
-      loginData.append("identifier", phone.trim());
-      loginData.append("password", password);
-      const loginErr = await loginAction(loginData);
-      if (loginErr) { window.location.href = "/login?registered=1"; }
+      // Redirect to login — avoids session conflicts with existing sessions
+      window.location.href = "/login?registered=1";
     } catch {
       setError("حدث خطأ في الاتصال، حاول مجدداً");
       setLoading(false);
