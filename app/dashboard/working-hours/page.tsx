@@ -24,8 +24,8 @@ const DAY_ORDER = [6, 0, 1, 2, 3, 4, 5];
 
 const DEFAULT_HOURS: DayHours[] = DAY_ORDER.map((d) => ({
   dayOfWeek: d,
-  startTime: "09:00",
-  endTime: "17:00",
+  startTime: "16:00",
+  endTime: "21:00",
   isOpen: d !== 5, // Friday closed by default
 }));
 

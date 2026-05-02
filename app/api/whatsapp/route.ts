@@ -22,7 +22,7 @@ function generateSlots(
   );
 
   const slots: string[] = [];
-  for (let m = startMinutes; m < endMinutes && slots.length < 6; m += 30) {
+  for (let m = startMinutes; m < endMinutes && slots.length < 8; m += 20) {
     const h = Math.floor(m / 60);
     const min = m % 60;
     const key = `${h}:${String(min).padStart(2, "0")}`;
@@ -40,7 +40,7 @@ function formatSlotLabel(time: string): string {
   return `${String(displayH).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
 }
 
-const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣"];
+const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 
 async function getAvailableSlotsMessage(clinicId: string): Promise<{ message: string; slots: string[] }> {
   const today = new Date();

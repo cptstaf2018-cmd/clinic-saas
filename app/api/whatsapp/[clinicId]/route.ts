@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 
-const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣"];
+const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -25,7 +25,7 @@ function generateSlots(startTime: string, endTime: string, takenTimes: Date[]): 
   );
 
   const slots: string[] = [];
-  for (let m = startMin; m < endMin && slots.length < 6; m += 30) {
+  for (let m = startMin; m < endMin && slots.length < 8; m += 20) {
     const h = Math.floor(m / 60);
     const min = m % 60;
     const key = `${h}:${String(min).padStart(2, "0")}`;
