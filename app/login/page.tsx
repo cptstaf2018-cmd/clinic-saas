@@ -23,8 +23,13 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const result = await loginAction(new FormData(e.currentTarget));
-    if (result) { setError(result); setLoading(false); }
+    try {
+      const result = await loginAction(new FormData(e.currentTarget));
+      if (result) { setError(result); setLoading(false); }
+    } catch {
+      setError("حدث خطأ في الاتصال، حاول مجدداً");
+      setLoading(false);
+    }
   }
 
   return (

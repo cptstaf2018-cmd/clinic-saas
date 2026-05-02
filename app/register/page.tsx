@@ -25,24 +25,29 @@ export default function RegisterPage() {
     const email    = form.get("email") as string;
     const password = form.get("password") as string;
 
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clinicName: form.get("clinicName"),
-        whatsappNumber: form.get("whatsappNumber"),
-        email, password,
-      }),
-    });
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clinicName: form.get("clinicName"),
+          whatsappNumber: form.get("whatsappNumber"),
+          email, password,
+        }),
+      });
 
-    const json = await res.json();
-    if (!res.ok) { setError(json.error); setLoading(false); return; }
+      const json = await res.json();
+      if (!res.ok) { setError(json.error); setLoading(false); return; }
 
-    const loginData = new FormData();
-    loginData.append("email", email);
-    loginData.append("password", password);
-    const loginErr = await loginAction(loginData);
-    if (loginErr) { window.location.href = "/login?registered=1"; return; }
+      const loginData = new FormData();
+      loginData.append("email", email);
+      loginData.append("password", password);
+      const loginErr = await loginAction(loginData);
+      if (loginErr) { window.location.href = "/login?registered=1"; }
+    } catch {
+      setError("حدث خطأ في الاتصال، حاول مجدداً");
+      setLoading(false);
+    }
   }
 
   return (
