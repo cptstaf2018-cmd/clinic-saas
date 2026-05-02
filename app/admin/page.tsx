@@ -54,6 +54,11 @@ export default function AdminClinicsPage() {
   // Delete state
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Delete ALL state
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState("");
+  const [deletingAll, setDeletingAll] = useState(false);
+
   const [error, setError] = useState("");
 
   const fetchClinics = async () => {
@@ -117,16 +122,90 @@ export default function AdminClinicsPage() {
     setActionLoading(null);
   }
 
+  async function deleteAll() {
+    setDeletingAll(true);
+    const res = await fetch("/api/admin/clinics", { method: "DELETE" });
+    if (res.ok) {
+      setClinics([]);
+      setShowDeleteAll(false);
+      setDeleteAllConfirm("");
+    } else {
+      const d = await res.json();
+      setError(d.error ?? "حدث خطأ");
+    }
+    setDeletingAll(false);
+  }
+
   if (loading) return <p className="text-gray-500">جاري التحميل...</p>;
 
   return (
     <div dir="rtl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">العيادات</h1>
-        <span className="text-sm text-gray-400 bg-white border border-gray-200 rounded-full px-3 py-1">
-          {clinics.length} عيادة
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-400 bg-white border border-gray-200 rounded-full px-3 py-1">
+            {clinics.length} عيادة
+          </span>
+          {clinics.length > 0 && (
+            <button
+              onClick={() => { setShowDeleteAll(true); setDeleteAllConfirm(""); setError(""); }}
+              className="text-sm bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-xl transition-colors"
+            >
+              حذف الكل
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Delete All Modal */}
+      {showDeleteAll && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" dir="rtl">
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth={2} className="w-7 h-7">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+              </div>
+              <h2 className="text-xl font-extrabold text-gray-900">حذف جميع العيادات</h2>
+              <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                سيتم حذف <strong className="text-red-600">{clinics.length} عيادة</strong> مع جميع المرضى والمواعيد والمدفوعات نهائياً.
+                <br/>هذا الإجراء <strong>لا يمكن التراجع عنه</strong>.
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-gray-600 mb-2">
+                اكتب <span className="text-red-600 font-bold">حذف الكل</span> للتأكيد
+              </label>
+              <input
+                value={deleteAllConfirm}
+                onChange={(e) => setDeleteAllConfirm(e.target.value)}
+                placeholder="حذف الكل"
+                className="w-full border-2 border-gray-200 focus:border-red-400 rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-colors"
+              />
+            </div>
+
+            {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+
+            <div className="flex gap-3">
+              <button
+                onClick={deleteAll}
+                disabled={deleteAllConfirm !== "حذف الكل" || deletingAll}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                {deletingAll ? "جاري الحذف..." : "نعم، احذف الكل نهائياً"}
+              </button>
+              <button
+                onClick={() => setShowDeleteAll(false)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">

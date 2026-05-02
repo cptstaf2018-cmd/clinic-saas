@@ -70,6 +70,12 @@ export default function SettingsPage() {
   const [pwError, setPwError] = useState("");
   const [pwSaved, setPwSaved] = useState(false);
 
+  // Clear all data
+  const [showClearAll, setShowClearAll] = useState(false);
+  const [clearConfirm, setClearConfirm] = useState("");
+  const [clearing, setClearing] = useState(false);
+  const [clearResult, setClearResult] = useState("");
+
   useEffect(() => {
     fetch("/api/clinic/settings")
       .then((r) => r.json())
@@ -123,6 +129,21 @@ export default function SettingsPage() {
     const d = await res.json();
     setRemindResult(d.message ?? `تم الإرسال`);
     setReminding(false);
+  }
+
+  async function clearAllData() {
+    setClearing(true);
+    const res = await fetch("/api/clinic/clear-data", { method: "DELETE" });
+    if (res.ok) {
+      const d = await res.json();
+      setClearResult(`تم المسح: ${d.deleted.patients} مريض، ${d.deleted.appointments} موعد`);
+      setShowClearAll(false);
+      setClearConfirm("");
+    } else {
+      const d = await res.json();
+      setError(d.error ?? "حدث خطأ");
+    }
+    setClearing(false);
   }
 
   async function changePassword() {
@@ -370,6 +391,7 @@ export default function SettingsPage() {
 
       {/* ── SECURITY TAB ── */}
       {tab === "security" && (
+        <>
         <Section title="تغيير كلمة المرور">
           <Field label="كلمة المرور الحالية">
             <input className={inputCls} type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} />
@@ -389,6 +411,78 @@ export default function SettingsPage() {
             تغيير كلمة المرور
           </button>
         </Section>
+
+        {/* Danger Zone */}
+        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
+          <h3 className="font-bold text-red-700 text-base mb-1">المنطقة الخطرة</h3>
+          <p className="text-xs text-red-500 mb-4">الإجراءات التالية لا يمكن التراجع عنها</p>
+
+          {clearResult && (
+            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-4">
+              ✓ {clearResult}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between bg-white rounded-xl border border-red-200 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">مسح جميع البيانات</p>
+              <p className="text-xs text-gray-400 mt-0.5">حذف كل المرضى والمواعيد — الحساب والإعدادات تبقى</p>
+            </div>
+            <button
+              onClick={() => { setShowClearAll(true); setClearConfirm(""); }}
+              className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors shrink-0 mr-3"
+            >
+              مسح الكل
+            </button>
+          </div>
+        </div>
+
+        {/* Clear All Modal */}
+        {showClearAll && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" dir="rtl">
+              <div className="text-center mb-5">
+                <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth={2} className="w-7 h-7">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <h2 className="text-lg font-extrabold text-gray-900">مسح جميع البيانات؟</h2>
+                <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                  سيتم حذف <strong className="text-red-600">كل المرضى والمواعيد</strong> نهائياً.<br/>
+                  الحساب والإعدادات وأوقات العمل تبقى.
+                </p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-600 mb-2">
+                  اكتب <span className="text-red-600 font-bold">مسح الكل</span> للتأكيد
+                </label>
+                <input
+                  value={clearConfirm}
+                  onChange={(e) => setClearConfirm(e.target.value)}
+                  placeholder="مسح الكل"
+                  className="w-full border-2 border-gray-200 focus:border-red-400 rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={clearAllData}
+                  disabled={clearConfirm !== "مسح الكل" || clearing}
+                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  {clearing ? "جاري المسح..." : "نعم، امسح الكل"}
+                </button>
+                <button
+                  onClick={() => setShowClearAll(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   );
