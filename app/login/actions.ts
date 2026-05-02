@@ -3,18 +3,18 @@
 import { signIn } from "@/lib/auth";
 
 export async function loginAction(formData: FormData) {
+  // Accept both "identifier" (new) and "email" (legacy) field names
+  const identifier = (formData.get("identifier") ?? formData.get("email")) as string;
+  const password   = formData.get("password") as string;
+
   try {
     await signIn("credentials", {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      identifier,
+      password,
       redirectTo: "/dashboard",
     });
   } catch (error: any) {
-    // NextAuth throws a redirect - let it through
     if (error?.message?.includes("NEXT_REDIRECT")) throw error;
-    if (error?.type === "CallbackRouteError") {
-      return "الإيميل أو كلمة المرور غير صحيحة";
-    }
-    return "الإيميل أو كلمة المرور غير صحيحة";
+    return "رقم الواتساب أو كلمة المرور غير صحيحة";
   }
 }
