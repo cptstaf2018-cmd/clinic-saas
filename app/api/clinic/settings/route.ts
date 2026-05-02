@@ -34,7 +34,7 @@ export async function PATCH(req: Request) {
   if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
   const body = await req.json();
-  const allowed = ["name", "whatsappNumber", "botEnabled", "whatsappPhoneNumberId", "whatsappAccessToken", "whatsappWelcomeMessage"];
+  const allowed = ["name", "botEnabled", "whatsappPhoneNumberId", "whatsappAccessToken", "whatsappWelcomeMessage"];
 
   const data: Record<string, unknown> = {};
   for (const key of allowed) {

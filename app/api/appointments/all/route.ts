@@ -29,20 +29,22 @@ export async function GET(req: NextRequest) {
     clinicId,
     ...(Object.keys(dateFilter).length ? { date: dateFilter } : {}),
     ...(status !== "all" ? { status } : {}),
+    ...(search ? {
+      patient: {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { whatsappPhone: { contains: search } },
+        ],
+      },
+    } : {}),
   };
 
   const appointments = await db.appointment.findMany({
     where,
     include: { patient: { select: { name: true, whatsappPhone: true } } },
     orderBy: [{ date: "asc" }, { queueNumber: "asc" }],
-    take: 200,
+    take: 300,
   });
 
-  const filtered = search
-    ? appointments.filter((a: { patient: { name: string; whatsappPhone: string } }) =>
-        a.patient.name.includes(search) || a.patient.whatsappPhone.includes(search)
-      )
-    : appointments;
-
-  return NextResponse.json(filtered);
+  return NextResponse.json(appointments);
 }

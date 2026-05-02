@@ -13,9 +13,9 @@ export async function POST(req: Request) {
     reference?: string;
   } = await req.json();
 
-  if (!body.clinicId || !body.amount) {
+  if (!body.clinicId || typeof body.amount !== "number" || body.amount <= 0) {
     return NextResponse.json(
-      { error: "clinicId و amount مطلوبان" },
+      { error: "clinicId و amount مطلوبان ويجب أن يكون المبلغ أكبر من صفر" },
       { status: 400 }
     );
   }

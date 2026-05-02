@@ -228,16 +228,18 @@ export default function SettingsPage() {
               />
             </Field>
             <Field label="رقم واتساب العيادة">
-              <input
-                className={inputCls}
-                value={settings.whatsappNumber}
-                onChange={(e) => setSettings({ ...settings, whatsappNumber: e.target.value })}
-                placeholder="07701234567"
-                dir="ltr"
-              />
+              <div className="flex items-center gap-2">
+                <input
+                  className={`${inputCls} bg-gray-50 text-gray-500 cursor-not-allowed`}
+                  value={settings.whatsappNumber}
+                  readOnly
+                  dir="ltr"
+                />
+                <span className="text-xs text-gray-400 whitespace-nowrap">للتغيير تواصل مع الدعم</span>
+              </div>
             </Field>
             <button
-              onClick={() => saveSettings({ name: settings.name, whatsappNumber: settings.whatsappNumber })}
+              onClick={() => saveSettings({ name: settings.name })}
               disabled={saving}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
