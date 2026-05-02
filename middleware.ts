@@ -9,6 +9,7 @@ export async function middleware(req: NextRequest) {
     "/register",
     "/display",
     "/api/auth",
+    "/api/register",
     "/api/whatsapp",
     "/api/payments/superkey-webhook",
     "/api/display",
