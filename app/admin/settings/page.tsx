@@ -128,14 +128,6 @@ export default function AdminSettingsPage() {
         <div className="space-y-4">
           {/* Primary: file upload */}
           <div className="flex items-center gap-5">
-            <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">
-              {logoPreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoPreview} alt="الشعار" className="w-full h-full object-contain" onError={() => setLogoPreview("")} />
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={1.5} className="w-8 h-8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-              )}
-            </div>
             <div>
               <button
                 type="button"
@@ -147,6 +139,14 @@ export default function AdminSettingsPage() {
               </button>
               <p className="text-xs text-gray-400 mt-1.5">JPG, PNG, SVG — حد أقصى 2MB</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+            </div>
+            <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">
+              {logoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoPreview} alt="الشعار" className="w-full h-full object-contain" onError={() => setLogoPreview("")} />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={1.5} className="w-8 h-8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              )}
             </div>
           </div>
 

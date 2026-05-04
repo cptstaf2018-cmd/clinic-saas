@@ -8,32 +8,32 @@ datasource db {
 }
 
 model Clinic {
-  id                      String         @id @default(cuid())
-  name                    String
-  whatsappNumber          String         @unique
-  logoUrl                 String?
-  botEnabled              Boolean        @default(true)
-  whatsappPhoneNumberId   String?
-  whatsappAccessToken     String?
-  whatsappWelcomeMessage  String?
-  createdAt               DateTime       @default(now())
-  users             User[]
-  patients          Patient[]
-  appointments      Appointment[]
-  payments          Payment[]
-  workingHours      WorkingHours[]
-  subscription      Subscription?
-  incomingMessages  IncomingMessage[]
+  id                     String            @id @default(cuid())
+  name                   String
+  whatsappNumber         String            @unique
+  createdAt              DateTime          @default(now())
+  botEnabled             Boolean           @default(true)
+  logoUrl                String?
+  whatsappAccessToken    String?
+  whatsappPhoneNumberId  String?
+  whatsappWelcomeMessage String?
+  appointments           Appointment[]
+  incomingMessages       IncomingMessage[]
+  patients               Patient[]
+  payments               Payment[]
+  subscription           Subscription?
+  users                  User[]
+  workingHours           WorkingHours[]
 }
 
 model User {
   id           String   @id @default(cuid())
   clinicId     String?
-  clinic       Clinic?  @relation(fields: [clinicId], references: [id])
   email        String?  @unique
   passwordHash String
-  role         String   @default("doctor") // doctor | staff | superadmin
+  role         String   @default("doctor")
   createdAt    DateTime @default(now())
+  clinic       Clinic?  @relation(fields: [clinicId], references: [id])
 }
 
 model OtpCode {
@@ -62,22 +62,22 @@ model InvitationCode {
 model Subscription {
   id        String   @id @default(cuid())
   clinicId  String   @unique
-  clinic    Clinic   @relation(fields: [clinicId], references: [id])
-  plan      String   @default("trial") // trial | basic | standard | premium
-  status    String   @default("trial") // trial | active | inactive
+  plan      String   @default("trial")
+  status    String   @default("trial")
   startDate DateTime @default(now())
   expiresAt DateTime
   createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Patient {
   id            String        @id @default(cuid())
   clinicId      String
-  clinic        Clinic        @relation(fields: [clinicId], references: [id])
   name          String
   whatsappPhone String
   createdAt     DateTime      @default(now())
   appointments  Appointment[]
+  clinic        Clinic        @relation(fields: [clinicId], references: [id])
 
   @@unique([clinicId, whatsappPhone])
   @@index([clinicId])
@@ -86,16 +86,16 @@ model Patient {
 model Appointment {
   id              String   @id @default(cuid())
   clinicId        String
-  clinic          Clinic   @relation(fields: [clinicId], references: [id])
   patientId       String
-  patient         Patient  @relation(fields: [patientId], references: [id])
   date            DateTime
-  status          String   @default("pending") // pending | confirmed | completed | cancelled
+  status          String   @default("pending")
   queueNumber     Int?
-  queueStatus     String   @default("waiting") // waiting | current | done
+  queueStatus     String   @default("waiting")
   reminder24hSent Boolean  @default(false)
   reminder1hSent  Boolean  @default(false)
   createdAt       DateTime @default(now())
+  clinic          Clinic   @relation(fields: [clinicId], references: [id])
+  patient         Patient  @relation(fields: [patientId], references: [id])
 
   @@index([clinicId])
   @@index([clinicId, date])
@@ -105,11 +105,11 @@ model Appointment {
 model WorkingHours {
   id        String  @id @default(cuid())
   clinicId  String
-  clinic    Clinic  @relation(fields: [clinicId], references: [id])
   dayOfWeek Int
   startTime String
   endTime   String
   isOpen    Boolean @default(true)
+  clinic    Clinic  @relation(fields: [clinicId], references: [id])
 
   @@unique([clinicId, dayOfWeek])
   @@index([clinicId])
@@ -129,11 +129,11 @@ model WhatsappSession {
 model IncomingMessage {
   id        String   @id @default(cuid())
   clinicId  String
-  clinic    Clinic   @relation(fields: [clinicId], references: [id])
   phone     String
   body      String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
 
   @@index([clinicId])
   @@index([clinicId, read])
@@ -142,12 +142,12 @@ model IncomingMessage {
 model Payment {
   id        String   @id @default(cuid())
   clinicId  String
-  clinic    Clinic   @relation(fields: [clinicId], references: [id])
   amount    Int
   method    String
   status    String   @default("pending")
   reference String?
   createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
 
   @@index([clinicId])
   @@index([status])
