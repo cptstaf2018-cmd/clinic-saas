@@ -14,7 +14,7 @@ function ImpersonateContent() {
     if (!token) { setError("رابط غير صالح"); return; }
 
     signIn("credentials", { impersonateToken: token, redirect: false }).then((res) => {
-      if (res?.ok) router.replace("/dashboard");
+      if (res?.ok) window.location.href = "/dashboard";
       else setError("انتهت صلاحية الرابط أو حدث خطأ");
     });
   }, [params, router]);
