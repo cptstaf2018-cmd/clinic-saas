@@ -140,7 +140,7 @@ export default function AdminSettingsPage() {
               >
                 {logoLoading ? "جاري الرفع..." : "رفع شعار"}
               </button>
-              <p className="text-xs text-gray-400 mt-1.5">JPG, PNG, SVG — حد أقصى 2MB</p>
+              <p className="text-xs text-gray-400 mt-1.5">JPG, PNG, SVG — حد أقصى 512KB</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
             </div>
             <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">

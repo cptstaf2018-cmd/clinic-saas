@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { put } from "@vercel/blob";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -18,24 +17,19 @@ export async function POST(req: Request) {
   if (!allowed.includes(file.type)) {
     return NextResponse.json({ error: "نوع الملف غير مدعوم (JPG, PNG, WEBP, SVG)" }, { status: 400 });
   }
-  if (file.size > 2 * 1024 * 1024) {
-    return NextResponse.json({ error: "حجم الصورة يجب أن يكون أقل من 2MB" }, { status: 400 });
+  if (file.size > 512 * 1024) {
+    return NextResponse.json({ error: "حجم الصورة يجب أن يكون أقل من 512KB" }, { status: 400 });
   }
 
-  const ext = file.type.split("/")[1].replace("svg+xml", "svg");
-
-  let blob;
-  try {
-    blob = await put(`platform/logo-${Date.now()}.${ext}`, file, { access: "public" });
-  } catch {
-    return NextResponse.json({ error: "فشل رفع الصورة — تحقق من إعداد BLOB_READ_WRITE_TOKEN" }, { status: 500 });
-  }
+  const buffer = await file.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+  const dataUrl = `data:${file.type};base64,${base64}`;
 
   await db.platformSettings.upsert({
     where: { id: "singleton" },
-    update: { logoUrl: blob.url },
-    create: { id: "singleton", logoUrl: blob.url },
+    update: { logoUrl: dataUrl },
+    create: { id: "singleton", logoUrl: dataUrl },
   });
 
-  return NextResponse.json({ url: blob.url });
+  return NextResponse.json({ url: dataUrl });
 }
