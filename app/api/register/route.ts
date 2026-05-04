@@ -9,8 +9,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "جميع الحقول مطلوبة" }, { status: 400 });
   }
 
-  // Verify invitation code
-  const codeRecord = await db.invitationCode.findUnique({
+  if (password.length < 6) {
+    return NextResponse.json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, { status: 400 });
+  }
+
+  // Check clinic not already registered before touching the code
+  const existingClinic = await db.clinic.findUnique({ where: { whatsappNumber: phone.trim() } });
+  if (existingClinic) {
+    return NextResponse.json({ error: "رقم الواتساب مسجل مسبقاً" }, { status: 400 });
+  }
+
+  // Find the code first to give a specific error if it doesn't exist at all
+  const codeRecord = await db.invitationCode.findFirst({
     where: { code: invitationCode.trim().toUpperCase() },
   });
 
@@ -21,10 +31,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "كود الدعوة مستخدم مسبقاً" }, { status: 400 });
   }
 
-  // Check clinic not already registered
-  const existingClinic = await db.clinic.findUnique({ where: { whatsappNumber: phone.trim() } });
-  if (existingClinic) {
-    return NextResponse.json({ error: "رقم الواتساب مسجل مسبقاً" }, { status: 400 });
+  // Atomic claim — prevents two concurrent requests from using the same code
+  const claimed = await db.invitationCode.updateMany({
+    where: { id: codeRecord.id, used: false },
+    data: { used: true, usedAt: new Date() },
+  });
+
+  if (claimed.count === 0) {
+    return NextResponse.json({ error: "كود الدعوة مستخدم مسبقاً" }, { status: 400 });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
@@ -44,10 +58,10 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Mark code as used
+  // Link code to clinic
   await db.invitationCode.update({
     where: { id: codeRecord.id },
-    data: { used: true, usedAt: new Date(), clinicId: clinic.id },
+    data: { clinicId: clinic.id },
   });
 
   return NextResponse.json({ success: true, clinicId: clinic.id });
