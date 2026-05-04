@@ -192,7 +192,8 @@ export async function POST(
         update: { step: "awaiting_name" },
         create: { clinicId, phone, step: "awaiting_name" },
       });
-      const welcome = clinic.whatsappWelcomeMessage || `أهلاً بك في ${clinic.name}! 👋\nما اسمك الكريم؟`;
+      const welcome = clinic.whatsappWelcomeMessage ||
+        `أهلاً بك في ${clinic.name}! 👋\nلحجز موعد، أرسل *اسمك الكريم فقط*\n✍️ مثال: أحمد محمد`;
       await reply(welcome);
     }
     return NextResponse.json({ ok: true });
@@ -202,10 +203,19 @@ export async function POST(
 
   // ── Awaiting patient name ─────────────────────────────────────────────────
   if (step === "awaiting_name") {
+    const NON_NAME_WORDS = ["حجز", "موعد", "اريد", "أريد", "ابغى", "ابي", "بغيت", "هلا", "مرحبا", "مرحباً", "السلام", "هاي", "hi", "hello", "مساء", "صباح", "طيب", "اهلا", "أهلا", "كيف", "وين", "ايش", "شنو"];
+    const normalized = messageBody.trim().toLowerCase();
+    const looksLikeName = messageBody.trim().length >= 2 && !NON_NAME_WORDS.some(w => normalized === w || normalized === `أريد ${w}` || normalized.startsWith(`${w} `));
+
+    if (!looksLikeName) {
+      await reply(`أرسل *اسمك الكريم فقط* من فضلك 🙏\n✍️ مثال: أحمد محمد`);
+      return NextResponse.json({ ok: true });
+    }
+
     const newPatient = await db.patient.upsert({
       where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
-      update: { name: messageBody },
-      create: { clinicId, name: messageBody, whatsappPhone: phone },
+      update: { name: messageBody.trim() },
+      create: { clinicId, name: messageBody.trim(), whatsappPhone: phone },
     });
     const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
     const nextStep = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${newPatient.id}` : "done";
