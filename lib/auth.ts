@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { verifyImpersonateToken } from "@/lib/impersonate";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
@@ -14,6 +15,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         try {
+          // Impersonation path — super admin entering a clinic
+          const impersonateToken = credentials?.impersonateToken as string | undefined;
+          if (impersonateToken) {
+            const payload = verifyImpersonateToken(impersonateToken);
+            if (!payload) return null;
+            const user = await db.user.findUnique({ where: { id: payload.userId } });
+            if (!user) return null;
+            return {
+              id: user.id,
+              email: user.email ?? "",
+              name: user.role,
+              role: user.role,
+              clinicId: user.clinicId ?? undefined,
+            } as any;
+          }
+
           const identifier = (credentials?.identifier as string ?? "").trim();
           const password   = credentials?.password as string;
           if (!identifier || !password) return null;

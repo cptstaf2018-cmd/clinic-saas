@@ -250,6 +250,24 @@ export default function AdminClinicsPage() {
                   </div>
                   {/* Actions */}
                   <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={async () => {
+                        setActionLoading(clinic.id + "_enter");
+                        const res = await fetch("/api/admin/impersonate", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ clinicId: clinic.id }),
+                        });
+                        const data = await res.json();
+                        setActionLoading(null);
+                        if (data.token) window.open(`/impersonate?token=${data.token}`, "_blank");
+                        else setError(data.error ?? "حدث خطأ");
+                      }}
+                      disabled={actionLoading === clinic.id + "_enter"}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors"
+                    >
+                      {actionLoading === clinic.id + "_enter" ? "..." : "دخول"}
+                    </button>
                     {status !== "active" ? (
                       <button
                         onClick={() => toggleStatus(clinic)}
