@@ -175,7 +175,7 @@ export async function POST(
           update: { step: "confirm_new" },
           create: { clinicId, phone, step: "confirm_new" },
         });
-        await reply(`أهلاً ${patient.name}! 👋\nلديك موعد ${dateStr} الساعة ${timeStr} ✅\nهل تريد حجز موعد جديد؟ (نعم / لا)`);
+        await reply(`أهلاً ${patient.name}! 👋\nلديك موعد محجوز في ${clinic.name}:\n📅 ${dateStr}\n⏰ ${timeStr} ✅\n\nهل تريد حجز موعد جديد؟ (نعم / لا)`);
       } else {
         const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
         const step = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${patient.id}` : "done";
@@ -184,7 +184,7 @@ export async function POST(
           update: { step },
           create: { clinicId, phone, step },
         });
-        await reply(`أهلاً ${patient.name}! 👋\n${message}`);
+        await reply(`أهلاً ${patient.name}! 👋\nيسعدنا خدمتك في ${clinic.name}.\n\n${message}`);
       }
     } else {
       await db.whatsappSession.upsert({
@@ -192,7 +192,7 @@ export async function POST(
         update: { step: "awaiting_name" },
         create: { clinicId, phone, step: "awaiting_name" },
       });
-      const welcome = clinic.whatsappWelcomeMessage || "أهلاً بك! 👋\nاكتب اسمك الكريم لتسجيلك في النظام 📝";
+      const welcome = clinic.whatsappWelcomeMessage || `أهلاً بك في ${clinic.name}! 👋\nما اسمك الكريم؟`;
       await reply(welcome);
     }
     return NextResponse.json({ ok: true });
@@ -214,9 +214,9 @@ export async function POST(
       data: { step: nextStep },
     });
     if (slots.length) {
-      await reply(`تم تسجيلك ${messageBody}! 🎉\n${message}`);
+      await reply(`أهلاً ${messageBody}! 😊\nتفضل اختر موعدك في ${clinic.name}:\n\n${message}`);
     } else {
-      await reply(`تم تسجيلك ${messageBody}! 🎉\nعذراً، لا تتوفر مواعيد حالياً. سنعلمك عند توفر مواعيد جديدة.`);
+      await reply(`أهلاً ${messageBody}! 😊\nعذراً، لا تتوفر مواعيد حالياً في ${clinic.name}.\nسنعلمك عند توفر مواعيد جديدة.`);
     }
     return NextResponse.json({ ok: true });
   }
@@ -259,6 +259,7 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
 
+    const bookedPatient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
     await db.appointment.create({
       data: { clinicId, patientId, date, queueNumber: (last?.queueNumber ?? 0) + 1 },
     });
@@ -266,7 +267,7 @@ export async function POST(
 
     const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
     const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
-    await reply(`✅ تم حجز موعدك بنجاح!\n📅 ${dateStr}\n⏰ ${timeStr}\nنراك قريباً 🏥`);
+    await reply(`✅ أهلاً ${bookedPatient.name}!\nتم تأكيد حجز موعدك في ${clinic.name}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nنراك قريباً، بالشفاء والعافية 🌟`);
     return NextResponse.json({ ok: true });
   }
 
