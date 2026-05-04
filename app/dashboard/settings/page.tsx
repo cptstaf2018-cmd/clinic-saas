@@ -246,6 +246,32 @@ export default function SettingsPage() {
               {saving ? "جاري الحفظ..." : "حفظ المعلومات"}
             </button>
           </Section>
+
+          {settings.clinicId && (
+            <Section title="شاشة الانتظار" description="افتح هذا الرابط على تلفزيون غرفة الانتظار">
+              <div className="bg-gray-900 rounded-xl p-3">
+                <code className="text-xs text-blue-400 break-all font-mono block mb-2">
+                  {`https://clinicplt.vercel.app/display/${settings.clinicId}`}
+                </code>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.open(`https://clinicplt.vercel.app/display/${settings.clinicId}`, "_blank")}
+                    className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    📺 فتح الشاشة
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/display/${settings.clinicId}`)}
+                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    نسخ الرابط
+                  </button>
+                </div>
+              </div>
+            </Section>
+          )}
         </>
       )}
 
