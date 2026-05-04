@@ -10,8 +10,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        identifier: { label: "Phone or Email", type: "text" },
-        password:   { label: "Password",       type: "password" },
+        identifier:        { label: "Phone or Email",    type: "text"     },
+        password:          { label: "Password",          type: "password" },
+        impersonateToken:  { label: "Impersonate Token", type: "text"     },
       },
       async authorize(credentials) {
         try {
