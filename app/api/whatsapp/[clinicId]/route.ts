@@ -137,7 +137,6 @@ export async function POST(
   }
 
   if (!clinic.botEnabled) {
-    await reply("عذراً، خدمة البوت معطلة حالياً. تواصل مع العيادة مباشرة.");
     return NextResponse.json({ ok: true });
   }
 
