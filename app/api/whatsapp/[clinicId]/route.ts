@@ -267,7 +267,7 @@ export async function POST(
 
     const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
     const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
-    await reply(`✅ أهلاً ${bookedPatient.name}!\nتم تأكيد حجز موعدك في ${clinic.name}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nنراك قريباً، بالشفاء والعافية 🌟`);
+    await reply(`✅ أهلاً ${bookedPatient?.name ?? ""}!\nتم تأكيد حجز موعدك في ${clinic.name}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nنراك قريباً، بالشفاء والعافية 🌟`);
     return NextResponse.json({ ok: true });
   }
 
