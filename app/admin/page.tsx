@@ -260,7 +260,7 @@ export default function AdminClinicsPage() {
                         });
                         const data = await res.json();
                         setActionLoading(null);
-                        if (data.token) window.open(`/impersonate?token=${data.token}`, "_blank");
+                        if (data.token) window.open(`/api/admin/enter?token=${data.token}`, "_blank");
                         else setError(data.error ?? "حدث خطأ");
                       }}
                       disabled={actionLoading === clinic.id + "_enter"}
