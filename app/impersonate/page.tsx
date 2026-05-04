@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function ImpersonatePage() {
+function ImpersonateContent() {
   const params = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState("");
@@ -32,5 +32,17 @@ export default function ImpersonatePage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <p className="text-gray-400 text-sm">جاري الدخول...</p>
     </div>
+  );
+}
+
+export default function ImpersonatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-gray-400 text-sm">جاري التحميل...</p>
+      </div>
+    }>
+      <ImpersonateContent />
+    </Suspense>
   );
 }
