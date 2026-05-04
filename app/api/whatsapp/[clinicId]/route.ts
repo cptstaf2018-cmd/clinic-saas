@@ -256,27 +256,39 @@ export async function POST(
 
     const dayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
     const dayEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
-    const last = await db.appointment.findFirst({
-      where: { clinicId, date: { gte: dayStart, lte: dayEnd }, queueNumber: { not: null } },
-      orderBy: { queueNumber: "desc" },
-    });
 
-    // Check if slot is still available (race condition guard)
-    const conflict = await db.appointment.findFirst({
-      where: { clinicId, date, status: { not: "cancelled" } },
-    });
-    if (conflict) {
+    const bookedPatient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
+
+    // Atomic check-and-book inside a serializable transaction to prevent double booking
+    let slotTaken = false;
+    try {
+      await db.$transaction(async (tx) => {
+        const conflict = await tx.appointment.findFirst({
+          where: { clinicId, date, status: { not: "cancelled" } },
+        });
+        if (conflict) { slotTaken = true; return; }
+
+        const last = await tx.appointment.findFirst({
+          where: { clinicId, date: { gte: dayStart, lte: dayEnd }, queueNumber: { not: null } },
+          orderBy: { queueNumber: "desc" },
+        });
+        await tx.appointment.create({
+          data: { clinicId, patientId, date, queueNumber: (last?.queueNumber ?? 0) + 1 },
+        });
+      }, { isolationLevel: "Serializable" });
+    } catch {
+      // Serialization failure = another transaction won — treat as slot taken
+      slotTaken = true;
+    }
+
+    if (slotTaken) {
       const { message: newMsg, slots: newSlots, datePrefix: newPrefix } = await getNextSlotsMessage(clinicId);
       const nextStep = newSlots.length ? `awaiting_slot|${newPrefix}|${newSlots.join(",")}|${patientId}` : "done";
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: nextStep } });
-      await reply(`عذراً، هذا الوقت محجوز. ${newMsg}`);
+      await reply(`عذراً، هذا الوقت محجوز للتو. ${newMsg}`);
       return NextResponse.json({ ok: true });
     }
 
-    const bookedPatient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
-    await db.appointment.create({
-      data: { clinicId, patientId, date, queueNumber: (last?.queueNumber ?? 0) + 1 },
-    });
     await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
 
     const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric" });

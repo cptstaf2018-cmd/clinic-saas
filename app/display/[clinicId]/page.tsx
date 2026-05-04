@@ -220,7 +220,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
         /* يسار — التاريخ */
         .dp-date {
           display:flex; flex-direction:column;
-          align-items:flex-start;
+          align-items:flex-end;
+          text-align:left;
         }
         .dp-date-day  { font-size:26px; font-weight:900; color:#1e3a8a; line-height:1; }
         .dp-date-full { font-size:14px; font-weight:700; color:#3b82f6; margin-top:2px; }

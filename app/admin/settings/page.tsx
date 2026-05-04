@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function AdminSettingsPage() {
   const [logoUrl, setLogoUrl] = useState("");
   const [logoPreview, setLogoPreview] = useState("");
   const [logoLoading, setLogoLoading] = useState(false);
   const [logoMsg, setLogoMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -24,6 +25,29 @@ export default function AdminSettingsPage() {
         }
       });
   }, []);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoLoading(true);
+    setLogoMsg(null);
+    setLogoPreview(URL.createObjectURL(file));
+    try {
+      const form = new FormData();
+      form.append("logo", file);
+      const res = await fetch("/api/admin/logo", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل الرفع");
+      setLogoUrl(data.url);
+      setLogoPreview(data.url);
+      setLogoMsg({ ok: true, text: "تم رفع الشعار بنجاح" });
+    } catch (err: any) {
+      setLogoMsg({ ok: false, text: err.message });
+      setLogoPreview(logoUrl);
+    } finally {
+      setLogoLoading(false);
+    }
+  }
 
   async function handleLogoSave(e: React.FormEvent) {
     e.preventDefault();
@@ -101,38 +125,59 @@ export default function AdminSettingsPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogoSave} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              رابط الشعار (URL)
-            </label>
-            <input
-              type="url"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://example.com/logo.png"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              dir="ltr"
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              أدخل رابطاً مباشراً لصورة الشعار (PNG, JPG, SVG)
-            </p>
+        <div className="space-y-4">
+          {/* Primary: file upload */}
+          <div className="flex items-center gap-5">
+            <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">
+              {logoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoPreview} alt="الشعار" className="w-full h-full object-contain" onError={() => setLogoPreview("")} />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={1.5} className="w-8 h-8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              )}
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={logoLoading}
+                className="bg-[#0C1F3F] hover:bg-[#1a3060] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition disabled:opacity-50"
+              >
+                {logoLoading ? "جاري الرفع..." : "رفع شعار"}
+              </button>
+              <p className="text-xs text-gray-400 mt-1.5">JPG, PNG, SVG — حد أقصى 2MB</p>
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+            </div>
           </div>
+
+          {/* Secondary: URL fallback */}
+          <form onSubmit={handleLogoSave} className="space-y-3">
+            <p className="text-xs font-medium text-gray-400">أو أدخل رابطاً مباشراً</p>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                placeholder="https://example.com/logo.png"
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                dir="ltr"
+              />
+              <button
+                type="submit"
+                disabled={logoLoading || !logoUrl}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium transition disabled:opacity-40"
+              >
+                حفظ
+              </button>
+            </div>
+          </form>
 
           {logoMsg && (
             <p className={`text-sm font-medium ${logoMsg.ok ? "text-green-600" : "text-red-500"}`}>
               {logoMsg.ok ? "✓ " : "✗ "}{logoMsg.text}
             </p>
           )}
-
-          <button
-            type="submit"
-            disabled={logoLoading}
-            className="bg-[#0C1F3F] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#1a3060] transition disabled:opacity-50"
-          >
-            {logoLoading ? "جاري الحفظ..." : "حفظ الشعار"}
-          </button>
-        </form>
+        </div>
       </section>
 
       {/* Password */}
