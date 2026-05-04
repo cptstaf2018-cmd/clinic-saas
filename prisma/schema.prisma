@@ -17,12 +17,13 @@ model Clinic {
   whatsappAccessToken     String?
   whatsappWelcomeMessage  String?
   createdAt               DateTime       @default(now())
-  users          User[]
-  patients       Patient[]
-  appointments   Appointment[]
-  payments       Payment[]
-  workingHours   WorkingHours[]
-  subscription   Subscription?
+  users             User[]
+  patients          Patient[]
+  appointments      Appointment[]
+  payments          Payment[]
+  workingHours      WorkingHours[]
+  subscription      Subscription?
+  incomingMessages  IncomingMessage[]
 }
 
 model User {
@@ -123,6 +124,19 @@ model WhatsappSession {
 
   @@unique([clinicId, phone])
   @@index([clinicId])
+}
+
+model IncomingMessage {
+  id        String   @id @default(cuid())
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  phone     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([clinicId])
+  @@index([clinicId, read])
 }
 
 model Payment {

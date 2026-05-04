@@ -136,6 +136,11 @@ export async function POST(
     await sendWhatsApp(phone, msg, apiKey);
   }
 
+  // Save every incoming message regardless of bot state
+  await db.incomingMessage.create({
+    data: { clinicId, phone, body: messageBody },
+  });
+
   if (!clinic.botEnabled) {
     return NextResponse.json({ ok: true });
   }
