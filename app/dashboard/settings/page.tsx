@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 interface Settings {
+  id: string;
   name: string;
   whatsappNumber: string;
   logoUrl: string;
@@ -11,7 +12,7 @@ interface Settings {
   whatsappPhoneNumberId: string;
   whatsappAccessToken: string;
   whatsappWelcomeMessage: string;
-  clinicId?: string;
+  clinicId: string;
 }
 
 type Tab = "profile" | "whatsapp" | "reminders" | "security";
@@ -247,31 +248,29 @@ export default function SettingsPage() {
             </button>
           </Section>
 
-          {settings.clinicId && (
-            <Section title="شاشة الانتظار" description="افتح هذا الرابط على تلفزيون غرفة الانتظار">
-              <div className="bg-gray-900 rounded-xl p-3">
-                <code className="text-xs text-blue-400 break-all font-mono block mb-2">
-                  {`https://clinicplt.vercel.app/display/${settings.clinicId}`}
-                </code>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => window.open(`https://clinicplt.vercel.app/display/${settings.clinicId}`, "_blank")}
-                    className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    📺 فتح الشاشة
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/display/${settings.clinicId}`)}
-                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    نسخ الرابط
-                  </button>
-                </div>
+          <Section title="شاشة الانتظار" description="افتح هذا الرابط على تلفزيون غرفة الانتظار">
+            <div className="bg-gray-900 rounded-xl p-3">
+              <code className="text-xs text-blue-400 break-all font-mono block mb-2">
+                {`https://clinicplt.vercel.app/display/${settings.id}`}
+              </code>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.open(`https://clinicplt.vercel.app/display/${settings.id}`, "_blank")}
+                  className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  📺 فتح الشاشة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/display/${settings.id}`)}
+                  className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  نسخ الرابط
+                </button>
               </div>
-            </Section>
-          )}
+            </div>
+          </Section>
         </>
       )}
 
@@ -320,47 +319,23 @@ export default function SettingsPage() {
           </Section>
 
           <Section title="إعدادات WasenderAPI" description="اربط رقم الواتساب الخاص بعيادتك عبر WasenderAPI">
-            {settings.clinicId && (
-              <div className="space-y-2 mb-4">
-                <div className="bg-gray-900 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">رابط الـ Webhook — أدخله في لوحة WasenderAPI:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs text-green-400 flex-1 break-all font-mono">
-                      {`https://clinicplt.vercel.app/api/whatsapp/${settings.clinicId}`}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/api/whatsapp/${settings.clinicId}`)}
-                      className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-lg shrink-0 transition-colors"
-                    >
-                      نسخ
-                    </button>
-                  </div>
-                </div>
-                <div className="bg-gray-900 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">رابط شاشة الانتظار — افتحه على تلفزيون غرفة الانتظار:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs text-blue-400 flex-1 break-all font-mono">
-                      {`https://clinicplt.vercel.app/display/${settings.clinicId}`}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => window.open(`https://clinicplt.vercel.app/display/${settings.clinicId}`, "_blank")}
-                      className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-2 py-1 rounded-lg shrink-0 transition-colors"
-                    >
-                      فتح
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/display/${settings.clinicId}`)}
-                      className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-lg shrink-0 transition-colors"
-                    >
-                      نسخ
-                    </button>
-                  </div>
+            <div className="space-y-2 mb-4">
+              <div className="bg-gray-900 rounded-xl p-3">
+                <p className="text-xs text-gray-400 mb-1">رابط الـ Webhook — أدخله في لوحة WasenderAPI:</p>
+                <div className="flex items-center gap-2">
+                  <code className="text-xs text-green-400 flex-1 break-all font-mono">
+                    {`https://clinicplt.vercel.app/api/whatsapp/${settings.id}`}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/api/whatsapp/${settings.id}`)}
+                    className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-lg shrink-0 transition-colors"
+                  >
+                    نسخ
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 text-xs text-blue-700">
               للحصول على API Key: سجّل في{" "}
               <a href="https://wasenderapi.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
