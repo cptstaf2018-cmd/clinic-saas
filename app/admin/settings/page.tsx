@@ -36,8 +36,9 @@ export default function AdminSettingsPage() {
       const form = new FormData();
       form.append("logo", file);
       const res = await fetch("/api/admin/logo", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل الرفع");
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) throw new Error(data.error || `خطأ في الخادم (${res.status})`);
       setLogoUrl(data.url);
       setLogoPreview(data.url);
       setLogoMsg({ ok: true, text: "تم رفع الشعار بنجاح" });
@@ -59,8 +60,9 @@ export default function AdminSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "logo", logoUrl }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل الحفظ");
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) throw new Error(data.error || `خطأ في الخادم (${res.status})`);
       setLogoPreview(logoUrl);
       setLogoMsg({ ok: true, text: "تم حفظ الشعار بنجاح" });
     } catch (err: any) {
@@ -84,8 +86,9 @@ export default function AdminSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "password", currentPassword, newPassword }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل التغيير");
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!res.ok) throw new Error(data.error || `خطأ في الخادم (${res.status})`);
       setPassMsg({ ok: true, text: "تم تغيير كلمة المرور بنجاح" });
       setCurrentPassword("");
       setNewPassword("");

@@ -23,7 +23,13 @@ export async function POST(req: Request) {
   }
 
   const ext = file.type.split("/")[1].replace("svg+xml", "svg");
-  const blob = await put(`platform/logo-${Date.now()}.${ext}`, file, { access: "public" });
+
+  let blob;
+  try {
+    blob = await put(`platform/logo-${Date.now()}.${ext}`, file, { access: "public" });
+  } catch {
+    return NextResponse.json({ error: "فشل رفع الصورة — تحقق من إعداد BLOB_READ_WRITE_TOKEN" }, { status: 500 });
+  }
 
   await db.platformSettings.upsert({
     where: { id: "singleton" },
