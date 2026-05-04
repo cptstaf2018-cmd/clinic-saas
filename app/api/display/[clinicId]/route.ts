@@ -13,6 +13,11 @@ export async function GET(
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
+  const clinic = await db.clinic.findUnique({
+    where: { id: clinicId },
+    select: { name: true },
+  });
+
   const [current, waiting] = await Promise.all([
     db.appointment.findFirst({
       where: {
@@ -35,6 +40,7 @@ export async function GET(
   ]);
 
   return NextResponse.json({
+    clinicName: clinic?.name ?? "",
     current: current
       ? { name: current.patient.name, queueNumber: current.queueNumber }
       : null,

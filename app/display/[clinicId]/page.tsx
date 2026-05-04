@@ -1,349 +1,460 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface DisplayData {
+  clinicName: string;
   current: { name: string; queueNumber: number | null } | null;
   waiting: { name: string; queueNumber: number | null }[];
 }
 
+const ARABIC_DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const ARABIC_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const toArabic = (n: number) => String(n).replace(/[0-9]/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
+
+function AnalogClock() {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const ticksRef = useRef<SVGGElement>(null);
+  const numsRef = useRef<SVGGElement>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    const tg = ticksRef.current;
+    const ng = numsRef.current;
+    if (!svg || !tg || !ng) return;
+
+    // Draw tick marks
+    for (let i = 0; i < 60; i++) {
+      const a = (i * 6 * Math.PI) / 180;
+      const isH = i % 5 === 0;
+      const r1 = isH ? 34 : 38, r2 = 42;
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", String(50 + r1 * Math.sin(a)));
+      line.setAttribute("y1", String(50 - r1 * Math.cos(a)));
+      line.setAttribute("x2", String(50 + r2 * Math.sin(a)));
+      line.setAttribute("y2", String(50 - r2 * Math.cos(a)));
+      line.setAttribute("stroke", isH ? "#2563eb" : "#dbeafe");
+      line.setAttribute("stroke-width", isH ? "2.5" : "1");
+      line.setAttribute("stroke-linecap", "round");
+      tg.appendChild(line);
+    }
+
+    // Draw Arabic hour numbers
+    const nums = ["١٢","١","٢","٣","٤","٥","٦","٧","٨","٩","١٠","١١"];
+    for (let i = 0; i < 12; i++) {
+      const a = ((i * 30 - 90) * Math.PI) / 180;
+      const r = 27;
+      const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      t.setAttribute("x", String(50 + r * Math.cos(a)));
+      t.setAttribute("y", String(50 + r * Math.sin(a)));
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("dominant-baseline", "central");
+      t.setAttribute("font-size", "7");
+      t.setAttribute("font-weight", "900");
+      t.setAttribute("fill", "#1e40af");
+      t.textContent = nums[i];
+      ng.appendChild(t);
+    }
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    const update = () => {
+      const now = new Date();
+      const h = now.getHours() % 12;
+      const m = now.getMinutes();
+      const s = now.getSeconds();
+      const hDeg = h * 30 + m * 0.5 + s * 0.00833;
+      const mDeg = m * 6 + s * 0.1;
+      const sDeg = s * 6;
+
+      const setHand = (id: string, deg: number, tip: number, tail = 0) => {
+        const r = (deg * Math.PI) / 180;
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute("x2", String(50 + tip * Math.sin(r)));
+        el.setAttribute("y2", String(50 - tip * Math.cos(r)));
+        if (tail) {
+          const tl = document.getElementById(id + "-t");
+          if (tl) {
+            tl.setAttribute("x2", String(50 - tail * Math.sin(r)));
+            tl.setAttribute("y2", String(50 + tail * Math.cos(r)));
+          }
+        }
+      };
+      setHand("hh", hDeg, 21);
+      setHand("hm", mDeg, 33);
+      setHand("hs", sDeg, 37, 8);
+    };
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
+  }, [ready]);
+
+  return (
+    <svg ref={svgRef} width="90" height="90" viewBox="0 0 100 100"
+      style={{ filter: "drop-shadow(0 4px 14px rgba(37,99,235,0.25))" }}>
+      <circle cx="50" cy="50" r="47" fill="rgba(37,99,235,0.05)" />
+      <circle cx="50" cy="50" r="45" fill="white" stroke="#dbeafe" strokeWidth="1.5" />
+      <circle cx="50" cy="50" r="45" fill="none" stroke="#2563eb" strokeWidth="3" />
+      <circle cx="50" cy="50" r="39" fill="none" stroke="#eff6ff" strokeWidth="1" />
+      <g ref={ticksRef} />
+      <g ref={numsRef} />
+      <line id="hh" x1="50" y1="50" x2="50" y2="29" stroke="#1e3a8a" strokeWidth="6"   strokeLinecap="round" />
+      <line id="hm" x1="50" y1="50" x2="50" y2="17" stroke="#2563eb" strokeWidth="3.5" strokeLinecap="round" />
+      <line id="hs"   x1="50" y1="57" x2="50" y2="13" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" />
+      <line id="hs-t" x1="50" y1="50" x2="50" y2="61" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="50" cy="50" r="5.5" fill="#1e3a8a" />
+      <circle cx="50" cy="50" r="3"   fill="#ef4444" />
+      <circle cx="50" cy="50" r="1.2" fill="white" />
+    </svg>
+  );
+}
+
 export default function DisplayPage({ params }: { params: Promise<{ clinicId: string }> }) {
   const [clinicId, setClinicId] = useState<string | null>(null);
-  const [data, setData] = useState<DisplayData>({ current: null, waiting: [] });
-  const [clinicName, setClinicName] = useState("نظام الانتظار");
-  const [time, setTime] = useState("");
+  const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", current: null, waiting: [] });
+  const [dateDay, setDateDay] = useState("");
+  const [dateFull, setDateFull] = useState("");
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
   useEffect(() => {
     if (!clinicId) return;
-    const fetchData = async () => {
+    const fetch_ = async () => {
       try {
         const res = await fetch(`/api/display/${clinicId}`);
-        if (res.ok) {
-          const json = await res.json();
-          setData(json);
-          if (json.clinicName) setClinicName(json.clinicName);
-        }
+        if (res.ok) setData(await res.json());
       } catch {}
     };
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
+    fetch_();
+    const t = setInterval(fetch_, 5000);
+    return () => clearInterval(t);
   }, [clinicId]);
 
   useEffect(() => {
     const update = () => {
-      setTime(new Date().toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" }));
+      const now = new Date();
+      setDateDay(ARABIC_DAYS[now.getDay()]);
+      setDateFull(
+        toArabic(now.getDate()) + " " + ARABIC_MONTHS[now.getMonth()] + " " + toArabic(now.getFullYear())
+      );
     };
     update();
-    const t = setInterval(update, 1000);
+    const t = setInterval(update, 60000);
     return () => clearInterval(t);
   }, []);
+
+  const waiting = data.waiting.slice(0, 4);
 
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700;900&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#f0f7ff; }
 
-        .display-root {
-          min-height:100vh;
-          background:#f0f4ff;
+        .dp-root {
+          min-height:100vh; background:#f0f7ff;
+          font-family:'Cairo',sans-serif;
           display:flex; flex-direction:column;
           overflow:hidden; position:relative;
-          font-family:'Cairo','Segoe UI',sans-serif;
+        }
+        .dp-root::before {
+          content:''; position:fixed; inset:0;
+          background-image:url("data:image/svg+xml,%3Csvg width='70' height='70' viewBox='0 0 70 70' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%232563eb' stroke-width='0.4' opacity='0.09'%3E%3Cpolygon points='35,3 46,12 56,9 60,20 70,24 66,35 70,45 59,50 59,61 48,63 43,70 35,65 27,70 22,63 11,61 11,50 0,45 4,35 0,24 10,20 14,9 24,12'/%3E%3Ccircle cx='35' cy='35' r='16'/%3E%3C/g%3E%3C/svg%3E");
+          background-size:70px 70px; pointer-events:none; z-index:0;
         }
 
-        /* شريط علوي متحرك */
-        .top-bar {
+        /* شريط علوي */
+        .dp-topbar {
           height:5px; flex-shrink:0;
-          background:linear-gradient(90deg,#2563eb,#0ea5e9,#06b6d4,#2563eb);
-          background-size:200% 100%;
-          animation:shimmer 3s linear infinite;
+          background:linear-gradient(90deg,#1e40af,#3b82f6,#60a5fa,#3b82f6,#1e40af);
+          background-size:300% 100%;
+          animation:dp-sh 4s linear infinite;
         }
-        @keyframes shimmer {
-          0%{background-position:0% 0%;}
-          100%{background-position:200% 0%;}
-        }
+        @keyframes dp-sh { 0%{background-position:0%} 100%{background-position:300%} }
 
-        /* هيدر */
-        .d-header {
-          display:flex; justify-content:space-between; align-items:center;
-          padding:18px 28px 14px;
-          background:white;
-          border-bottom:2px solid #e2e8f0;
+        /* هيدر ثلاثة أعمدة */
+        .dp-header {
           position:relative; z-index:2;
+          display:grid; grid-template-columns:1fr auto 1fr;
+          align-items:center;
+          padding:10px 26px;
+          background:white;
+          border-bottom:2px solid #dbeafe;
+          box-shadow:0 2px 12px rgba(37,99,235,0.07);
+          gap:10px;
         }
-        .d-clinic {
-          display:flex; align-items:center; gap:12px;
-          font-size:22px; font-weight:900; color:#1e40af;
+        /* يمين — ساعة عقارب */
+        .dp-clock {
+          display:flex; align-items:center; gap:9px;
         }
-        .d-logo {
-          width:48px; height:48px; border-radius:14px;
+        .dp-live { font-size:12px; font-weight:700; color:#3b82f6; }
+        .dp-dot {
+          width:10px; height:10px; border-radius:50%;
+          background:#3b82f6;
+          animation:dp-lp 1.4s infinite;
+        }
+        @keyframes dp-lp {
+          0%{box-shadow:0 0 0 0 rgba(59,130,246,0.6);}
+          70%{box-shadow:0 0 0 12px rgba(59,130,246,0);}
+          100%{box-shadow:0 0 0 0 rgba(59,130,246,0);}
+        }
+        /* وسط — اسم العيادة */
+        .dp-clinic {
+          display:flex; align-items:center; gap:10px;
+          white-space:nowrap;
+        }
+        .dp-logo {
+          width:44px; height:44px; border-radius:13px;
           background:linear-gradient(135deg,#1e40af,#3b82f6);
           display:flex; align-items:center; justify-content:center;
-          font-size:24px;
-          box-shadow:0 4px 14px rgba(30,64,175,0.35);
-          animation:logoPop 8s ease-in-out infinite;
+          font-size:22px;
+          box-shadow:0 4px 14px rgba(37,99,235,0.3);
         }
-        @keyframes logoPop {
-          0%,88%,100%{transform:scale(1);}
-          92%{transform:scale(1.12);}
-          96%{transform:scale(0.97);}
-        }
-        .d-time {
-          background:#f8fafc; border:2px solid #e2e8f0;
-          border-radius:14px; padding:10px 18px;
-          font-size:20px; font-weight:700; color:#334155;
-          display:flex; align-items:center; gap:8px;
-        }
-
-        /* سماعة خلفية */
-        .steth-bg {
-          position:fixed; top:-10px; right:-20px;
-          opacity:0.07; z-index:0;
-          animation:floatSteth 7s ease-in-out infinite;
-        }
-        @keyframes floatSteth {
-          0%,100%{transform:translateY(0) rotate(0deg);}
-          50%{transform:translateY(12px) rotate(4deg);}
-        }
-
-        /* قلب نابض */
-        .heart-bg {
-          position:fixed; bottom:20px; left:30px;
-          z-index:0;
-          animation:heartBeat 1.3s ease-in-out infinite;
-        }
-        @keyframes heartBeat {
-          0%,100%{transform:scale(1);}
-          14%{transform:scale(1.2);}
-          28%{transform:scale(1);}
-          42%{transform:scale(1.1);}
-          70%{transform:scale(1);}
-        }
-
-        /* خط ECG خلفي */
-        .ecg-bg {
-          position:fixed; bottom:10px; left:0; right:0;
-          height:150px; z-index:0;
-        }
-        .ecg-line {
-          stroke-dasharray:2200;
-          stroke-dashoffset:2200;
-          animation:drawECG 3.5s ease-in-out infinite;
-        }
-        @keyframes drawECG {
-          0%{stroke-dashoffset:2200; opacity:0.04;}
-          40%{opacity:0.16;}
-          100%{stroke-dashoffset:0; opacity:0.04;}
-        }
-
-        /* محتوى رئيسي */
-        .d-content {
-          position:relative; z-index:1;
-          flex:1; padding:0 24px 16px;
+        .dp-cname { font-size:21px; font-weight:900; color:#1e3a8a; }
+        /* يسار — التاريخ */
+        .dp-date {
           display:flex; flex-direction:column;
+          align-items:flex-start;
         }
+        .dp-date-day  { font-size:26px; font-weight:900; color:#1e3a8a; line-height:1; }
+        .dp-date-full { font-size:14px; font-weight:700; color:#3b82f6; margin-top:2px; }
 
-        /* نقطة حية */
-        .now-label {
-          text-align:center; font-size:16px;
-          color:#64748b; font-weight:700;
-          margin:18px 0 12px;
-          display:flex; align-items:center; justify-content:center; gap:9px;
+        /* آية قرآنية */
+        .dp-quran {
+          position:relative; z-index:2;
+          margin:12px 22px 0;
+          background:linear-gradient(135deg,#1e3a8a,#1e40af,#2563eb);
+          border-radius:18px; padding:14px 50px 12px;
+          text-align:center; overflow:hidden;
+          box-shadow:0 8px 28px rgba(37,99,235,0.28);
         }
-        .live-dot {
-          width:11px; height:11px; border-radius:50%;
-          background:#22c55e;
-          box-shadow:0 0 0 0 rgba(34,197,94,0.6);
-          animation:livePulse 1.5s ease-out infinite;
+        .dp-quran::before,.dp-quran::after {
+          content:'✦'; position:absolute;
+          top:50%; transform:translateY(-50%);
+          font-size:20px; color:rgba(255,255,255,0.14);
         }
-        @keyframes livePulse {
-          0%{box-shadow:0 0 0 0 rgba(34,197,94,0.7);}
-          70%{box-shadow:0 0 0 14px rgba(34,197,94,0);}
-          100%{box-shadow:0 0 0 0 rgba(34,197,94,0);}
+        .dp-quran::before { right:14px; }
+        .dp-quran::after  { left:14px; }
+        .dp-bsm { font-family:'Amiri',serif; font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:3px; }
+        .dp-aya {
+          font-family:'Amiri',serif; font-size:26px;
+          color:white; line-height:1.7;
+          animation:dp-ab 5s ease-in-out infinite;
+        }
+        @keyframes dp-ab { 0%,100%{opacity:0.88;} 50%{opacity:1;} }
+        .dp-aya-ref { font-size:11px; color:rgba(255,255,255,0.4); margin-top:3px; }
+
+        /* المنطقة الرئيسية */
+        .dp-main {
+          position:relative; z-index:1;
+          flex:1; display:grid;
+          grid-template-columns:1.2fr 1fr;
+          gap:12px; margin:12px 22px;
+        }
+        .dp-cur-wrap, .dp-q-wrap { display:flex; flex-direction:column; }
+        .dp-sec-lbl {
+          font-size:10px; font-weight:700; letter-spacing:3px;
+          color:#93c5fd; text-align:center; margin-bottom:7px;
         }
 
         /* بطاقة المريض الحالي */
-        .current-card {
-          background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 55%,#3b82f6 100%);
-          border-radius:26px; padding:36px 28px;
-          text-align:center; margin-bottom:24px;
-          box-shadow:0 20px 60px rgba(37,99,235,0.38);
+        .dp-cur-card {
+          flex:1;
+          background:linear-gradient(150deg,#1e3a8a,#1d4ed8,#2563eb);
+          border-radius:22px;
+          display:flex; flex-direction:column;
+          align-items:center; justify-content:center;
+          padding:26px 20px; text-align:center;
           position:relative; overflow:hidden;
-          animation:cardPulse 2.8s ease-in-out infinite;
+          box-shadow:0 16px 48px rgba(37,99,235,0.38);
+          animation:dp-cp 3s ease-in-out infinite;
         }
-        @keyframes cardPulse {
-          0%,100%{box-shadow:0 20px 60px rgba(37,99,235,0.38), 0 0 0 0 rgba(37,99,235,0.25);}
-          50%{box-shadow:0 20px 60px rgba(37,99,235,0.38), 0 0 0 20px rgba(37,99,235,0);}
+        @keyframes dp-cp {
+          0%,100%{box-shadow:0 16px 48px rgba(37,99,235,0.38),0 0 0 0 rgba(37,99,235,0.2);}
+          50%{box-shadow:0 16px 48px rgba(37,99,235,0.45),0 0 0 20px rgba(37,99,235,0);}
         }
-        .card-glow {
-          position:absolute; inset:0; border-radius:26px;
-          background:radial-gradient(ellipse at 50% 0%,rgba(255,255,255,0.13),transparent 65%);
-          animation:glowPulse 2.5s ease-in-out infinite;
+        .dp-cur-card::before {
+          content:''; position:absolute;
+          width:200px; height:200px; border-radius:50%;
+          background:rgba(255,255,255,0.04);
+          top:-50px; right:-50px;
         }
-        @keyframes glowPulse {
-          0%,100%{opacity:0.5;} 50%{opacity:1;}
+        .dp-ecg { position:absolute; bottom:0; left:0; right:0; opacity:0.14; }
+        .dp-ecg-p {
+          stroke-dasharray:800; stroke-dashoffset:800;
+          animation:dp-de 2.5s ease-in-out infinite;
         }
-        /* ECG داخل البطاقة */
-        .card-ecg {
-          position:absolute; bottom:0; left:0; right:0; opacity:0.18;
+        @keyframes dp-de {
+          0%{stroke-dashoffset:800;opacity:0.08;}
+          50%{opacity:0.28;}
+          100%{stroke-dashoffset:0;opacity:0.08;}
         }
-        .card-ecg-line {
-          stroke-dasharray:900;
-          stroke-dashoffset:900;
-          animation:drawECG 2.2s ease-in-out infinite;
+        .dp-now-tag {
+          display:inline-flex; align-items:center; gap:6px;
+          background:rgba(255,255,255,0.14);
+          border:1.5px solid rgba(255,255,255,0.28);
+          border-radius:999px; padding:5px 14px;
+          font-size:12px; font-weight:700; color:white;
+          margin-bottom:14px; position:relative; z-index:1;
         }
-        /* دوائر تمتد */
-        .ripple {
-          position:absolute; border-radius:50%;
-          border:2px solid rgba(255,255,255,0.25);
-          animation:rippleOut 2.6s ease-out infinite;
-          top:50%; left:50%; transform:translate(-50%,-50%);
-        }
-        .ripple:nth-child(3){animation-delay:0.87s;}
-        .ripple:nth-child(4){animation-delay:1.74s;}
-        @keyframes rippleOut {
-          0%{width:60px;height:60px;opacity:0.7;}
-          100%{width:380px;height:380px;opacity:0;}
-        }
-        .num-badge {
-          display:inline-flex; align-items:center; justify-content:center;
-          width:54px; height:54px; border-radius:18px;
-          background:rgba(255,255,255,0.18);
-          border:2px solid rgba(255,255,255,0.35);
-          color:white; font-size:22px; font-weight:900;
+        .dp-num-ring {
+          width:78px; height:78px; border-radius:50%;
+          background:rgba(255,255,255,0.14);
+          border:3px solid rgba(255,255,255,0.35);
+          display:flex; align-items:center; justify-content:center;
+          font-size:34px; font-weight:900; color:white;
           margin-bottom:12px; position:relative; z-index:1;
+          animation:dp-nr 2s ease-out infinite;
         }
-        .patient-name {
-          font-size:62px; font-weight:900; color:white;
-          line-height:1; position:relative; z-index:1;
-          text-shadow:0 4px 20px rgba(0,0,0,0.22);
+        @keyframes dp-nr {
+          0%{box-shadow:0 0 0 0 rgba(255,255,255,0.3);}
+          70%{box-shadow:0 0 0 18px rgba(255,255,255,0);}
+          100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}
         }
-        .empty-text {
-          font-size:28px; font-weight:600;
-          color:rgba(255,255,255,0.5);
+        .dp-patient-name {
+          font-size:50px; font-weight:900; color:white;
+          line-height:1.1; position:relative; z-index:1;
+          text-shadow:0 3px 14px rgba(0,0,0,0.2);
+        }
+        .dp-patient-sub {
+          font-size:12px; color:rgba(255,255,255,0.55);
+          margin-top:8px; position:relative; z-index:1; font-weight:600;
+        }
+        .dp-empty {
+          font-size:24px; font-weight:600;
+          color:rgba(255,255,255,0.45);
           position:relative; z-index:1;
         }
 
         /* قائمة الانتظار */
-        .queue-title {
-          text-align:center; font-size:12px; font-weight:700;
-          color:#94a3b8; letter-spacing:3px;
-          margin-bottom:12px;
+        .dp-q-list { display:flex; flex-direction:column; gap:8px; flex:1; }
+        .dp-qi {
+          background:white; border-radius:15px;
+          display:flex; align-items:stretch; overflow:hidden;
+          box-shadow:0 2px 8px rgba(37,99,235,0.07);
+          border:1.5px solid #e0eaff;
         }
-        .queue-item {
-          background:white;
-          border:1.5px solid #e2e8f0;
-          border-radius:18px;
-          padding:15px 22px;
-          display:flex; justify-content:space-between; align-items:center;
-          margin-bottom:10px;
-          box-shadow:0 2px 10px rgba(0,0,0,0.04);
+        .dp-qi.next { border-color:#93c5fd; background:#eff6ff; }
+        .dp-qi-num {
+          width:50px; flex-shrink:0;
+          display:flex; align-items:center; justify-content:center;
+          background:#f0f7ff;
+          font-size:21px; font-weight:900; color:#3b82f6;
+          border-left:1.5px solid #dbeafe;
         }
-        .q-name { font-size:20px; font-weight:700; color:#1e293b; }
-        .q-num {
-          font-size:14px; font-weight:800; color:#2563eb;
-          background:#eff6ff; border:1.5px solid #bfdbfe;
-          padding:5px 14px; border-radius:10px;
+        .dp-qi.next .dp-qi-num { background:#dbeafe; color:#1d4ed8; border-color:#93c5fd; }
+        .dp-qi-body { flex:1; padding:11px 13px; display:flex; flex-direction:column; justify-content:center; }
+        .dp-qi-name { font-size:18px; font-weight:800; color:#1e293b; }
+        .dp-qi-st   { font-size:10px; font-weight:700; margin-top:2px; color:#94a3b8; }
+        .dp-qi.next .dp-qi-st { color:#1d4ed8; }
+        .dp-qi-tag  { display:flex; align-items:center; padding:0 12px; flex-shrink:0; }
+        .dp-pill {
+          font-size:11px; font-weight:800;
+          padding:4px 11px; border-radius:18px;
+          background:#eff6ff; color:#3b82f6; border:1px solid #bfdbfe;
         }
+        .dp-qi.next .dp-pill { background:#dbeafe; color:#1d4ed8; border-color:#93c5fd; }
 
-        .d-footer {
-          text-align:center; color:#cbd5e1;
-          font-size:12px; padding:10px 0;
+        .dp-footer {
           position:relative; z-index:2;
+          text-align:center; font-size:11px; color:#cbd5e1;
+          padding:6px; border-top:1px solid #f1f5f9; background:white;
         }
       `}</style>
 
-      <div className="display-root" dir="rtl">
-
-        {/* شريط علوي */}
-        <div className="top-bar" />
+      <div className="dp-root" dir="rtl">
+        <div className="dp-topbar" />
 
         {/* هيدر */}
-        <div className="d-header">
-          <div className="d-clinic">
-            <div className="d-logo">🏥</div>
-            {clinicName}
-          </div>
-          <div className="d-time">🕐 {time}</div>
-        </div>
-
-        {/* سماعة طبية خلفية */}
-        <svg className="steth-bg" width="290" viewBox="0 0 200 200" fill="none">
-          <circle cx="100" cy="148" r="32" stroke="#2563eb" strokeWidth="12" />
-          <path d="M52 52 Q52 118 100 118" stroke="#2563eb" strokeWidth="12" strokeLinecap="round" />
-          <path d="M148 52 Q148 118 100 118" stroke="#2563eb" strokeWidth="12" strokeLinecap="round" />
-          <circle cx="52" cy="44" r="12" fill="#2563eb" />
-          <circle cx="148" cy="44" r="12" fill="#2563eb" />
-        </svg>
-
-        {/* قلب نابض */}
-        <div className="heart-bg">
-          <svg width="120" viewBox="0 0 200 200" fill="none">
-            <path d="M100 175 C100 175 15 112 15 62 C15 36 36 20 62 29 C78 34 90 46 100 60 C110 46 122 34 138 29 C164 20 185 36 185 62 C185 112 100 175 100 175Z" fill="#fca5a5" opacity="0.7" />
-            <path d="M100 165 C100 165 25 108 25 65 C25 42 44 28 68 36 C83 41 93 52 100 65 C107 52 117 41 132 36 C156 28 175 42 175 65 C175 108 100 165 100 165Z" fill="#ef4444" opacity="0.85" />
-          </svg>
-        </div>
-
-        {/* خط ECG خلفي */}
-        <svg className="ecg-bg" viewBox="0 0 1440 150" preserveAspectRatio="none">
-          <polyline className="ecg-line"
-            points="0,75 180,75 210,75 232,20 248,130 262,5 278,130 300,75 420,75 450,75 470,38 490,112 510,75 600,75 640,75 660,20 678,130 694,5 710,130 730,75 850,75 882,75 900,38 920,112 940,75 1040,75 1070,75 1090,20 1108,130 1122,5 1138,130 1160,75 1290,75 1310,75 1330,38 1348,112 1370,75 1440,75"
-            fill="none" stroke="#2563eb" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"
-          />
-        </svg>
-
-        {/* المحتوى */}
-        <div className="d-content">
-          <div className="now-label">
-            <span className="live-dot" />
-            يُرجى الدخول الآن
+        <div className="dp-header">
+          {/* يمين — ساعة */}
+          <div className="dp-clock">
+            <AnalogClock />
+            <span className="dp-dot" />
+            <span className="dp-live">مباشر</span>
           </div>
 
-          {/* بطاقة المريض الحالي */}
-          <div className="current-card">
-            <div className="card-glow" />
-            <div className="ripple" />
-            <div className="ripple" />
-            <div className="ripple" />
-            <svg className="card-ecg" height="55" viewBox="0 0 600 55" preserveAspectRatio="none">
-              <polyline className="card-ecg-line"
-                points="0,27 80,27 100,27 112,7 122,48 132,3 142,48 158,27 240,27 260,27 270,12 282,42 294,27 360,27 380,27 392,7 402,48 412,3 422,48 438,27 520,27 540,27 552,12 564,42 576,27 600,27"
-                fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
-              />
-            </svg>
+          {/* وسط — اسم العيادة */}
+          <div className="dp-clinic">
+            <div className="dp-logo">🏥</div>
+            <div className="dp-cname">{data.clinicName || "نظام الانتظار"}</div>
+          </div>
 
-            {data.current ? (
-              <>
-                {data.current.queueNumber !== null && (
-                  <div className="num-badge">{data.current.queueNumber}</div>
-                )}
-                <div className="patient-name">{data.current.name}</div>
-              </>
-            ) : (
-              <div className="empty-text">لا يوجد مريض حالياً</div>
-            )}
+          {/* يسار — التاريخ */}
+          <div className="dp-date">
+            <div className="dp-date-day">{dateDay}</div>
+            <div className="dp-date-full">{dateFull}</div>
+          </div>
+        </div>
+
+        {/* آية قرآنية */}
+        <div className="dp-quran">
+          <div className="dp-bsm">﷽</div>
+          <div className="dp-aya">وَإِذَا مَرِضْتُ فَهُوَ يَشْفِينِ</div>
+          <div className="dp-aya-ref">سورة الشعراء — الآية ٨٠</div>
+        </div>
+
+        {/* المحتوى الرئيسي */}
+        <div className="dp-main">
+          {/* المريض الحالي */}
+          <div className="dp-cur-wrap">
+            <div className="dp-sec-lbl">المريض الحالي</div>
+            <div className="dp-cur-card">
+              <svg className="dp-ecg" height="48" viewBox="0 0 600 48" preserveAspectRatio="none">
+                <polyline className="dp-ecg-p"
+                  points="0,24 80,24 100,24 112,5 122,43 132,2 142,43 158,24 240,24 260,24 270,10 282,38 294,24 360,24 380,24 392,5 402,43 412,2 422,43 438,24 540,24 552,10 564,38 576,24 600,24"
+                  fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"
+                />
+              </svg>
+
+              {data.current ? (
+                <>
+                  <div className="dp-now-tag">
+                    <span className="dp-dot" style={{ background: "white" }} />
+                    يُرجى الدخول الآن
+                  </div>
+                  {data.current.queueNumber !== null && (
+                    <div className="dp-num-ring">{data.current.queueNumber}</div>
+                  )}
+                  <div className="dp-patient-name">{data.current.name}</div>
+                  <div className="dp-patient-sub">تفضل/ي بالدخول للعيادة</div>
+                </>
+              ) : (
+                <div className="dp-empty">لا يوجد مريض حالياً</div>
+              )}
+            </div>
           </div>
 
           {/* قائمة الانتظار */}
-          {data.waiting.length > 0 && (
-            <>
-              <div className="queue-title">التالي في الانتظار</div>
-              {data.waiting.slice(0, 4).map((p, i) => (
-                <div className="queue-item" key={i}>
-                  <div className="q-name">{p.name}</div>
-                  {p.queueNumber !== null && (
-                    <div className="q-num">#{p.queueNumber}</div>
-                  )}
+          <div className="dp-q-wrap">
+            <div className="dp-sec-lbl">قائمة الانتظار</div>
+            <div className="dp-q-list">
+              {waiting.length === 0 ? (
+                <div style={{ textAlign: "center", color: "#94a3b8", marginTop: "40px", fontSize: "14px" }}>
+                  لا يوجد مرضى في الانتظار
+                </div>
+              ) : waiting.map((p, i) => (
+                <div key={i} className={`dp-qi${i === 0 ? " next" : ""}`}>
+                  <div className="dp-qi-num">{p.queueNumber ?? i + 1}</div>
+                  <div className="dp-qi-body">
+                    <div className="dp-qi-name">{p.name}</div>
+                    <div className="dp-qi-st">{i === 0 ? "▶ التالي" : "في الانتظار"}</div>
+                  </div>
+                  <div className="dp-qi-tag">
+                    <span className="dp-pill">{i === 0 ? "التالي" : "انتظار"}</span>
+                  </div>
                 </div>
               ))}
-            </>
-          )}
+            </div>
+          </div>
         </div>
 
-        <div className="d-footer">كلينيك — نظام إدارة العيادة</div>
+        <div className="dp-footer">كلينيك — نظام إدارة العيادة</div>
       </div>
     </>
   );
