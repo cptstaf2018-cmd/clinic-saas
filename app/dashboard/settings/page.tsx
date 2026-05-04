@@ -214,7 +214,7 @@ export default function SettingsPage() {
                 >
                   {uploadingLogo ? "جاري الرفع..." : "رفع شعار"}
                 </button>
-                <p className="text-xs text-gray-400 mt-1.5">JPG, PNG, SVG — حد أقصى 2MB</p>
+                <p className="text-xs text-gray-400 mt-1.5">JPG, PNG, SVG — حد أقصى 512KB</p>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
               </div>
             </div>

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { put } from "@vercel/blob";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -17,20 +16,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "نوع الملف غير مدعوم (JPG, PNG, WEBP, SVG فقط)" }, { status: 400 });
   }
 
-  if (file.size > 2 * 1024 * 1024) {
-    return NextResponse.json({ error: "حجم الصورة يجب أن يكون أقل من 2MB" }, { status: 400 });
+  if (file.size > 512 * 1024) {
+    return NextResponse.json({ error: "حجم الصورة يجب أن يكون أقل من 512KB" }, { status: 400 });
   }
 
-  const blob = await put(
-    `clinics/${session.user.clinicId}/logo-${Date.now()}.${file.type.split("/")[1]}`,
-    file,
-    { access: "public" }
-  );
+  const buffer = await file.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+  const dataUrl = `data:${file.type};base64,${base64}`;
 
   await db.clinic.update({
     where: { id: session.user.clinicId },
-    data: { logoUrl: blob.url },
+    data: { logoUrl: dataUrl },
   });
 
-  return NextResponse.json({ url: blob.url });
+  return NextResponse.json({ url: dataUrl });
 }
