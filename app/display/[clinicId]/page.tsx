@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 interface DisplayData {
   clinicName: string;
+  logoUrl: string | null;
   current: { name: string; queueNumber: number | null } | null;
   waiting: { name: string; queueNumber: number | null }[];
 }
@@ -115,7 +116,7 @@ function AnalogClock() {
 
 export default function DisplayPage({ params }: { params: Promise<{ clinicId: string }> }) {
   const [clinicId, setClinicId] = useState<string | null>(null);
-  const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", current: null, waiting: [] });
+  const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", logoUrl: null, current: null, waiting: [] });
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
 
@@ -381,7 +382,16 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
 
           {/* وسط — اسم العيادة */}
           <div className="dp-clinic">
-            <div className="dp-logo">🏥</div>
+            {data.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={data.logoUrl}
+                alt={data.clinicName}
+                style={{ width: 44, height: 44, borderRadius: 13, objectFit: "contain", background: "white", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
+              />
+            ) : (
+              <div className="dp-logo">🏥</div>
+            )}
             <div className="dp-cname">{data.clinicName || "نظام الانتظار"}</div>
           </div>
 

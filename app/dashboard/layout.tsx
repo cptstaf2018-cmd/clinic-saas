@@ -106,12 +106,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#2563EB] rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-blue-600/40">
-              <svg viewBox="0 0 40 40" fill="none" className="w-5 h-5">
-                <rect x="15" y="4" width="10" height="32" rx="2" fill="white"/>
-                <rect x="4" y="15" width="32" height="10" rx="2" fill="white"/>
-              </svg>
-            </div>
+            {clinic?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={clinic.logoUrl} alt={name} className="w-9 h-9 object-contain rounded-lg shrink-0" />
+            ) : (
+              <div className="w-9 h-9 bg-[#2563EB] rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-blue-600/40">
+                <svg viewBox="0 0 40 40" fill="none" className="w-5 h-5">
+                  <rect x="15" y="4" width="10" height="32" rx="2" fill="white"/>
+                  <rect x="4" y="15" width="32" height="10" rx="2" fill="white"/>
+                </svg>
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-white font-bold text-sm leading-tight truncate">{name}</p>
               <span className={`text-[10px] font-semibold border rounded-full px-2 py-0.5 ${badge.cls}`}>
@@ -154,12 +159,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="flex flex-col flex-1 min-w-0">
         <header className="md:hidden bg-[#0C1F3F] px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-lg">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#2563EB] rounded-lg flex items-center justify-center">
-              <svg viewBox="0 0 40 40" fill="none" className="w-4 h-4">
-                <rect x="15" y="4" width="10" height="32" rx="2" fill="white"/>
-                <rect x="4" y="15" width="32" height="10" rx="2" fill="white"/>
-              </svg>
-            </div>
+            {clinic?.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={clinic.logoUrl} alt={name} className="w-8 h-8 object-contain rounded-lg shrink-0" />
+            ) : (
+              <div className="w-8 h-8 bg-[#2563EB] rounded-lg flex items-center justify-center">
+                <svg viewBox="0 0 40 40" fill="none" className="w-4 h-4">
+                  <rect x="15" y="4" width="10" height="32" rx="2" fill="white"/>
+                  <rect x="4" y="15" width="32" height="10" rx="2" fill="white"/>
+                </svg>
+              </div>
+            )}
             <span className="text-white font-bold text-sm truncate max-w-[160px]">{name}</span>
           </div>
           <span className={`text-[10px] font-bold border rounded-full px-2.5 py-1 ${badge.cls}`}>
