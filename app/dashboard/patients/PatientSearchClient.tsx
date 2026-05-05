@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type Patient = {
   id: string;
@@ -137,6 +138,12 @@ export default function PatientSearchClient({
                       </p>
                     </div>
                     <div className="flex gap-2 shrink-0">
+                      <Link
+                        href={`/dashboard/patients/${p.id}`}
+                        className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                      >
+                        الملف
+                      </Link>
                       <button
                         onClick={() => startEdit(p)}
                         className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-medium transition-colors"
