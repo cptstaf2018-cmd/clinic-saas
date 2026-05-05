@@ -45,6 +45,7 @@ export async function DELETE(
     return NextResponse.json({ error: "المريض غير موجود" }, { status: 404 });
 
   await db.$transaction([
+    db.medicalRecord.deleteMany({ where: { patientId: id, clinicId } }),
     db.appointment.deleteMany({ where: { patientId: id, clinicId } }),
     db.patient.delete({ where: { id } }),
   ]);
