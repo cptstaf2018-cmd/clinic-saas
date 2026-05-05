@@ -19,6 +19,7 @@ model Clinic {
   whatsappWelcomeMessage String?
   appointments           Appointment[]
   incomingMessages       IncomingMessage[]
+  medicalRecords         MedicalRecord[]
   patients               Patient[]
   payments               Payment[]
   subscription           Subscription?
@@ -76,8 +77,9 @@ model Patient {
   name          String
   whatsappPhone String
   createdAt     DateTime      @default(now())
-  appointments  Appointment[]
-  clinic        Clinic        @relation(fields: [clinicId], references: [id])
+  appointments   Appointment[]
+  medicalRecords MedicalRecord[]
+  clinic         Clinic          @relation(fields: [clinicId], references: [id])
 
   @@unique([clinicId, whatsappPhone])
   @@index([clinicId])
@@ -156,4 +158,22 @@ model Payment {
 model PlatformSettings {
   id      String  @id @default("singleton")
   logoUrl String?
+}
+
+model MedicalRecord {
+  id           String   @id @default(cuid())
+  clinicId     String
+  patientId    String
+  date         DateTime @default(now())
+  complaint    String
+  diagnosis    String?
+  prescription String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  clinic       Clinic   @relation(fields: [clinicId], references: [id])
+  patient      Patient  @relation(fields: [patientId], references: [id])
+
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([clinicId, patientId])
 }
