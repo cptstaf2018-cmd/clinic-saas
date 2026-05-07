@@ -33,6 +33,7 @@ export async function DELETE() {
   // Delete all data for all clinics in one transaction
   await db.$transaction([
     db.whatsappSession.deleteMany({ where: { clinicId: { in: ids } } }),
+    db.incomingMessage.deleteMany({ where: { clinicId: { in: ids } } }),
     db.medicalRecord.deleteMany({ where: { clinicId: { in: ids } } }),
     db.appointment.deleteMany({ where: { clinicId: { in: ids } } }),
     db.patient.deleteMany({ where: { clinicId: { in: ids } } }),
