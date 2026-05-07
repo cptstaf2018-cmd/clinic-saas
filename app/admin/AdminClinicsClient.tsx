@@ -76,54 +76,101 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
     if (!editId) return;
     setActionLoading(editId + "_edit");
     setError("");
-    const res = await fetch(`/api/admin/clinics/${editId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "edit",
-        name: editName,
-        whatsappNumber: editWhatsapp,
-        plan: editPlan,
-        status: editStatus,
-        expiresAt: editExpires ? new Date(editExpires).toISOString() : undefined,
-      }),
-    });
-    if (res.ok) { setEditId(null); router.refresh(); }
-    else { const d = await res.json(); setError(d.error ?? "حدث خطأ"); }
+    try {
+      const res = await fetch(`/api/admin/clinics/${editId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "edit",
+          name: editName,
+          whatsappNumber: editWhatsapp,
+          plan: editPlan,
+          status: editStatus,
+          expiresAt: editExpires ? new Date(editExpires).toISOString() : undefined,
+        }),
+      });
+      if (res.ok) {
+        setClinics((prev) => prev.map((c) =>
+          c.id === editId ? {
+            ...c,
+            name: editName,
+            whatsappNumber: editWhatsapp,
+            subscription: {
+              plan: editPlan,
+              status: editStatus,
+              expiresAt: editExpires ? new Date(editExpires).toISOString() : (c.subscription?.expiresAt ?? ""),
+            },
+          } : c
+        ));
+        setEditId(null);
+        router.refresh();
+      } else {
+        const d = await res.json();
+        setError(d.error ?? "حدث خطأ");
+      }
+    } catch {
+      setError("حدث خطأ في الاتصال");
+    }
     setActionLoading(null);
   }
 
   async function toggleStatus(clinic: Clinic) {
     const status = clinic.subscription?.status;
     const action = status === "active" ? "deactivate" : "activate";
+    const newStatus = action === "activate" ? "active" : "inactive";
     setActionLoading(clinic.id + "_toggle");
-    await fetch(`/api/admin/clinics/${clinic.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    });
+    try {
+      const res = await fetch(`/api/admin/clinics/${clinic.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) {
+        setClinics((prev) => prev.map((c) =>
+          c.id === clinic.id
+            ? { ...c, subscription: c.subscription ? { ...c.subscription, status: newStatus } : null }
+            : c
+        ));
+        router.refresh();
+      }
+    } catch {
+      setError("حدث خطأ في الاتصال");
+    }
     setActionLoading(null);
-    router.refresh();
   }
 
   async function deleteClinic(id: string) {
     setActionLoading(id + "_delete");
-    const res = await fetch(`/api/admin/clinics/${id}`, { method: "DELETE" });
-    if (res.ok) { setClinics((prev) => prev.filter((c) => c.id !== id)); setDeleteId(null); }
-    else { const d = await res.json(); setError(d.error ?? "حدث خطأ"); }
+    try {
+      const res = await fetch(`/api/admin/clinics/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setClinics((prev) => prev.filter((c) => c.id !== id));
+        setDeleteId(null);
+        router.refresh();
+      } else {
+        const d = await res.json();
+        setError(d.error ?? "حدث خطأ");
+      }
+    } catch {
+      setError("حدث خطأ في الاتصال");
+    }
     setActionLoading(null);
   }
 
   async function deleteAll() {
     setDeletingAll(true);
-    const res = await fetch("/api/admin/clinics", { method: "DELETE" });
-    if (res.ok) {
-      setClinics([]);
-      setShowDeleteAll(false);
-      setDeleteAllConfirm("");
-    } else {
-      const d = await res.json();
-      setError(d.error ?? "حدث خطأ");
+    try {
+      const res = await fetch("/api/admin/clinics", { method: "DELETE" });
+      if (res.ok) {
+        setClinics([]);
+        setShowDeleteAll(false);
+        setDeleteAllConfirm("");
+      } else {
+        const d = await res.json();
+        setError(d.error ?? "حدث خطأ");
+      }
+    } catch {
+      setError("حدث خطأ في الاتصال");
     }
     setDeletingAll(false);
   }

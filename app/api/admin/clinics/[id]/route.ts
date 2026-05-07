@@ -92,6 +92,7 @@ export async function DELETE(
   // Delete all related data in correct order
   await db.$transaction([
     db.whatsappSession.deleteMany({ where: { clinicId: id } }),
+    db.medicalRecord.deleteMany({ where: { clinicId: id } }),
     db.appointment.deleteMany({ where: { clinicId: id } }),
     db.patient.deleteMany({ where: { clinicId: id } }),
     db.workingHours.deleteMany({ where: { clinicId: id } }),
