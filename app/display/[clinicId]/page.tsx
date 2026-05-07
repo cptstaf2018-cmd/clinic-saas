@@ -139,7 +139,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   }, [clinicId]);
 
   async function announcePatient(name: string) {
-    const text = `المريض ${name} ... تفضل من فضلك`;
+    const text = `المريض ${name}، تفضل من فضلك`;
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {

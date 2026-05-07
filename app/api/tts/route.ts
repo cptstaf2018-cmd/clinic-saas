@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   const apiKey = process.env.VOICERSS_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "not_configured" }, { status: 503 });
 
-  const url = `https://api.voicerss.org/?key=${apiKey}&hl=ar-sa&src=${encodeURIComponent(text)}&c=MP3&f=44khz_16bit_stereo&r=-2`;
+  const url = `https://api.voicerss.org/?key=${apiKey}&hl=ar-sa&src=${encodeURIComponent(text)}&c=MP3&f=48khz_16bit_stereo&r=0`;
 
   const res = await fetch(url);
 
