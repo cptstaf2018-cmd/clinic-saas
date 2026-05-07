@@ -121,6 +121,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [dateFull, setDateFull] = useState("");
   const prevPatientRef = useRef<string | null | undefined>(undefined);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioUnlockedRef = useRef(false);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
@@ -137,29 +138,34 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, [clinicId]);
 
-  function unlockAndSpeak(text: string) {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const speak = () => {
+  async function announcePatient(name: string) {
+    const text = `المريض ${name} ... تفضل من فضلك`;
+    try {
+      const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        await audio.play();
+        return;
+      }
+    } catch {}
+    // Fallback: Web Speech API
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "ar-SA";
       u.rate = 0.82;
-      u.pitch = 1;
-      u.volume = 1;
       window.speechSynthesis.speak(u);
-    };
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0) { speak(); }
-    else { window.speechSynthesis.addEventListener("voiceschanged", speak, { once: true }); setTimeout(speak, 300); }
+    }
   }
 
   function enableSound() {
-    if (!("speechSynthesis" in window)) return;
-    // تشغيل نطق صامت لفتح الصوت على iOS/Android
-    const u = new SpeechSynthesisUtterance(" ");
-    u.lang = "ar-SA";
-    u.volume = 0;
-    window.speechSynthesis.speak(u);
+    // فتح audio context على iOS بضغطة المستخدم
+    const silent = new Audio();
+    silent.play().catch(() => {});
+    audioUnlockedRef.current = true;
     setSoundEnabled(true);
   }
 
@@ -171,7 +177,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
       return;
     }
     if (name && name !== prevPatientRef.current && soundEnabled) {
-      unlockAndSpeak(`المريض ${name} ... تفضل من فضلك`);
+      announcePatient(name);
     }
     prevPatientRef.current = name;
   // eslint-disable-next-line react-hooks/exhaustive-deps

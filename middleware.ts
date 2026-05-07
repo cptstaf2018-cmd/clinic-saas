@@ -16,6 +16,7 @@ export async function middleware(req: NextRequest) {
     "/api/payments/superkey-webhook",
     "/api/display",
     "/api/cron",
+    "/api/tts",
   ];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
