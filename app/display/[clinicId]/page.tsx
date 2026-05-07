@@ -138,8 +138,18 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, [clinicId]);
 
+  function isFemale(name: string): boolean {
+    const first = name.trim().split(" ")[0];
+    if (first.endsWith("ة") || first.endsWith("اء") || first.endsWith("ى") || first.endsWith("ين")) return true;
+    const knownFemale = ["زينب","مريم","هند","ريم","نور","سمر","ندى","رنا","لين","أمل","بتول","وفاء","منى","رغد","شيماء","دينا","صفاء","رهف","لمى","غادة","ميساء","تبارك","رقية","سكينة","رباب","إيناس","حنان","سناء","إلهام","هيفاء","ديمة","شذى","نجلاء","وداد","سحر","إيمان","صبا","نجوى","رفاه","ورود","عبير","ولاء"];
+    return knownFemale.includes(first);
+  }
+
   async function announcePatient(name: string) {
-    const text = `المريض ${name}، تفضل من فضلك`;
+    const female = isFemale(name);
+    const title = female ? "المريضة" : "المريض";
+    const verb  = female ? "تفضلي" : "تفضل";
+    const text  = `${title} ${name}، ${verb} من فضلك`;
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
