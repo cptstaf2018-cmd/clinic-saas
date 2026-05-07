@@ -146,10 +146,12 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   }
 
   async function announcePatient(name: string) {
-    const female = isFemale(name);
+    // أخذ الاسم العربي فقط — حذف الأرقام والشرطات والرموز
+    const cleanName = name.replace(/[\d\-_\/\\]+/g, "").replace(/\s+/g, " ").trim();
+    const female = isFemale(cleanName);
     const title = female ? "المريضة" : "المريض";
     const verb  = female ? "تفضلي" : "تفضل";
-    const text  = `${title} ${name}، ${verb} من فضلك`;
+    const text  = `${title} ${cleanName}، ${verb} من فضلك`;
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
