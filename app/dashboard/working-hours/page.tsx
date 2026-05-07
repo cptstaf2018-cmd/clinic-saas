@@ -47,8 +47,8 @@ export default function WorkingHoursPage() {
               (d) =>
                 map[d] ?? {
                   dayOfWeek: d,
-                  startTime: "09:00",
-                  endTime: "17:00",
+                  startTime: "16:00",
+                  endTime: "21:00",
                   isOpen: d !== 5,
                 }
             )

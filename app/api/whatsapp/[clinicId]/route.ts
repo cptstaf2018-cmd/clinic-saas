@@ -273,9 +273,21 @@ export async function POST(
     // format: awaiting_slot|YYYY-MM-DD|HH:mm,HH:mm,...|patientId
     const parts = step.split("|");
     const datePrefix = parts[1]; // YYYY-MM-DD
-    const slots = parts[2].split(","); // ["09:00","09:30",...]
+    const slots = parts[2].split(","); // ["15:00","15:20",...]
     const patientId = parts[3];
     const choice = parseInt(messageBody, 10);
+
+    // Greeting/restart words → reset session and start fresh
+    const RESTART_WORDS = ["مرحبا", "مرحباً", "هلا", "السلام", "اهلا", "أهلا", "hi", "hello", "هاي", "ابدأ", "ابدا"];
+    if (RESTART_WORDS.some(w => messageBody.trim().toLowerCase() === w)) {
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
+      const { message, slots: newSlots, datePrefix: newPrefix } = await getNextSlotsMessage(clinicId);
+      const patient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
+      const nextStep = newSlots.length ? `awaiting_slot|${newPrefix}|${newSlots.join(",")}|${patientId}` : "done";
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: nextStep } });
+      await reply(`أهلاً ${patient?.name ?? ""}! 👋\n\n${message}`);
+      return NextResponse.json({ ok: true });
+    }
 
     if (isNaN(choice) || choice < 1 || choice > slots.length) {
       const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
