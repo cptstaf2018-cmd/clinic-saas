@@ -120,10 +120,32 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
   const prevPatientRef = useRef<string | null | undefined>(undefined);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const audioUnlockedRef = useRef(false);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
+
+  // فتح الصوت تلقائياً عند أول تفاعل مع الصفحة (نقرة أو لمس)
+  useEffect(() => {
+    function unlockOnInteraction() {
+      if (audioUnlockedRef.current) return;
+      audioUnlockedRef.current = true;
+      const silent = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+      silent.play().catch(() => {});
+      if ("speechSynthesis" in window) {
+        const u = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(u);
+      }
+    }
+    document.addEventListener("click", unlockOnInteraction, { once: true });
+    document.addEventListener("touchstart", unlockOnInteraction, { once: true });
+    document.addEventListener("keydown", unlockOnInteraction, { once: true });
+    return () => {
+      document.removeEventListener("click", unlockOnInteraction);
+      document.removeEventListener("touchstart", unlockOnInteraction);
+      document.removeEventListener("keydown", unlockOnInteraction);
+    };
+  }, []);
 
   useEffect(() => {
     if (!clinicId) return;
@@ -171,14 +193,6 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
       u.rate = 0.82;
       window.speechSynthesis.speak(u);
     }
-  }
-
-  function enableSound() {
-    // فتح audio context على iOS بضغطة المستخدم
-    const silent = new Audio();
-    silent.play().catch(() => {});
-    audioUnlockedRef.current = true;
-    setSoundEnabled(true);
   }
 
   // نداء صوتي عند تغيّر المريض الحالي
@@ -439,27 +453,6 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
             <AnalogClock />
             <span className="dp-dot" />
             <span className="dp-live">مباشر</span>
-            <button
-              onClick={enableSound}
-              title={soundEnabled ? "الصوت مفعّل" : "اضغط لتفعيل الصوت"}
-              style={{
-                marginRight: 6,
-                background: soundEnabled ? "#dcfce7" : "#fef9c3",
-                border: `1.5px solid ${soundEnabled ? "#86efac" : "#fde047"}`,
-                borderRadius: 10,
-                padding: "4px 10px",
-                fontSize: 13,
-                fontWeight: 700,
-                color: soundEnabled ? "#15803d" : "#a16207",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {soundEnabled ? "🔊 صوت مفعّل" : "🔇 فعّل الصوت"}
-            </button>
           </div>
 
           {/* وسط — اسم العيادة */}
