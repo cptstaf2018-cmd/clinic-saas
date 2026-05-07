@@ -14,18 +14,42 @@ function normalizePhone(raw: string): string {
   return digits;
 }
 
-function generateSlots(startTime: string, endTime: string, takenTimes: Date[]): string[] {
+const IRAQ_OFFSET = 3 * 60; // UTC+3 in minutes
+
+function toIraqMinutes(date: Date): number {
+  return date.getUTCHours() * 60 + date.getUTCMinutes() + IRAQ_OFFSET;
+}
+
+function generateSlots(
+  startTime: string,
+  endTime: string,
+  takenTimes: Date[],
+  isToday: boolean,
+  nowUtc: Date
+): string[] {
   const [startH, startM] = startTime.split(":").map(Number);
   const [endH, endM] = endTime.split(":").map(Number);
   const startMin = startH * 60 + startM;
   const endMin = endH * 60 + endM;
 
+  // Current Iraq time in minutes (to skip past slots for today)
+  const nowIraqMin = isToday
+    ? nowUtc.getUTCHours() * 60 + nowUtc.getUTCMinutes() + IRAQ_OFFSET
+    : 0;
+
+  // Taken slots in Iraq local time
   const takenSet = new Set(
-    takenTimes.map((d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`)
+    takenTimes.map((d) => {
+      const iraqMin = toIraqMinutes(d);
+      const h = Math.floor(iraqMin / 60) % 24;
+      const m = iraqMin % 60;
+      return `${h}:${String(m).padStart(2, "0")}`;
+    })
   );
 
   const slots: string[] = [];
   for (let m = startMin; m < endMin && slots.length < 8; m += 20) {
+    if (isToday && m <= nowIraqMin) continue; // skip past slots
     const h = Math.floor(m / 60);
     const min = m % 60;
     const key = `${h}:${String(min).padStart(2, "0")}`;
@@ -47,25 +71,34 @@ function formatSlot(time: string): string {
 async function getNextSlotsMessage(
   clinicId: string
 ): Promise<{ message: string; slots: string[]; datePrefix: string }> {
+  const nowUtc = new Date();
+  // Shift to Iraq time (UTC+3) so getUTC* methods return Iraq date/time
+  const IRAQ_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const nowIraq = new Date(nowUtc.getTime() + IRAQ_OFFSET_MS);
+
   for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
-    const target = new Date();
-    target.setDate(target.getDate() + daysAhead);
-    target.setHours(0, 0, 0, 0);
+    // Iraq calendar date for this iteration
+    const iraqTarget = new Date(nowIraq.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+    const iraqY = iraqTarget.getUTCFullYear();
+    const iraqMo = iraqTarget.getUTCMonth();
+    const iraqD = iraqTarget.getUTCDate();
+    const dayOfWeek = iraqTarget.getUTCDay();
+
+    // UTC window covering this Iraq calendar day (Iraq 00:00 = UTC 21:00 prev day)
+    const utcStart = new Date(Date.UTC(iraqY, iraqMo, iraqD, -3, 0, 0, 0));
+    const utcEnd = new Date(utcStart.getTime() + 24 * 60 * 60 * 1000 - 1);
 
     const wh = await db.workingHours.findUnique({
-      where: { clinicId_dayOfWeek: { clinicId, dayOfWeek: target.getDay() } },
+      where: { clinicId_dayOfWeek: { clinicId, dayOfWeek } },
     });
     if (!wh?.isOpen) continue;
 
-    const dayEnd = new Date(target);
-    dayEnd.setHours(23, 59, 59, 999);
-
     const taken = await db.appointment.findMany({
-      where: { clinicId, date: { gte: target, lte: dayEnd }, status: { not: "cancelled" } },
+      where: { clinicId, date: { gte: utcStart, lte: utcEnd }, status: { not: "cancelled" } },
       select: { date: true },
     });
 
-    const slots = generateSlots(wh.startTime, wh.endTime, taken.map((a: { date: Date }) => a.date));
+    const slots = generateSlots(wh.startTime, wh.endTime, taken.map((a: { date: Date }) => a.date), daysAhead === 0, nowUtc);
     if (!slots.length) continue;
 
     const isToday = daysAhead === 0;
@@ -74,9 +107,9 @@ async function getNextSlotsMessage(
       ? "اليوم"
       : isTomorrow
       ? "غداً"
-      : target.toLocaleDateString("ar-IQ", { weekday: "long" });
+      : iraqTarget.toLocaleDateString("ar-IQ", { weekday: "long", timeZone: "UTC" });
 
-    const dateStr = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}-${String(target.getDate()).padStart(2, "0")}`;
+    const dateStr = `${iraqY}-${String(iraqMo + 1).padStart(2, "0")}-${String(iraqD).padStart(2, "0")}`;
 
     const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
     return {
@@ -172,8 +205,8 @@ export async function POST(
     if (patient) {
       const upcoming = patient.appointments[0];
       if (upcoming) {
-        const dateStr = upcoming.date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-        const timeStr = upcoming.date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = upcoming.date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Baghdad" });
+        const timeStr = upcoming.date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Baghdad" });
         await db.whatsappSession.upsert({
           where: { clinicId_phone: { clinicId, phone } },
           update: { step: "confirm_new" },
@@ -252,10 +285,12 @@ export async function POST(
 
     const [year, month, day] = datePrefix.split("-").map(Number);
     const [h, m] = slots[choice - 1].split(":").map(Number);
-    const date = new Date(year, month - 1, day, h, m, 0, 0);
+    // datePrefix and slots are in Iraq time (UTC+3); convert to UTC for storage
+    const date = new Date(Date.UTC(year, month - 1, day, h - 3, m, 0, 0));
 
-    const dayStart = new Date(year, month - 1, day, 0, 0, 0, 0);
-    const dayEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
+    // Iraq day bounds in UTC (Iraq 00:00 = UTC 21:00 prev day)
+    const dayStart = new Date(Date.UTC(year, month - 1, day, -3, 0, 0, 0));
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
 
     const bookedPatient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
 
@@ -291,8 +326,8 @@ export async function POST(
 
     await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
 
-    const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
+    const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Baghdad" });
+    const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Baghdad" });
     await reply(`✅ أهلاً ${bookedPatient?.name ?? ""}!\nتم تأكيد حجز موعدك في ${clinic.name}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nنراك قريباً، بالشفاء والعافية 🌟`);
     return NextResponse.json({ ok: true });
   }
