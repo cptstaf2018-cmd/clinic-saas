@@ -35,6 +35,7 @@ export default async function DashboardPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const serialized = appointments.map((a: any) => ({
     id: a.id,
+    patientId: a.patientId,
     patientName: a.patient.name,
     patientPhone: a.patient.whatsappPhone,
     date: a.date.toISOString(),
