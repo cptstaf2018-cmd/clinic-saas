@@ -9,6 +9,7 @@ type MedicalRecord = {
   diagnosis: string | null;
   prescription: string | null;
   notes: string | null;
+  followUpDate: string | null;
 };
 
 type FormState = {
@@ -17,6 +18,7 @@ type FormState = {
   prescription: string;
   notes: string;
   date: string;
+  followUpDate: string;
 };
 
 function emptyForm(): FormState {
@@ -26,6 +28,7 @@ function emptyForm(): FormState {
     prescription: "",
     notes: "",
     date: new Date().toISOString().slice(0, 10),
+    followUpDate: "",
   };
 }
 
@@ -69,6 +72,7 @@ export default function MedicalRecordsClient({
       prescription: r.prescription ?? "",
       notes: r.notes ?? "",
       date: r.date.slice(0, 10),
+      followUpDate: r.followUpDate ? r.followUpDate.slice(0, 10) : "",
     });
     setError("");
   }
@@ -264,7 +268,18 @@ export default function MedicalRecordsClient({
                             <p className="text-sm text-gray-700">{r.notes}</p>
                           </div>
                         )}
-                        {!r.diagnosis && !r.prescription && !r.notes && (
+                        {r.followUpDate && (
+                          <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth={2} className="w-4 h-4 shrink-0">
+                              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <div>
+                              <p className="text-[11px] font-bold text-blue-600">موعد المراجعة القادمة</p>
+                              <p className="text-sm font-semibold text-blue-800">{formatDate(r.followUpDate)}</p>
+                            </div>
+                          </div>
+                        )}
+                        {!r.diagnosis && !r.prescription && !r.notes && !r.followUpDate && (
                           <p className="text-xs text-gray-400">لا توجد تفاصيل إضافية</p>
                         )}
                       </div>
@@ -376,6 +391,23 @@ function RecordForm({
             rows={2}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
           />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-bold text-blue-600 mb-1">
+            📅 موعد المراجعة القادمة <span className="text-gray-400 font-normal">(اختياري)</span>
+          </label>
+          <input
+            type="date"
+            {...field("followUpDate")}
+            min={new Date().toISOString().slice(0, 10)}
+            className="w-full border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            dir="ltr"
+          />
+          {form.followUpDate && (
+            <p className="text-xs text-blue-600 mt-1">
+              ✓ سيُنشأ حجز مراجعة تلقائياً ويُرسل تذكير قبل 24 ساعة
+            </p>
+          )}
         </div>
       </div>
       <div className="flex gap-2 pt-1">

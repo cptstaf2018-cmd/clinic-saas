@@ -379,24 +379,6 @@ export default function SettingsPage() {
       {/* ── REMINDERS TAB ── */}
       {tab === "reminders" && (
         <>
-          <Section title="إرسال تذكير جماعي" description="إرسال تذكير واتساب لجميع مرضى اليوم دفعة واحدة">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4 text-xs text-yellow-800">
-              سيتم إرسال تذكير لكل مريض لديه موعد اليوم بحالة (معلق أو مؤكد)
-            </div>
-            {remindResult && (
-              <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-3">
-                {remindResult} ✓
-              </div>
-            )}
-            <button
-              onClick={sendRemindAll}
-              disabled={reminding}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm disabled:opacity-50 transition-colors"
-            >
-              {reminding ? "جاري الإرسال..." : "📤 إرسال تذكير لجميع مرضى اليوم"}
-            </button>
-          </Section>
-
           <Section title="التذكيرات التلقائية" description="تعمل تلقائياً للباقة المتوسطة والمميزة">
             <div className="space-y-3">
               {[

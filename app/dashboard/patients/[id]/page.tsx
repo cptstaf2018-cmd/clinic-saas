@@ -52,6 +52,7 @@ export default async function PatientProfilePage({
     diagnosis: r.diagnosis,
     prescription: r.prescription,
     notes: r.notes,
+    followUpDate: r.followUpDate ? r.followUpDate.toISOString() : null,
   }));
 
   return (

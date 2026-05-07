@@ -17,7 +17,7 @@ export async function PATCH(
   if (!record)
     return NextResponse.json({ error: "السجل غير موجود" }, { status: 404 });
 
-  const { complaint, diagnosis, prescription, notes, date } = await req.json();
+  const { complaint, diagnosis, prescription, notes, date, followUpDate } = await req.json();
   if (!complaint?.trim())
     return NextResponse.json({ error: "الشكوى مطلوبة" }, { status: 400 });
 
@@ -29,8 +29,30 @@ export async function PATCH(
       prescription: prescription?.trim() || null,
       notes: notes?.trim() || null,
       date: date ? new Date(date) : record.date,
+      followUpDate: followUpDate ? new Date(followUpDate) : null,
     },
   });
+
+  // إذا تغيّر موعد المراجعة → أنشئ حجز جديد
+  const oldFollowUp = record.followUpDate?.toISOString().slice(0, 10);
+  const newFollowUp = followUpDate || null;
+  if (newFollowUp && newFollowUp !== oldFollowUp) {
+    const followDate = new Date(newFollowUp);
+    followDate.setHours(9, 0, 0, 0);
+    const start = new Date(followDate); start.setHours(0, 0, 0, 0);
+    const end   = new Date(followDate); end.setHours(23, 59, 59, 999);
+    const count = await db.appointment.count({ where: { clinicId, date: { gte: start, lte: end } } });
+    await db.appointment.create({
+      data: {
+        clinicId,
+        patientId: record.patientId,
+        date: followDate,
+        status: "confirmed",
+        queueNumber: count + 1,
+        queueStatus: "waiting",
+      },
+    });
+  }
 
   return NextResponse.json(updated);
 }

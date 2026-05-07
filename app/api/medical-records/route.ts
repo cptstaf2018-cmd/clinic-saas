@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
   const clinicId = session.user.clinicId as string;
-  const { patientId, complaint, diagnosis, prescription, notes, date } =
+  const { patientId, complaint, diagnosis, prescription, notes, date, followUpDate } =
     await req.json();
 
   if (!patientId || !complaint?.trim())
@@ -51,8 +51,31 @@ export async function POST(req: Request) {
       prescription: prescription?.trim() || null,
       notes: notes?.trim() || null,
       date: date ? new Date(date) : new Date(),
+      followUpDate: followUpDate ? new Date(followUpDate) : null,
     },
   });
+
+  // إنشاء موعد مراجعة تلقائي إذا حُدّد تاريخ
+  if (followUpDate) {
+    const followDate = new Date(followUpDate);
+    followDate.setHours(9, 0, 0, 0); // الساعة 9 صباحاً افتراضياً
+
+    // احسب رقم الدور لهذا اليوم
+    const start = new Date(followDate); start.setHours(0, 0, 0, 0);
+    const end   = new Date(followDate); end.setHours(23, 59, 59, 999);
+    const count = await db.appointment.count({ where: { clinicId, date: { gte: start, lte: end } } });
+
+    await db.appointment.create({
+      data: {
+        clinicId,
+        patientId,
+        date: followDate,
+        status: "confirmed",
+        queueNumber: count + 1,
+        queueStatus: "waiting",
+      },
+    });
+  }
 
   return NextResponse.json(record, { status: 201 });
 }

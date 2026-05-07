@@ -169,6 +169,7 @@ model MedicalRecord {
   diagnosis    String?
   prescription String?
   notes        String?
+  followUpDate DateTime?
   createdAt    DateTime @default(now())
   clinic       Clinic   @relation(fields: [clinicId], references: [id])
   patient      Patient  @relation(fields: [patientId], references: [id])
