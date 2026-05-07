@@ -120,6 +120,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
   const prevPatientRef = useRef<string | null | undefined>(undefined);
+  const [soundEnabled, setSoundEnabled] = useState(false);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
@@ -136,6 +137,32 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, [clinicId]);
 
+  function unlockAndSpeak(text: string) {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const speak = () => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ar-SA";
+      u.rate = 0.82;
+      u.pitch = 1;
+      u.volume = 1;
+      window.speechSynthesis.speak(u);
+    };
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) { speak(); }
+    else { window.speechSynthesis.addEventListener("voiceschanged", speak, { once: true }); setTimeout(speak, 300); }
+  }
+
+  function enableSound() {
+    if (!("speechSynthesis" in window)) return;
+    // تشغيل نطق صامت لفتح الصوت على iOS/Android
+    const u = new SpeechSynthesisUtterance(" ");
+    u.lang = "ar-SA";
+    u.volume = 0;
+    window.speechSynthesis.speak(u);
+    setSoundEnabled(true);
+  }
+
   // نداء صوتي عند تغيّر المريض الحالي
   useEffect(() => {
     const name = data.current?.name ?? null;
@@ -143,17 +170,12 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
       prevPatientRef.current = name;
       return;
     }
-    if (name && name !== prevPatientRef.current && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(`المريض ${name} ... تفضل من فضلك`);
-      u.lang = "ar-SA";
-      u.rate = 0.82;
-      u.pitch = 1;
-      u.volume = 1;
-      window.speechSynthesis.speak(u);
+    if (name && name !== prevPatientRef.current && soundEnabled) {
+      unlockAndSpeak(`المريض ${name} ... تفضل من فضلك`);
     }
     prevPatientRef.current = name;
-  }, [data.current]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.current, soundEnabled]);
 
   useEffect(() => {
     const update = () => {
@@ -394,11 +416,32 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
 
         {/* هيدر */}
         <div className="dp-header">
-          {/* يمين — ساعة */}
+          {/* يمين — ساعة + زر الصوت */}
           <div className="dp-clock">
             <AnalogClock />
             <span className="dp-dot" />
             <span className="dp-live">مباشر</span>
+            <button
+              onClick={enableSound}
+              title={soundEnabled ? "الصوت مفعّل" : "اضغط لتفعيل الصوت"}
+              style={{
+                marginRight: 6,
+                background: soundEnabled ? "#dcfce7" : "#fef9c3",
+                border: `1.5px solid ${soundEnabled ? "#86efac" : "#fde047"}`,
+                borderRadius: 10,
+                padding: "4px 10px",
+                fontSize: 13,
+                fontWeight: 700,
+                color: soundEnabled ? "#15803d" : "#a16207",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {soundEnabled ? "🔊 صوت مفعّل" : "🔇 فعّل الصوت"}
+            </button>
           </div>
 
           {/* وسط — اسم العيادة */}
