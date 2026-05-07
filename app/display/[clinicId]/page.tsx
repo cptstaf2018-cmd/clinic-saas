@@ -119,6 +119,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", logoUrl: null, current: null, waiting: [] });
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
+  const prevPatientRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
@@ -134,6 +135,25 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     const t = setInterval(fetch_, 5000);
     return () => clearInterval(t);
   }, [clinicId]);
+
+  // نداء صوتي عند تغيّر المريض الحالي
+  useEffect(() => {
+    const name = data.current?.name ?? null;
+    if (prevPatientRef.current === undefined) {
+      prevPatientRef.current = name;
+      return;
+    }
+    if (name && name !== prevPatientRef.current && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(`المريض ${name} ... تفضل من فضلك`);
+      u.lang = "ar-SA";
+      u.rate = 0.82;
+      u.pitch = 1;
+      u.volume = 1;
+      window.speechSynthesis.speak(u);
+    }
+    prevPatientRef.current = name;
+  }, [data.current]);
 
   useEffect(() => {
     const update = () => {
