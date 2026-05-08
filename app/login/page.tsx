@@ -26,7 +26,8 @@ function LoginForm() {
     try {
       const result = await loginAction(new FormData(e.currentTarget));
       if (result) { setError(result); setLoading(false); }
-    } catch {
+    } catch (err: any) {
+      if (err?.digest?.startsWith("NEXT_REDIRECT")) return;
       setError("حدث خطأ في الاتصال، حاول مجدداً");
       setLoading(false);
     }

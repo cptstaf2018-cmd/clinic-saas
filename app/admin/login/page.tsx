@@ -15,7 +15,8 @@ export default function AdminLoginPage() {
       const form = new FormData(e.currentTarget);
       const result = await loginAction(form);
       if (result) { setError(result); setLoading(false); }
-    } catch {
+    } catch (err: any) {
+      if (err?.digest?.startsWith("NEXT_REDIRECT")) return;
       setError("حدث خطأ في الاتصال");
       setLoading(false);
     }
