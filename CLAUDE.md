@@ -357,8 +357,85 @@ Build only:
 
 ## Out of Scope for MVP
 
-- Medical records / diagnoses (متوسطة plan — phase 2)
-- Reports (مميزة plan — phase 2)
 - Staff roles and permissions
 - File attachments
 - Dark mode
+
+---
+
+## Implemented Features (Beyond Original MVP)
+
+### Medical Records ✅
+- Full CRUD for medical records per patient
+- Fields: complaint, diagnosis, prescription, notes, visitDate, **followUpDate**
+- `followUpDate` auto-creates an Appointment and triggers individual WhatsApp reminder 24h before
+- Schema: `MedicalRecord.followUpDate DateTime?` added and migrated
+
+### Follow-Up Appointments ✅
+- Set from inside the medical record form
+- Creates a confirmed Appointment automatically
+- Existing cron handles 24h and 1h reminders individually per patient
+- NO group/bulk reminder feature — reminders are always per-patient only
+
+### Waiting Room Display `/display/[clinicId]` ✅
+- Public page, no auth required
+- Auto-polls every 5 seconds
+- Sound always enabled — first touch/click on screen unlocks browser audio
+- TTS strips numbers/dashes from patient name before announcing
+- Announces: "المريض [name]، تفضل من فضلك" (gender-aware)
+
+### Super Admin Impersonation ✅
+- `/api/admin/enter/[clinicId]` — enters clinic as their doctor user
+- Saves superadmin JWT in `sa-backup` cookie before replacing main cookie
+- Subsequent clinic entries check `sa-backup` if main cookie is not superadmin
+- Admin can enter multiple clinics without re-logging in
+
+### Dashboard UX ✅
+- Completed/cancelled appointments slide out of today's list with animation
+- Toast notification with link to patient profile after completing appointment
+- `DashboardNav` (client component) highlights active section with blue dot
+- Patient name in today's list is a clickable link to patient profile
+
+---
+
+## Routing Architecture
+
+```
+app/
+├── admin/
+│   ├── (dashboard)/          ← Protected by layout (superadmin only)
+│   │   ├── layout.tsx
+│   │   ├── page.tsx          → /admin
+│   │   ├── payments/         → /admin/payments
+│   │   ├── codes/            → /admin/codes
+│   │   └── settings/         → /admin/settings
+│   └── login/                → /admin/login (PUBLIC — no layout)
+├── dashboard/                ← Clinic staff (clinicId required)
+│   ├── layout.tsx
+│   ├── DashboardNav.tsx      ← Client component for active nav state
+│   ├── TodayAppointmentsClient.tsx
+│   ├── patients/
+│   │   └── [id]/
+│   │       ├── page.tsx
+│   │       └── MedicalRecordsClient.tsx
+│   └── ...
+└── display/[clinicId]/       ← PUBLIC — no auth
+```
+
+---
+
+## Important Rules (Learned from Experience)
+
+1. **Never send group WhatsApp reminders** — always individual per patient
+2. **Admin impersonation uses `sa-backup` cookie** — do not simplify away this logic
+3. **`/admin/login` must be outside the admin layout** — otherwise redirect loop
+4. **Always run `prisma generate` after schema changes** — generated client in `app/generated/prisma/`
+5. **Seed data must not append numbers to Arabic names** — they appear on TV screen and TTS
+
+---
+
+## Deployed URL
+
+- **Production**: https://clinicplt.vercel.app
+- **Admin**: https://clinicplt.vercel.app/admin/login
+- **Last deployed**: 2026-05-08
