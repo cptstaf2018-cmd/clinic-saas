@@ -94,35 +94,33 @@ export default function AppointmentsPage() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">الحجوزات</h1>
+        <h1 className="text-2xl font-black text-gray-900">الحجوزات</h1>
         <p className="text-sm text-gray-400 mt-0.5">إدارة جميع مواعيد العيادة</p>
       </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-4 gap-3 mb-6">
         {[
-          { label: "الإجمالي", value: total, color: "text-gray-800", bg: "bg-gray-50 border-gray-200" },
-          { label: "معلق",     value: pending,   color: "text-yellow-700", bg: "bg-yellow-50 border-yellow-200" },
-          { label: "مؤكد",     value: confirmed, color: "text-blue-700",   bg: "bg-blue-50 border-blue-200"   },
-          { label: "مكتمل",    value: completed, color: "text-green-700",  bg: "bg-green-50 border-green-200" },
+          { label: "الإجمالي", value: total,     color: "#374151", bg: "#f9fafb", border: "#e5e7eb" },
+          { label: "معلق",     value: pending,   color: "#92400e", bg: "#fffbeb", border: "#fde68a" },
+          { label: "مؤكد",     value: confirmed, color: "#1e40af", bg: "#eff6ff", border: "#bfdbfe" },
+          { label: "مكتمل",    value: completed, color: "#166534", bg: "#f0fdf4", border: "#bbf7d0" },
         ].map((s) => (
-          <div key={s.label} className={`rounded-xl border p-3 text-center ${s.bg}`}>
-            <p className={`text-2xl font-extrabold ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+          <div key={s.label} className="rounded-2xl p-4 shadow-sm text-center"
+            style={{ background: s.bg, border: `1.5px solid ${s.border}` }}>
+            <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
+            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Range tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4 overflow-x-auto">
+      <div className="flex gap-1 bg-gray-100 rounded-2xl p-1.5 mb-4 overflow-x-auto">
         {RANGE_TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setRange(t.id)}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-              range === t.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
+          <button key={t.id} onClick={() => setRange(t.id)}
+            className={`flex-1 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
+              range === t.id ? "bg-white shadow-sm text-blue-700" : "text-gray-500 hover:text-gray-700"
+            }`}>
             {t.label}
           </button>
         ))}
@@ -161,11 +159,18 @@ export default function AppointmentsPage() {
 
       {/* Appointments list */}
       {loading ? (
-        <div className="text-center py-16 text-gray-400 text-sm">جاري التحميل...</div>
+        <div className="space-y-2">
+          {[1,2,3].map(i => <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 h-20 animate-pulse" />)}
+        </div>
       ) : appointments.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-3">📅</div>
-          <p className="text-gray-400 text-sm">لا توجد حجوزات</p>
+        <div className="text-center py-20">
+          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth={1.5} className="w-8 h-8">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <p className="text-gray-400 font-semibold">لا توجد حجوزات</p>
         </div>
       ) : (
         <div className="space-y-2">
