@@ -53,7 +53,7 @@ export default function RegisterPage() {
             <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
               <MedicalCross />
             </div>
-            <span className="text-white text-2xl font-bold tracking-wide">كلينيك</span>
+            <span className="text-white text-2xl font-bold tracking-wide">عيادتي</span>
           </div>
           <div>
             <h1 className="text-white text-4xl font-extrabold leading-tight mb-4">
@@ -77,7 +77,7 @@ export default function RegisterPage() {
               ))}
             </div>
           </div>
-          <p className="text-blue-300/60 text-sm">© 2026 كلينيك — تكريت، العراق</p>
+          <p className="text-blue-300/60 text-sm">© 2026 عيادتي — تكريت، العراق</p>
         </div>
       </div>
 
@@ -89,7 +89,7 @@ export default function RegisterPage() {
             <div className="w-9 h-9 bg-[#2563EB] rounded-lg flex items-center justify-center">
               <MedicalCross />
             </div>
-            <span className="text-[#0C1F3F] text-xl font-bold">كلينيك</span>
+            <span className="text-[#0C1F3F] text-xl font-bold">عيادتي</span>
           </div>
 
           <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)] p-8">
@@ -127,7 +127,7 @@ export default function RegisterPage() {
                   placeholder="TIKRIT-0000" dir="ltr"
                   onChange={(e) => e.target.value = e.target.value.toUpperCase()}
                 />
-                <p className="text-xs text-[#94A3B8] mt-1">احصل على الكود من فريق كلينيك</p>
+                <p className="text-xs text-[#94A3B8] mt-1">احصل على الكود من فريق عيادتي</p>
               </div>
 
               {error && (

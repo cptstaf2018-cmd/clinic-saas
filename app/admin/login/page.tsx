@@ -34,10 +34,11 @@ export default function AdminLoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-500 rounded-2xl shadow-2xl shadow-amber-500/40 mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="w-8 h-8">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
+            <svg viewBox="0 0 40 40" fill="none" className="w-9 h-9">
+              <path d="M20 34s-14-9-14-19a8 8 0 0 1 14-5.3A8 8 0 0 1 34 15c0 10-14 19-14 19z"
+                fill="white" fillOpacity="0.9"/>
+              <path d="M8 20h4l2-5 3 10 3-8 2 3h10"
+                stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             </svg>
           </div>
           <h1 className="text-white text-2xl font-extrabold">لوحة الإدارة</h1>
@@ -84,7 +85,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="text-center text-blue-400/40 text-xs mt-6">
-          كلينيك — نظام إدارة العيادات
+          عيادتي — نظام إدارة العيادات
         </p>
       </div>
     </div>

@@ -539,7 +539,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           </div>
         </div>
 
-        <div className="dp-footer">كلينيك — نظام إدارة العيادة</div>
+        <div className="dp-footer">عيادتي — نظام إدارة العيادة</div>
       </div>
     </>
   );

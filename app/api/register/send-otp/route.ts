@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   await sendWhatsApp(
     cleanPhone,
-    `مرحباً بك في كلينيك 🏥\n\nكود التحقق الخاص بك:\n\n*${code}*\n\nصالح لمدة 5 دقائق. لا تشاركه مع أحد.`,
+    `مرحباً بك في عيادتي 🏥\n\nكود التحقق الخاص بك:\n\n*${code}*\n\nصالح لمدة 5 دقائق. لا تشاركه مع أحد.`,
     adminKey ?? undefined
   );
 

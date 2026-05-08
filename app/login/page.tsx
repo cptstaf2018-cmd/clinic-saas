@@ -5,11 +5,15 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction } from "./actions";
 
-function MedicalCross() {
+function HealthIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10">
-      <rect x="15" y="4" width="10" height="32" rx="3" fill="white" fillOpacity="0.9"/>
-      <rect x="4" y="15" width="32" height="10" rx="3" fill="white" fillOpacity="0.9"/>
+    <svg viewBox="0 0 40 40" fill="none" className={className}>
+      {/* Heart */}
+      <path d="M20 34s-14-9-14-19a8 8 0 0 1 14-5.3A8 8 0 0 1 34 15c0 10-14 19-14 19z"
+        fill="white" fillOpacity="0.9" />
+      {/* ECG line */}
+      <path d="M8 20h4l2-5 3 10 3-8 2 3h10"
+        stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
     </svg>
   );
 }
@@ -57,9 +61,9 @@ function LoginForm() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/40">
-              <MedicalCross />
+              <HealthIcon />
             </div>
-            <span className="text-white text-2xl font-extrabold tracking-wide">كلينيك</span>
+            <span className="text-white text-2xl font-extrabold tracking-wide">عيادتي</span>
             <span className="text-[10px] text-blue-300/70 border border-blue-400/30 rounded-full px-2 py-0.5 font-semibold mr-1">PRO</span>
           </div>
 
@@ -185,7 +189,7 @@ function LoginForm() {
                 <p className="text-blue-300/60 text-xs">{s.label}</p>
               </div>
             ))}
-            <div className="mr-auto text-blue-300/40 text-xs">© 2026 كلينيك</div>
+            <div className="mr-auto text-blue-300/40 text-xs">© 2026 عيادتي</div>
           </div>
         </div>
       </div>
@@ -196,9 +200,9 @@ function LoginForm() {
 
           <div className="flex lg:hidden items-center gap-2 justify-center mb-8">
             <div className="w-9 h-9 bg-[#2563EB] rounded-lg flex items-center justify-center">
-              <MedicalCross />
+              <HealthIcon />
             </div>
-            <span className="text-[#0C1F3F] text-xl font-bold">كلينيك</span>
+            <span className="text-[#0C1F3F] text-xl font-bold">عيادتي</span>
           </div>
 
           <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)] p-8">

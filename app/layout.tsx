@@ -11,7 +11,7 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "كلينيك — نظام إدارة العيادة",
+  title: "عيادتي — نظام إدارة العيادة",
   description: "نظام متكامل لإدارة المواعيد والمرضى في عيادتك",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
