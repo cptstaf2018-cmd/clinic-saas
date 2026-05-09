@@ -56,6 +56,8 @@ export default function PaymentsClient({
   const [approving, setApproving] = useState<string | null>(null);
   const [plan, setPlan] = useState<Record<string, string>>({});
   const [duration, setDuration] = useState<Record<string, string>>({});
+  const pending = payments.filter((payment) => payment.status === "pending").length;
+  const approved = payments.filter((payment) => payment.status === "approved").length;
 
   const handleApprove = async (id: string) => {
     setApproving(id);
@@ -82,8 +84,22 @@ export default function PaymentsClient({
   };
 
   return (
-    <div dir="rtl">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">المدفوعات</h1>
+    <div dir="rtl" className="space-y-6">
+      <section className="rounded-[30px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <p className="text-sm font-black text-slate-500">التحقق المالي</p>
+        <h1 className="mt-2 text-4xl font-black text-slate-950">المدفوعات</h1>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl bg-slate-50 p-4"><p className="text-3xl font-black">{payments.length}</p><p className="text-xs font-black text-slate-400">كل الطلبات</p></div>
+          <div className="rounded-2xl bg-amber-50 p-4"><p className="text-3xl font-black text-amber-700">{pending}</p><p className="text-xs font-black text-amber-700/70">معلقة</p></div>
+          <div className="rounded-2xl bg-emerald-50 p-4"><p className="text-3xl font-black text-emerald-700">{approved}</p><p className="text-xs font-black text-emerald-700/70">مقبولة</p></div>
+        </div>
+      </section>
+      {payments.length === 0 ? (
+        <div className="rounded-[30px] border border-dashed border-slate-200 bg-white py-20 text-center shadow-sm">
+          <p className="text-xl font-black text-slate-400">لا توجد طلبات دفع حتى الآن</p>
+          <p className="mt-2 text-sm font-semibold text-slate-400">عند إرسال طبيب رقم عملية ستظهر هنا للمراجعة والتفعيل.</p>
+        </div>
+      ) : (
       <div className="bg-white rounded-2xl shadow overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-600">
@@ -183,19 +199,10 @@ export default function PaymentsClient({
                 </td>
               </tr>
             ))}
-            {payments.length === 0 && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="px-4 py-8 text-center text-gray-400"
-                >
-                  لا توجد مدفوعات
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }

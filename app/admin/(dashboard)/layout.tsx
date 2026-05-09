@@ -11,13 +11,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const logoUrl = settings?.logoUrl ?? null;
 
   return (
-    <div dir="rtl" className="min-h-screen flex bg-[#EEF2F9]">
+    <div dir="rtl" className="min-h-screen flex bg-[#F5F7FB]">
 
       {/* Sidebar */}
-      <aside className="w-60 bg-[#0C1F3F] min-h-screen sticky top-0 h-screen flex flex-col shrink-0 shadow-xl">
+      <aside className="w-64 bg-slate-950 min-h-screen sticky top-0 h-screen flex flex-col shrink-0 shadow-xl">
 
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-white/10">
+        <div className="px-5 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -27,15 +27,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 className="w-9 h-9 object-contain rounded-lg shrink-0"
               />
             ) : (
-              <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/40">
+              <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-white/15">
                 <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="w-5 h-5">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
                 </svg>
               </div>
             )}
             <div>
-              <p className="text-white font-bold text-sm">لوحة الإدارة</p>
-              <p className="text-amber-400/70 text-[10px] font-semibold">Super Admin</p>
+              <p className="text-white font-black text-sm">مركز الإدارة</p>
+              <p className="text-slate-400 text-[10px] font-semibold">Super Admin Console</p>
             </div>
           </div>
         </div>
@@ -62,9 +62,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           ].map((item) => (
             <Link
               key={item.href} href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-blue-100/70 hover:text-white hover:bg-white/8 transition-all text-sm font-medium group"
+              className="flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-white/8 transition-all text-sm font-bold group"
             >
-              <span className="text-blue-300/70 group-hover:text-amber-300 transition-colors">{item.icon}</span>
+              <span className="text-slate-500 group-hover:text-white transition-colors">{item.icon}</span>
               {item.label}
             </Link>
           ))}
@@ -73,7 +73,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* Logout */}
         <div className="px-3 py-4 border-t border-white/10">
           <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-300/70 hover:text-red-300 hover:bg-red-500/10 transition-all text-sm font-medium">
+            <button className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-slate-500 hover:text-rose-300 hover:bg-rose-500/10 transition-all text-sm font-bold">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
@@ -84,7 +84,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-8 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto">
+        <div className="mx-auto max-w-7xl p-6 lg:p-8">{children}</div>
+      </main>
     </div>
   );
 }

@@ -41,6 +41,7 @@ function toDateInput(iso: string | undefined) {
 export default function AdminClinicsClient({ initialClinics }: { initialClinics: Clinic[] }) {
   const router = useRouter();
   const [clinics, setClinics] = useState<Clinic[]>(initialClinics);
+  const [query, setQuery] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Edit state
@@ -60,6 +61,19 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
   const [deletingAll, setDeletingAll] = useState(false);
 
   const [error, setError] = useState("");
+  const [now] = useState(() => Date.now());
+  const activeCount = clinics.filter((clinic) => clinic.subscription?.status === "active").length;
+  const inactiveCount = clinics.filter((clinic) => clinic.subscription?.status !== "active").length;
+  const expiringCount = clinics.filter((clinic) => {
+    if (!clinic.subscription?.expiresAt) return false;
+    const diff = new Date(clinic.subscription.expiresAt).getTime() - now;
+    return diff > 0 && diff <= 7 * 86400000;
+  }).length;
+  const filteredClinics = clinics.filter((clinic) => {
+    const term = query.trim();
+    if (!term) return true;
+    return clinic.name.includes(term) || clinic.whatsappNumber.includes(term);
+  });
 
   function startEdit(c: Clinic) {
     setEditId(c.id);
@@ -176,23 +190,45 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
   }
 
   return (
-    <div dir="rtl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">العيادات</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400 bg-white border border-gray-200 rounded-full px-3 py-1">
-            {clinics.length} عيادة
-          </span>
-          {clinics.length > 0 && (
-            <button
-              onClick={() => { setShowDeleteAll(true); setDeleteAllConfirm(""); setError(""); }}
-              className="text-sm bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-xl transition-colors"
-            >
-              حذف الكل
-            </button>
-          )}
+    <div dir="rtl" className="space-y-6">
+      <section className="rounded-[30px] bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-black text-slate-500">مركز التحكم</p>
+            <h1 className="mt-2 text-4xl font-black text-slate-950">العيادات</h1>
+            <p className="mt-2 text-sm font-semibold text-slate-500">إدارة الاشتراكات، الدخول للعيادات، ومتابعة التشغيل من شاشة واحدة.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">
+            {[
+              { label: "الكل", value: clinics.length },
+              { label: "نشطة", value: activeCount },
+              { label: "تنتهي قريباً", value: expiringCount },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-2xl bg-white p-4 text-center ring-1 ring-slate-200">
+                <p className="text-3xl font-black text-slate-950">{stat.value}</p>
+                <p className="mt-1 text-xs font-black text-slate-400">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section className="rounded-[26px] bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative lg:w-[420px]">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="بحث باسم العيادة أو رقم الهاتف"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:bg-white focus:ring-4 focus:ring-slate-100"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-500">{filteredClinics.length} نتيجة</span>
+            <span className="rounded-full bg-rose-50 px-3 py-2 text-xs font-black text-rose-600">{inactiveCount} تحتاج متابعة</span>
+          </div>
+        </div>
+      </section>
 
       {/* Delete All Modal */}
       {showDeleteAll && (
@@ -250,8 +286,8 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
         </div>
       )}
 
-      <div className="space-y-3">
-        {clinics.map((clinic) => {
+      <div className="grid gap-3">
+        {filteredClinics.map((clinic) => {
           const status = clinic.subscription?.status ?? "inactive";
           const plan   = clinic.subscription?.plan   ?? "—";
           const expires = clinic.subscription?.expiresAt
@@ -263,33 +299,33 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
           return (
             <div
               key={clinic.id}
-              className={`bg-white rounded-2xl border shadow-sm transition-all ${
-                isEdit   ? "border-blue-300 ring-1 ring-blue-100" :
-                isDelete ? "border-red-300 ring-1 ring-red-100"  :
-                "border-gray-200"
+              className={`bg-white rounded-[24px] border shadow-sm transition-all ${
+                isEdit   ? "border-blue-200 ring-1 ring-blue-100" :
+                isDelete ? "border-rose-200 ring-1 ring-rose-100"  :
+                "border-slate-200"
               }`}
             >
               {/* Normal row */}
               {!isEdit && !isDelete && (
-                <div className="flex flex-wrap items-center gap-3 px-5 py-4">
+                <div className="grid gap-4 px-5 py-4 xl:grid-cols-[1fr_auto_auto] xl:items-center">
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900">{clinic.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 dir-ltr">{clinic.whatsappNumber}</p>
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-black text-slate-950">{clinic.name}</p>
+                    <p className="mt-1 text-xs font-bold text-slate-400 dir-ltr">{clinic.whatsappNumber}</p>
                   </div>
                   {/* Meta */}
-                  <div className="flex items-center gap-3 text-sm shrink-0">
-                    <span className="text-gray-500 hidden sm:inline">{plan}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700"}`}>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">{plan}</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-black ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700"}`}>
                       {STATUS_LABELS[status] ?? status}
                     </span>
-                    <span className="text-gray-400 text-xs hidden md:inline">{expires}</span>
+                    <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-400 ring-1 ring-slate-200">{expires}</span>
                   </div>
                   {/* Actions */}
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => window.open(`/api/admin/enter/${clinic.id}`, "_blank")}
-                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                      className="rounded-2xl bg-slate-950 px-4 py-2.5 text-xs font-black text-white transition hover:bg-slate-800"
                     >
                       دخول
                     </button>
@@ -297,7 +333,7 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
                       <button
                         onClick={() => toggleStatus(clinic)}
                         disabled={actionLoading === clinic.id + "_toggle"}
-                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors"
+                        className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:opacity-50"
                       >
                         تفعيل
                       </button>
@@ -305,20 +341,20 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
                       <button
                         onClick={() => toggleStatus(clinic)}
                         disabled={actionLoading === clinic.id + "_toggle"}
-                        className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors"
+                        className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-700 ring-1 ring-amber-100 transition hover:bg-amber-100 disabled:opacity-50"
                       >
                         إيقاف
                       </button>
                     )}
                     <button
                       onClick={() => startEdit(clinic)}
-                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-colors"
+                      className="rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
                     >
                       تعديل
                     </button>
                     <button
                       onClick={() => { setDeleteId(clinic.id); setEditId(null); setError(""); }}
-                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg text-xs font-semibold transition-colors"
+                      className="rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-500 ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-700"
                     >
                       حذف
                     </button>
@@ -398,10 +434,27 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
           );
         })}
 
-        {clinics.length === 0 && (
+        {filteredClinics.length === 0 && (
           <div className="text-center py-16 text-gray-400">لا توجد عيادات مسجلة</div>
         )}
       </div>
+
+      {clinics.length > 0 && (
+        <section className="rounded-[26px] bg-white p-5 shadow-sm ring-1 ring-rose-100">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-black text-slate-950">منطقة الخطر</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">إجراءات الحذف الشامل محفوظة هنا حتى لا تضغطها بالخطأ.</p>
+            </div>
+            <button
+              onClick={() => { setShowDeleteAll(true); setDeleteAllConfirm(""); setError(""); }}
+              className="rounded-2xl bg-rose-50 px-5 py-3 text-sm font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+            >
+              حذف كل العيادات
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

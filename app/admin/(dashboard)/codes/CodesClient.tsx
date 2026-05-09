@@ -18,6 +18,7 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
   const [note, setNote]         = useState("");
   const [creating, setCreating] = useState(false);
   const [copied, setCopied]     = useState<string | null>(null);
+  const [tab, setTab] = useState<"available" | "used">("available");
 
   async function createCode() {
     setCreating(true);
@@ -81,9 +82,18 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
         </div>
       </div>
 
+      <div className="mb-5 flex gap-2 rounded-2xl bg-slate-100 p-1.5">
+        <button onClick={() => setTab("available")} className={`flex-1 rounded-xl px-4 py-2 text-sm font-black ${tab === "available" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500"}`}>
+          كودات متاحة
+        </button>
+        <button onClick={() => setTab("used")} className={`flex-1 rounded-xl px-4 py-2 text-sm font-black ${tab === "used" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500"}`}>
+          الأرشيف المستخدم
+        </button>
+      </div>
+
       <>
         {/* Available codes */}
-        {available.length > 0 && (
+        {tab === "available" && available.length > 0 && (
           <div className="mb-6">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">متاحة للاستخدام</p>
             <div className="space-y-2">
@@ -115,14 +125,14 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
           </div>
         )}
 
-        {available.length === 0 && (
+        {tab === "available" && available.length === 0 && (
           <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-200 mb-6">
             <p className="text-gray-400 text-sm">لا توجد كودات متاحة — أنشئ كوداً جديداً</p>
           </div>
         )}
 
         {/* Used codes */}
-        {used.length > 0 && (
+        {tab === "used" && used.length > 0 && (
           <div>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">مستخدمة</p>
             <div className="space-y-2">
@@ -140,6 +150,11 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        {tab === "used" && used.length === 0 && (
+          <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-200 mb-6">
+            <p className="text-gray-400 text-sm">لا توجد كودات مستخدمة بعد</p>
           </div>
         )}
       </>
