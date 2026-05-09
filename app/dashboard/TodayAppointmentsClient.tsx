@@ -105,7 +105,7 @@ export default function TodayAppointmentsClient({ appointments: initial }: { app
       if (previous) removeAppt(previous.id, previous.patientName, previous.patientId);
       setAppointments((prev) =>
         prev.map((appointment) =>
-          appointment.id === updated.id ? { ...appointment, queueStatus: "current" } : appointment
+          appointment.id === updated.id ? { ...appointment, ...updated, queueStatus: "current" } : appointment
         )
       );
       router.refresh();
@@ -132,7 +132,12 @@ export default function TodayAppointmentsClient({ appointments: initial }: { app
     }
   }
 
-  const active = appointments.filter((appointment) => appointment.status !== "cancelled" && appointment.status !== "completed");
+  const active = appointments.filter(
+    (appointment) =>
+      appointment.status !== "cancelled" &&
+      appointment.status !== "completed" &&
+      appointment.queueStatus !== "done"
+  );
 
   return (
     <div>

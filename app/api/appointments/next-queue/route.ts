@@ -16,10 +16,10 @@ export async function POST() {
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Mark current patient as done
+  // Mark current patient as completed before calling the next one.
   await db.appointment.updateMany({
     where: { clinicId, queueStatus: "current", date: { gte: startOfDay, lte: endOfDay } },
-    data: { queueStatus: "done" },
+    data: { queueStatus: "done", status: "completed" },
   });
 
   // Find next waiting patient (lowest queueNumber)
