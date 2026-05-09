@@ -1,9 +1,8 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-
-const VALID_PLANS = ["basic", "standard", "premium"] as const;
-type Plan = (typeof VALID_PLANS)[number];
+import { encodePaymentReference, isPlanId, PLAN_PRICES, PlanId } from "@/lib/plans";
+import { createPaymentActivationCode } from "@/lib/activation-codes";
 
 export async function POST(req: Request) {
   const secret   = req.headers.get("x-superkey-secret") ?? "";
@@ -21,7 +20,7 @@ export async function POST(req: Request) {
   const body: {
     clinicId: string;
     amount: number;
-    plan: Plan;
+    plan: PlanId;
     reference?: string;
   } = await req.json();
 
@@ -32,11 +31,34 @@ export async function POST(req: Request) {
     );
   }
 
-  if (!VALID_PLANS.includes(body.plan)) {
+  if (!isPlanId(body.plan)) {
     return NextResponse.json(
       { error: "الباقة غير صحيحة — القيم المقبولة: basic, standard, premium" },
       { status: 400 }
     );
+  }
+
+  if (body.amount !== PLAN_PRICES[body.plan]) {
+    return NextResponse.json(
+      { error: "المبلغ لا يطابق الباقة المختارة" },
+      { status: 400 }
+    );
+  }
+
+  const storedReference = body.reference
+    ? encodePaymentReference(body.plan, body.reference)
+    : null;
+
+  if (storedReference) {
+    const duplicate = await db.payment.findFirst({
+      where: {
+        method: "superkey",
+        reference: storedReference,
+        status: "approved",
+      },
+    });
+
+    if (duplicate) return NextResponse.json({ success: true, duplicate: true });
   }
 
   const clinic = await db.clinic.findUnique({ where: { id: body.clinicId } });
@@ -47,14 +69,14 @@ export async function POST(req: Request) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);
 
-  await db.$transaction([
+  const [payment] = await db.$transaction([
     db.payment.create({
       data: {
         clinicId: body.clinicId,
         amount: body.amount,
         method: "superkey",
         status: "approved",
-        reference: body.reference ?? null,
+        reference: storedReference,
       },
     }),
     db.subscription.upsert({
@@ -69,5 +91,14 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  return NextResponse.json({ success: true });
+  const activation = await createPaymentActivationCode({
+    paymentId: payment.id,
+    clinicId: body.clinicId,
+    clinicName: clinic.name,
+    whatsappNumber: clinic.whatsappNumber,
+    plan: body.plan,
+    days: 30,
+  });
+
+  return NextResponse.json({ success: true, activationCode: activation.code });
 }

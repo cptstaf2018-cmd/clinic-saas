@@ -3,22 +3,35 @@
 import { useEffect, useState } from "react";
 
 interface Message {
-  id: string; phone: string; body: string;
-  read: boolean; createdAt: string; patientName: string | null;
+  id: string;
+  phone: string;
+  body: string;
+  read: boolean;
+  createdAt: string;
+  patientName: string | null;
 }
 
-const COLORS = ["#2563eb","#16a34a","#7c3aed","#dc2626","#d97706","#0891b2"];
-function colorFor(s: string) { return COLORS[s.charCodeAt(0) % COLORS.length]; }
+const COLORS = ["#0f172a", "#2563eb", "#059669", "#7c3aed", "#c2410c", "#0891b2"];
+
+function colorFor(s: string) {
+  return COLORS[Math.abs(s.split("").reduce((a, c) => a + c.charCodeAt(0), 0)) % COLORS.length];
+}
+
 function initials(name: string | null, phone: string) {
   if (!name) return phone.slice(-2);
-  return name.trim().split(" ").slice(0,2).map(w=>w[0]).join("");
+  return name.trim().split(" ").slice(0, 2).map((word) => word[0]).join("");
 }
+
 function timeAgo(iso: string) {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
   if (diff < 1) return "الآن";
   if (diff < 60) return `منذ ${diff} د`;
-  if (diff < 1440) return `منذ ${Math.floor(diff/60)} س`;
-  return new Date(iso).toLocaleDateString("ar-EG", { month: "short", day: "numeric" });
+  if (diff < 1440) return `منذ ${Math.floor(diff / 60)} س`;
+  return new Date(iso).toLocaleDateString("ar-IQ", { month: "short", day: "numeric" });
+}
+
+function arabicNumber(value: number) {
+  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
 
 export default function MessagesPage() {
@@ -31,121 +44,133 @@ export default function MessagesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchMessages(); const t = setInterval(fetchMessages, 15000); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    const initial = window.setTimeout(() => {
+      void fetchMessages();
+    }, 0);
+    const timer = window.setInterval(() => {
+      void fetchMessages();
+    }, 15000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, []);
 
   async function markRead(id: string) {
-    await fetch("/api/messages", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m));
+    await fetch("/api/messages", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
   }
 
-  const unread = messages.filter(m => !m.read).length;
+  const unread = messages.filter((m) => !m.read).length;
+  const read = messages.length - unread;
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-5" dir="rtl">
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900">الرسائل</h1>
-          <p className="text-sm text-gray-400 mt-0.5">رسائل المرضى الواردة عبر واتساب</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {unread > 0 && (
-            <span className="text-xs font-bold bg-blue-600 text-white px-3 py-1.5 rounded-full">
-              {unread} جديد
-            </span>
-          )}
-          <button onClick={fetchMessages}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
-            style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe" }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth={2} className="w-4 h-4">
-              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: "إجمالي الرسائل", value: messages.length, color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
-          { label: "غير مقروءة",     value: unread,           color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
-        ].map(s => (
-          <div key={s.label} className="rounded-2xl p-4 shadow-sm"
-            style={{ background: s.bg, border: `1.5px solid ${s.border}` }}>
-            <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+    <div className="p-4 md:p-8" dir="rtl">
+      <div className="mx-auto max-w-6xl space-y-7">
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
+          <div className="absolute inset-0 opacity-10 pattern-medical" />
+          <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-black text-emerald-700">واتساب العيادة</p>
+              <h1 className="mt-2 text-3xl font-black md:text-4xl">مركز الرسائل</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+                تابع رسائل المراجعين الواردة من واتساب، وافصل المهم عن المقروء بدون ازدحام بصري.
+              </p>
+            </div>
+            <button
+              onClick={fetchMessages}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-600/15 transition hover:-translate-y-0.5 hover:bg-blue-700"
+            >
+              تحديث الرسائل
+            </button>
           </div>
-        ))}
-      </div>
+        </section>
 
-      {/* Messages */}
-      {loading ? (
-        <div className="space-y-3">
-          {[1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 animate-pulse">
-              <div className="flex gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gray-100" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-100 rounded w-1/3" />
-                  <div className="h-3 bg-gray-100 rounded w-2/3" />
-                </div>
+        <section className="grid gap-4 md:grid-cols-3">
+          {[
+            { label: "إجمالي الرسائل", value: messages.length, tone: "bg-blue-600 text-white" },
+            { label: "غير مقروءة", value: unread, tone: "bg-orange-500 text-white" },
+            { label: "تمت مراجعتها", value: read, tone: "bg-emerald-600 text-white" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-[26px] bg-white p-5 shadow-[0_14px_38px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
+              <div className={`h-10 w-10 rounded-2xl ${stat.tone} flex items-center justify-center text-sm font-black`}>
+                {arabicNumber(stat.value)}
               </div>
+              <p className="mt-4 text-sm font-black text-slate-500">{stat.label}</p>
             </div>
           ))}
-        </div>
-      ) : messages.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth={1.5} className="w-8 h-8">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
+        </section>
+
+        <section className="rounded-[30px] bg-white p-4 md:p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-black text-slate-950">الوارد</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">آخر رسائل واتساب من المراجعين.</p>
+            </div>
+            {unread > 0 && (
+              <span className="rounded-full bg-blue-600 px-4 py-2 text-xs font-black text-white">
+                {arabicNumber(unread)} جديد
+              </span>
+            )}
           </div>
-          <p className="text-gray-400 font-semibold">لا توجد رسائل بعد</p>
-          <p className="text-gray-300 text-sm mt-1">ستظهر هنا رسائل المرضى على واتساب</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {messages.map(m => {
-            const color = colorFor(m.phone);
-            return (
-              <div key={m.id} onClick={() => !m.read && markRead(m.id)} className="cursor-pointer"
-                style={{
-                  background: m.read ? "white" : "#fefeff",
-                  border: m.read ? "1.5px solid #f1f5f9" : "1.5px solid #bfdbfe",
-                  borderRadius: 16,
-                  boxShadow: m.read ? "0 1px 4px rgba(0,0,0,0.04)" : "0 4px 16px rgba(37,99,235,0.10)",
-                  opacity: m.read ? 0.75 : 1,
-                  transition: "all .2s",
-                  padding: 16,
-                }}>
-                <div className="flex items-start gap-3">
-                  {/* Avatar */}
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 font-bold text-white text-sm"
-                    style={{ background: color }}>
-                    {initials(m.patientName, m.phone)}
-                  </div>
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {!m.read && <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />}
-                        <p className="font-bold text-gray-900 text-sm truncate">
-                          {m.patientName ?? m.phone}
-                        </p>
+
+          {loading ? (
+            <div className="grid gap-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-24 animate-pulse rounded-3xl bg-slate-100" />
+              ))}
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="py-20 text-center">
+              <p className="text-lg font-black text-slate-400">لا توجد رسائل بعد</p>
+              <p className="mt-1 text-sm font-semibold text-slate-300">ستظهر هنا رسائل واتساب الجديدة.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {messages.map((message) => {
+                const color = colorFor(message.phone);
+                return (
+                  <button
+                    key={message.id}
+                    type="button"
+                    onClick={() => !message.read && markRead(message.id)}
+                    className={`w-full rounded-[24px] p-4 text-right transition hover:-translate-y-0.5 ${
+                      message.read ? "bg-slate-50 ring-1 ring-slate-200" : "bg-white shadow-[0_12px_30px_rgba(37,99,235,0.12)] ring-2 ring-blue-100"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-base font-black text-white"
+                        style={{ background: color }}
+                      >
+                        {initials(message.patientName, message.phone)}
                       </div>
-                      <p className="text-xs text-gray-400 shrink-0">{timeAgo(m.createdAt)}</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            {!message.read && <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />}
+                            <p className="truncate text-base font-black text-slate-950">
+                              {message.patientName ?? message.phone}
+                            </p>
+                          </div>
+                          <span className="text-xs font-bold text-slate-400">{timeAgo(message.createdAt)}</span>
+                        </div>
+                        {message.patientName && <p className="mt-1 text-xs font-bold text-slate-400" dir="ltr">{message.phone}</p>}
+                        <p className="mt-3 line-clamp-2 text-sm font-semibold leading-7 text-slate-600">{message.body}</p>
+                      </div>
                     </div>
-                    {m.patientName && <p className="text-xs text-gray-400 font-mono mt-0.5">{m.phone}</p>}
-                    <p className="text-sm text-gray-600 mt-1.5 leading-relaxed">{m.body}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

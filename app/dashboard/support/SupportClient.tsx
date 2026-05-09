@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type HealthData = {
   db: boolean;
@@ -15,20 +15,19 @@ const PLAN_LABELS: Record<string, string> = {
   standard: "متوسطة",
   premium: "مميزة",
 };
+
 const STATUS_LABELS: Record<string, string> = {
   active: "نشط",
   trial: "تجريبي",
   inactive: "منتهي",
 };
 
+function arabicNumber(value: number) {
+  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
+}
+
 function StatusDot({ ok }: { ok: boolean }) {
-  return (
-    <span
-      className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${
-        ok ? "bg-green-500" : "bg-red-500"
-      }`}
-    />
-  );
+  return <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${ok ? "bg-emerald-500" : "bg-red-500"}`} />;
 }
 
 export default function SupportClient() {
@@ -44,7 +43,12 @@ export default function SupportClient() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchHealth(); }, [fetchHealth]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchHealth();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchHealth]);
 
   async function runFix(action: string) {
     setFixing(action);
@@ -62,12 +66,9 @@ export default function SupportClient() {
 
   if (loading) {
     return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-20 bg-white rounded-2xl border border-gray-200 animate-pulse"
-          />
+      <div className="grid gap-4 md:grid-cols-3">
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="h-36 animate-pulse rounded-[26px] bg-white shadow-sm ring-1 ring-slate-200" />
         ))}
       </div>
     );
@@ -75,13 +76,9 @@ export default function SupportClient() {
 
   if (!health) {
     return (
-      <div className="text-center py-12 text-gray-400">
-        تعذر تحميل حالة النظام
-        <br />
-        <button
-          onClick={fetchHealth}
-          className="mt-3 text-blue-600 text-sm underline"
-        >
+      <div className="rounded-[30px] border border-dashed border-slate-200 bg-white py-16 text-center shadow-sm">
+        <p className="text-lg font-black text-slate-400">تعذر تحميل حالة النظام</p>
+        <button onClick={fetchHealth} className="mt-4 rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white">
           إعادة المحاولة
         </button>
       </div>
@@ -89,96 +86,73 @@ export default function SupportClient() {
   }
 
   const subOk = ["active", "trial"].includes(health.subscription.status);
+  const hasIssues = health.issues.stuckSessions > 0 || health.issues.pendingOldAppointments > 0;
 
   return (
-    <div className="space-y-4">
-      {/* Toast */}
+    <div className="space-y-5">
       {toast && (
-        <div
-          className={`fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold text-white transition-all ${
-            toast.ok ? "bg-green-600" : "bg-red-600"
-          }`}
-        >
+        <div className={`fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-2xl px-5 py-3 text-sm font-black text-white shadow-xl md:bottom-8 ${toast.ok ? "bg-emerald-600" : "bg-red-600"}`}>
           {toast.msg}
         </div>
       )}
 
-      {/* System Status */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-gray-800">حالة النظام</h2>
-          <button
-            onClick={fetchHealth}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
+      <section className="grid gap-4 md:grid-cols-3">
+        <HealthCard title="قاعدة البيانات" value={health.db ? "تعمل" : "خطأ"} ok={health.db} detail={health.db ? "الاتصال مستقر" : "يوجد خلل في الاتصال"} />
+        <HealthCard
+          title="الاشتراك"
+          value={STATUS_LABELS[health.subscription.status] ?? health.subscription.status}
+          ok={subOk}
+          detail={`${PLAN_LABELS[health.subscription.plan] ?? health.subscription.plan} · ${arabicNumber(health.subscription.daysLeft)} يوم متبقي`}
+        />
+        <HealthCard
+          title="طابور اليوم"
+          value={`${arabicNumber(health.queue.total)} موعد`}
+          ok={!hasIssues}
+          detail={`${arabicNumber(health.queue.waiting)} انتظار · ${arabicNumber(health.queue.done)} منتهي`}
+        />
+      </section>
+
+      <section className="rounded-[30px] bg-white p-4 md:p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-black text-slate-950">الإصلاح السريع</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-500">أدوات تشغيل آمنة للمشاكل اليومية المتكررة.</p>
+          </div>
+          <button onClick={fetchHealth} className="rounded-2xl bg-slate-100 px-4 py-2.5 text-xs font-black text-slate-700 transition hover:bg-slate-200">
             تحديث
           </button>
         </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2.5 border-b border-gray-50">
-            <span className="text-sm text-gray-600">قاعدة البيانات</span>
-            <div className="flex items-center gap-2">
-              <StatusDot ok={health.db} />
-              <span className={`text-xs font-semibold ${health.db ? "text-green-600" : "text-red-600"}`}>
-                {health.db ? "تعمل بشكل طبيعي" : "خطأ في الاتصال"}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between py-2.5 border-b border-gray-50">
-            <span className="text-sm text-gray-600">الاشتراك</span>
-            <div className="flex items-center gap-2">
-              <StatusDot ok={subOk} />
-              <span className={`text-xs font-semibold ${subOk ? "text-green-600" : "text-red-600"}`}>
-                {STATUS_LABELS[health.subscription.status] ?? health.subscription.status}{" "}
-                · {PLAN_LABELS[health.subscription.plan] ?? health.subscription.plan}
-                {subOk && ` · ${health.subscription.daysLeft} يوم متبقي`}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-sm text-gray-600">طابور اليوم</span>
-            <span className="text-xs font-semibold text-gray-700">
-              {health.queue.total} موعد ·{" "}
-              <span className="text-orange-500">{health.queue.waiting} انتظار</span>{" "}
-              · <span className="text-green-600">{health.queue.done} منتهي</span>
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Quick Fixes */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-        <h2 className="font-bold text-gray-800 mb-4">إصلاح سريع</h2>
-        <div className="space-y-3">
+        <div className="grid gap-3">
           <FixCard
-            title="مسح محادثات الواتساب المعلقة"
+            title="مسح محادثات واتساب المعلقة"
             description={
               health.issues.stuckSessions > 0
-                ? `يوجد ${health.issues.stuckSessions} محادثة معلقة منذ أكثر من 24 ساعة — قد تمنع بعض المرضى من الحجز`
-                : "لا توجد محادثات معلقة — كل شيء يعمل"
+                ? `يوجد ${arabicNumber(health.issues.stuckSessions)} محادثة معلقة منذ أكثر من 24 ساعة وقد تؤثر على الحجز.`
+                : "لا توجد محادثات معلقة حالياً."
             }
             hasIssue={health.issues.stuckSessions > 0}
             action="clear-sessions"
-            actionLabel="مسح المحادثات"
+            actionLabel="مسح"
             fixing={fixing}
             onFix={runFix}
           />
           <FixCard
-            title="إكمال المواعيد القديمة المعلقة"
+            title="إغلاق المواعيد القديمة المعلقة"
             description={
               health.issues.pendingOldAppointments > 0
-                ? `يوجد ${health.issues.pendingOldAppointments} موعد قديم لم يُغلق — قد يؤثر على الإحصاءات`
-                : "جميع المواعيد القديمة مغلقة بشكل صحيح"
+                ? `يوجد ${arabicNumber(health.issues.pendingOldAppointments)} موعد قديم يحتاج إغلاقاً لتحسين الإحصاءات.`
+                : "كل المواعيد القديمة مرتبة."
             }
             hasIssue={health.issues.pendingOldAppointments > 0}
             action="fix-pending"
-            actionLabel="إكمال المواعيد"
+            actionLabel="إصلاح"
             fixing={fixing}
             onFix={runFix}
           />
           <FixCard
             title="إعادة تعيين الطابور الحالي"
-            description="إذا علق النظام ولم يتحرك الطابور، اضغط هنا لإعادة تعيينه"
+            description="استخدمها فقط إذا توقف الطابور عن التقدم داخل العيادة."
             hasIssue={false}
             isWarning
             action="reset-queue"
@@ -187,15 +161,26 @@ export default function SupportClient() {
             onFix={runFix}
           />
         </div>
-      </div>
+      </section>
 
-      {/* Help note */}
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-        <p className="text-xs text-blue-700 leading-relaxed">
-          <strong>ملاحظة:</strong> إذا استمرت المشكلة بعد الإصلاح، تواصل مع
-          الدعم وأخبرهم بالمشكلة تحديداً — لا حاجة لإعادة تشغيل أي شيء.
+      <section className="rounded-[26px] bg-blue-50 p-4 ring-1 ring-blue-100">
+        <p className="text-sm font-bold leading-7 text-blue-800">
+          عند استمرار المشكلة، تواصل مع الدعم من الزر العلوي وأرسل وصفاً قصيراً لما يحدث داخل اللوحة.
         </p>
+      </section>
+    </div>
+  );
+}
+
+function HealthCard({ title, value, detail, ok }: { title: string; value: string; detail: string; ok: boolean }) {
+  return (
+    <div className="rounded-[26px] bg-white p-5 shadow-[0_14px_38px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-black text-slate-500">{title}</p>
+        <StatusDot ok={ok} />
       </div>
+      <p className="mt-4 text-3xl font-black text-slate-950">{value}</p>
+      <p className="mt-2 text-xs font-bold text-slate-400">{detail}</p>
     </div>
   );
 }
@@ -219,28 +204,29 @@ function FixCard({
   fixing: string | null;
   onFix: (action: string) => void;
 }) {
-  const containerCls = hasIssue
-    ? "border-orange-200 bg-orange-50/40"
+  const tone = hasIssue
+    ? "bg-amber-50 ring-amber-100"
     : isWarning
-    ? "border-gray-200 bg-gray-50"
-    : "border-green-100 bg-green-50/30";
-
-  const dotCls = hasIssue ? "bg-orange-400" : isWarning ? "bg-gray-400" : "bg-green-500";
-  const btnCls = hasIssue ? "bg-orange-500 hover:bg-orange-600" : "bg-gray-600 hover:bg-gray-700";
+    ? "bg-slate-50 ring-slate-100"
+    : "bg-emerald-50/60 ring-emerald-100";
+  const dot = hasIssue ? "bg-amber-500" : isWarning ? "bg-slate-400" : "bg-emerald-500";
+  const button = hasIssue ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700";
 
   return (
-    <div className={`border rounded-xl p-4 ${containerCls}`}>
-      <div className="flex items-start gap-3">
-        <span className={`mt-1 w-2.5 h-2.5 rounded-full shrink-0 ${dotCls}`} />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-800">{title}</p>
-          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+    <div className={`rounded-[24px] p-4 ring-1 ${tone}`}>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <span className={`mt-2 h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
+          <div className="min-w-0">
+            <p className="text-sm font-black text-slate-950">{title}</p>
+            <p className="mt-1 text-xs font-semibold leading-6 text-slate-500">{description}</p>
+          </div>
         </div>
         {(hasIssue || isWarning) && (
           <button
             onClick={() => onFix(action)}
             disabled={fixing === action}
-            className={`shrink-0 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 ${btnCls}`}
+            className={`rounded-2xl px-5 py-2.5 text-xs font-black text-white transition disabled:opacity-50 ${button}`}
           >
             {fixing === action ? "جاري..." : actionLabel}
           </button>

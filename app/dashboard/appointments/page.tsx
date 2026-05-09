@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Appt = {
   id: string;
@@ -11,35 +11,43 @@ type Appt = {
   patient: { name: string; whatsappPhone: string };
 };
 
-const STATUS_MAP: Record<string, { label: string; color: string; dot: string }> = {
-  pending:   { label: "معلق",  color: "bg-yellow-100 text-yellow-800 border-yellow-200",  dot: "bg-yellow-400" },
-  confirmed: { label: "مؤكد",  color: "bg-blue-100 text-blue-800 border-blue-200",        dot: "bg-blue-400"   },
-  completed: { label: "مكتمل", color: "bg-green-100 text-green-800 border-green-200",     dot: "bg-green-400"  },
-  cancelled: { label: "ملغي",  color: "bg-red-100 text-red-800 border-red-200",           dot: "bg-red-400"    },
+const STATUS_MAP: Record<string, { label: string; badge: string; dot: string }> = {
+  pending: { label: "معلق", badge: "bg-amber-50 text-amber-700 ring-amber-100", dot: "bg-amber-400" },
+  confirmed: { label: "مؤكد", badge: "bg-blue-50 text-blue-700 ring-blue-100", dot: "bg-blue-500" },
+  completed: { label: "مكتمل", badge: "bg-emerald-50 text-emerald-700 ring-emerald-100", dot: "bg-emerald-500" },
+  cancelled: { label: "ملغي", badge: "bg-red-50 text-red-700 ring-red-100", dot: "bg-red-500" },
 };
 
 const RANGE_TABS = [
-  { id: "today",    label: "اليوم" },
-  { id: "week",     label: "هذا الأسبوع" },
+  { id: "today", label: "اليوم" },
+  { id: "week", label: "الأسبوع" },
   { id: "upcoming", label: "القادمة" },
-  { id: "past",     label: "السابقة" },
-  { id: "all",      label: "الكل" },
+  { id: "past", label: "السابقة" },
+  { id: "all", label: "الكل" },
 ];
 
 const STATUS_FILTERS = [
-  { id: "all",       label: "الكل" },
-  { id: "pending",   label: "معلق" },
+  { id: "all", label: "كل الحالات" },
+  { id: "pending", label: "معلق" },
   { id: "confirmed", label: "مؤكد" },
   { id: "completed", label: "مكتمل" },
   { id: "cancelled", label: "ملغي" },
 ];
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleDateString("ar-IQ", { weekday: "short", day: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString("ar-IQ", { weekday: "short", day: "numeric", month: "short" });
 }
+
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
+}
+
+function arabicNumber(value: number) {
+  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
+}
+
+function initials(name: string) {
+  return name.trim().split(" ").slice(0, 2).map((word) => word[0]).join("") || "م";
 }
 
 export default function AppointmentsPage() {
@@ -59,7 +67,12 @@ export default function AppointmentsPage() {
     setLoading(false);
   }, [range, statusFilter, search]);
 
-  useEffect(() => { fetchAppointments(); }, [fetchAppointments]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void fetchAppointments();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchAppointments]);
 
   async function updateStatus(id: string, status: string) {
     setActionLoading(id + status);
@@ -83,177 +96,165 @@ export default function AppointmentsPage() {
     setActionLoading(null);
   }
 
-  // Stats
   const total = appointments.length;
-  const pending = appointments.filter((a) => a.status === "pending").length;
-  const confirmed = appointments.filter((a) => a.status === "confirmed").length;
-  const completed = appointments.filter((a) => a.status === "completed").length;
+  const pending = appointments.filter((appointment) => appointment.status === "pending").length;
+  const confirmed = appointments.filter((appointment) => appointment.status === "confirmed").length;
+  const completed = appointments.filter((appointment) => appointment.status === "completed").length;
 
   return (
-    <div className="p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
-
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-gray-900">الحجوزات</h1>
-        <p className="text-sm text-gray-400 mt-0.5">إدارة جميع مواعيد العيادة</p>
-      </div>
-
-      {/* Stats bar */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
-        {[
-          { label: "الإجمالي", value: total,     color: "#374151", bg: "#f9fafb", border: "#e5e7eb" },
-          { label: "معلق",     value: pending,   color: "#92400e", bg: "#fffbeb", border: "#fde68a" },
-          { label: "مؤكد",     value: confirmed, color: "#1e40af", bg: "#eff6ff", border: "#bfdbfe" },
-          { label: "مكتمل",    value: completed, color: "#166534", bg: "#f0fdf4", border: "#bbf7d0" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl p-4 shadow-sm text-center"
-            style={{ background: s.bg, border: `1.5px solid ${s.border}` }}>
-            <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+    <div className="p-4 md:p-8" dir="rtl">
+      <div className="mx-auto max-w-6xl space-y-7">
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-cyan-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
+          <div className="absolute inset-0 opacity-10 pattern-medical" />
+          <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-black text-cyan-700">تشغيل اليوم</p>
+              <h1 className="mt-2 text-3xl font-black md:text-4xl">الحجوزات</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+                جدول عملي للحجوزات، التأكيدات، التذكيرات، وإنهاء الزيارات بدون ازدحام.
+              </p>
+            </div>
+            <div className="rounded-3xl bg-white px-5 py-4 shadow-sm ring-1 ring-cyan-100">
+              <p className="text-xs font-black text-cyan-700">حجوزات ظاهرة</p>
+              <p className="mt-1 text-4xl font-black text-slate-900">{arabicNumber(total)}</p>
+            </div>
           </div>
-        ))}
-      </div>
+        </section>
 
-      {/* Range tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-2xl p-1.5 mb-4 overflow-x-auto">
-        {RANGE_TABS.map((t) => (
-          <button key={t.id} onClick={() => setRange(t.id)}
-            className={`flex-1 px-3 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-              range === t.id ? "bg-white shadow-sm text-blue-700" : "text-gray-500 hover:text-gray-700"
-            }`}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Filters row */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        {/* Search */}
-        <div className="relative flex-1">
-          <span className="absolute right-3 top-2.5 text-gray-400 text-sm">🔍</span>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث باسم المريض أو رقم الهاتف..."
-            className="w-full border border-gray-200 rounded-xl pr-8 pl-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-        {/* Status filter */}
-        <div className="flex gap-1 overflow-x-auto">
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setStatusFilter(f.id)}
-              className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap border transition-all ${
-                statusFilter === f.id
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
-              }`}
-            >
-              {f.label}
-            </button>
+        <section className="grid gap-4 md:grid-cols-4">
+          {[
+            { label: "الإجمالي", value: total, color: "bg-blue-600" },
+            { label: "معلق", value: pending, color: "bg-amber-500" },
+            { label: "مؤكد", value: confirmed, color: "bg-blue-600" },
+            { label: "مكتمل", value: completed, color: "bg-emerald-600" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-[26px] bg-white p-5 shadow-[0_14px_38px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
+              <div className={`h-2 w-14 rounded-full ${stat.color}`} />
+              <p className="mt-5 text-sm font-black text-slate-500">{stat.label}</p>
+              <p className="mt-2 text-4xl font-black text-slate-950">{arabicNumber(stat.value)}</p>
+            </div>
           ))}
-        </div>
-      </div>
+        </section>
 
-      {/* Appointments list */}
-      {loading ? (
-        <div className="space-y-2">
-          {[1,2,3].map(i => <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 h-20 animate-pulse" />)}
-        </div>
-      ) : appointments.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth={1.5} className="w-8 h-8">
-              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-          </div>
-          <p className="text-gray-400 font-semibold">لا توجد حجوزات</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {appointments.map((apt) => {
-            const sm = STATUS_MAP[apt.status] ?? STATUS_MAP.pending;
-            const isToday = new Date(apt.date).toDateString() === new Date().toDateString();
-            return (
-              <div
-                key={apt.id}
-                className={`bg-white rounded-2xl border p-4 shadow-sm transition-all hover:shadow-md ${
-                  apt.status === "cancelled" ? "opacity-60" : ""
+        <section className="rounded-[30px] bg-white p-4 md:p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+          <div className="mb-4 flex gap-2 overflow-x-auto rounded-[22px] bg-slate-100 p-1.5">
+            {RANGE_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setRange(tab.id)}
+                className={`min-w-max flex-1 rounded-2xl px-4 py-2.5 text-sm font-black transition ${
+                  range === tab.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
-                <div className="flex items-start gap-4">
-                  {/* Queue number */}
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-600 shrink-0">
-                    {apt.queueNumber ?? "—"}
-                  </div>
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-                  {/* Patient info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-gray-900 text-sm">{apt.patient.name}</p>
-                      {isToday && (
-                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">اليوم</span>
+          <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+            <div className="relative">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="ابحث باسم المراجع أو رقم الهاتف"
+                className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pr-11 pl-4 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+            <div className="flex gap-2 overflow-x-auto">
+              {STATUS_FILTERS.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => setStatusFilter(filter.id)}
+                  className={`min-w-max rounded-2xl px-4 py-2.5 text-xs font-black ring-1 transition ${
+                    statusFilter === filter.id
+                      ? "bg-blue-600 text-white ring-blue-600"
+                      : "bg-white text-slate-500 ring-slate-200 hover:text-slate-800"
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="grid gap-3">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="h-28 animate-pulse rounded-[26px] bg-slate-100" />
+              ))}
+            </div>
+          ) : appointments.length === 0 ? (
+            <div className="rounded-[26px] border border-dashed border-slate-200 bg-slate-50 py-16 text-center">
+              <p className="text-lg font-black text-slate-400">لا توجد حجوزات</p>
+              <p className="mt-1 text-sm font-semibold text-slate-300">غيّر الفلتر أو انتظر الحجوزات القادمة من واتساب.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {appointments.map((appointment) => {
+                const status = STATUS_MAP[appointment.status] ?? STATUS_MAP.pending;
+                const isToday = new Date(appointment.date).toDateString() === new Date().toDateString();
+
+                return (
+                  <div
+                    key={appointment.id}
+                    className={`rounded-[26px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] ${
+                      appointment.status === "cancelled" ? "opacity-60" : ""
+                    }`}
+                  >
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                      <div className="flex min-w-0 flex-1 items-center gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-base font-black text-white">
+                          {appointment.queueNumber ? arabicNumber(appointment.queueNumber) : initials(appointment.patient.name)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-base font-black text-slate-950">{appointment.patient.name}</p>
+                            {isToday && <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-700 ring-1 ring-cyan-100">اليوم</span>}
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ring-1 ${status.badge}`}>
+                              <span className={`h-2 w-2 rounded-full ${status.dot}`} />
+                              {status.label}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm font-bold text-slate-400" dir="ltr">{appointment.patient.whatsappPhone}</p>
+                          <p className="mt-1 text-xs font-black text-slate-500">
+                            {formatDate(appointment.date)}
+                            <span className="mx-2 text-slate-300">|</span>
+                            <span className="text-blue-700">{formatTime(appointment.date)}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {appointment.status !== "cancelled" && appointment.status !== "completed" && (
+                        <div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
+                          {appointment.status === "pending" && (
+                            <button onClick={() => updateStatus(appointment.id, "confirmed")} disabled={actionLoading === appointment.id + "confirmed"} className="rounded-2xl bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100 disabled:opacity-50">
+                              تأكيد
+                            </button>
+                          )}
+                          <button onClick={() => updateStatus(appointment.id, "completed")} disabled={actionLoading === appointment.id + "completed"} className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:opacity-50">
+                            مكتمل
+                          </button>
+                          <button onClick={() => sendReminder(appointment.id)} disabled={actionLoading === appointment.id + "remind" || reminded.has(appointment.id)} className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-700 ring-1 ring-amber-100 transition hover:bg-amber-100 disabled:opacity-50">
+                            {reminded.has(appointment.id) ? "تم التذكير" : "تذكير"}
+                          </button>
+                          <button onClick={() => updateStatus(appointment.id, "cancelled")} disabled={actionLoading === appointment.id + "cancelled"} className="rounded-2xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 ring-1 ring-red-100 transition hover:bg-red-100 disabled:opacity-50">
+                            إلغاء
+                          </button>
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{apt.patient.whatsappPhone}</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-gray-600 font-medium">{formatDate(apt.date)}</span>
-                      <span className="text-xs text-blue-600 font-bold">{formatTime(apt.date)}</span>
-                    </div>
                   </div>
-
-                  {/* Status badge */}
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <span className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border font-medium ${sm.color}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${sm.dot}`} />
-                      {sm.label}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                {apt.status !== "cancelled" && apt.status !== "completed" && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-50 flex-wrap">
-                    {apt.status === "pending" && (
-                      <button
-                        onClick={() => updateStatus(apt.id, "confirmed")}
-                        disabled={actionLoading === apt.id + "confirmed"}
-                        className="flex-1 sm:flex-none text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
-                      >
-                        ✓ تأكيد
-                      </button>
-                    )}
-                    <button
-                      onClick={() => updateStatus(apt.id, "completed")}
-                      disabled={actionLoading === apt.id + "completed"}
-                      className="flex-1 sm:flex-none text-xs bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    >
-                      ✓ مكتمل
-                    </button>
-                    <button
-                      onClick={() => sendReminder(apt.id)}
-                      disabled={actionLoading === apt.id + "remind" || reminded.has(apt.id)}
-                      className="flex-1 sm:flex-none text-xs bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    >
-                      {reminded.has(apt.id) ? "✓ تم التذكير" : "🔔 تذكير"}
-                    </button>
-                    <button
-                      onClick={() => updateStatus(apt.id, "cancelled")}
-                      disabled={actionLoading === apt.id + "cancelled"}
-                      className="flex-1 sm:flex-none text-xs bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
-                    >
-                      ✕ إلغاء
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

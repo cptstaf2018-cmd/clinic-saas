@@ -1,21 +1,43 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { redirect, notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import MedicalRecordsClient from "./MedicalRecordsClient";
 
 const STATUS_LABEL: Record<string, string> = {
-  pending:   "قيد الانتظار",
+  pending: "معلق",
   confirmed: "مؤكد",
-  completed: "منتهي",
+  completed: "مكتمل",
   cancelled: "ملغي",
 };
+
 const STATUS_COLOR: Record<string, string> = {
-  pending:   "bg-yellow-100 text-yellow-800",
-  confirmed: "bg-blue-100 text-blue-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
+  pending: "bg-amber-50 text-amber-700 ring-amber-100",
+  confirmed: "bg-blue-50 text-blue-700 ring-blue-100",
+  completed: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  cancelled: "bg-red-50 text-red-700 ring-red-100",
 };
+
+function arabicNumber(value: number) {
+  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
+}
+
+function formatDate(iso: Date | string) {
+  return new Date(iso).toLocaleDateString("ar-IQ", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatTime(iso: Date | string) {
+  return new Date(iso).toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
+}
+
+function initials(name: string) {
+  return name.trim().split(" ").slice(0, 2).map((word) => word[0]).join("") || "م";
+}
 
 export default async function PatientProfilePage({
   params,
@@ -31,128 +53,133 @@ export default async function PatientProfilePage({
   const patient = await db.patient.findFirst({
     where: { id, clinicId },
     include: {
-      appointments: { orderBy: { date: "desc" }, take: 20 },
+      appointments: { orderBy: { date: "desc" }, take: 30 },
       medicalRecords: { orderBy: { date: "desc" } },
     },
   });
 
   if (!patient) notFound();
 
-  const completedCount = patient.appointments.filter(
-    (a) => a.status === "completed"
-  ).length;
-  const lastCompleted = patient.appointments.find(
-    (a) => a.status === "completed"
-  );
+  const now = new Date();
+  const completedCount = patient.appointments.filter((appointment) => appointment.status === "completed").length;
+  const upcoming = patient.appointments
+    .filter((appointment) => new Date(appointment.date) > now && appointment.status !== "cancelled" && appointment.status !== "completed")
+    .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+  const lastVisit = patient.appointments.find((appointment) => appointment.status === "completed") ?? patient.appointments[0];
 
-  const serializedRecords = patient.medicalRecords.map((r) => ({
-    id: r.id,
-    date: r.date.toISOString(),
-    complaint: r.complaint,
-    diagnosis: r.diagnosis,
-    prescription: r.prescription,
-    notes: r.notes,
-    followUpDate: r.followUpDate ? r.followUpDate.toISOString() : null,
+  const serializedRecords = patient.medicalRecords.map((record) => ({
+    id: record.id,
+    date: record.date.toISOString(),
+    complaint: record.complaint,
+    diagnosis: record.diagnosis,
+    prescription: record.prescription,
+    notes: record.notes,
+    followUpDate: record.followUpDate ? record.followUpDate.toISOString() : null,
   }));
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-5" dir="rtl">
-      {/* Back */}
-      <Link
-        href="/dashboard/patients"
-        className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-        قائمة المرضى
-      </Link>
+    <div className="p-4 md:p-8" dir="rtl">
+      <div className="mx-auto max-w-6xl space-y-5">
+        <Link href="/dashboard/patients" className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 text-sm font-black text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:text-slate-950">
+          قائمة المراجعين
+        </Link>
 
-      {/* Patient Header */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-            <span className="text-blue-700 font-bold text-xl">
-              {patient.name.charAt(0)}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-gray-900">{patient.name}</h1>
-            <p className="text-sm text-gray-400 mt-0.5 dir-ltr">{patient.whatsappPhone}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-gray-100">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-700">{patient.appointments.length}</p>
-            <p className="text-xs text-gray-500 mt-0.5">إجمالي المواعيد</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{completedCount}</p>
-            <p className="text-xs text-gray-500 mt-0.5">زيارة مكتملة</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600">{patient.medicalRecords.length}</p>
-            <p className="text-xs text-gray-500 mt-0.5">سجل طبي</p>
-          </div>
-        </div>
-        {lastCompleted && (
-          <p className="text-xs text-gray-400 mt-3 text-center">
-            آخر زيارة:{" "}
-            {new Date(lastCompleted.date).toLocaleDateString("ar-EG", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        )}
-      </div>
-
-      {/* Medical Records */}
-      <MedicalRecordsClient
-        patientId={patient.id}
-        initialRecords={serializedRecords}
-      />
-
-      {/* Appointments History */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-        <h2 className="font-bold text-gray-800 mb-4">سجل المواعيد</h2>
-        {patient.appointments.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">لا توجد مواعيد</p>
-        ) : (
-          <div className="space-y-2">
-            {patient.appointments.map((a) => (
-              <div
-                key={a.id}
-                className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-gray-50"
-              >
-                <div>
-                  <p className="text-sm font-medium text-gray-800">
-                    {new Date(a.date).toLocaleDateString("ar-EG", {
-                      weekday: "short",
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {new Date(a.date).toLocaleTimeString("ar-EG", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                    {a.queueNumber ? ` · رقم ${a.queueNumber}` : ""}
-                  </p>
-                </div>
-                <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                    STATUS_COLOR[a.status] ?? "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {STATUS_LABEL[a.status] ?? a.status}
-                </span>
+        <section className="grid gap-5 xl:grid-cols-[390px_1fr]">
+          <div className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
+            <div className="flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[28px] bg-blue-600 text-2xl font-black text-white">
+                {initials(patient.name)}
               </div>
-            ))}
+              <div className="min-w-0">
+                <p className="text-sm font-black text-sky-700">ملف مراجع</p>
+                <h1 className="mt-1 truncate text-3xl font-black">{patient.name}</h1>
+                <p className="mt-1 text-sm font-bold text-slate-500" dir="ltr">{patient.whatsappPhone}</p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              {[
+                { label: "مواعيد", value: patient.appointments.length },
+                { label: "زيارات", value: completedCount },
+                { label: "سجلات", value: patient.medicalRecords.length },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-[22px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-100">
+                  <p className="text-3xl font-black text-slate-900">{arabicNumber(stat.value)}</p>
+                  <p className="mt-1 text-xs font-black text-slate-500">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100">
+              <p className="text-xs font-black text-slate-400">آخر نشاط</p>
+              <p className="mt-1 text-sm font-black text-slate-900">
+                {lastVisit ? `${formatDate(lastVisit.date)} | ${formatTime(lastVisit.date)}` : "لا توجد زيارات"}
+              </p>
+            </div>
           </div>
-        )}
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-[30px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+              <p className="text-sm font-black text-slate-500">الموعد القادم</p>
+              {upcoming ? (
+                <>
+                  <p className="mt-3 text-2xl font-black text-slate-950">{formatDate(upcoming.date)}</p>
+                  <p className="mt-1 text-sm font-bold text-blue-700">
+                    {formatTime(upcoming.date)}
+                    {upcoming.queueNumber ? ` | رقم ${arabicNumber(upcoming.queueNumber)}` : ""}
+                  </p>
+                </>
+              ) : (
+                <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+                  <p className="text-lg font-black text-slate-400">لا يوجد موعد قادم</p>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-[30px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+              <p className="text-sm font-black text-slate-500">ملخص طبي</p>
+              <p className="mt-3 text-2xl font-black text-slate-950">{arabicNumber(patient.medicalRecords.length)}</p>
+              <p className="mt-1 text-sm font-bold text-slate-400">سجل محفوظ</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
+          <MedicalRecordsClient patientId={patient.id} initialRecords={serializedRecords} />
+
+          <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-black text-slate-950">الزيارات</h2>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">
+                {arabicNumber(patient.appointments.length)}
+              </span>
+            </div>
+            {patient.appointments.length === 0 ? (
+              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
+                <p className="text-sm font-black text-slate-400">لا توجد زيارات</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {patient.appointments.map((appointment) => (
+                  <div key={appointment.id} className="rounded-[24px] bg-slate-50 p-4 ring-1 ring-slate-100">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black text-slate-950">{formatDate(appointment.date)}</p>
+                        <p className="mt-1 text-xs font-bold text-slate-400">
+                          {formatTime(appointment.date)}
+                          {appointment.queueNumber ? ` | رقم ${arabicNumber(appointment.queueNumber)}` : ""}
+                        </p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${STATUS_COLOR[appointment.status] ?? "bg-slate-100 text-slate-600 ring-slate-200"}`}>
+                        {STATUS_LABEL[appointment.status] ?? appointment.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );

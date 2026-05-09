@@ -1,14 +1,23 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import TodayAppointmentsClient from "./TodayAppointmentsClient";
 
-const ARABIC_DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const ARABIC_MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const ARABIC_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+const ARABIC_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
-function arabicDate(d: Date) {
-  const toAr = (n: number) => String(n).replace(/\d/g, x => "٠١٢٣٤٥٦٧٨٩"[+x]);
-  return `${ARABIC_DAYS[d.getDay()]}، ${toAr(d.getDate())} ${ARABIC_MONTHS[d.getMonth()]} ${toAr(d.getFullYear())}`;
+function arabicNumber(value: number) {
+  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
+}
+
+function arabicDate(date: Date) {
+  return `${ARABIC_DAYS[date.getDay()]} ${arabicNumber(date.getDate())} ${ARABIC_MONTHS[date.getMonth()]}`;
+}
+
+function formatTime(date?: Date) {
+  if (!date) return "لا يوجد";
+  return date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
 }
 
 export default async function DashboardPage() {
@@ -17,139 +26,116 @@ export default async function DashboardPage() {
 
   const clinicId = session.user.clinicId as string;
   const today = new Date();
-  const startOfDay = new Date(today); startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay   = new Date(today); endOfDay.setHours(23, 59, 59, 999);
+  const startOfDay = new Date(today);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(today);
+  endOfDay.setHours(23, 59, 59, 999);
 
-  const [appointments, totalPatients] = await Promise.all([
-    db.appointment.findMany({
-      where: { clinicId, date: { gte: startOfDay, lte: endOfDay } },
-      include: { patient: true },
-      orderBy: [{ queueNumber: "asc" }, { date: "asc" }],
-    }),
-    db.patient.count({ where: { clinicId } }),
-  ]);
+  const appointments = await db.appointment.findMany({
+    where: { clinicId, date: { gte: startOfDay, lte: endOfDay } },
+    include: { patient: true },
+    orderBy: [{ queueNumber: "asc" }, { date: "asc" }],
+  });
 
-  const completed = appointments.filter(a => a.status === "completed").length;
-  const waiting   = appointments.filter(a => a.queueStatus === "waiting").length;
-  const current   = appointments.find(a => a.queueStatus === "current");
-  const nextWaiting = appointments.find(a => a.queueStatus === "waiting");
+  const current = appointments.find((appointment) => appointment.queueStatus === "current");
+  const waiting = appointments.filter((appointment) => appointment.queueStatus === "waiting");
+  const active = appointments.filter((appointment) => appointment.status !== "completed" && appointment.status !== "cancelled");
+  const completed = appointments.filter((appointment) => appointment.status === "completed").length;
+  const pending = appointments.filter((appointment) => appointment.status === "pending").length;
+  const nextWaiting = waiting[0];
+  const currentQueue = current?.queueNumber ?? null;
+  const nextQueue = nextWaiting?.queueNumber ?? null;
 
-  const serialized = appointments.map((a: any) => ({
-    id: a.id,
-    patientId: a.patientId,
-    patientName: a.patient.name,
-    patientPhone: a.patient.whatsappPhone,
-    date: a.date.toISOString(),
-    status: a.status,
-    queueNumber: a.queueNumber,
-    queueStatus: a.queueStatus,
+  const serialized = appointments.map((appointment) => ({
+    id: appointment.id,
+    patientId: appointment.patientId,
+    patientName: appointment.patient.name,
+    patientPhone: appointment.patient.whatsappPhone,
+    date: appointment.date.toISOString(),
+    status: appointment.status,
+    queueNumber: appointment.queueNumber,
+    queueStatus: appointment.queueStatus,
   }));
 
-  const stats = [
-    {
-      label: "مواعيد اليوم",
-      value: appointments.length,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="2" fill="currentColor" stroke="none"/>
-        </svg>
-      ),
-      color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe",
-    },
-    {
-      label: "مكتمل",
-      value: completed,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-          <polyline points="22 4 12 14.01 9 11.01"/>
-        </svg>
-      ),
-      color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0",
-    },
-    {
-      label: "في الانتظار",
-      value: waiting,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-      ),
-      color: "#d97706", bg: "#fffbeb", border: "#fde68a",
-    },
-    {
-      label: "إجمالي المرضى",
-      value: totalPatients,
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-6 h-6">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      ),
-      color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe",
-    },
-  ];
-
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6" dir="rtl">
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900">مواعيد اليوم</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{arabicDate(today)}</p>
-        </div>
-        {current && (
-          <div className="flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2">
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-            <span className="text-xs font-bold text-purple-700">حالياً: {current.patient.name}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {stats.map((s) => (
-          <div key={s.label}
-            className="rounded-2xl p-4 flex flex-col gap-3 shadow-sm"
-            style={{ background: s.bg, border: `1.5px solid ${s.border}` }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: `${s.color}18`, color: s.color }}>
-              {s.icon}
+    <div className="p-4 md:p-8" dir="rtl">
+      <div className="mx-auto max-w-6xl space-y-5">
+        <section className="grid gap-4 xl:grid-cols-[1fr_360px]">
+          <div className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-5 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100 md:p-6">
+            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p className="text-sm font-black text-sky-700">{arabicDate(today)}</p>
+                <h1 className="mt-2 text-3xl font-black md:text-4xl">الرئيسية</h1>
+                <p className="mt-2 max-w-xl text-sm font-bold leading-7 text-slate-500">
+                  نظرة سريعة على حجوزات العيادة والدور الحالي.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/dashboard/appointments" className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:-translate-y-0.5 hover:bg-blue-700">
+                  الحجوزات
+                </Link>
+                <Link href="/dashboard/patients" className="rounded-2xl bg-white px-4 py-2.5 text-sm font-black text-slate-700 ring-1 ring-sky-100 transition hover:bg-sky-50">
+                  المراجعين
+                </Link>
+                <Link href={`/display/${clinicId}`} target="_blank" className="rounded-2xl bg-white px-4 py-2.5 text-sm font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-50">
+                  شاشة الانتظار
+                </Link>
+              </div>
             </div>
+
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {[
+                { label: "حجوزات اليوم", hint: "كل المواعيد المسجلة", value: appointments.length, tone: "bg-blue-500" },
+                { label: "ينتظرون الدور", hint: "داخل قائمة الانتظار", value: waiting.length, tone: "bg-amber-400" },
+                { label: "زيارات مكتملة", hint: "تم إنهاؤها اليوم", value: completed, tone: "bg-emerald-500" },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100">
+                  <div className={`h-2 w-12 rounded-full ${stat.tone}`} />
+                  <p className="mt-4 text-sm font-black text-slate-500">{stat.label}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-400">{stat.hint}</p>
+                  <p className="mt-1 text-4xl font-black text-slate-900">{arabicNumber(stat.value)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+            <p className="text-sm font-black text-slate-500">الدور الآن</p>
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-600 text-xl font-black text-white">
+                {currentQueue ? `#${arabicNumber(currentQueue)}` : "-"}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-2xl font-black text-slate-950">{current?.patient.name ?? "لا يوجد مراجع حالي"}</p>
+                <p className="mt-1 text-sm font-bold text-slate-400">
+                  {current ? `${formatTime(current.date)} | مطابق لشاشة الانتظار` : "جاهز لاستدعاء التالي"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-black text-slate-400">التالي</p>
+                <p className="mt-1 text-xl font-black text-slate-900">{nextQueue ? `#${arabicNumber(nextQueue)}` : "لا يوجد"}</p>
+                {nextWaiting && <p className="mt-1 truncate text-xs font-black text-slate-500">{nextWaiting.patient.name}</p>}
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-black text-slate-400">معلق</p>
+                <p className="mt-1 text-sm font-black text-slate-900">{arabicNumber(pending)}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[32px] bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70 md:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
-              <p className="text-xs font-semibold text-gray-500 mt-0.5">{s.label}</p>
+              <h2 className="text-2xl font-black text-slate-950">مواعيد اليوم</h2>
+              <p className="mt-1 text-sm font-bold text-slate-400">{arabicNumber(active.length)} قيد المتابعة</p>
             </div>
           </div>
-        ))}
+          <TodayAppointmentsClient appointments={serialized} />
+        </section>
       </div>
-
-      {/* Call next banner */}
-      {nextWaiting && (
-        <div className="rounded-2xl p-4 flex items-center gap-4"
-          style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)", boxShadow: "0 8px 32px rgba(37,99,235,0.3)" }}>
-          <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-            <span className="text-white font-black text-lg">#{nextWaiting.queueNumber}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-blue-200 text-xs font-semibold">المريض التالي في القائمة</p>
-            <p className="text-white font-black text-lg truncate">{nextWaiting.patient.name}</p>
-          </div>
-          <div className="shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} className="w-6 h-6">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </div>
-        </div>
-      )}
-
-      {/* Appointments list */}
-      <TodayAppointmentsClient appointments={serialized} />
     </div>
   );
 }

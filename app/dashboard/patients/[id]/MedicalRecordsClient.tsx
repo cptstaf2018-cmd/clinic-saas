@@ -40,6 +40,10 @@ function formatDate(iso: string) {
   });
 }
 
+function arabicNumber(value: number) {
+  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
+}
+
 export default function MedicalRecordsClient({
   patientId,
   initialRecords,
@@ -135,17 +139,17 @@ export default function MedicalRecordsClient({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+    <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-bold text-gray-800">السجلات الطبية</h2>
+        <div>
+          <h2 className="text-2xl font-black text-slate-950">السجل الطبي</h2>
+          <p className="mt-1 text-sm font-bold text-slate-400">{arabicNumber(records.length)} سجل محفوظ</p>
+        </div>
         {!showForm && !editingId && (
           <button
             onClick={startAdd}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors"
+            className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="w-4 h-4">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
             سجل جديد
           </button>
         )}
@@ -164,11 +168,12 @@ export default function MedicalRecordsClient({
       )}
 
       {records.length === 0 && !showForm ? (
-        <div className="text-center py-8 text-gray-400 text-sm">
-          لا توجد سجلات طبية — اضغط &quot;سجل جديد&quot; لإضافة أول سجل
+        <div className="rounded-[26px] border border-dashed border-slate-200 bg-slate-50 py-14 text-center">
+          <p className="text-lg font-black text-slate-400">لا توجد سجلات طبية</p>
+          <p className="mt-1 text-sm font-bold text-slate-300">أضف أول سجل عند الحاجة.</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {records.map((r) => {
             const isEdit = editingId === r.id;
             const isExpanded = expandedId === r.id;
@@ -176,7 +181,7 @@ export default function MedicalRecordsClient({
 
             if (isEdit) {
               return (
-                <div key={r.id} className="border border-blue-200 rounded-xl p-4 bg-blue-50/30">
+                <div key={r.id} className="rounded-[24px] bg-blue-50/40 p-4 ring-1 ring-blue-100">
                   <RecordForm
                     form={form}
                     setForm={setForm}
@@ -193,48 +198,37 @@ export default function MedicalRecordsClient({
             return (
               <div
                 key={r.id}
-                className={`border rounded-xl transition-all ${
-                  isDelete ? "border-red-200 bg-red-50/30" : "border-gray-100 bg-gray-50"
+                className={`rounded-[24px] transition-all ring-1 ${
+                  isDelete ? "bg-red-50/50 ring-red-100" : "bg-slate-50 ring-slate-100"
                 }`}
               >
                 {!isDelete ? (
                   <>
                     <div
-                      className="flex items-center justify-between p-3 cursor-pointer select-none"
+                      className="flex items-center justify-between p-4 cursor-pointer select-none"
                       onClick={() => setExpandedId(isExpanded ? null : r.id)}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth={2} className="w-4 h-4">
-                            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-                            <rect x="9" y="3" width="6" height="4" rx="1"/>
-                            <line x1="9" y1="12" x2="15" y2="12"/>
-                            <line x1="9" y1="16" x2="13" y2="16"/>
-                          </svg>
+                        <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shrink-0 text-sm font-black text-blue-700 ring-1 ring-slate-200">
+                          س
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-800 truncate">{r.complaint}</p>
-                          <p className="text-xs text-gray-400">{formatDate(r.date)}</p>
+                          <p className="text-sm font-black text-slate-950 truncate">{r.complaint}</p>
+                          <p className="text-xs font-bold text-slate-400">{formatDate(r.date)}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0 mr-2">
                         <button
                           onClick={(e) => { e.stopPropagation(); startEdit(r); }}
-                          className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-50"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
+                          تعديل
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setDeleteId(r.id); }}
-                          className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-red-700 ring-1 ring-red-100 transition hover:bg-red-50"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                          </svg>
+                          حذف
                         </button>
                         <svg
                           viewBox="0 0 24 24"
@@ -249,7 +243,7 @@ export default function MedicalRecordsClient({
                     </div>
 
                     {isExpanded && (
-                      <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+                      <div className="px-4 pb-4 space-y-3 border-t border-slate-200/70 pt-3">
                         {r.diagnosis && (
                           <div>
                             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">التشخيص</p>

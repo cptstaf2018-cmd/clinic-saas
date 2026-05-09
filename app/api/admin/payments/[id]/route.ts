@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { extractPlanFromReference, isPlanId, planFromAmount } from "@/lib/plans";
+import { createPaymentActivationCode } from "@/lib/activation-codes";
 
 export async function PATCH(
   req: Request,
@@ -14,9 +16,9 @@ export async function PATCH(
   }
 
   // 🔒 CRITICAL: Superadmin MUST NOT have clinicId
-  if ((session.user as any).clinicId) {
+  if (session.user.clinicId) {
     console.warn(
-      `[SECURITY] Superadmin has clinicId: ${(session.user as any).clinicId}`
+      `[SECURITY] Superadmin has clinicId: ${session.user.clinicId}`
     );
     return NextResponse.json({ error: "غير مصرح" }, { status: 403 });
   }
@@ -24,13 +26,17 @@ export async function PATCH(
   const { id } = await params;
   const body: { action: "approve" | "reject"; plan?: string; durationDays?: number } = await req.json();
 
-  const payment = await db.payment.findUnique({ where: { id } });
+  const payment = await db.payment.findUnique({
+    where: { id },
+    include: { clinic: { select: { name: true, whatsappNumber: true } } },
+  });
   if (!payment) {
     return NextResponse.json({ error: "الدفعة غير موجودة" }, { status: 404 });
   }
 
   if (body.action === "approve") {
-    const plan = body.plan ?? "basic";
+    const inferredPlan = extractPlanFromReference(payment.reference) ?? planFromAmount(payment.amount) ?? "basic";
+    const plan = isPlanId(body.plan) ? body.plan : inferredPlan;
     const days = body.durationDays ?? 30;
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + days);
@@ -49,7 +55,16 @@ export async function PATCH(
       }),
     ]);
 
-    return NextResponse.json({ success: true });
+    const activation = await createPaymentActivationCode({
+      paymentId: payment.id,
+      clinicId: payment.clinicId,
+      clinicName: payment.clinic.name,
+      whatsappNumber: payment.clinic.whatsappNumber,
+      plan,
+      days,
+    });
+
+    return NextResponse.json({ success: true, activationCode: activation.code });
   }
 
   if (body.action === "reject") {

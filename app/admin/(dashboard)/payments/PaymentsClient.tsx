@@ -9,6 +9,8 @@ interface Payment {
   method: string;
   status: string;
   reference: string | null;
+  activationCode: string | null;
+  requestedPlan: string | null;
   createdAt: string;
   clinic: { name: string };
 }
@@ -28,6 +30,8 @@ const STATUS_COLORS: Record<string, string> = {
 const METHOD_LABELS: Record<string, string> = {
   manual: "يدوي",
   superkey: "SuperKey",
+  zaincash: "Zain Cash",
+  crypto: "Binance / Crypto",
 };
 
 const PLAN_OPTIONS = [
@@ -35,6 +39,12 @@ const PLAN_OPTIONS = [
   { value: "standard", label: "متوسطة — 45,000 د.ع" },
   { value: "premium", label: "مميزة — 55,000 د.ع" },
 ];
+
+const PLAN_NAMES: Record<string, string> = {
+  basic: "أساسية",
+  standard: "متوسطة",
+  premium: "مميزة",
+};
 
 export default function PaymentsClient({
   initialPayments,
@@ -54,7 +64,7 @@ export default function PaymentsClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "approve",
-        plan: plan[id] ?? "basic",
+        plan: plan[id] ?? payments.find((p) => p.id === id)?.requestedPlan ?? "basic",
         durationDays: parseInt(duration[id] ?? "30", 10),
       }),
     });
@@ -81,9 +91,11 @@ export default function PaymentsClient({
               <th className="px-4 py-3 text-right">العيادة</th>
               <th className="px-4 py-3 text-right">المبلغ</th>
               <th className="px-4 py-3 text-right">الطريقة</th>
+              <th className="px-4 py-3 text-right">الباقة</th>
               <th className="px-4 py-3 text-right">الحالة</th>
               <th className="px-4 py-3 text-right">التاريخ</th>
               <th className="px-4 py-3 text-right">المرجع</th>
+              <th className="px-4 py-3 text-right">كود التفعيل</th>
               <th className="px-4 py-3 text-right">إجراءات</th>
             </tr>
           </thead>
@@ -94,6 +106,9 @@ export default function PaymentsClient({
                 <td className="px-4 py-3">{payment.amount.toLocaleString()} د.ع</td>
                 <td className="px-4 py-3">
                   {METHOD_LABELS[payment.method] ?? payment.method}
+                </td>
+                <td className="px-4 py-3 font-semibold text-gray-700">
+                  {payment.requestedPlan ? PLAN_NAMES[payment.requestedPlan] : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <span
@@ -111,10 +126,19 @@ export default function PaymentsClient({
                   {payment.reference ?? "—"}
                 </td>
                 <td className="px-4 py-3">
+                  {payment.activationCode ? (
+                    <span className="font-mono text-xs font-extrabold tracking-widest text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1">
+                      {payment.activationCode}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
                   {payment.status === "pending" && (
                     <div className="flex flex-col gap-2 min-w-[200px]">
                       <select
-                        value={plan[payment.id] ?? "basic"}
+                        value={plan[payment.id] ?? payment.requestedPlan ?? "basic"}
                         onChange={(e) =>
                           setPlan((p) => ({ ...p, [payment.id]: e.target.value }))
                         }

@@ -119,8 +119,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", logoUrl: null, current: null, waiting: [] });
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
-  const prevPatientRef = useRef<string | null | undefined>(undefined);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const prevQueueRef = useRef<number | null | undefined>(undefined);
+  const [soundEnabled] = useState(true);
   const audioUnlockedRef = useRef(false);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
@@ -160,20 +160,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, [clinicId]);
 
-  function isFemale(name: string): boolean {
-    const first = name.trim().split(" ")[0];
-    if (first.endsWith("ة") || first.endsWith("اء") || first.endsWith("ى") || first.endsWith("ين")) return true;
-    const knownFemale = ["زينب","مريم","هند","ريم","نور","سمر","ندى","رنا","لين","أمل","بتول","وفاء","منى","رغد","شيماء","دينا","صفاء","رهف","لمى","غادة","ميساء","تبارك","رقية","سكينة","رباب","إيناس","حنان","سناء","إلهام","هيفاء","ديمة","شذى","نجلاء","وداد","سحر","إيمان","صبا","نجوى","رفاه","ورود","عبير","ولاء"];
-    return knownFemale.includes(first);
-  }
-
-  async function announcePatient(name: string) {
-    // أخذ الاسم العربي فقط — حذف الأرقام والشرطات والرموز
-    const cleanName = name.replace(/[\d\-_\/\\]+/g, "").replace(/\s+/g, " ").trim();
-    const female = isFemale(cleanName);
-    const title = female ? "المريضة" : "المريض";
-    const verb  = female ? "تفضلي" : "تفضل";
-    const text  = `${title} ${cleanName}، ${verb} من فضلك`;
+  async function announceQueue(queueNumber: number) {
+    const text = `رقم ${toArabic(queueNumber)}، تفضل إلى العيادة`;
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
@@ -195,17 +183,17 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     }
   }
 
-  // نداء صوتي عند تغيّر المريض الحالي
+  // نداء صوتي عند تغيّر الرقم الحالي
   useEffect(() => {
-    const name = data.current?.name ?? null;
-    if (prevPatientRef.current === undefined) {
-      prevPatientRef.current = name;
+    const queueNumber = data.current?.queueNumber ?? null;
+    if (prevQueueRef.current === undefined) {
+      prevQueueRef.current = queueNumber;
       return;
     }
-    if (name && name !== prevPatientRef.current && soundEnabled) {
-      announcePatient(name);
+    if (queueNumber && queueNumber !== prevQueueRef.current && soundEnabled) {
+      announceQueue(queueNumber);
     }
-    prevPatientRef.current = name;
+    prevQueueRef.current = queueNumber;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.current, soundEnabled]);
 
@@ -379,12 +367,12 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           margin-bottom:14px; position:relative; z-index:1;
         }
         .dp-num-ring {
-          width:78px; height:78px; border-radius:50%;
+          min-width:150px; height:150px; border-radius:50%;
           background:rgba(255,255,255,0.14);
-          border:3px solid rgba(255,255,255,0.35);
+          border:4px solid rgba(255,255,255,0.35);
           display:flex; align-items:center; justify-content:center;
-          font-size:34px; font-weight:900; color:white;
-          margin-bottom:12px; position:relative; z-index:1;
+          font-size:76px; font-weight:900; color:white;
+          margin-bottom:18px; padding:0 28px; position:relative; z-index:1;
           animation:dp-nr 2s ease-out infinite;
         }
         @keyframes dp-nr {
@@ -393,7 +381,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}
         }
         .dp-patient-name {
-          font-size:50px; font-weight:900; color:white;
+          font-size:42px; font-weight:900; color:white;
           line-height:1.1; position:relative; z-index:1;
           text-shadow:0 3px 14px rgba(0,0,0,0.2);
         }
@@ -425,7 +413,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
         }
         .dp-qi.next .dp-qi-num { background:#dbeafe; color:#1d4ed8; border-color:#93c5fd; }
         .dp-qi-body { flex:1; padding:11px 13px; display:flex; flex-direction:column; justify-content:center; }
-        .dp-qi-name { font-size:18px; font-weight:800; color:#1e293b; }
+        .dp-qi-name { font-size:18px; font-weight:900; color:#1e293b; }
         .dp-qi-st   { font-size:10px; font-weight:700; margin-top:2px; color:#94a3b8; }
         .dp-qi.next .dp-qi-st { color:#1d4ed8; }
         .dp-qi-tag  { display:flex; align-items:center; padding:0 12px; flex-shrink:0; }
@@ -486,9 +474,9 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
 
         {/* المحتوى الرئيسي */}
         <div className="dp-main">
-          {/* المريض الحالي */}
+          {/* المراجع الحالي */}
           <div className="dp-cur-wrap">
-            <div className="dp-sec-lbl">المريض الحالي</div>
+            <div className="dp-sec-lbl">المراجع الحالي</div>
             <div className="dp-cur-card">
               <svg className="dp-ecg" height="48" viewBox="0 0 600 48" preserveAspectRatio="none">
                 <polyline className="dp-ecg-p"
@@ -504,13 +492,13 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
                     يُرجى الدخول الآن
                   </div>
                   {data.current.queueNumber !== null && (
-                    <div className="dp-num-ring">{data.current.queueNumber}</div>
+                    <div className="dp-num-ring">{toArabic(data.current.queueNumber)}</div>
                   )}
                   <div className="dp-patient-name">{data.current.name}</div>
                   <div className="dp-patient-sub">تفضل/ي بالدخول للعيادة</div>
                 </>
               ) : (
-                <div className="dp-empty">لا يوجد مريض حالياً</div>
+                <div className="dp-empty">لا يوجد مراجع حالياً</div>
               )}
             </div>
           </div>
@@ -525,10 +513,10 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
                 </div>
               ) : waiting.map((p, i) => (
                 <div key={i} className={`dp-qi${i === 0 ? " next" : ""}`}>
-                  <div className="dp-qi-num">{p.queueNumber ?? i + 1}</div>
+                  <div className="dp-qi-num">{toArabic(p.queueNumber ?? i + 1)}</div>
                   <div className="dp-qi-body">
                     <div className="dp-qi-name">{p.name}</div>
-                    <div className="dp-qi-st">{i === 0 ? "▶ التالي" : "في الانتظار"}</div>
+                    <div className="dp-qi-st">{i === 0 ? "التالي للاستدعاء" : "في الانتظار"}</div>
                   </div>
                   <div className="dp-qi-tag">
                     <span className="dp-pill">{i === 0 ? "التالي" : "انتظار"}</span>

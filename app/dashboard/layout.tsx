@@ -1,7 +1,6 @@
 import { auth, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import DashboardNav, { MobileDashboardNav } from "./DashboardNav";
 
 async function getClinicData(clinicId: string) {
@@ -31,28 +30,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const badge = STATUS_BADGE[subStatus] ?? STATUS_BADGE.inactive;
 
   return (
-    <div className="min-h-screen flex bg-[#EEF2F9]" dir="rtl">
+    <div className="min-h-screen flex bg-[#eef7f4]" dir="rtl">
 
       {/* ── Desktop Sidebar ── */}
-      <aside className="hidden md:flex flex-col w-64 bg-[#0C1F3F] min-h-screen sticky top-0 h-screen shrink-0">
+      <aside className="hidden md:flex flex-col w-72 min-h-screen sticky top-0 h-screen shrink-0 p-4">
+        <div className="flex min-h-full flex-col rounded-[28px] bg-gradient-to-b from-[#0f766e] via-[#2563eb] to-[#1d4ed8] shadow-[0_20px_50px_rgba(37,99,235,0.18)] overflow-hidden">
 
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-white/10">
+        <div className="px-5 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             {clinic?.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={clinic.logoUrl} alt={name} className="w-9 h-9 object-contain rounded-lg shrink-0" />
+              <img src={clinic.logoUrl} alt={name} className="w-11 h-11 object-contain rounded-2xl shrink-0 bg-white/95 p-1" />
             ) : (
-              <div className="w-9 h-9 bg-[#2563EB] rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-blue-600/40">
+              <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-950/20">
                 <svg viewBox="0 0 40 40" fill="none" className="w-5 h-5">
-                  <rect x="15" y="4" width="10" height="32" rx="2" fill="white"/>
-                  <rect x="4" y="15" width="32" height="10" rx="2" fill="white"/>
+                  <rect x="15" y="4" width="10" height="32" rx="2" fill="#065f46"/>
+                  <rect x="4" y="15" width="32" height="10" rx="2" fill="#2563eb"/>
                 </svg>
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-white font-bold text-sm leading-tight truncate">{name}</p>
-              <span className={`text-[10px] font-semibold border rounded-full px-2 py-0.5 ${badge.cls}`}>
+              <p className="text-white font-black text-base leading-tight truncate">{name}</p>
+              <p className="text-blue-100/60 text-xs mt-1">لوحة تشغيل العيادة</p>
+              <span className={`inline-flex mt-2 text-[10px] font-semibold border rounded-full px-2 py-0.5 ${badge.cls}`}>
                 {badge.label}
               </span>
             </div>
@@ -72,6 +73,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               تسجيل الخروج
             </button>
           </form>
+        </div>
         </div>
       </aside>
 

@@ -42,44 +42,77 @@ function formatSlotLabel(time: string): string {
 
 const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 
-async function getAvailableSlotsMessage(clinicId: string): Promise<{ message: string; slots: string[] }> {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
+const DAY_NAMES_AR: Record<number, string> = {
+  0: "الأحد", 1: "الاثنين", 2: "الثلاثاء", 3: "الأربعاء",
+  4: "الخميس", 5: "الجمعة", 6: "السبت",
+};
 
-  const workingHours = await db.workingHours.findUnique({
-    where: { clinicId_dayOfWeek: { clinicId, dayOfWeek } },
-  });
+// Returns all working hours for a clinic (to find next available day)
+async function getAllWorkingHours(clinicId: string) {
+  return db.workingHours.findMany({ where: { clinicId } });
+}
 
-  if (!workingHours || !workingHours.isOpen) {
-    return { message: "عذراً، العيادة مغلقة اليوم 🚫", slots: [] };
-  }
-
-  const startOfDay = new Date(today);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(today);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  const existingAppointments = await db.appointment.findMany({
-    where: {
-      clinicId,
-      date: { gte: startOfDay, lte: endOfDay },
-      status: { not: "cancelled" },
-    },
+// Get slots for a specific date
+async function getSlotsForDate(clinicId: string, date: Date, startTime: string, endTime: string) {
+  const start = new Date(date); start.setHours(0, 0, 0, 0);
+  const end   = new Date(date); end.setHours(23, 59, 59, 999);
+  const existing = await db.appointment.findMany({
+    where: { clinicId, date: { gte: start, lte: end }, status: { not: "cancelled" } },
     select: { date: true },
   });
+  return generateSlots(startTime, endTime, existing.map((a: { date: Date }) => a.date));
+}
 
-  const takenTimes = existingAppointments.map((a: { date: Date }) => a.date);
-  const slots = generateSlots(workingHours.startTime, workingHours.endTime, takenTimes);
+async function getAvailableSlotsMessage(clinicId: string): Promise<{ message: string; slots: string[]; targetDate: Date }> {
+  const allHours = await getAllWorkingHours(clinicId);
+  const hoursMap = Object.fromEntries(allHours.map((h: any) => [h.dayOfWeek, h]));
 
-  if (slots.length === 0) {
-    return { message: "عذراً، لا تتوفر مواعيد متاحة اليوم 😔", slots: [] };
+  // Search today + next 6 days for first available slot
+  const base = new Date();
+  let closedToday = false;
+  let fullToday = false;
+
+  for (let offset = 0; offset < 7; offset++) {
+    const targetDate = new Date(base);
+    targetDate.setDate(base.getDate() + offset);
+    const dayOfWeek = targetDate.getDay();
+    const wh = hoursMap[dayOfWeek];
+
+    if (!wh || !wh.isOpen) {
+      if (offset === 0) closedToday = true;
+      continue;
+    }
+
+    const slots = await getSlotsForDate(clinicId, targetDate, wh.startTime, wh.endTime);
+
+    if (slots.length === 0) {
+      if (offset === 0) fullToday = true;
+      continue;
+    }
+
+    // Found available slots on targetDate
+    const dayLabel = offset === 0 ? "اليوم" : offset === 1 ? "غداً" : `يوم ${DAY_NAMES_AR[dayOfWeek]}`;
+    const timeRange = `من ${formatSlotLabel(wh.startTime)} حتى ${formatSlotLabel(wh.endTime)}`;
+    const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlotLabel(s)}`);
+
+    let prefix = "";
+    if (closedToday)
+      prefix = `العيادة مغلقة اليوم 🔴\nأقرب موعد متاح: *${dayLabel}* (${timeRange})\n\n`;
+    else if (fullToday)
+      prefix = `مواعيد اليوم ممتلئة 😔\nأقرب موعد متاح: *${dayLabel}* (${timeRange})\n\n`;
+    else if (offset > 0)
+      prefix = `*${dayLabel}* (${timeRange})\n\n`;
+
+    const message = `${prefix}اختر الوقت المناسب:\n${lines.join("\n")}`;
+    return { message, slots, targetDate };
   }
 
-  const lines = slots.map(
-    (s, i) => `${EMOJI_NUMBERS[i]} ${formatSlotLabel(s)}`
-  );
-  const message = `اختر الوقت المناسب:\n${lines.join("\n")}`;
-  return { message, slots };
+  // No slots in 7 days
+  return {
+    message: "عذراً، لا تتوفر مواعيد خلال الأيام القادمة 😔\nتواصل مع العيادة مباشرة للمساعدة.",
+    slots: [],
+    targetDate: base,
+  };
 }
 
 export async function POST(req: Request) {
@@ -190,7 +223,7 @@ export async function POST(req: Request) {
           `أهلاً ${patient.name}! 👋\nلديك موعد بتاريخ ${dateStr} الساعة ${timeStr} ✅\nهل تريد حجز موعد جديد؟ أرسل (نعم)`
         );
       } else {
-        const { message, slots } = await getAvailableSlotsMessage(clinicId);
+        const { message, slots, targetDate } = await getAvailableSlotsMessage(clinicId);
         if (slots.length === 0) {
           await db.whatsappSession.upsert({
             where: { clinicId_phone: { clinicId, phone } },
@@ -200,14 +233,11 @@ export async function POST(req: Request) {
           return twimlReply(`أهلاً ${patient.name}! 👋\n${message}`);
         }
 
+        const dateKey = targetDate.toISOString().slice(0, 10);
         await db.whatsappSession.upsert({
           where: { clinicId_phone: { clinicId, phone } },
-          update: { step: `awaiting_slot:${slots.join(",")}:${patient.id}` },
-          create: {
-            clinicId,
-            phone,
-            step: `awaiting_slot:${slots.join(",")}:${patient.id}`,
-          },
+          update: { step: `awaiting_slot:${dateKey}:${slots.join(",")}:${patient.id}` },
+          create: { clinicId, phone, step: `awaiting_slot:${dateKey}:${slots.join(",")}:${patient.id}` },
         });
 
         return twimlReply(`أهلاً ${patient.name}! 👋\n${message}`);
@@ -234,7 +264,7 @@ export async function POST(req: Request) {
       data: { clinicId, name, whatsappPhone: phone },
     });
 
-    const { message, slots } = await getAvailableSlotsMessage(clinicId);
+    const { message, slots, targetDate } = await getAvailableSlotsMessage(clinicId);
     if (slots.length === 0) {
       await db.whatsappSession.update({
         where: { id: session.id },
@@ -243,9 +273,10 @@ export async function POST(req: Request) {
       return twimlReply(`تم تسجيلك بنجاح ${name}! 🎉\n${message}`);
     }
 
+    const dateKey = targetDate.toISOString().slice(0, 10);
     await db.whatsappSession.update({
       where: { id: session.id },
-      data: { step: `awaiting_slot:${slots.join(",")}:${newPatient.id}` },
+      data: { step: `awaiting_slot:${dateKey}:${slots.join(",")}:${newPatient.id}` },
     });
 
     return twimlReply(message);

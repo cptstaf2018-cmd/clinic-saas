@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 
 interface Settings {
   id: string;
@@ -18,18 +17,18 @@ interface Settings {
 type Tab = "profile" | "whatsapp" | "reminders" | "security";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "profile",   label: "ملف العيادة",     icon: "🏥" },
-  { id: "whatsapp",  label: "واتساب بزنس",     icon: "💬" },
-  { id: "reminders", label: "التذكيرات",        icon: "🔔" },
-  { id: "security",  label: "الأمان",           icon: "🔒" },
+  { id: "profile",   label: "ملف العيادة",     icon: "ع" },
+  { id: "whatsapp",  label: "واتساب بزنس",     icon: "و" },
+  { id: "reminders", label: "التذكيرات",        icon: "ت" },
+  { id: "security",  label: "الأمان",           icon: "أ" },
 ];
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
-      <div className="mb-4">
-        <h3 className="font-bold text-gray-900 text-base">{title}</h3>
-        {description && <p className="text-xs text-gray-400 mt-0.5">{description}</p>}
+    <div className="mb-5 rounded-[30px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70 md:p-6">
+      <div className="mb-5">
+        <h3 className="text-xl font-black text-slate-950">{title}</h3>
+        {description && <p className="mt-1 text-sm font-semibold text-slate-500">{description}</p>}
       </div>
       {children}
     </div>
@@ -39,13 +38,13 @@ function Section({ title, description, children }: { title: string; description?
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <label className="mb-1.5 block text-sm font-black text-slate-700">{label}</label>
       {children}
     </div>
   );
 }
 
-const inputCls = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent bg-white";
+const inputCls = "w-full h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100";
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("profile");
@@ -59,10 +58,6 @@ export default function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
-
-  // Reminders
-  const [reminding, setReminding] = useState(false);
-  const [remindResult, setRemindResult] = useState("");
 
   // Password
   const [currentPw, setCurrentPw] = useState("");
@@ -94,7 +89,7 @@ export default function SettingsPage() {
     });
     if (res.ok) {
       setSettings((prev) => prev ? { ...prev, ...patch } : prev);
-      setSaved("تم الحفظ بنجاح ✓");
+      setSaved("تم الحفظ بنجاح");
       setTimeout(() => setSaved(""), 3000);
     } else {
       const d = await res.json();
@@ -115,21 +110,13 @@ export default function SettingsPage() {
       const { url } = await res.json();
       setSettings((prev) => prev ? { ...prev, logoUrl: url } : prev);
       setLogoPreview(url);
-      setSaved("تم رفع الشعار بنجاح ✓");
+      setSaved("تم رفع الشعار بنجاح");
       setTimeout(() => setSaved(""), 3000);
     } else {
       const d = await res.json();
       setError(d.error ?? "فشل رفع الشعار");
     }
     setUploadingLogo(false);
-  }
-
-  async function sendRemindAll() {
-    setReminding(true); setRemindResult("");
-    const res = await fetch("/api/clinic/remind-all", { method: "POST" });
-    const d = await res.json();
-    setRemindResult(d.message ?? `تم الإرسال`);
-    setReminding(false);
   }
 
   async function clearAllData() {
@@ -165,34 +152,39 @@ export default function SettingsPage() {
     }
   }
 
-  if (loading) return <div className="p-6 text-gray-400 text-sm text-center">جاري التحميل...</div>;
-  if (!settings) return <div className="p-6 text-red-400 text-sm text-center">خطأ في تحميل الإعدادات</div>;
+  if (loading) return <div className="p-8 text-center text-sm font-bold text-slate-400">جاري التحميل...</div>;
+  if (!settings) return <div className="p-8 text-center text-sm font-bold text-red-500">خطأ في تحميل الإعدادات</div>;
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto" dir="rtl">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">الإعدادات</h1>
-        <p className="text-sm text-gray-400 mt-0.5">إدارة معلومات وإعدادات عيادتك</p>
-      </div>
+    <div className="p-4 md:p-8" dir="rtl">
+      <div className="mx-auto max-w-5xl space-y-7">
+      <section className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
+        <p className="text-sm font-black text-sky-700">إدارة النظام</p>
+        <h1 className="mt-2 text-3xl font-black md:text-4xl">الإعدادات</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+          تحكم بملف العيادة، واتساب، التذكيرات، والأمان من واجهة واحدة مرتبة.
+        </p>
+      </section>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 mb-6 overflow-x-auto">
+      <div className="flex gap-2 overflow-x-auto rounded-[26px] bg-white p-2 shadow-[0_14px_38px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => { setTab(t.id); setSaved(""); setError(""); }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex-1 justify-center ${
-              tab === t.id ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"
+            className={`flex min-w-max flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black whitespace-nowrap transition-all ${
+              tab === t.id ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
             }`}
           >
-            <span>{t.icon}</span> {t.label}
+            <span className={`flex h-7 w-7 items-center justify-center rounded-xl text-xs ${tab === t.id ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500"}`}>{t.icon}</span>
+            {t.label}
           </button>
         ))}
       </div>
 
       {/* Status messages */}
-      {saved && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-4">{saved}</div>}
-      {error && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">{error}</div>}
+      {saved && <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700">{saved}</div>}
+      {error && <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-black text-red-700">{error}</div>}
 
       {/* ── PROFILE TAB ── */}
       {tab === "profile" && (
@@ -201,9 +193,10 @@ export default function SettingsPage() {
             <div className="flex items-center gap-5">
               <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">
                 {logoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoPreview} alt="logo" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-3xl">🏥</span>
+                  <span className="text-xl font-black text-slate-400">ع</span>
                 )}
               </div>
               <div>
@@ -259,7 +252,7 @@ export default function SettingsPage() {
                   onClick={() => window.open(`https://clinicplt.vercel.app/display/${settings.id}`, "_blank")}
                   className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
                 >
-                  📺 فتح الشاشة
+                  فتح الشاشة
                 </button>
                 <button
                   type="button"
@@ -282,7 +275,7 @@ export default function SettingsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-800">الرد التلقائي على المرضى</p>
                 <p className={`text-xs mt-0.5 ${settings.botEnabled ? "text-green-600" : "text-red-500"}`}>
-                  {settings.botEnabled ? "✅ البوت مفعّل" : "❌ البوت معطّل"}
+                  {settings.botEnabled ? "البوت مفعّل" : "البوت معطّل"}
                 </p>
               </div>
               <button
@@ -304,7 +297,7 @@ export default function SettingsPage() {
               <textarea
                 className={`${inputCls} resize-none`}
                 rows={3}
-                value={settings.whatsappWelcomeMessage}
+                value={settings.whatsappWelcomeMessage ?? ""}
                 onChange={(e) => setSettings({ ...settings, whatsappWelcomeMessage: e.target.value })}
                 placeholder="مرحباً بك في عيادتنا! اكتب اسمك الكريم للمتابعة..."
               />
@@ -341,7 +334,7 @@ export default function SettingsPage() {
               <a href="https://wasenderapi.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
                 wasenderapi.com
               </a>{" "}
-              ← أنشئ Session ← اربط رقمك بالـ QR Code ← انسخ الـ API Key
+              ثم أنشئ Session واربط رقمك بالـ QR Code وانسخ الـ API Key
             </div>
             <Field label="WasenderAPI Key">
               <input
@@ -362,7 +355,7 @@ export default function SettingsPage() {
                 ? "bg-green-50 border border-green-200 text-green-700"
                 : "bg-gray-50 border border-gray-200 text-gray-500"
             }`}>
-              <span>{settings.whatsappAccessToken ? "✅" : "⚪"}</span>
+              <span className={`h-2.5 w-2.5 rounded-full ${settings.whatsappAccessToken ? "bg-emerald-500" : "bg-slate-300"}`} />
               <span>{settings.whatsappAccessToken ? "API Key محفوظ — البوت جاهز للإرسال" : "لم يتم إدخال API Key بعد"}</span>
             </div>
             <button
@@ -412,7 +405,7 @@ export default function SettingsPage() {
             <input className={inputCls} type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} />
           </Field>
           {pwError && <p className="text-red-500 text-sm mb-3">{pwError}</p>}
-          {pwSaved && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-3">تم تغيير كلمة المرور بنجاح ✓</div>}
+          {pwSaved && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-3">تم تغيير كلمة المرور بنجاح</div>}
           <button
             onClick={changePassword}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
@@ -428,7 +421,7 @@ export default function SettingsPage() {
 
           {clearResult && (
             <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-4">
-              ✓ {clearResult}
+              {clearResult}
             </div>
           )}
 
@@ -493,6 +486,7 @@ export default function SettingsPage() {
         )}
         </>
       )}
+      </div>
     </div>
   );
 }
