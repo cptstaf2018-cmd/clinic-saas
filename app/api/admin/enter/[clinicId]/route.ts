@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { encode, decode } from "next-auth/jwt";
 
+function appUrl(path: string) {
+  const base =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.AUTH_URL ??
+    process.env.NEXTAUTH_URL ??
+    "http://localhost:3000";
+  return new URL(path, base);
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ clinicId: string }> }
@@ -37,13 +46,13 @@ export async function GET(
     }
   }
 
-  if (!isAdmin) return NextResponse.redirect(new URL("/admin/login", req.url));
+  if (!isAdmin) return NextResponse.redirect(appUrl("/admin/login"));
 
   // ── 2. جلب مستخدم العيادة ───────────────────────────────────────────────
   const { clinicId } = await params;
   const user = await db.user.findFirst({ where: { clinicId } });
   if (!user || !user.clinicId)
-    return NextResponse.redirect(new URL("/admin", req.url));
+    return NextResponse.redirect(appUrl("/admin"));
 
   // ── 3. إنشاء JWT للعيادة ────────────────────────────────────────────────
   const clinicJwt = await encode({
@@ -59,7 +68,7 @@ export async function GET(
   });
 
   // ── 4. الاستجابة: احفظ الـ backup + ضع جلسة العيادة ────────────────────
-  const res = NextResponse.redirect(new URL("/dashboard", req.url));
+  const res = NextResponse.redirect(appUrl("/dashboard"));
 
   // احفظ جلسة السوبر أدمن كاحتياط (8 ساعات)
   res.cookies.set(backupName, adminJwt!, {
