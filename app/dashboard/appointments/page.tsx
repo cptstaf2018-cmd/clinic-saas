@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import ClearClinicDataButton from "../ClearClinicDataButton";
 
 type Appt = {
   id: string;
@@ -137,18 +138,21 @@ export default function AppointmentsPage() {
         </section>
 
         <section className="rounded-[30px] bg-white p-4 md:p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
-          <div className="mb-4 flex gap-2 overflow-x-auto rounded-[22px] bg-slate-100 p-1.5">
-            {RANGE_TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setRange(tab.id)}
-                className={`min-w-max flex-1 rounded-2xl px-4 py-2.5 text-sm font-black transition ${
-                  range === tab.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex gap-2 overflow-x-auto rounded-[22px] bg-slate-100 p-1.5 lg:flex-1">
+              {RANGE_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setRange(tab.id)}
+                  className={`min-w-max flex-1 rounded-2xl px-4 py-2.5 text-sm font-black transition ${
+                    range === tab.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <ClearClinicDataButton />
           </div>
 
           <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_auto]">

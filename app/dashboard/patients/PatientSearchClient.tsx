@@ -12,16 +12,6 @@ type Patient = {
   hasUpcoming: boolean;
 };
 
-const COLORS = ["#0f172a", "#2563eb", "#059669", "#7c3aed", "#c2410c", "#0891b2", "#be123c", "#4d7c0f"];
-
-function initials(name: string) {
-  return name.trim().split(" ").slice(0, 2).map((word) => word[0]).join("") || "م";
-}
-
-function colorFor(id: string) {
-  return COLORS[Math.abs(id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % COLORS.length];
-}
-
 function formatDate(iso: string | null) {
   if (!iso) return null;
   return new Date(iso).toLocaleDateString("ar-IQ", { month: "short", day: "numeric", year: "numeric" });
@@ -126,26 +116,22 @@ export default function PatientSearchClient({ patients: initial }: { patients: P
           {filtered.map((patient) => {
             const isEditing = editingId === patient.id;
             const isDelete = confirmDeleteId === patient.id;
-            const color = colorFor(patient.id);
 
             return (
               <div
                 key={patient.id}
-                className={`overflow-hidden rounded-[26px] bg-white shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] ${
-                  isDelete ? "ring-red-200" : isEditing ? "ring-blue-200" : "ring-slate-200"
+                className={`overflow-hidden rounded-[22px] bg-white shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,23,42,0.07)] ${
+                  isDelete ? "ring-rose-100" : isEditing ? "ring-blue-100" : "ring-slate-200/80"
                 }`}
               >
                 {!isEditing && !isDelete && (
                   <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center">
-                    <div className="flex min-w-0 flex-1 items-center gap-4">
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-base font-black text-white" style={{ background: color }}>
-                        {initials(patient.name)}
-                      </div>
+                    <div className="flex min-w-0 flex-1 items-center">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate text-base font-black text-slate-950">{patient.name}</p>
                           {patient.hasUpcoming && (
-                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                            <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-600 ring-1 ring-slate-200">
                               موعد قادم
                             </span>
                           )}
@@ -160,7 +146,7 @@ export default function PatientSearchClient({ patients: initial }: { patients: P
                     </div>
 
                     <div className="flex gap-2 md:justify-end">
-                      <Link href={`/dashboard/patients/${patient.id}`} className="flex-1 rounded-2xl bg-blue-600 px-4 py-2.5 text-center text-xs font-black text-white transition hover:bg-blue-700 md:flex-none">
+                      <Link href={`/dashboard/patients/${patient.id}`} className="flex-1 rounded-2xl bg-slate-950 px-4 py-2.5 text-center text-xs font-black text-white transition hover:bg-slate-800 md:flex-none">
                         الملف
                       </Link>
                       <button
@@ -171,7 +157,7 @@ export default function PatientSearchClient({ patients: initial }: { patients: P
                           setConfirmDeleteId(null);
                           setError("");
                         }}
-                        className="flex-1 rounded-2xl bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100 md:flex-none"
+                        className="flex-1 rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 md:flex-none"
                       >
                         تعديل
                       </button>
@@ -181,7 +167,7 @@ export default function PatientSearchClient({ patients: initial }: { patients: P
                           setEditingId(null);
                           setError("");
                         }}
-                        className="flex-1 rounded-2xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 ring-1 ring-red-100 transition hover:bg-red-100 md:flex-none"
+                        className="flex-1 rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-500 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-rose-700 md:flex-none"
                       >
                         حذف
                       </button>
@@ -190,11 +176,11 @@ export default function PatientSearchClient({ patients: initial }: { patients: P
                 )}
 
                 {isEditing && (
-                  <div className="space-y-3 bg-blue-50/40 p-4">
-                    <p className="text-sm font-black text-blue-800">تعديل بيانات المراجع</p>
+                  <div className="space-y-3 bg-slate-50/80 p-4">
+                    <p className="text-sm font-black text-slate-800">تعديل بيانات المراجع</p>
                     <div className="grid gap-3 md:grid-cols-2">
-                      <input value={editName} onChange={(event) => setEditName(event.target.value)} placeholder="الاسم" className="rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100" />
-                      <input value={editPhone} onChange={(event) => setEditPhone(event.target.value)} placeholder="رقم الهاتف" className="rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100" dir="ltr" />
+                      <input value={editName} onChange={(event) => setEditName(event.target.value)} placeholder="الاسم" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100" />
+                      <input value={editPhone} onChange={(event) => setEditPhone(event.target.value)} placeholder="رقم الهاتف" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100" dir="ltr" />
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => saveEdit(patient.id)} disabled={loading === `${patient.id}_edit`} className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-50">
@@ -208,11 +194,11 @@ export default function PatientSearchClient({ patients: initial }: { patients: P
                 )}
 
                 {isDelete && (
-                  <div className="space-y-3 bg-red-50/50 p-4">
-                    <p className="text-sm font-black text-red-800">حذف {patient.name}؟</p>
-                    <p className="text-xs font-semibold leading-6 text-red-600">سيتم حذف ملف المراجع ومواعيده نهائياً.</p>
+                  <div className="space-y-3 bg-rose-50/60 p-4">
+                    <p className="text-sm font-black text-slate-900">حذف {patient.name}؟</p>
+                    <p className="text-xs font-semibold leading-6 text-slate-500">سيتم حذف ملف المراجع ومواعيده نهائياً.</p>
                     <div className="flex gap-2">
-                      <button onClick={() => deletePatient(patient.id)} disabled={loading === `${patient.id}_delete`} className="rounded-2xl bg-red-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-red-700 disabled:opacity-50">
+                      <button onClick={() => deletePatient(patient.id)} disabled={loading === `${patient.id}_delete`} className="rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-black text-white transition hover:bg-slate-800 disabled:opacity-50">
                         {loading === `${patient.id}_delete` ? "جاري الحذف..." : "نعم، احذف"}
                       </button>
                       <button onClick={() => setConfirmDeleteId(null)} className="rounded-2xl bg-white px-5 py-2.5 text-sm font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50">

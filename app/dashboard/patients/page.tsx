@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import PatientSearchClient from "./PatientSearchClient";
+import ClearClinicDataButton from "../ClearClinicDataButton";
 
 function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
@@ -59,12 +60,12 @@ export default async function PatientsPage() {
 
         <section className="grid gap-4 md:grid-cols-3">
           {[
-            { label: "إجمالي المراجعين", value: patients.length, bar: "bg-blue-600" },
-            { label: "لديهم موعد قادم", value: withUpcoming, bar: "bg-emerald-600" },
-            { label: "جديد هذا الشهر", value: newThisMonth, bar: "bg-blue-600" },
+            { label: "إجمالي المراجعين", value: patients.length, bar: "bg-slate-800" },
+            { label: "لديهم موعد قادم", value: withUpcoming, bar: "bg-sky-500" },
+            { label: "جديد هذا الشهر", value: newThisMonth, bar: "bg-slate-400" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-[26px] bg-white p-5 shadow-[0_14px_38px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
-              <div className={`h-2 w-16 rounded-full ${stat.bar}`} />
+            <div key={stat.label} className="rounded-[22px] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/70">
+              <div className={`h-1.5 w-16 rounded-full ${stat.bar}`} />
               <p className="mt-5 text-sm font-black text-slate-500">{stat.label}</p>
               <p className="mt-2 text-4xl font-black text-slate-950">{arabicNumber(stat.value)}</p>
             </div>
@@ -72,6 +73,9 @@ export default async function PatientsPage() {
         </section>
 
         <section className="rounded-[30px] bg-white p-4 md:p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+          <div className="mb-4 flex justify-end">
+            <ClearClinicDataButton />
+          </div>
           <PatientSearchClient patients={serialized} />
         </section>
       </div>
