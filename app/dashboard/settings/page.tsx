@@ -71,6 +71,12 @@ export default function SettingsPage() {
   const [clearConfirm, setClearConfirm] = useState("");
   const [clearing, setClearing] = useState(false);
   const [clearResult, setClearResult] = useState("");
+  const [origin, setOrigin] = useState("");
+  const displayUrl = settings && origin ? `${origin}/display/${settings.id}` : "";
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     fetch("/api/clinic/settings")
@@ -244,19 +250,19 @@ export default function SettingsPage() {
           <Section title="شاشة الانتظار" description="افتح هذا الرابط على تلفزيون غرفة الانتظار">
             <div className="bg-gray-900 rounded-xl p-3">
               <code className="text-xs text-blue-400 break-all font-mono block mb-2">
-                {`https://clinicplt.vercel.app/display/${settings.id}`}
+                {displayUrl}
               </code>
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => window.open(`https://clinicplt.vercel.app/display/${settings.id}`, "_blank")}
+                  onClick={() => window.open(displayUrl, "_blank", "noopener,noreferrer")}
                   className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
                 >
                   فتح الشاشة
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/display/${settings.id}`)}
+                  onClick={() => navigator.clipboard.writeText(displayUrl)}
                   className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-lg transition-colors"
                 >
                   نسخ الرابط

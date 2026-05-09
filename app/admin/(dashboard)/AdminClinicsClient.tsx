@@ -38,7 +38,13 @@ function toDateInput(iso: string | undefined) {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
-export default function AdminClinicsClient({ initialClinics }: { initialClinics: Clinic[] }) {
+export default function AdminClinicsClient({
+  initialClinics,
+  publicBaseUrl,
+}: {
+  initialClinics: Clinic[];
+  publicBaseUrl: string;
+}) {
   const router = useRouter();
   const [clinics, setClinics] = useState<Clinic[]>(initialClinics);
   const [query, setQuery] = useState("");
@@ -74,6 +80,11 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
     if (!term) return true;
     return clinic.name.includes(term) || clinic.whatsappNumber.includes(term);
   });
+
+  function enterClinic(clinicId: string) {
+    const origin = publicBaseUrl || window.location.origin;
+    window.open(new URL(`/api/admin/enter/${clinicId}`, origin).toString(), "_blank", "noopener,noreferrer");
+  }
 
   function startEdit(c: Clinic) {
     setEditId(c.id);
@@ -324,7 +335,7 @@ export default function AdminClinicsClient({ initialClinics }: { initialClinics:
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2">
                     <button
-                      onClick={() => window.open(`/api/admin/enter/${clinic.id}`, "_blank")}
+                      onClick={() => enterClinic(clinic.id)}
                       className="rounded-2xl bg-slate-950 px-4 py-2.5 text-xs font-black text-white transition hover:bg-slate-800"
                     >
                       دخول

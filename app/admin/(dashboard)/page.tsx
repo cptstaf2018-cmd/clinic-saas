@@ -6,6 +6,11 @@ import AdminClinicsClient from "./AdminClinicsClient";
 export default async function AdminClinicsPage() {
   const session = await auth();
   if ((session?.user as any)?.role !== "superadmin") redirect("/login");
+  const publicBaseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.AUTH_URL ??
+    process.env.NEXTAUTH_URL ??
+    "";
 
   const clinics = await db.clinic.findMany({
     include: { subscription: true },
@@ -25,5 +30,5 @@ export default async function AdminClinicsPage() {
       : null,
   }));
 
-  return <AdminClinicsClient initialClinics={serialized} />;
+  return <AdminClinicsClient initialClinics={serialized} publicBaseUrl={publicBaseUrl} />;
 }
