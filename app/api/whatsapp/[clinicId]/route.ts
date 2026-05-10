@@ -466,6 +466,46 @@ export async function POST(
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
       const patient = await db.patient.findUnique({ where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } }, select: { name: true } });
       await reply(mainMenuMessage(botClinic, patient?.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "book") {
+      const patient = await db.patient.findUnique({ where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } } });
+      if (patient) {
+        await startBooking(patient.id, patient.name, session.id);
+      } else {
+        await db.whatsappSession.update({ where: { id: session.id }, data: { step: "awaiting_name" } });
+        await reply(`لحجز موعد في ${clinic.name}، أرسل اسمك الكامل من فضلك.\nمثال: أحمد محمد`);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "my_appointment") {
+      const patient = await db.patient.findUnique({
+        where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
+        include: {
+          appointments: {
+            where: { date: { gte: new Date() }, status: { not: "cancelled" } },
+            orderBy: { date: "asc" },
+            take: 1,
+          },
+        },
+      });
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
+      await reply(patient?.appointments[0] ? formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date) : noUpcomingMessage(patient?.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "working_hours") {
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
+      await reply(await workingHoursMessage(clinicId, clinic.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "location") {
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
+      await reply(clinicLocationMessage(botClinic));
+      return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ ok: true });
   }
