@@ -248,11 +248,11 @@ export default function AdminClinicsClient({
 
   return (
     <div dir="rtl" className="space-y-5">
-      <section className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-        <div className="border-b border-slate-100 px-5 py-5 lg:px-6">
+      <section className="overflow-hidden rounded-lg bg-white shadow-[0_18px_70px_rgba(15,23,42,0.07)] ring-1 ring-slate-200">
+        <div className="border-b border-slate-100 bg-[linear-gradient(90deg,#ffffff,#f0f7ff,#f7fdfb)] px-5 py-5 lg:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-black text-blue-600">لوحة السوبر أدمن</p>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">Clinics Operations</p>
               <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">إدارة العيادات</h1>
               <p className="mt-2 text-sm font-semibold text-slate-500">
                 متابعة الاشتراكات، الحالات، والدخول التشغيلي للعيادات من شاشة واحدة.
@@ -276,7 +276,7 @@ export default function AdminClinicsClient({
             { label: "تنتهي قريباً", value: expiringCount, accent: "text-amber-700", sub: "خلال 7 أيام" },
             { label: "تحتاج متابعة", value: inactiveCount, accent: "text-rose-700", sub: "متوقفة أو معلقة" },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white px-5 py-4">
+            <div key={stat.label} className="bg-white px-5 py-4 transition hover:bg-slate-50">
               <p className="text-xs font-black text-slate-400">{stat.label}</p>
               <div className="mt-2 flex items-end justify-between gap-3">
                 <p className={`text-3xl font-black ${stat.accent}`}>{stat.value}</p>
@@ -304,7 +304,7 @@ export default function AdminClinicsClient({
                   onClick={() => setStatusFilter(tab.value)}
                   className={`shrink-0 rounded-lg px-3 py-2 text-xs font-black ring-1 transition ${
                     active
-                      ? "bg-slate-950 text-white ring-slate-950"
+                      ? "bg-blue-600 text-white ring-blue-600"
                       : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
                   }`}
                 >
@@ -337,7 +337,7 @@ export default function AdminClinicsClient({
         </div>
       )}
 
-      <section className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+      <section className="overflow-hidden rounded-lg bg-white shadow-[0_12px_50px_rgba(15,23,42,0.05)] ring-1 ring-slate-200">
         <div className="hidden overflow-x-auto lg:block">
           <table className="min-w-full border-separate border-spacing-0 text-right">
             <thead className="bg-slate-50">
@@ -657,7 +657,7 @@ function RowActions({
 }) {
   return (
     <div className={`flex gap-2 ${compact ? "flex-wrap" : "justify-end"}`}>
-      <button onClick={() => enterClinic(clinic.id)} className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-800">دخول</button>
+      <button onClick={() => enterClinic(clinic.id)} className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-black text-white transition hover:bg-blue-700">دخول</button>
       <button
         onClick={() => toggleStatus(clinic)}
         disabled={loading === clinic.id + "_toggle"}
