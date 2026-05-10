@@ -263,12 +263,12 @@ export default function SettingsPage() {
                 placeholder="مثال: بغداد، الكرادة، قرب..."
               />
             </Field>
-            <Field label="رابط خرائط Google">
+            <Field label="رابط خرائط Google أو كود الموقع">
               <input
                 className={inputCls}
                 value={settings.locationUrl ?? ""}
                 onChange={(e) => setSettings({ ...settings, locationUrl: e.target.value })}
-                placeholder="https://maps.google.com/..."
+                placeholder="https://maps.google.com/... أو JM3J+F6G, Tikrit"
                 dir="ltr"
               />
             </Field>

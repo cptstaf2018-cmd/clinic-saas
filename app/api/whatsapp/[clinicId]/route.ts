@@ -10,7 +10,7 @@ const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6
 const MENU_WORDS = ["قائمة", "القائمة", "مساعدة", "help", "menu", "رجوع", "ابدأ", "ابدا", "0"];
 const HANDOFF_WORDS = ["موظف", "دعم", "ادمن", "إنسان", "انسان", "تواصل", "مساعدة موظف"];
 const WORKING_HOURS_WORDS = ["دوام", "اوقات الدوام", "اوقات", "وقت", "متى تفتح", "متى تغلق"];
-const LOCATION_WORDS = ["موقع", "عنوان", "وين", "اين", "خريطة", "لوكيشن"];
+const LOCATION_WORDS = ["موقع", "موقعكم", "عنوان", "العنوان", "مكان", "المكان", "وين", "اين", "خريطة", "خريطه", "لوكيشن", "كوكل", "قوقل", "google", "maps"];
 const MEDICAL_WORDS = ["الم", "وجع", "علاج", "دواء", "تشخيص", "اعراض", "جرعة", "نزف", "حرارة", "صداع", "وصفة", "مريض"];
 const OUT_OF_SCOPE_WORDS = ["طقس", "سياسة", "كرة", "سعر الدولار", "اخبار", "اغنية", "نكتة", "طبخ", "دراسة", "ترجمة"];
 const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -169,8 +169,16 @@ function clinicLocationMessage(clinic: BotClinic) {
   }
 
   const lines = [`موقع ${clinic.name}:`];
-  if (clinic.address) lines.push(`العنوان: ${clinic.address}`);
-  if (clinic.locationUrl) lines.push(`الخريطة: ${clinic.locationUrl}`);
+  const address = clinic.address?.trim();
+  const locationValue = clinic.locationUrl?.trim();
+  if (address) lines.push(`العنوان: ${address}`);
+  if (locationValue) {
+    const isUrl = /^https?:\/\//i.test(locationValue);
+    const mapUrl = isUrl
+      ? locationValue
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${locationValue} ${address ?? clinic.name}`)}`;
+    lines.push(`رابط الخريطة: ${mapUrl}`);
+  }
   lines.push("\nللحجز أرسل 1، وللعودة إلى القائمة أرسل 0.");
   return lines.join("\n");
 }
