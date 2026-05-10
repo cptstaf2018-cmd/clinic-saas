@@ -13,6 +13,11 @@ function appUrl(path: string) {
   return new URL(path, base);
 }
 
+function requestIsSecure(req: NextRequest) {
+  const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  return forwardedProto === "https" || req.nextUrl.protocol === "https:";
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if ((session?.user as any)?.role !== "superadmin")
@@ -28,7 +33,7 @@ export async function GET(req: NextRequest) {
   if (!user || !user.clinicId) return NextResponse.redirect(appUrl("/login"));
 
   const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
-  const isSecure = req.nextUrl.protocol === "https:";
+  const isSecure = requestIsSecure(req);
   const cookieName = isSecure ? "__Secure-authjs.session-token" : "authjs.session-token";
 
   const jwt = await encode({

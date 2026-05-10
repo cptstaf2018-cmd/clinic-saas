@@ -11,12 +11,17 @@ function appUrl(path: string) {
   return new URL(path, base);
 }
 
+function requestIsSecure(req: NextRequest) {
+  const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  return forwardedProto === "https" || req.nextUrl.protocol === "https:";
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ clinicId: string }> }
 ) {
   const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
-  const isSecure = req.nextUrl.protocol === "https:";
+  const isSecure = requestIsSecure(req);
   const cookieName = isSecure ? "__Secure-authjs.session-token" : "authjs.session-token";
   const backupName = "sa-backup";
 

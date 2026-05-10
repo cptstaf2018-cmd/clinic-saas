@@ -1,8 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+function requestIsSecure(req: NextRequest) {
+  const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  return forwardedProto === "https" || req.nextUrl.protocol === "https:";
+}
+
+function shouldRedirectToHttps(req: NextRequest) {
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+  const localHost = host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
+  return process.env.NODE_ENV === "production" && !localHost && !requestIsSecure(req);
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  if (shouldRedirectToHttps(req)) {
+    const url = req.nextUrl.clone();
+    url.protocol = "https:";
+    url.host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+    return NextResponse.redirect(url, 308);
+  }
 
   const publicPaths = [
     "/login",
@@ -22,7 +40,7 @@ export async function middleware(req: NextRequest) {
 
   if (isPublic) return NextResponse.next();
 
-  const isSecure = req.nextUrl.protocol === "https:";
+  const isSecure = requestIsSecure(req);
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
