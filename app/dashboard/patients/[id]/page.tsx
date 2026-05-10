@@ -84,9 +84,14 @@ export default async function PatientProfilePage({
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-6xl space-y-5">
-        <Link href="/dashboard/patients" className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 text-sm font-black text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:text-slate-950">
-          قائمة المراجعين
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/dashboard/patients" className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 text-sm font-black text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:text-slate-950">
+            قائمة المراجعين
+          </Link>
+          <Link href={`/dashboard/patients/${patient.id}/report`} className="inline-flex items-center rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-blue-700">
+            تقرير PDF
+          </Link>
+        </div>
 
         <section className="grid gap-5 xl:grid-cols-[390px_1fr]">
           <div className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
