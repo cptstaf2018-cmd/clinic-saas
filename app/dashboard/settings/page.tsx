@@ -7,10 +7,17 @@ interface Settings {
   name: string;
   whatsappNumber: string;
   logoUrl: string;
+  address: string | null;
+  locationUrl: string | null;
   botEnabled: boolean;
   whatsappPhoneNumberId: string;
   whatsappAccessToken: string;
   whatsappWelcomeMessage: string;
+  botOutOfScopeMessage: string | null;
+  botMedicalDisclaimer: string | null;
+  botHandoffMessage: string | null;
+  botShowWorkingHours: boolean;
+  botShowLocation: boolean;
   clinicId: string;
 }
 
@@ -75,13 +82,13 @@ export default function SettingsPage() {
   const displayUrl = settings && origin ? `${origin}/display/${settings.id}` : "";
 
   useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
-
-  useEffect(() => {
     fetch("/api/clinic/settings")
       .then((r) => r.json())
-      .then((d) => { setSettings(d); setLogoPreview(d.logoUrl || ""); })
+      .then((d) => {
+        setSettings(d);
+        setLogoPreview(d.logoUrl || "");
+        setOrigin(window.location.origin);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -247,6 +254,33 @@ export default function SettingsPage() {
             </button>
           </Section>
 
+          <Section title="موقع العيادة" description="يستخدمه البوت فقط عند تفعيل خيار عرض الموقع للمرضى">
+            <Field label="عنوان العيادة">
+              <input
+                className={inputCls}
+                value={settings.address ?? ""}
+                onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                placeholder="مثال: بغداد، الكرادة، قرب..."
+              />
+            </Field>
+            <Field label="رابط خرائط Google">
+              <input
+                className={inputCls}
+                value={settings.locationUrl ?? ""}
+                onChange={(e) => setSettings({ ...settings, locationUrl: e.target.value })}
+                placeholder="https://maps.google.com/..."
+                dir="ltr"
+              />
+            </Field>
+            <button
+              onClick={() => saveSettings({ address: settings.address, locationUrl: settings.locationUrl })}
+              disabled={saving}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ موقع العيادة"}
+            </button>
+          </Section>
+
           <Section title="شاشة الانتظار" description="افتح هذا الرابط على تلفزيون غرفة الانتظار">
             <div className="bg-gray-900 rounded-xl p-3">
               <code className="text-xs text-blue-400 break-all font-mono block mb-2">
@@ -314,6 +348,72 @@ export default function SettingsPage() {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ رسالة الترحيب"}
+            </button>
+          </Section>
+
+          <Section title="حدود البوت وردوده" description="اضبط ما يقوله البوت عند طلب الموقع، الدوام، الأسئلة الطبية، أو المواضيع غير المتعلقة بالعيادة">
+            <div className="mb-4 grid gap-3 sm:grid-cols-2">
+              <label className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <span>
+                  <span className="block text-sm font-black text-slate-800">إظهار أوقات الدوام</span>
+                  <span className="block text-xs font-semibold text-slate-400">يضيف خيار الدوام في قائمة البوت</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={settings.botShowWorkingHours}
+                  onChange={(e) => setSettings({ ...settings, botShowWorkingHours: e.target.checked })}
+                  className="h-5 w-5 accent-blue-600"
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <span>
+                  <span className="block text-sm font-black text-slate-800">إظهار موقع العيادة</span>
+                  <span className="block text-xs font-semibold text-slate-400">لا يظهر للمرضى إلا إذا أضفت العنوان أو الرابط</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={settings.botShowLocation}
+                  onChange={(e) => setSettings({ ...settings, botShowLocation: e.target.checked })}
+                  className="h-5 w-5 accent-blue-600"
+                />
+              </label>
+            </div>
+            <Field label="رد المواضيع خارج نطاق العيادة">
+              <textarea
+                className={`${inputCls} min-h-24 resize-none leading-7`}
+                value={settings.botOutOfScopeMessage ?? ""}
+                onChange={(e) => setSettings({ ...settings, botOutOfScopeMessage: e.target.value })}
+                placeholder="أنا مساعد العيادة، أستطيع مساعدتك في الحجز، المواعيد، الدوام، والتواصل مع الموظف فقط."
+              />
+            </Field>
+            <Field label="رد الأسئلة الطبية">
+              <textarea
+                className={`${inputCls} min-h-24 resize-none leading-7`}
+                value={settings.botMedicalDisclaimer ?? ""}
+                onChange={(e) => setSettings({ ...settings, botMedicalDisclaimer: e.target.value })}
+                placeholder="لا أستطيع تقديم تشخيص أو وصف علاج عبر الرسائل. للحالات الطبية احجز موعداً أو تواصل مع موظف العيادة."
+              />
+            </Field>
+            <Field label="رسالة التحويل إلى الموظف">
+              <textarea
+                className={`${inputCls} min-h-24 resize-none leading-7`}
+                value={settings.botHandoffMessage ?? ""}
+                onChange={(e) => setSettings({ ...settings, botHandoffMessage: e.target.value })}
+                placeholder="تم تحويل طلبك إلى موظف العيادة. سنرد عليك قريباً عبر واتساب."
+              />
+            </Field>
+            <button
+              onClick={() => saveSettings({
+                botOutOfScopeMessage: settings.botOutOfScopeMessage,
+                botMedicalDisclaimer: settings.botMedicalDisclaimer,
+                botHandoffMessage: settings.botHandoffMessage,
+                botShowWorkingHours: settings.botShowWorkingHours,
+                botShowLocation: settings.botShowLocation,
+              })}
+              disabled={saving}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ حدود البوت"}
             </button>
           </Section>
 

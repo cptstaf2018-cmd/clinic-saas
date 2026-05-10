@@ -8,8 +8,24 @@ import { sendWhatsApp } from "@/lib/whatsapp";
 const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 const MENU_WORDS = ["قائمة", "القائمة", "مساعدة", "help", "menu", "رجوع", "ابدأ", "ابدا", "0"];
 const HANDOFF_WORDS = ["موظف", "دعم", "ادمن", "إنسان", "انسان", "تواصل", "مساعدة موظف"];
+const WORKING_HOURS_WORDS = ["دوام", "اوقات الدوام", "اوقات", "وقت", "متى تفتح", "متى تغلق"];
+const LOCATION_WORDS = ["موقع", "عنوان", "وين", "اين", "خريطة", "لوكيشن"];
+const MEDICAL_WORDS = ["الم", "وجع", "علاج", "دواء", "تشخيص", "اعراض", "جرعة", "نزف", "حرارة", "صداع", "وصفة", "مريض"];
+const OUT_OF_SCOPE_WORDS = ["طقس", "سياسة", "كرة", "سعر الدولار", "اخبار", "اغنية", "نكتة", "طبخ", "دراسة", "ترجمة"];
+const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
-type BotIntent = "menu" | "book" | "my_appointment" | "change_or_cancel" | "handoff" | "unknown";
+type BotIntent = "menu" | "book" | "my_appointment" | "change_or_cancel" | "handoff" | "working_hours" | "location" | "unknown";
+
+type BotClinic = {
+  name: string;
+  address?: string | null;
+  locationUrl?: string | null;
+  botOutOfScopeMessage?: string | null;
+  botMedicalDisclaimer?: string | null;
+  botHandoffMessage?: string | null;
+  botShowWorkingHours?: boolean | null;
+  botShowLocation?: boolean | null;
+};
 
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -101,12 +117,80 @@ function detectIntent(message: string): BotIntent {
   if (["2", "موعدي", "موعدي القادم", "عندي موعد", "مواعيدي"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "my_appointment";
   if (["3", "الغاء", "الغاء موعد", "تغيير", "تغيير موعد", "تاجيل", "اجل"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "change_or_cancel";
   if (text === "4") return "handoff";
+  if (text === "5" || WORKING_HOURS_WORDS.map(normalizeText).some((word) => text === word || text.includes(word))) return "working_hours";
+  if (text === "6" || LOCATION_WORDS.map(normalizeText).some((word) => text === word || text.includes(word))) return "location";
   return "unknown";
 }
 
-function mainMenuMessage(clinicName: string, patientName?: string | null) {
-  const greeting = patientName ? `مرحباً ${patientName}` : `مرحباً بك في ${clinicName}`;
-  return `${greeting}\nكيف يمكننا مساعدتك؟\n\n1. حجز موعد\n2. عرض موعدي القادم\n3. تعديل أو إلغاء موعد\n4. التحدث مع موظف\n\nأرسل رقم الخيار فقط.`;
+function mainMenuMessage(clinic: BotClinic, patientName?: string | null) {
+  const greeting = patientName ? `مرحباً ${patientName}` : `مرحباً بك في ${clinic.name}`;
+  const options = [
+    "1. حجز موعد",
+    "2. عرض موعدي القادم",
+    "3. تعديل أو إلغاء موعد",
+    "4. التحدث مع موظف",
+  ];
+
+  if (clinic.botShowWorkingHours !== false) options.push("5. أوقات الدوام");
+  if (clinic.botShowLocation && (clinic.address || clinic.locationUrl)) options.push("6. موقع العيادة");
+
+  return `${greeting}\nكيف يمكننا مساعدتك؟\n\n${options.join("\n")}\n\nأرسل رقم الخيار فقط.`;
+}
+
+function isMedicalQuestion(message: string) {
+  const text = normalizeText(message);
+  return MEDICAL_WORDS.map(normalizeText).some((word) => text.includes(word));
+}
+
+function isOutOfScope(message: string) {
+  const text = normalizeText(message);
+  return OUT_OF_SCOPE_WORDS.map(normalizeText).some((word) => text.includes(word));
+}
+
+function medicalDisclaimerMessage(clinic: BotClinic) {
+  return clinic.botMedicalDisclaimer?.trim() ||
+    `أنا مساعد ${clinic.name} للحجز والمتابعة فقط، ولا أستطيع تقديم تشخيص أو وصف علاج عبر الرسائل.\n\nللحجز أرسل 1، أو للتحدث مع موظف العيادة أرسل 4.`;
+}
+
+function outOfScopeMessage(clinic: BotClinic) {
+  return clinic.botOutOfScopeMessage?.trim() ||
+    `أنا مساعد ${clinic.name}، أستطيع مساعدتك في الحجز، موعدك القادم، تعديل الموعد، أوقات الدوام، أو التواصل مع موظف العيادة فقط.\n\nأرسل 0 لعرض القائمة.`;
+}
+
+function handoffMessage(clinic: BotClinic) {
+  return clinic.botHandoffMessage?.trim() ||
+    "تم تحويل طلبك إلى موظف العيادة.\nسنرد عليك قريباً عبر واتساب.\n\nللعودة إلى الخدمات الآلية أرسل 0.";
+}
+
+function clinicLocationMessage(clinic: BotClinic) {
+  if (!clinic.address && !clinic.locationUrl) {
+    return `لم يتم إضافة موقع ${clinic.name} بعد.\nللتواصل مع موظف العيادة أرسل 4.`;
+  }
+
+  const lines = [`موقع ${clinic.name}:`];
+  if (clinic.address) lines.push(`العنوان: ${clinic.address}`);
+  if (clinic.locationUrl) lines.push(`الخريطة: ${clinic.locationUrl}`);
+  lines.push("\nللحجز أرسل 1، وللعودة إلى القائمة أرسل 0.");
+  return lines.join("\n");
+}
+
+async function workingHoursMessage(clinicId: string, clinicName: string) {
+  const hours = await db.workingHours.findMany({
+    where: { clinicId },
+    orderBy: { dayOfWeek: "asc" },
+  });
+
+  if (!hours.length) {
+    return `لم يتم ضبط أوقات دوام ${clinicName} بعد.\nللتواصل مع موظف العيادة أرسل 4.`;
+  }
+
+  const lines = hours.map((day) => {
+    const name = DAY_NAMES[day.dayOfWeek] ?? "يوم غير محدد";
+    if (!day.isOpen) return `${name}: مغلق`;
+    return `${name}: ${formatSlot(day.startTime)} - ${formatSlot(day.endTime)}`;
+  });
+
+  return `أوقات دوام ${clinicName}:\n${lines.join("\n")}\n\nللحجز أرسل 1، وللعودة إلى القائمة أرسل 0.`;
 }
 
 function formatUpcomingAppointment(clinicName: string, patientName: string, date: Date) {
@@ -216,6 +300,7 @@ export async function POST(
 
   if (!clinic) return NextResponse.json({ ok: false, error: "Clinic not found" }, { status: 404 });
 
+  const botClinic = clinic;
   const apiKey = clinic.whatsappAccessToken ?? undefined;
   const clinicName = clinic.name;
 
@@ -248,7 +333,7 @@ export async function POST(
       update: { step: "handoff" },
       create: { clinicId, phone, step: "handoff" },
     });
-    await reply("تم تحويل طلبك إلى موظف العيادة.\nسنرد عليك قريباً عبر واتساب.\n\nللعودة إلى الخدمات الآلية أرسل 0.");
+    await reply(handoffMessage(botClinic));
   }
 
   async function startBooking(patientId: string, patientName: string, sessionId?: string) {
@@ -294,6 +379,16 @@ export async function POST(
   });
   const intent = detectIntent(messageBody);
 
+  if (isMedicalQuestion(messageBody)) {
+    await reply(medicalDisclaimerMessage(botClinic));
+    return NextResponse.json({ ok: true });
+  }
+
+  if (isOutOfScope(messageBody)) {
+    await reply(outOfScopeMessage(botClinic));
+    return NextResponse.json({ ok: true });
+  }
+
   // ── No active session → start conversation ────────────────────────────────
   if (!session || session.step === "done") {
     const patient = await db.patient.findUnique({
@@ -309,6 +404,16 @@ export async function POST(
 
     if (intent === "handoff" || intent === "change_or_cancel") {
       await transferToStaff();
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "working_hours") {
+      await reply(await workingHoursMessage(clinicId, clinic.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "location") {
+      await reply(clinicLocationMessage(botClinic));
       return NextResponse.json({ ok: true });
     }
 
@@ -329,7 +434,7 @@ export async function POST(
           update: { step: "main_menu" },
           create: { clinicId, phone, step: "main_menu" },
         });
-        await reply(mainMenuMessage(clinic.name, patient.name));
+        await reply(mainMenuMessage(botClinic, patient.name));
       }
     } else {
       if (intent === "book") {
@@ -348,7 +453,7 @@ export async function POST(
         create: { clinicId, phone, step: "main_menu" },
       });
       const welcome = clinic.whatsappWelcomeMessage ||
-        mainMenuMessage(clinic.name);
+        mainMenuMessage(botClinic);
       await reply(welcome);
     }
     return NextResponse.json({ ok: true });
@@ -360,7 +465,7 @@ export async function POST(
     if (intent === "menu") {
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
       const patient = await db.patient.findUnique({ where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } }, select: { name: true } });
-      await reply(mainMenuMessage(clinic.name, patient?.name));
+      await reply(mainMenuMessage(botClinic, patient?.name));
     }
     return NextResponse.json({ ok: true });
   }
@@ -397,7 +502,17 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
 
-    await reply(mainMenuMessage(clinic.name, patient?.name));
+    if (intent === "working_hours") {
+      await reply(await workingHoursMessage(clinicId, clinic.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "location") {
+      await reply(clinicLocationMessage(botClinic));
+      return NextResponse.json({ ok: true });
+    }
+
+    await reply(outOfScopeMessage(botClinic));
     return NextResponse.json({ ok: true });
   }
 
@@ -405,7 +520,7 @@ export async function POST(
   if (step === "awaiting_name") {
     if (intent === "menu") {
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
-      await reply(mainMenuMessage(clinic.name));
+      await reply(mainMenuMessage(botClinic));
       return NextResponse.json({ ok: true });
     }
 
@@ -444,7 +559,7 @@ export async function POST(
     if (intent === "menu") {
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
       const patient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
-      await reply(mainMenuMessage(clinic.name, patient?.name));
+      await reply(mainMenuMessage(botClinic, patient?.name));
       return NextResponse.json({ ok: true });
     }
 

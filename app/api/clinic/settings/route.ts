@@ -13,10 +13,17 @@ export async function GET() {
       name: true,
       whatsappNumber: true,
       logoUrl: true,
+      address: true,
+      locationUrl: true,
       botEnabled: true,
       whatsappPhoneNumberId: true,
       whatsappAccessToken: true,
       whatsappWelcomeMessage: true,
+      botOutOfScopeMessage: true,
+      botMedicalDisclaimer: true,
+      botHandoffMessage: true,
+      botShowWorkingHours: true,
+      botShowLocation: true,
     },
   });
 
@@ -34,7 +41,20 @@ export async function PATCH(req: Request) {
   if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
   const body = await req.json();
-  const allowed = ["name", "botEnabled", "whatsappPhoneNumberId", "whatsappAccessToken", "whatsappWelcomeMessage"];
+  const allowed = [
+    "name",
+    "address",
+    "locationUrl",
+    "botEnabled",
+    "whatsappPhoneNumberId",
+    "whatsappAccessToken",
+    "whatsappWelcomeMessage",
+    "botOutOfScopeMessage",
+    "botMedicalDisclaimer",
+    "botHandoffMessage",
+    "botShowWorkingHours",
+    "botShowLocation",
+  ];
 
   const data: Record<string, unknown> = {};
   for (const key of allowed) {

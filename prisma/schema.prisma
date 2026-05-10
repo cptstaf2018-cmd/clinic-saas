@@ -14,9 +14,16 @@ model Clinic {
   createdAt              DateTime          @default(now())
   botEnabled             Boolean           @default(true)
   logoUrl                String?
+  address                String?
+  locationUrl            String?
   whatsappAccessToken    String?
   whatsappPhoneNumberId  String?
   whatsappWelcomeMessage String?
+  botOutOfScopeMessage   String?
+  botMedicalDisclaimer   String?
+  botHandoffMessage      String?
+  botShowWorkingHours    Boolean           @default(true)
+  botShowLocation        Boolean           @default(false)
   appointments           Appointment[]
   incomingMessages       IncomingMessage[]
   medicalRecords         MedicalRecord[]
