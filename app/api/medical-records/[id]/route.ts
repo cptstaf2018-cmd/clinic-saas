@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { canUseFeature, upgradeMessage } from "@/lib/feature-gates";
 
 export async function PATCH(
   req: Request,
@@ -20,6 +21,11 @@ export async function PATCH(
   const { complaint, diagnosis, prescription, notes, date, followUpDate } = await req.json();
   if (!complaint?.trim())
     return NextResponse.json({ error: "الشكوى مطلوبة" }, { status: 400 });
+
+  const subscription = await db.subscription.findUnique({ where: { clinicId } });
+  if (followUpDate && !canUseFeature(subscription?.plan, "followUpTracking")) {
+    return NextResponse.json({ error: upgradeMessage("followUpTracking") }, { status: 402 });
+  }
 
   const updated = await db.medicalRecord.update({
     where: { id },

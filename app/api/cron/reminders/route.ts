@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
+import { canUseFeature } from "@/lib/feature-gates";
 
 export async function GET(req: NextRequest) {
   const secret = req.headers.get("authorization");
@@ -10,16 +11,16 @@ export async function GET(req: NextRequest) {
 
   const now = new Date();
 
-  // Clinics with active reminders (standard/premium plan)
   const activeSubscriptions = await db.subscription.findMany({
     where: {
       status: { in: ["active", "trial"] },
-      plan: { in: ["standard", "premium", "trial"] },
     },
-    select: { clinicId: true },
+    select: { clinicId: true, plan: true },
   });
 
-  const clinicIds = activeSubscriptions.map((s: { clinicId: string }) => s.clinicId);
+  const clinicIds = activeSubscriptions
+    .filter((subscription) => canUseFeature(subscription.plan, "autoReminders"))
+    .map((subscription) => subscription.clinicId);
 
   // 24h reminders
   const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);

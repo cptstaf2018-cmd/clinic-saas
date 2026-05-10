@@ -8,9 +8,9 @@ export type PlanId = keyof typeof PLAN_PRICES;
 
 export const PLAN_LABELS: Record<PlanId | "trial", string> = {
   trial: "تجريبي",
-  basic: "أساسية",
-  standard: "متوسطة",
-  premium: "مميزة",
+  basic: "Basic",
+  standard: "Pro",
+  premium: "Enterprise",
 };
 
 export function isPlanId(value: unknown): value is PlanId {

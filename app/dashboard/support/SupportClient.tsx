@@ -11,9 +11,9 @@ type HealthData = {
 
 const PLAN_LABELS: Record<string, string> = {
   trial: "تجريبي",
-  basic: "أساسية",
-  standard: "متوسطة",
-  premium: "مميزة",
+  basic: "Basic",
+  standard: "Pro",
+  premium: "Enterprise",
 };
 
 const STATUS_LABELS: Record<string, string> = {

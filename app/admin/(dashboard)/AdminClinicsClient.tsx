@@ -32,16 +32,16 @@ const STATUS_COLORS: Record<string, string> = {
 
 const PLAN_LABELS: Record<string, string> = {
   trial: "تجريبي",
-  basic: "أساسية",
-  standard: "متوسطة",
-  premium: "مميزة",
+  basic: "Basic",
+  standard: "Pro",
+  premium: "Enterprise",
 };
 
 const PLAN_OPTIONS = [
   { value: "trial", label: "تجريبي" },
-  { value: "basic", label: "أساسية" },
-  { value: "standard", label: "متوسطة" },
-  { value: "premium", label: "مميزة" },
+  { value: "basic", label: "Basic" },
+  { value: "standard", label: "Pro" },
+  { value: "premium", label: "Enterprise" },
 ];
 
 const STATUS_OPTIONS = [

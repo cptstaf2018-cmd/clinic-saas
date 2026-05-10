@@ -47,9 +47,11 @@ function arabicNumber(value: number) {
 export default function MedicalRecordsClient({
   patientId,
   initialRecords,
+  canUseFollowUp,
 }: {
   patientId: string;
   initialRecords: MedicalRecord[];
+  canUseFollowUp: boolean;
 }) {
   const [records, setRecords] = useState(initialRecords);
   const [showForm, setShowForm] = useState(false);
@@ -156,15 +158,16 @@ export default function MedicalRecordsClient({
       </div>
 
       {showForm && (
-        <RecordForm
-          form={form}
-          setForm={setForm}
-          onSave={saveNew}
-          onCancel={cancelForm}
-          loading={loading}
-          error={error}
-          title="إضافة سجل طبي جديد"
-        />
+          <RecordForm
+            form={form}
+            setForm={setForm}
+            onSave={saveNew}
+            onCancel={cancelForm}
+            loading={loading}
+            error={error}
+            title="إضافة سجل طبي جديد"
+            canUseFollowUp={canUseFollowUp}
+          />
       )}
 
       {records.length === 0 && !showForm ? (
@@ -190,6 +193,7 @@ export default function MedicalRecordsClient({
                     loading={loading}
                     error={error}
                     title="تعديل السجل الطبي"
+                    canUseFollowUp={canUseFollowUp}
                   />
                 </div>
               );
@@ -317,6 +321,7 @@ function RecordForm({
   loading,
   error,
   title,
+  canUseFollowUp,
 }: {
   form: FormState;
   setForm: (f: FormState) => void;
@@ -325,6 +330,7 @@ function RecordForm({
   loading: boolean;
   error: string;
   title: string;
+  canUseFollowUp: boolean;
 }) {
   const field = (key: keyof FormState) => ({
     value: form[key],
@@ -388,15 +394,21 @@ function RecordForm({
         </div>
         <div className="sm:col-span-2">
           <label className="block text-xs font-bold text-blue-600 mb-1">
-            📅 موعد المراجعة القادمة <span className="text-gray-400 font-normal">(اختياري)</span>
+            موعد المراجعة القادمة <span className="text-gray-400 font-normal">(اختياري)</span>
           </label>
-          <input
-            type="date"
-            {...field("followUpDate")}
-            min={new Date().toISOString().slice(0, 10)}
-            className="w-full border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            dir="ltr"
-          />
+          {canUseFollowUp ? (
+            <input
+              type="date"
+              {...field("followUpDate")}
+              min={new Date().toISOString().slice(0, 10)}
+              className="w-full border border-blue-200 bg-blue-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              dir="ltr"
+            />
+          ) : (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-bold text-amber-800">
+              تتبع المراجعات التلقائي متاح في باقة Pro.
+            </div>
+          )}
           {form.followUpDate && (
             <p className="text-xs text-blue-600 mt-1">
               ✓ سيُنشأ حجز مراجعة تلقائياً ويُرسل تذكير قبل 24 ساعة

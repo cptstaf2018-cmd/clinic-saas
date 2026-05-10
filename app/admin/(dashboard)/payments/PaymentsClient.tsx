@@ -35,15 +35,15 @@ const METHOD_LABELS: Record<string, string> = {
 };
 
 const PLAN_OPTIONS = [
-  { value: "basic", label: "أساسية — 35,000 د.ع" },
-  { value: "standard", label: "متوسطة — 45,000 د.ع" },
-  { value: "premium", label: "مميزة — 55,000 د.ع" },
+  { value: "basic", label: "Basic — 35,000 د.ع" },
+  { value: "standard", label: "Pro — 45,000 د.ع" },
+  { value: "premium", label: "Enterprise — 55,000 د.ع" },
 ];
 
 const PLAN_NAMES: Record<string, string> = {
-  basic: "أساسية",
-  standard: "متوسطة",
-  premium: "مميزة",
+  basic: "Basic",
+  standard: "Pro",
+  premium: "Enterprise",
 };
 
 export default function PaymentsClient({

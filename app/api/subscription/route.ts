@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getEntitlements } from "@/lib/feature-gates";
 
 export async function GET() {
   const session = await auth();
@@ -16,5 +17,8 @@ export async function GET() {
     return NextResponse.json(null);
   }
 
-  return NextResponse.json(subscription);
+  return NextResponse.json({
+    ...subscription,
+    entitlements: getEntitlements(subscription.plan),
+  });
 }

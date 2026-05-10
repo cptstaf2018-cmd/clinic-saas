@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { canUseFeature, upgradeMessage } from "@/lib/feature-gates";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -41,6 +42,11 @@ export async function POST(req: Request) {
   const patient = await db.patient.findFirst({ where: { id: patientId, clinicId } });
   if (!patient)
     return NextResponse.json({ error: "المريض غير موجود" }, { status: 404 });
+
+  const subscription = await db.subscription.findUnique({ where: { clinicId } });
+  if (followUpDate && !canUseFeature(subscription?.plan, "followUpTracking")) {
+    return NextResponse.json({ error: upgradeMessage("followUpTracking") }, { status: 402 });
+  }
 
   const record = await db.medicalRecord.create({
     data: {

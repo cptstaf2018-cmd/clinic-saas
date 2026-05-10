@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import MedicalRecordsClient from "./MedicalRecordsClient";
+import { getEntitlements } from "@/lib/feature-gates";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "معلق",
@@ -59,6 +60,9 @@ export default async function PatientProfilePage({
   });
 
   if (!patient) notFound();
+
+  const subscription = await db.subscription.findUnique({ where: { clinicId } });
+  const entitlements = getEntitlements(subscription?.plan);
 
   const now = new Date();
   const completedCount = patient.appointments.filter((appointment) => appointment.status === "completed").length;
@@ -145,7 +149,7 @@ export default async function PatientProfilePage({
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
-          <MedicalRecordsClient patientId={patient.id} initialRecords={serializedRecords} />
+          <MedicalRecordsClient patientId={patient.id} initialRecords={serializedRecords} canUseFollowUp={entitlements.features.includes("followUpTracking")} />
 
           <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
             <div className="mb-4 flex items-center justify-between">
