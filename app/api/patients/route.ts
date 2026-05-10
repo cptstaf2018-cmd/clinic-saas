@@ -42,3 +42,42 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(patients);
 }
+
+export async function POST(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+    cookieName: "https:" === req.nextUrl.protocol
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token",
+  });
+
+  if (!token?.clinicId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body: { name?: string; whatsappPhone?: string; phone?: string } = await req.json().catch(() => ({}));
+  const name = body.name?.trim();
+  const whatsappPhone = (body.whatsappPhone ?? body.phone ?? "").trim();
+
+  if (!name || !whatsappPhone) {
+    return NextResponse.json({ error: "اسم المراجع ورقم الهاتف مطلوبان" }, { status: 400 });
+  }
+
+  const patient = await db.patient.upsert({
+    where: {
+      clinicId_whatsappPhone: {
+        clinicId: token.clinicId as string,
+        whatsappPhone,
+      },
+    },
+    update: { name },
+    create: {
+      clinicId: token.clinicId as string,
+      name,
+      whatsappPhone,
+    },
+  });
+
+  return NextResponse.json(patient, { status: 201 });
+}

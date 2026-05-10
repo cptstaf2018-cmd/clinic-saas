@@ -17,12 +17,16 @@ export async function GET() {
   const phones = [...new Set(messages.map((m) => m.phone))];
   const patients = await db.patient.findMany({
     where: { clinicId, whatsappPhone: { in: phones } },
-    select: { whatsappPhone: true, name: true },
+    select: { id: true, whatsappPhone: true, name: true },
   });
-  const nameMap = Object.fromEntries(patients.map((p) => [p.whatsappPhone, p.name]));
+  const patientMap = Object.fromEntries(patients.map((p) => [p.whatsappPhone, p]));
 
   return NextResponse.json(
-    messages.map((m) => ({ ...m, patientName: nameMap[m.phone] ?? null }))
+    messages.map((m) => ({
+      ...m,
+      patientId: patientMap[m.phone]?.id ?? null,
+      patientName: patientMap[m.phone]?.name ?? null,
+    }))
   );
 }
 
@@ -31,7 +35,16 @@ export async function PATCH(req: Request) {
   if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
   const clinicId = session.user.clinicId as string;
 
-  const { id } = await req.json();
+  const { id, phone } = await req.json();
+
+  if (phone) {
+    await db.incomingMessage.updateMany({
+      where: { phone, clinicId },
+      data: { read: true },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   await db.incomingMessage.updateMany({
     where: { id, clinicId },
     data: { read: true },
