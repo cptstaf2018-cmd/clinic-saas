@@ -49,28 +49,28 @@ export default function AdminLoginPage() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-black">Ayadti Cloud</p>
-                    <p className="text-[11px] font-bold text-slate-400">Super Admin Console</p>
+                    <p className="text-sm font-black">عيادتي</p>
+                    <p className="text-[11px] font-bold text-slate-400">منصة إدارة العيادات</p>
                   </div>
                 </div>
 
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-600">Platform Command</p>
+                <p className="text-xs font-black text-blue-600">نظام متكامل للعيادات الحديثة</p>
                 <h1 className="mt-3 max-w-sm text-4xl font-black leading-tight tracking-tight text-slate-950">
-                  مركز إدارة العيادات والاشتراكات
+                  إدارة عيادتك تصبح أسهل وأسرع
                 </h1>
                 <p className="mt-4 max-w-md text-sm font-semibold leading-7 text-slate-500">
-                  واجهة تشغيل هادئة وسريعة لمتابعة الحسابات، المدفوعات، وحالة المنصة من مكان واحد.
+                  عيادتي يساعدك على تنظيم الحجوزات، ملفات المرضى، المدفوعات، والتذكيرات التلقائية من شاشة واحدة واضحة.
                 </p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                 {[
-                  ["Multi", "عيادات"],
-                  ["SSL", "اتصال آمن"],
-                  ["VPS", "تشغيل"],
+                  ["حجوزات", "تنظيم المواعيد"],
+                  ["مرضى", "ملفات وسجل كامل"],
+                  ["تذكير", "رسائل تلقائية"],
                 ].map(([value, label]) => (
                   <div key={label} className="rounded-lg border border-slate-200 bg-white p-4">
-                    <p className="text-2xl font-black text-slate-950">{value}</p>
+                    <p className="text-xl font-black text-slate-950">{value}</p>
                     <p className="mt-1 text-xs font-bold text-slate-400">{label}</p>
                   </div>
                 ))}
@@ -82,10 +82,10 @@ export default function AdminLoginPage() {
             <div className="w-full max-w-md">
               <div className="mb-7">
                 <span className="inline-flex rounded-lg bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100">
-                  دخول السوبر أدمن
+                  دخول إدارة المنصة
                 </span>
-                <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950">أهلاً بك</h2>
-                <p className="mt-2 text-sm font-semibold text-slate-500">سجّل الدخول لإدارة منصة عيادتي.</p>
+                <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950">مرحباً بك</h2>
+                <p className="mt-2 text-sm font-semibold text-slate-500">أدخل بياناتك للوصول إلى لوحة التحكم.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -130,7 +130,7 @@ export default function AdminLoginPage() {
 
               <div className="mt-5 flex items-center justify-center gap-2 text-xs font-bold text-slate-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span>Production HTTPS</span>
+                <span>اتصال آمن ومشفّر</span>
               </div>
             </div>
           </div>
