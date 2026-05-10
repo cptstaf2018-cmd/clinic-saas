@@ -22,6 +22,15 @@ export async function sendWhatsApp(
 
   if (!key) {
     console.log(`[WhatsApp DEV] To: ${phone}\n${message}`);
+    await logSystemEvent({
+      clinicId: context?.clinicId,
+      type: "whatsapp_api_key_missing",
+      severity: "error",
+      source: context?.source ?? "whatsapp",
+      title: "واتساب غير مربوط",
+      message: "لا يوجد API Key لإرسال رسائل واتساب لهذه العيادة.",
+      metadata: { phone, appointmentId: context?.appointmentId },
+    });
     return;
   }
 

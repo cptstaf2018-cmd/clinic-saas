@@ -79,7 +79,7 @@ export default function MonitoringClient({
     return runAction("scan", () => fetch("/api/admin/maintenance/scan", { method: "POST" }));
   }
 
-  function fixAll(action: "clear-stuck-sessions" | "close-old-pending") {
+  function fixAll(action: "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions") {
     return runAction(action, () =>
       fetch("/api/admin/maintenance/fix", {
         method: "POST",
@@ -89,7 +89,7 @@ export default function MonitoringClient({
     );
   }
 
-  function fixClinic(action: "clear-stuck-sessions" | "close-old-pending", clinicId: string) {
+  function fixClinic(action: "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions", clinicId: string) {
     return runAction(`${action}:${clinicId}`, () =>
       fetch("/api/admin/maintenance/fix", {
         method: "POST",
@@ -229,10 +229,11 @@ function EventActions({
   event: EventItem;
   busy: string | null;
   resolveEvent: (id: string) => void;
-  fixClinic: (action: "clear-stuck-sessions" | "close-old-pending", clinicId: string) => void;
+  fixClinic: (action: "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions", clinicId: string) => void;
 }) {
   const canFixStuck = event.type === "stuck_whatsapp_sessions" && event.clinicId;
   const canFixPending = event.type === "old_pending_appointments" && event.clinicId;
+  const canResetWhatsapp = event.type === "whatsapp_inbound_without_reply" && event.clinicId;
 
   return (
     <div className="flex flex-wrap items-start gap-2 lg:justify-end">
@@ -252,6 +253,15 @@ function EventActions({
           className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-black text-amber-700 ring-1 ring-amber-100 transition hover:bg-amber-100 disabled:opacity-50"
         >
           إغلاق
+        </button>
+      ) : null}
+      {canResetWhatsapp ? (
+        <button
+          onClick={() => fixClinic("reset-whatsapp-sessions", event.clinicId as string)}
+          disabled={busy === `reset-whatsapp-sessions:${event.clinicId}`}
+          className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100 disabled:opacity-50"
+        >
+          إعادة تشغيل البوت
         </button>
       ) : null}
       {!event.resolved ? (

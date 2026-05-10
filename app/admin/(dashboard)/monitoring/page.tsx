@@ -37,7 +37,20 @@ export default async function AdminMonitoringPage() {
     db.systemEvent.count(),
     db.systemEvent.count({ where: { severity: "error", createdAt: { gte: dayStart } } }),
     db.systemEvent.count({ where: { severity: "error", resolved: false } }),
-    db.systemEvent.count({ where: { type: "whatsapp_send_failed", createdAt: { gte: dayStart } } }),
+    db.systemEvent.count({
+      where: {
+        type: {
+          in: [
+            "whatsapp_send_failed",
+            "whatsapp_bot_reply_failed",
+            "whatsapp_api_key_missing",
+            "whatsapp_inbound_without_reply",
+            "whatsapp_bot_subscription_inactive",
+          ],
+        },
+        createdAt: { gte: dayStart },
+      },
+    }),
     db.systemEvent.count({ where: { type: { in: ["reminder_24h_failed", "reminder_1h_failed"] }, createdAt: { gte: dayStart } } }),
     Promise.all([
       db.whatsappSession.count({ where: { updatedAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } } }),

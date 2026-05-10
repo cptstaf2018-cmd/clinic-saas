@@ -25,18 +25,18 @@ export async function POST(req: Request) {
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
 
-  if (body.action === "clear-stuck-sessions") {
+  if (body.action === "clear-stuck-sessions" || body.action === "reset-whatsapp-sessions") {
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const result = await db.whatsappSession.deleteMany({
       where: {
         clinicId: body.clinicId ? body.clinicId : undefined,
-        updatedAt: { lt: cutoff },
+        updatedAt: body.action === "clear-stuck-sessions" ? { lt: cutoff } : undefined,
       },
     });
 
     await db.systemEvent.updateMany({
       where: {
-        type: "stuck_whatsapp_sessions",
+        type: { in: ["stuck_whatsapp_sessions", "whatsapp_inbound_without_reply"] },
         clinicId: body.clinicId ? body.clinicId : undefined,
         resolved: false,
       },
@@ -45,15 +45,15 @@ export async function POST(req: Request) {
 
     await logSystemEvent({
       clinicId: body.clinicId ?? null,
-      type: "stuck_sessions_cleared",
+      type: body.action === "clear-stuck-sessions" ? "stuck_sessions_cleared" : "whatsapp_sessions_reset",
       severity: "success",
       source: "super_admin_fix",
-      title: "تنظيف جلسات واتساب عالقة",
-      message: `تم حذف ${result.count} جلسة عالقة.`,
+      title: body.action === "clear-stuck-sessions" ? "تنظيف جلسات واتساب عالقة" : "إعادة تشغيل جلسات البوت",
+      message: `تم حذف ${result.count} جلسة واتساب.`,
       metadata: { count: result.count },
     });
 
-    return NextResponse.json({ success: true, message: `تم حذف ${result.count} جلسة عالقة.` });
+    return NextResponse.json({ success: true, message: `تم حذف ${result.count} جلسة واتساب.` });
   }
 
   if (body.action === "close-old-pending") {

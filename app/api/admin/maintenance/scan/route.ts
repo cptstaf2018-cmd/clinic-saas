@@ -61,6 +61,7 @@ export async function POST() {
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
   const staleSessionCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const recentInboundCutoff = new Date(now.getTime() - 15 * 60 * 1000);
   const expiringCutoff = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const [stuckSessions, pendingOldAppointments, expiringSubscriptions] = await Promise.all([
@@ -79,6 +80,38 @@ export async function POST() {
       select: { clinicId: true, expiresAt: true, plan: true },
     }),
   ]);
+
+  const recentInbound = await db.incomingMessage.findMany({
+    where: {
+      direction: "inbound",
+      createdAt: { gte: recentInboundCutoff },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, clinicId: true, phone: true, body: true, createdAt: true },
+  });
+
+  const unansweredByClinic = new Map<string, { count: number; latestPhone: string; latestBody: string; latestAt: string }>();
+  for (const inbound of recentInbound) {
+    const outboundAfter = await db.incomingMessage.findFirst({
+      where: {
+        clinicId: inbound.clinicId,
+        phone: inbound.phone,
+        direction: "outbound",
+        createdAt: { gt: inbound.createdAt },
+      },
+      select: { id: true },
+    });
+
+    if (!outboundAfter) {
+      const current = unansweredByClinic.get(inbound.clinicId);
+      unansweredByClinic.set(inbound.clinicId, {
+        count: (current?.count ?? 0) + 1,
+        latestPhone: inbound.phone,
+        latestBody: inbound.body.slice(0, 180),
+        latestAt: inbound.createdAt.toISOString(),
+      });
+    }
+  }
 
   let createdOrUpdated = 0;
 
@@ -122,6 +155,19 @@ export async function POST() {
     createdOrUpdated += 1;
   }
 
+  for (const [clinicId, item] of unansweredByClinic) {
+    await createOrRefreshEvent({
+      clinicId,
+      type: "whatsapp_inbound_without_reply",
+      severity: "error",
+      source: "maintenance_scan",
+      title: "رسائل واتساب بلا رد",
+      message: `يوجد ${item.count} رسالة واردة خلال آخر 15 دقيقة بدون رد خارج بعدها.`,
+      metadata: item,
+    });
+    createdOrUpdated += 1;
+  }
+
   await logSystemEvent({
     type: "maintenance_scan_completed",
     severity: "success",
@@ -132,6 +178,7 @@ export async function POST() {
       stuckSessions: stuckSessions.length,
       pendingOldAppointments: pendingOldAppointments.length,
       expiringSubscriptions: expiringSubscriptions.length,
+      unansweredWhatsappClinics: unansweredByClinic.size,
     },
   });
 

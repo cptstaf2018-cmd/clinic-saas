@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
+import { logSystemEvent } from "@/lib/system-events";
 
 const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 const MENU_WORDS = ["قائمة", "القائمة", "مساعدة", "help", "menu", "رجوع", "ابدأ", "ابدا", "0"];
@@ -325,6 +326,18 @@ export async function POST(
         error,
       },
     });
+
+    if (status === "failed") {
+      await logSystemEvent({
+        clinicId,
+        type: "whatsapp_bot_reply_failed",
+        severity: "error",
+        source: "whatsapp_bot",
+        title: "فشل رد البوت",
+        message: "وصلت رسالة من مراجع لكن فشل إرسال رد البوت عبر واتساب.",
+        metadata: { phone, error, replyPreview: msg.slice(0, 180) },
+      });
+    }
   }
 
   async function transferToStaff() {
@@ -364,12 +377,30 @@ export async function POST(
   });
 
   if (!clinic.botEnabled) {
+    await logSystemEvent({
+      clinicId,
+      type: "whatsapp_bot_disabled_inbound",
+      severity: "warning",
+      source: "whatsapp_bot",
+      title: "رسالة واردة والبوت معطل",
+      message: "وصلت رسالة واتساب لكن البوت معطل من إعدادات العيادة.",
+      metadata: { phone, messagePreview: messageBody.slice(0, 180) },
+    });
     return NextResponse.json({ ok: true });
   }
 
   const sub = clinic.subscription;
   const isActive = sub && (sub.status === "active" || sub.status === "trial") && sub.expiresAt > new Date();
   if (!isActive) {
+    await logSystemEvent({
+      clinicId,
+      type: "whatsapp_bot_subscription_inactive",
+      severity: "error",
+      source: "whatsapp_bot",
+      title: "البوت متوقف بسبب الاشتراك",
+      message: "وصلت رسالة واتساب لكن اشتراك العيادة غير فعال أو منتهي.",
+      metadata: { phone, subscriptionStatus: sub?.status ?? "missing" },
+    });
     await reply("العيادة غير متاحة حالياً 🔴");
     return NextResponse.json({ ok: true });
   }
@@ -604,6 +635,31 @@ export async function POST(
 
     if (intent === "handoff" || intent === "change_or_cancel") {
       await transferToStaff();
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "working_hours") {
+      await reply(await workingHoursMessage(clinicId, clinic.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "location") {
+      await reply(clinicLocationMessage(botClinic));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "my_appointment") {
+      const patient = await db.patient.findUnique({
+        where: { id: patientId },
+        include: {
+          appointments: {
+            where: { date: { gte: new Date() }, status: { not: "cancelled" } },
+            orderBy: { date: "asc" },
+            take: 1,
+          },
+        },
+      });
+      await reply(patient?.appointments[0] ? formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date) : noUpcomingMessage(patient?.name));
       return NextResponse.json({ ok: true });
     }
 
