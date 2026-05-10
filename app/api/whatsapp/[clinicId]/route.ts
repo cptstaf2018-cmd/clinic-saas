@@ -100,18 +100,24 @@ function detectIntent(message: string): BotIntent {
   if (["1", "حجز", "احجز", "اريد حجز", "موعد جديد", "حجز موعد"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "book";
   if (["2", "موعدي", "موعدي القادم", "عندي موعد", "مواعيدي"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "my_appointment";
   if (["3", "الغاء", "الغاء موعد", "تغيير", "تغيير موعد", "تاجيل", "اجل"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "change_or_cancel";
+  if (text === "4") return "handoff";
   return "unknown";
 }
 
 function mainMenuMessage(clinicName: string, patientName?: string | null) {
-  const greeting = patientName ? `أهلاً ${patientName}` : `أهلاً بك في ${clinicName}`;
-  return `${greeting}\nاختر الخدمة المطلوبة:\n\n1. حجز موعد\n2. موعدي القادم\n3. تغيير أو إلغاء موعد\n4. التواصل مع العيادة\n\nيمكنك كتابة: حجز، موعدي، إلغاء، أو موظف.`;
+  const greeting = patientName ? `مرحباً ${patientName}` : `مرحباً بك في ${clinicName}`;
+  return `${greeting}\nكيف يمكننا مساعدتك؟\n\n1. حجز موعد\n2. عرض موعدي القادم\n3. تعديل أو إلغاء موعد\n4. التحدث مع موظف\n\nأرسل رقم الخيار فقط.`;
 }
 
 function formatUpcomingAppointment(clinicName: string, patientName: string, date: Date) {
   const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Baghdad" });
   const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Baghdad" });
-  return `أهلاً ${patientName}\nموعدك القادم في ${clinicName}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nللحصول على خيارات أخرى اكتب: القائمة`;
+  return `مرحباً ${patientName}\nموعدك القادم في ${clinicName}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nللعودة إلى الخدمات أرسل 0.`;
+}
+
+function noUpcomingMessage(patientName?: string | null) {
+  const greeting = patientName ? `مرحباً ${patientName}` : "مرحباً";
+  return `${greeting}\nلا يوجد لديك موعد قادم حالياً.\n\nللحجز أرسل 1\nوللتحدث مع موظف أرسل 4`;
 }
 
 // Looks ahead up to 7 days for the next available day with open slots
@@ -242,7 +248,7 @@ export async function POST(
       update: { step: "handoff" },
       create: { clinicId, phone, step: "handoff" },
     });
-    await reply("تم تحويل رسالتك للعيادة. سيقوم أحد الموظفين بالرد عليك قريباً.\nللعودة إلى البوت اكتب: القائمة");
+    await reply("تم تحويل طلبك إلى موظف العيادة.\nسنرد عليك قريباً عبر واتساب.\n\nللعودة إلى الخدمات الآلية أرسل 0.");
   }
 
   async function startBooking(patientId: string, patientName: string, sessionId?: string) {
@@ -260,9 +266,9 @@ export async function POST(
     }
 
     if (slots.length) {
-      await reply(`تمام ${patientName}\nاختر الموعد المناسب في ${clinicName}:\n\n${message}\n\nللرجوع اكتب: القائمة`);
+      await reply(`${patientName}، هذه أقرب المواعيد المتاحة في ${clinicName}:\n\n${message}\n\nأرسل رقم الوقت المناسب، أو أرسل 0 للرجوع.`);
     } else {
-      await reply(`أهلاً ${patientName}\nعذراً، لا تتوفر مواعيد حالياً في ${clinicName}.\nتم تحويل طلبك للعيادة للمتابعة.`);
+      await reply(`مرحباً ${patientName}\nلا توجد مواعيد متاحة حالياً في ${clinicName}.\nتم تحويل طلبك للعيادة للمتابعة.`);
       await transferToStaff();
     }
   }
@@ -316,7 +322,7 @@ export async function POST(
           update: { step: "main_menu" },
           create: { clinicId, phone, step: "main_menu" },
         });
-        await reply(upcoming ? formatUpcomingAppointment(clinic.name, patient.name, upcoming.date) : `لا يوجد لديك موعد قادم حالياً.\n\n${mainMenuMessage(clinic.name, patient.name)}`);
+        await reply(upcoming ? formatUpcomingAppointment(clinic.name, patient.name, upcoming.date) : noUpcomingMessage(patient.name));
       } else {
         await db.whatsappSession.upsert({
           where: { clinicId_phone: { clinicId, phone } },
@@ -382,7 +388,7 @@ export async function POST(
     }
 
     if (intent === "my_appointment") {
-      await reply(patient?.appointments[0] ? formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date) : `لا يوجد لديك موعد قادم حالياً.\n\n${mainMenuMessage(clinic.name, patient?.name)}`);
+      await reply(patient?.appointments[0] ? formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date) : noUpcomingMessage(patient?.name));
       return NextResponse.json({ ok: true });
     }
 
@@ -455,13 +461,13 @@ export async function POST(
       const patient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
       const nextStep = newSlots.length ? `awaiting_slot|${newPrefix}|${newSlots.join(",")}|${patientId}` : "done";
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: nextStep } });
-      await reply(`أهلاً ${patient?.name ?? ""}! 👋\n\n${message}`);
+      await reply(`${patient?.name ? `${patient.name}، ` : ""}${message}\n\nأرسل رقم الوقت المناسب، أو أرسل 0 للرجوع.`);
       return NextResponse.json({ ok: true });
     }
 
     if (isNaN(choice) || choice < 1 || choice > slots.length) {
       const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
-      await reply(`يرجى إرسال رقم من 1 إلى ${slots.length} لاختيار الموعد:\n${lines.join("\n")}`);
+      await reply(`أرسل رقماً من 1 إلى ${slots.length} لاختيار الموعد:\n${lines.join("\n")}\n\nأو أرسل 0 للرجوع.`);
       return NextResponse.json({ ok: true });
     }
 
