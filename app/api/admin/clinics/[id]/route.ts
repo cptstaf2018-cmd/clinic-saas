@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { logSystemEvent } from "@/lib/system-events";
 
-function isSuperAdmin(session: any) {
+type AdminSession = {
+  user?: {
+    role?: string | null;
+    clinicId?: string | null;
+  };
+} | null;
+
+function isSuperAdmin(session: AdminSession) {
   return session?.user?.role === "superadmin" && !session?.user?.clinicId;
 }
 
@@ -45,6 +53,16 @@ export async function PATCH(
       });
     }
 
+    await logSystemEvent({
+      clinicId: id,
+      type: "clinic_updated",
+      severity: "info",
+      source: "super_admin",
+      title: "تعديل بيانات عيادة",
+      message: "تم تعديل بيانات العيادة أو الاشتراك من السوبر أدمن.",
+      metadata: { changedFields: Object.keys(body) },
+    });
+
     return NextResponse.json({ success: true });
   }
 
@@ -59,6 +77,14 @@ export async function PATCH(
       update: { status: "active", plan, expiresAt },
       create: { clinicId: id, status: "active", plan, expiresAt },
     });
+    await logSystemEvent({
+      clinicId: id,
+      type: "clinic_activated",
+      severity: "success",
+      source: "super_admin",
+      title: "تفعيل عيادة",
+      message: `تم تفعيل العيادة على باقة ${plan}.`,
+    });
     return NextResponse.json({ success: true });
   }
 
@@ -68,6 +94,14 @@ export async function PATCH(
       where: { clinicId: id },
       update: { status: "inactive" },
       create: { clinicId: id, status: "inactive", plan: "basic", expiresAt: new Date() },
+    });
+    await logSystemEvent({
+      clinicId: id,
+      type: "clinic_deactivated",
+      severity: "warning",
+      source: "super_admin",
+      title: "إيقاف عيادة",
+      message: "تم إيقاف اشتراك العيادة من السوبر أدمن.",
     });
     return NextResponse.json({ success: true });
   }
@@ -88,6 +122,15 @@ export async function DELETE(
   const clinic = await db.clinic.findUnique({ where: { id } });
   if (!clinic)
     return NextResponse.json({ error: "العيادة غير موجودة" }, { status: 404 });
+
+  await logSystemEvent({
+    clinicId: id,
+    type: "clinic_deleted",
+    severity: "warning",
+    source: "super_admin",
+    title: "حذف عيادة",
+    message: `تم حذف العيادة: ${clinic.name}`,
+  });
 
   // Delete all related data in correct order
   await db.$transaction([

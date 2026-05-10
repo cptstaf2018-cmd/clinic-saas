@@ -23,6 +23,7 @@ model Clinic {
   patients               Patient[]
   payments               Payment[]
   subscription           Subscription?
+  systemEvents           SystemEvent[]
   users                  User[]
   workingHours           WorkingHours[]
 }
@@ -177,4 +178,25 @@ model MedicalRecord {
   @@index([clinicId])
   @@index([patientId])
   @@index([clinicId, patientId])
+}
+
+model SystemEvent {
+  id         String   @id @default(cuid())
+  clinicId   String?
+  type       String
+  severity   String   @default("info")
+  source     String
+  title      String
+  message    String?
+  metadata   Json?
+  resolved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+  clinic     Clinic?  @relation(fields: [clinicId], references: [id])
+
+  @@index([clinicId])
+  @@index([severity])
+  @@index([source])
+  @@index([resolved])
+  @@index([createdAt])
 }

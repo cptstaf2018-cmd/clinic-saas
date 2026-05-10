@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { canUseFeature } from "@/lib/feature-gates";
+import { logSystemEvent } from "@/lib/system-events";
 
 export async function GET(req: NextRequest) {
   const secret = req.headers.get("authorization");
@@ -45,16 +46,29 @@ export async function GET(req: NextRequest) {
       minute: "2-digit",
     });
 
-    await sendWhatsApp(
-      appt.patient.whatsappPhone,
-      `تذكير بموعدك 🔔\nعيادة: ${appt.clinic.name}\nالتاريخ: ${dateStr}\nالوقت: ${timeStr}\nنراك غداً! 🏥`,
-      appt.clinic.whatsappAccessToken ?? undefined
-    );
+    try {
+      await sendWhatsApp(
+        appt.patient.whatsappPhone,
+        `تذكير بموعدك 🔔\nعيادة: ${appt.clinic.name}\nالتاريخ: ${dateStr}\nالوقت: ${timeStr}\nنراك غداً! 🏥`,
+        appt.clinic.whatsappAccessToken ?? undefined,
+        { clinicId: appt.clinicId, source: "cron_reminders", appointmentId: appt.id }
+      );
 
-    await db.appointment.update({
-      where: { id: appt.id },
-      data: { reminder24hSent: true },
-    });
+      await db.appointment.update({
+        where: { id: appt.id },
+        data: { reminder24hSent: true },
+      });
+    } catch (error) {
+      await logSystemEvent({
+        clinicId: appt.clinicId,
+        type: "reminder_24h_failed",
+        severity: "error",
+        source: "cron_reminders",
+        title: "فشل تذكير موعد قبل 24 ساعة",
+        message: error instanceof Error ? error.message : "Unknown reminder error",
+        metadata: { appointmentId: appt.id, patientId: appt.patientId },
+      });
+    }
   }
 
   // 1h reminders
@@ -75,16 +89,29 @@ export async function GET(req: NextRequest) {
       minute: "2-digit",
     });
 
-    await sendWhatsApp(
-      appt.patient.whatsappPhone,
-      `موعدك بعد ساعة ⏰\nعيادة: ${appt.clinic.name}\nالوقت: ${timeStr}\nلا تتأخر! 😊`,
-      appt.clinic.whatsappAccessToken ?? undefined
-    );
+    try {
+      await sendWhatsApp(
+        appt.patient.whatsappPhone,
+        `موعدك بعد ساعة ⏰\nعيادة: ${appt.clinic.name}\nالوقت: ${timeStr}\nلا تتأخر! 😊`,
+        appt.clinic.whatsappAccessToken ?? undefined,
+        { clinicId: appt.clinicId, source: "cron_reminders", appointmentId: appt.id }
+      );
 
-    await db.appointment.update({
-      where: { id: appt.id },
-      data: { reminder1hSent: true },
-    });
+      await db.appointment.update({
+        where: { id: appt.id },
+        data: { reminder1hSent: true },
+      });
+    } catch (error) {
+      await logSystemEvent({
+        clinicId: appt.clinicId,
+        type: "reminder_1h_failed",
+        severity: "error",
+        source: "cron_reminders",
+        title: "فشل تذكير موعد قبل ساعة",
+        message: error instanceof Error ? error.message : "Unknown reminder error",
+        metadata: { appointmentId: appt.id, patientId: appt.patientId },
+      });
+    }
   }
 
   return NextResponse.json({

@@ -248,8 +248,8 @@ export default function AdminClinicsClient({
 
   return (
     <div dir="rtl" className="space-y-5">
-      <section className="overflow-hidden rounded-lg bg-white shadow-[0_18px_70px_rgba(15,23,42,0.07)] ring-1 ring-slate-200">
-        <div className="border-b border-slate-100 bg-[linear-gradient(90deg,#ffffff,#f0f7ff,#f7fdfb)] px-5 py-5 lg:px-6">
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.07)]">
+        <div className="border-b border-slate-200 bg-[linear-gradient(90deg,#ffffff,#eef6ff,#f6fffb)] px-5 py-5 lg:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">Clinics Operations</p>
@@ -269,7 +269,7 @@ export default function AdminClinicsClient({
           </div>
         </div>
 
-        <div className="grid gap-px bg-slate-100 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-px bg-slate-200 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { label: "إجمالي العيادات", value: clinics.length, accent: "text-slate-950", sub: "كل الحسابات" },
             { label: "العيادات النشطة", value: activeCount, accent: "text-emerald-700", sub: "تعمل حالياً" },
@@ -287,7 +287,7 @@ export default function AdminClinicsClient({
         </div>
       </section>
 
-      <section className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <input
             value={query}
@@ -337,10 +337,10 @@ export default function AdminClinicsClient({
         </div>
       )}
 
-      <section className="overflow-hidden rounded-lg bg-white shadow-[0_12px_50px_rgba(15,23,42,0.05)] ring-1 ring-slate-200">
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_12px_50px_rgba(15,23,42,0.05)]">
         <div className="hidden overflow-x-auto lg:block">
           <table className="min-w-full border-separate border-spacing-0 text-right">
-            <thead className="bg-slate-50">
+            <thead className="border-b border-slate-200 bg-slate-100">
               <tr className="text-[11px] font-black text-slate-400">
                 <th className="px-5 py-3">العيادة</th>
                 <th className="px-5 py-3">الهاتف</th>

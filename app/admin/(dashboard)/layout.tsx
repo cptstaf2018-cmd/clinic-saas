@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const userEmail = session.user?.email ?? "Super Admin";
 
   return (
-    <div dir="rtl" className="flex min-h-screen bg-[#F5F8FB] text-slate-950">
+    <div dir="rtl" className="flex min-h-screen bg-[#EEF3F8] text-slate-950">
 
       {/* Sidebar */}
       <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-l border-slate-200 bg-white/95 shadow-[0_20px_80px_rgba(15,23,42,0.06)] md:flex">
@@ -68,8 +68,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </aside>
 
       {/* Main */}
-      <main className="min-w-0 flex-1 overflow-auto">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/88 backdrop-blur">
+      <main className="min-w-0 flex-1 overflow-auto bg-[linear-gradient(180deg,#F8FAFC_0%,#EEF3F8_38%,#F6F8FB_100%)]">
+        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/92 shadow-sm backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-5 lg:px-7">
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">Platform Command</p>

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { encodePaymentReference, isPlanId, PLAN_PRICES } from "@/lib/plans";
 import { PaymentMethodId, validatePaymentReference } from "@/lib/payment-reference";
+import { logSystemEvent } from "@/lib/system-events";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -79,6 +80,16 @@ export async function POST(req: Request) {
       status: "pending",
       reference: encodePaymentReference(body.plan, referenceCheck.reference),
     },
+  });
+
+  await logSystemEvent({
+    clinicId,
+    type: "payment_submitted",
+    severity: "info",
+    source: "billing",
+    title: "طلب دفع جديد",
+    message: `تم إرسال طلب دفع بقيمة ${body.amount}.`,
+    metadata: { method: body.method, plan: body.plan, paymentId: payment.id },
   });
 
   return NextResponse.json(payment, { status: 201 });
