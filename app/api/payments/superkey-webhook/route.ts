@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { encodePaymentReference, isPlanId, PLAN_PRICES, PlanId } from "@/lib/plans";
 import { createPaymentActivationCode } from "@/lib/activation-codes";
+import { validatePaymentReference } from "@/lib/payment-reference";
 
 export async function POST(req: Request) {
   const secret   = req.headers.get("x-superkey-secret") ?? "";
@@ -45,8 +46,16 @@ export async function POST(req: Request) {
     );
   }
 
-  const storedReference = body.reference
-    ? encodePaymentReference(body.plan, body.reference)
+  const referenceCheck = body.reference
+    ? validatePaymentReference("superkey", body.reference)
+    : null;
+
+  if (referenceCheck && !referenceCheck.ok) {
+    return NextResponse.json({ error: referenceCheck.error }, { status: 400 });
+  }
+
+  const storedReference = referenceCheck
+    ? encodePaymentReference(body.plan, referenceCheck.reference)
     : null;
 
   if (storedReference) {

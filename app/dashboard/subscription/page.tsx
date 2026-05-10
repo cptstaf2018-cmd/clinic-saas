@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PLAN_LABELS, PLAN_PRICES, PlanId } from "@/lib/plans";
+import { isPlanId, PLAN_LABELS, PLAN_PRICES, PlanId } from "@/lib/plans";
+import { validatePaymentReference } from "@/lib/payment-reference";
 
 type PaymentMethodId = "superkey" | "zaincash" | "crypto";
+type PurchaseMode = "renew" | "upgrade";
 
 const PAYMENT_METHODS: Array<{
   id: PaymentMethodId;
@@ -101,6 +103,12 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }>
   inactive: { label: "منتهي", cls: "bg-red-50 text-red-700 ring-red-200", dot: "bg-red-500" },
 };
 
+const PLAN_RANK: Record<PlanId, number> = {
+  basic: 1,
+  standard: 2,
+  premium: 3,
+};
+
 interface Subscription {
   plan: string;
   status: string;
@@ -136,6 +144,7 @@ export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null | "loading">("loading");
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("standard");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodId>("superkey");
+  const [purchaseMode, setPurchaseMode] = useState<PurchaseMode | null>(null);
   const [reference, setReference] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -172,8 +181,11 @@ export default function SubscriptionPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!reference.trim()) {
-      setError("رقم العملية مطلوب");
+    const method = PAYMENT_METHODS.find((item) => item.id === selectedMethod)!;
+    const referenceCheck = validatePaymentReference(method.id, reference);
+
+    if (!referenceCheck.ok) {
+      setError(referenceCheck.error);
       return;
     }
 
@@ -181,7 +193,6 @@ export default function SubscriptionPage() {
     setError("");
 
     const plan = PLANS.find((p) => p.id === selectedPlan)!;
-    const method = PAYMENT_METHODS.find((item) => item.id === selectedMethod)!;
     const res = await fetch("/api/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -189,7 +200,7 @@ export default function SubscriptionPage() {
         amount: plan.price,
         method: method.id,
         plan: plan.id,
-        reference: reference.trim(),
+        reference: referenceCheck.reference,
       }),
     });
 
@@ -211,13 +222,22 @@ export default function SubscriptionPage() {
     );
   }
 
-  const showPaymentForm = true;
   const selected = PLANS.find((p) => p.id === selectedPlan)!;
   const selectedPaymentMethod = PAYMENT_METHODS.find((method) => method.id === selectedMethod)!;
   const status = subscription ? STATUS_CONFIG[subscription.status] ?? STATUS_CONFIG.inactive : null;
   const daysLeft = subscription
     ? Math.max(0, Math.ceil((new Date(subscription.expiresAt).getTime() - now) / 86400000))
     : 0;
+  const activePlan = subscription && isPlanId(subscription.plan) ? subscription.plan : "basic";
+  const isActiveSubscription = subscription?.status === "active" && daysLeft > 0;
+  const selectablePlans = isActiveSubscription
+    ? purchaseMode === "renew"
+      ? PLANS.filter((plan) => plan.id === activePlan)
+      : purchaseMode === "upgrade"
+        ? PLANS.filter((plan) => PLAN_RANK[plan.id] > PLAN_RANK[activePlan])
+        : []
+    : PLANS;
+  const showPaymentForm = !isActiveSubscription || purchaseMode !== null;
 
   return (
     <div className="p-4 md:p-8 bg-[#eef7f4]" dir="rtl">
@@ -257,18 +277,56 @@ export default function SubscriptionPage() {
           </div>
         </section>
 
-        {subscription?.status === "active" && (
+        {isActiveSubscription && (
           <section className="rounded-[26px] bg-[#fbfdf9] p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)] ring-1 ring-emerald-100/80">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-xl font-black text-slate-950">اشتراكك نشط</h2>
                 <p className="mt-1 text-sm font-semibold text-slate-500">
-                  تستطيع اختيار باقة جديدة للتجديد أو الترقية، وسيتم تحديث الاشتراك بعد التحقق من الدفع.
+                  كروت الباقات مخفية لأن الاشتراك مفعل. اختر تجديد الباقة الحالية أو ترقية فقط عند الحاجة.
                 </p>
               </div>
-              <span className="rounded-2xl bg-emerald-50 px-5 py-3 text-center text-sm font-black text-emerald-700 ring-1 ring-emerald-100">
-                ينتهي {formatDate(subscription.expiresAt)}
-              </span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPurchaseMode("renew");
+                    setSelectedPlan(activePlan);
+                    setReference("");
+                    setError("");
+                  }}
+                  className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white transition hover:bg-blue-700"
+                >
+                  تجديد الباقة
+                </button>
+                {activePlan !== "premium" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPurchaseMode("upgrade");
+                      setSelectedPlan(activePlan === "basic" ? "standard" : "premium");
+                      setReference("");
+                      setError("");
+                    }}
+                    className="rounded-2xl bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100"
+                  >
+                    ترقية الاشتراك
+                  </button>
+                )}
+                {purchaseMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPurchaseMode(null);
+                      setReference("");
+                      setError("");
+                    }}
+                    className="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-black text-slate-600 transition hover:bg-slate-200"
+                  >
+                    إلغاء
+                  </button>
+                )}
+              </div>
             </div>
           </section>
         )}
@@ -276,7 +334,7 @@ export default function SubscriptionPage() {
         {showPaymentForm && !submitted && (
           <form onSubmit={handleSubmit} className="grid gap-7 xl:grid-cols-[1fr_380px]">
             <section className="grid gap-4 md:grid-cols-3">
-              {PLANS.map((plan) => {
+              {selectablePlans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 return (
                   <button
