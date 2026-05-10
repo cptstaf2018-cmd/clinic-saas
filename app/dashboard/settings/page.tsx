@@ -339,7 +339,7 @@ export default function SettingsPage() {
                 rows={3}
                 value={settings.whatsappWelcomeMessage ?? ""}
                 onChange={(e) => setSettings({ ...settings, whatsappWelcomeMessage: e.target.value })}
-                placeholder="مرحباً بك في عيادتنا! اكتب اسمك الكريم للمتابعة..."
+                placeholder="مرحباً بك في عيادتنا. اختر الخدمة المطلوبة من القائمة."
               />
             </Field>
             <button

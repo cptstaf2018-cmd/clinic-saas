@@ -452,9 +452,8 @@ export async function POST(
         update: { step: "main_menu" },
         create: { clinicId, phone, step: "main_menu" },
       });
-      const welcome = clinic.whatsappWelcomeMessage ||
-        mainMenuMessage(botClinic);
-      await reply(welcome);
+      const customWelcome = clinic.whatsappWelcomeMessage?.trim();
+      await reply(customWelcome ? `${customWelcome}\n\n${mainMenuMessage(botClinic)}` : mainMenuMessage(botClinic));
     }
     return NextResponse.json({ ok: true });
   }
