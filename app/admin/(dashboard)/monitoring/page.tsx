@@ -1,32 +1,10 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-
-const SEVERITY_LABELS: Record<string, string> = {
-  success: "نجاح",
-  info: "معلومة",
-  warning: "تحذير",
-  error: "خطأ",
-};
-
-const SEVERITY_STYLES: Record<string, string> = {
-  success: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-  info: "bg-blue-50 text-blue-700 ring-blue-100",
-  warning: "bg-amber-50 text-amber-700 ring-amber-100",
-  error: "bg-rose-50 text-rose-700 ring-rose-100",
-};
+import MonitoringClient from "./MonitoringClient";
 
 function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
-}
-
-function formatDate(value: Date) {
-  return value.toLocaleString("ar-IQ", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export default async function AdminMonitoringPage() {
@@ -36,7 +14,6 @@ export default async function AdminMonitoringPage() {
   const now = new Date();
   const dayStart = new Date(now);
   dayStart.setHours(0, 0, 0, 0);
-  const hourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
   let dbOk = false;
   try {
@@ -50,9 +27,9 @@ export default async function AdminMonitoringPage() {
     totalEvents,
     todayErrors,
     unresolvedErrors,
-    lastHourWarnings,
     whatsappFailures,
     reminderFailures,
+    maintenanceStats,
     recentEvents,
     activeClinics,
     expiringClinics,
@@ -60,9 +37,12 @@ export default async function AdminMonitoringPage() {
     db.systemEvent.count(),
     db.systemEvent.count({ where: { severity: "error", createdAt: { gte: dayStart } } }),
     db.systemEvent.count({ where: { severity: "error", resolved: false } }),
-    db.systemEvent.count({ where: { severity: "warning", createdAt: { gte: hourAgo } } }),
     db.systemEvent.count({ where: { type: "whatsapp_send_failed", createdAt: { gte: dayStart } } }),
     db.systemEvent.count({ where: { type: { in: ["reminder_24h_failed", "reminder_1h_failed"] }, createdAt: { gte: dayStart } } }),
+    Promise.all([
+      db.whatsappSession.count({ where: { updatedAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } } }),
+      db.appointment.count({ where: { status: "pending", date: { lt: dayStart } } }),
+    ]),
     db.systemEvent.findMany({
       orderBy: { createdAt: "desc" },
       take: 30,
@@ -85,6 +65,19 @@ export default async function AdminMonitoringPage() {
     { label: "فشل التذكيرات", value: arabicNumber(reminderFailures), detail: "خلال اليوم", tone: reminderFailures > 0 ? "warning" : "success" },
     { label: "عيادات نشطة", value: arabicNumber(activeClinics), detail: `${arabicNumber(expiringClinics)} تنتهي قريباً`, tone: expiringClinics > 0 ? "warning" : "info" },
   ];
+
+  const serializedEvents = recentEvents.map((event) => ({
+    id: event.id,
+    clinicId: event.clinicId,
+    type: event.type,
+    severity: event.severity,
+    source: event.source,
+    title: event.title,
+    message: event.message,
+    resolved: event.resolved,
+    createdAt: event.createdAt.toISOString(),
+    clinic: event.clinic,
+  }));
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -113,71 +106,14 @@ export default async function AdminMonitoringPage() {
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1fr_330px]">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4">
-            <div>
-              <h2 className="text-lg font-black text-slate-950">آخر الأحداث</h2>
-              <p className="mt-1 text-xs font-bold text-slate-400">{arabicNumber(totalEvents)} حدث مسجل في النظام</p>
-            </div>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
-              آخر 30
-            </span>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {recentEvents.length === 0 ? (
-              <div className="p-10 text-center text-sm font-black text-slate-400">لا توجد أحداث مسجلة بعد.</div>
-            ) : (
-              recentEvents.map((event) => (
-                <article key={event.id} className="grid gap-3 px-5 py-4 transition hover:bg-slate-50 lg:grid-cols-[150px_130px_1fr]">
-                  <div className="text-xs font-bold text-slate-400">{formatDate(event.createdAt)}</div>
-                  <div>
-                    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${SEVERITY_STYLES[event.severity] ?? SEVERITY_STYLES.info}`}>
-                      {SEVERITY_LABELS[event.severity] ?? event.severity}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-black text-slate-950">{event.title}</h3>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">{event.source}</span>
-                    </div>
-                    {event.message ? <p className="mt-1 text-xs font-bold leading-6 text-slate-500">{event.message}</p> : null}
-                    <p className="mt-1 text-[11px] font-bold text-slate-400">
-                      {event.clinic ? `${event.clinic.name} · ${event.clinic.whatsappNumber}` : "حدث عام على المنصة"}
-                    </p>
-                  </div>
-                </article>
-              ))
-            )}
-          </div>
-        </div>
-
-        <aside className="space-y-5">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-black text-slate-950">كيف تستخدمها؟</h2>
-            <div className="mt-4 space-y-3 text-sm font-bold leading-7 text-slate-500">
-              <p>إذا ظهر خطأ أحمر، افتح تفاصيل الحدث وافحص العيادة والوقت والمصدر.</p>
-              <p>فشل واتساب يعني غالباً توكن غير صحيح، رصيد/ربط WasenderAPI، أو رقم غير صالح.</p>
-              <p>فشل التذكيرات يعني أن الرسالة لم تؤشر كمرسلة، وسيبقى الموعد قابلاً للمراجعة.</p>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-            <p className="text-xs font-black text-amber-700">ملاحظة تشغيلية</p>
-            <h3 className="mt-2 text-lg font-black text-slate-950">النسخ الاحتياطي</h3>
-            <p className="mt-2 text-sm font-bold leading-7 text-amber-800/80">
-              هذه الصفحة تجهز مركز المراقبة. الخطوة التالية هي ربط سجل النسخ الاحتياطي اليومي والتنبيه عند فشل النسخة.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-black text-slate-400">آخر ساعة</p>
-            <p className="mt-3 text-4xl font-black text-slate-950">{arabicNumber(lastHourWarnings)}</p>
-            <p className="mt-1 text-sm font-bold text-slate-500">تحذيرات مسجلة</p>
-          </div>
-        </aside>
-      </section>
+      <MonitoringClient
+        events={serializedEvents}
+        totalEvents={totalEvents}
+        maintenanceStats={{
+          stuckSessions: maintenanceStats[0],
+          oldPendingAppointments: maintenanceStats[1],
+        }}
+      />
     </div>
   );
 }
