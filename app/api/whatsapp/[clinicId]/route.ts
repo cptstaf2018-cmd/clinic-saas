@@ -6,6 +6,10 @@ import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 
 const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
+const MENU_WORDS = ["قائمة", "القائمة", "مساعدة", "help", "menu", "رجوع", "ابدأ", "ابدا", "0"];
+const HANDOFF_WORDS = ["موظف", "دعم", "ادمن", "إنسان", "انسان", "تواصل", "مساعدة موظف"];
+
+type BotIntent = "menu" | "book" | "my_appointment" | "change_or_cancel" | "handoff" | "unknown";
 
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, "");
@@ -65,6 +69,38 @@ function formatSlot(time: string): string {
   const period = h < 12 ? "صباحاً" : "مساءً";
   const dh = h > 12 ? h - 12 : h === 0 ? 12 : h;
   return `${String(dh).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function normalizeText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/\s+/g, " ");
+}
+
+function detectIntent(message: string): BotIntent {
+  const text = normalizeText(message);
+  if (MENU_WORDS.map(normalizeText).includes(text)) return "menu";
+  if (HANDOFF_WORDS.map(normalizeText).some((word) => text === word || text.includes(word))) return "handoff";
+  if (["1", "حجز", "احجز", "اريد حجز", "موعد جديد", "حجز موعد"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "book";
+  if (["2", "موعدي", "موعدي القادم", "عندي موعد", "مواعيدي"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "my_appointment";
+  if (["3", "الغاء", "الغاء موعد", "تغيير", "تغيير موعد", "تاجيل", "اجل"].some((word) => text === normalizeText(word) || text.includes(normalizeText(word)))) return "change_or_cancel";
+  return "unknown";
+}
+
+function mainMenuMessage(clinicName: string, patientName?: string | null) {
+  const greeting = patientName ? `أهلاً ${patientName}` : `أهلاً بك في ${clinicName}`;
+  return `${greeting}\nاختر الخدمة المطلوبة:\n\n1. حجز موعد\n2. موعدي القادم\n3. تغيير أو إلغاء موعد\n4. التواصل مع العيادة\n\nيمكنك كتابة: حجز، موعدي، إلغاء، أو موظف.`;
+}
+
+function formatUpcomingAppointment(clinicName: string, patientName: string, date: Date) {
+  const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Baghdad" });
+  const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Baghdad" });
+  return `أهلاً ${patientName}\nموعدك القادم في ${clinicName}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nللحصول على خيارات أخرى اكتب: القائمة`;
 }
 
 // Looks ahead up to 7 days for the next available day with open slots
@@ -164,9 +200,60 @@ export async function POST(
   if (!clinic) return NextResponse.json({ ok: false, error: "Clinic not found" }, { status: 404 });
 
   const apiKey = clinic.whatsappAccessToken ?? undefined;
+  const clinicName = clinic.name;
 
   async function reply(msg: string) {
-    await sendWhatsApp(phone, msg, apiKey);
+    let status = "sent";
+    let error: string | null = null;
+    try {
+      await sendWhatsApp(phone, msg, apiKey, { clinicId, source: "bot_reply" });
+    } catch (err) {
+      status = "failed";
+      error = err instanceof Error ? err.message : "فشل إرسال رد البوت";
+    }
+
+    await db.incomingMessage.create({
+      data: {
+        clinicId,
+        phone,
+        body: msg,
+        read: true,
+        direction: "outbound",
+        status,
+        error,
+      },
+    });
+  }
+
+  async function transferToStaff() {
+    await db.whatsappSession.upsert({
+      where: { clinicId_phone: { clinicId, phone } },
+      update: { step: "handoff" },
+      create: { clinicId, phone, step: "handoff" },
+    });
+    await reply("تم تحويل رسالتك للعيادة. سيقوم أحد الموظفين بالرد عليك قريباً.\nللعودة إلى البوت اكتب: القائمة");
+  }
+
+  async function startBooking(patientId: string, patientName: string, sessionId?: string) {
+    const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
+    const nextStep = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${patientId}` : "done";
+
+    if (sessionId) {
+      await db.whatsappSession.update({ where: { id: sessionId }, data: { step: nextStep } });
+    } else {
+      await db.whatsappSession.upsert({
+        where: { clinicId_phone: { clinicId, phone } },
+        update: { step: nextStep },
+        create: { clinicId, phone, step: nextStep },
+      });
+    }
+
+    if (slots.length) {
+      await reply(`تمام ${patientName}\nاختر الموعد المناسب في ${clinicName}:\n\n${message}\n\nللرجوع اكتب: القائمة`);
+    } else {
+      await reply(`أهلاً ${patientName}\nعذراً، لا تتوفر مواعيد حالياً في ${clinicName}.\nتم تحويل طلبك للعيادة للمتابعة.`);
+      await transferToStaff();
+    }
   }
 
   // Save every incoming message regardless of bot state
@@ -188,6 +275,7 @@ export async function POST(
   const session = await db.whatsappSession.findUnique({
     where: { clinicId_phone: { clinicId, phone } },
   });
+  const intent = detectIntent(messageBody);
 
   // ── No active session → start conversation ────────────────────────────────
   if (!session || session.step === "done") {
@@ -202,35 +290,48 @@ export async function POST(
       },
     });
 
+    if (intent === "handoff" || intent === "change_or_cancel") {
+      await transferToStaff();
+      return NextResponse.json({ ok: true });
+    }
+
     if (patient) {
-      const upcoming = patient.appointments[0];
-      if (upcoming) {
-        const dateStr = upcoming.date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Baghdad" });
-        const timeStr = upcoming.date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Baghdad" });
+      if (intent === "book") {
+        await startBooking(patient.id, patient.name);
+      } else if (intent === "my_appointment") {
+        const upcoming = patient.appointments[0];
         await db.whatsappSession.upsert({
           where: { clinicId_phone: { clinicId, phone } },
-          update: { step: "confirm_new" },
-          create: { clinicId, phone, step: "confirm_new" },
+          update: { step: "main_menu" },
+          create: { clinicId, phone, step: "main_menu" },
         });
-        await reply(`أهلاً ${patient.name}! 👋\nلديك موعد محجوز في ${clinic.name}:\n📅 ${dateStr}\n⏰ ${timeStr} ✅\n\nهل تريد حجز موعد جديد؟ (نعم / لا)`);
+        await reply(upcoming ? formatUpcomingAppointment(clinic.name, patient.name, upcoming.date) : `لا يوجد لديك موعد قادم حالياً.\n\n${mainMenuMessage(clinic.name, patient.name)}`);
       } else {
-        const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
-        const step = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${patient.id}` : "done";
         await db.whatsappSession.upsert({
           where: { clinicId_phone: { clinicId, phone } },
-          update: { step },
-          create: { clinicId, phone, step },
+          update: { step: "main_menu" },
+          create: { clinicId, phone, step: "main_menu" },
         });
-        await reply(`أهلاً ${patient.name}! 👋\nيسعدنا خدمتك في ${clinic.name}.\n\n${message}`);
+        await reply(mainMenuMessage(clinic.name, patient.name));
       }
     } else {
+      if (intent === "book") {
+        await db.whatsappSession.upsert({
+          where: { clinicId_phone: { clinicId, phone } },
+          update: { step: "awaiting_name" },
+          create: { clinicId, phone, step: "awaiting_name" },
+        });
+        await reply(`لحجز موعد في ${clinic.name}، أرسل اسمك الكامل من فضلك.\nمثال: أحمد محمد`);
+        return NextResponse.json({ ok: true });
+      }
+
       await db.whatsappSession.upsert({
         where: { clinicId_phone: { clinicId, phone } },
-        update: { step: "awaiting_name" },
-        create: { clinicId, phone, step: "awaiting_name" },
+        update: { step: "main_menu" },
+        create: { clinicId, phone, step: "main_menu" },
       });
       const welcome = clinic.whatsappWelcomeMessage ||
-        `أهلاً بك في ${clinic.name}! 👋\nلحجز موعد، أرسل *اسمك الكريم فقط*\n✍️ مثال: أحمد محمد`;
+        mainMenuMessage(clinic.name);
       await reply(welcome);
     }
     return NextResponse.json({ ok: true });
@@ -238,8 +339,64 @@ export async function POST(
 
   const step = session.step;
 
+  if (step === "handoff") {
+    if (intent === "menu") {
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
+      const patient = await db.patient.findUnique({ where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } }, select: { name: true } });
+      await reply(mainMenuMessage(clinic.name, patient?.name));
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (step === "main_menu") {
+    const patient = await db.patient.findUnique({
+      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
+      include: {
+        appointments: {
+          where: { date: { gte: new Date() }, status: { not: "cancelled" } },
+          orderBy: { date: "asc" },
+          take: 1,
+        },
+      },
+    });
+
+    if (intent === "book") {
+      if (!patient) {
+        await db.whatsappSession.update({ where: { id: session.id }, data: { step: "awaiting_name" } });
+        await reply(`لحجز موعد في ${clinic.name}، أرسل اسمك الكامل من فضلك.\nمثال: أحمد محمد`);
+      } else {
+        await startBooking(patient.id, patient.name, session.id);
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "my_appointment") {
+      await reply(patient?.appointments[0] ? formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date) : `لا يوجد لديك موعد قادم حالياً.\n\n${mainMenuMessage(clinic.name, patient?.name)}`);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "change_or_cancel" || intent === "handoff") {
+      await transferToStaff();
+      return NextResponse.json({ ok: true });
+    }
+
+    await reply(mainMenuMessage(clinic.name, patient?.name));
+    return NextResponse.json({ ok: true });
+  }
+
   // ── Awaiting patient name ─────────────────────────────────────────────────
   if (step === "awaiting_name") {
+    if (intent === "menu") {
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
+      await reply(mainMenuMessage(clinic.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "handoff") {
+      await transferToStaff();
+      return NextResponse.json({ ok: true });
+    }
+
     const NON_NAME_WORDS = ["حجز", "موعد", "اريد", "أريد", "ابغى", "ابي", "بغيت", "هلا", "مرحبا", "مرحباً", "السلام", "هاي", "hi", "hello", "مساء", "صباح", "طيب", "اهلا", "أهلا", "كيف", "وين", "ايش", "شنو"];
     const normalized = messageBody.trim().toLowerCase();
     const looksLikeName = messageBody.trim().length >= 2 && !NON_NAME_WORDS.some(w => normalized === w || normalized === `أريد ${w}` || normalized.startsWith(`${w} `));
@@ -254,17 +411,7 @@ export async function POST(
       update: { name: messageBody.trim() },
       create: { clinicId, name: messageBody.trim(), whatsappPhone: phone },
     });
-    const { message, slots, datePrefix } = await getNextSlotsMessage(clinicId);
-    const nextStep = slots.length ? `awaiting_slot|${datePrefix}|${slots.join(",")}|${newPatient.id}` : "done";
-    await db.whatsappSession.update({
-      where: { id: session.id },
-      data: { step: nextStep },
-    });
-    if (slots.length) {
-      await reply(`أهلاً ${messageBody}! 😊\nتفضل اختر موعدك في ${clinic.name}:\n\n${message}`);
-    } else {
-      await reply(`أهلاً ${messageBody}! 😊\nعذراً، لا تتوفر مواعيد حالياً في ${clinic.name}.\nسنعلمك عند توفر مواعيد جديدة.`);
-    }
+    await startBooking(newPatient.id, newPatient.name, session.id);
     return NextResponse.json({ ok: true });
   }
 
@@ -276,6 +423,18 @@ export async function POST(
     const slots = parts[2].split(","); // ["15:00","15:20",...]
     const patientId = parts[3];
     const choice = parseInt(messageBody, 10);
+
+    if (intent === "menu") {
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
+      const patient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
+      await reply(mainMenuMessage(clinic.name, patient?.name));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (intent === "handoff" || intent === "change_or_cancel") {
+      await transferToStaff();
+      return NextResponse.json({ ok: true });
+    }
 
     // Greeting/restart words → reset session and start fresh
     const RESTART_WORDS = ["مرحبا", "مرحباً", "هلا", "السلام", "اهلا", "أهلا", "hi", "hello", "هاي", "ابدأ", "ابدا"];
