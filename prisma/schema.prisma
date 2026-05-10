@@ -135,11 +135,16 @@ model IncomingMessage {
   phone     String
   body      String
   read      Boolean  @default(false)
+  direction String   @default("inbound")
+  status    String   @default("received")
+  error     String?
   createdAt DateTime @default(now())
   clinic    Clinic   @relation(fields: [clinicId], references: [id])
 
   @@index([clinicId])
   @@index([clinicId, read])
+  @@index([clinicId, phone])
+  @@index([clinicId, direction])
 }
 
 model Payment {

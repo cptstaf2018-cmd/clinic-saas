@@ -8,6 +8,9 @@ type Message = {
   phone: string;
   body: string;
   read: boolean;
+  direction: string;
+  status: string;
+  error?: string | null;
   createdAt: string;
   patientId: string | null;
   patientName: string | null;
@@ -16,6 +19,13 @@ type Message = {
 type Filter = "all" | "unread" | "read" | "new";
 
 const COLORS = ["#0f172a", "#2563eb", "#059669", "#7c3aed", "#c2410c", "#0891b2"];
+const QUICK_REPLIES = [
+  "تم استلام رسالتك، سنتواصل معك قريباً.",
+  "يرجى إرسال الاسم الكامل لتأكيد الحجز.",
+  "يرجى إرسال صورة التحليل أو الوصفة هنا.",
+  "موعدك مؤكد، شكراً لتواصلك.",
+  "يرجى اختيار وقت مناسب للحجز.",
+];
 
 function colorFor(value: string) {
   return COLORS[Math.abs(value.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % COLORS.length];
@@ -53,7 +63,7 @@ function buildConversations(messages: Message[]) {
         patientId: sorted.find((item) => item.patientId)?.patientId ?? null,
         patientName: sorted.find((item) => item.patientName)?.patientName ?? null,
         messages: sorted,
-        unread: sorted.filter((item) => !item.read).length,
+        unread: sorted.filter((item) => item.direction !== "outbound" && !item.read).length,
         lastMessage: sorted[0],
       };
     })
@@ -68,6 +78,8 @@ export default function MessagesPage() {
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [newPatientName, setNewPatientName] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [sending, setSending] = useState(false);
   const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
 
   const fetchMessages = async () => {
@@ -111,7 +123,7 @@ export default function MessagesPage() {
     });
   }, [conversations, filter, query]);
 
-  const unread = messages.filter((message) => !message.read).length;
+  const unread = messages.filter((message) => message.direction !== "outbound" && !message.read).length;
   const read = messages.length - unread;
   const newNumbers = conversations.filter((conversation) => !conversation.patientId).length;
 
@@ -154,6 +166,53 @@ export default function MessagesPage() {
       setToast({ ok: false, text: data.error ?? "تعذر إنشاء المراجع" });
     }
     setCreating(false);
+  }
+
+  async function sendReply() {
+    if (!selectedConversation || !replyText.trim()) {
+      setToast({ ok: false, text: "اكتب نص الرد أولاً" });
+      return;
+    }
+
+    setSending(true);
+    setToast(null);
+    const res = await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: selectedConversation.phone, message: replyText.trim() }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      setMessages((prev) => [
+        {
+          ...data,
+          patientId: selectedConversation.patientId,
+          patientName: selectedConversation.patientName,
+        },
+        ...prev,
+      ]);
+      setReplyText("");
+      setToast({ ok: true, text: "تم إرسال الرد عبر واتساب" });
+    } else {
+      if (data?.id) {
+        setMessages((prev) => [
+          {
+            ...data,
+            body: replyText.trim(),
+            phone: selectedConversation.phone,
+            direction: "outbound",
+            status: "failed",
+            read: true,
+            patientId: selectedConversation.patientId,
+            patientName: selectedConversation.patientName,
+          },
+          ...prev,
+        ]);
+      }
+      setToast({ ok: false, text: data.error ?? "فشل إرسال الرد" });
+    }
+    setSending(false);
   }
 
   const filterTabs: { value: Filter; label: string; count: number }[] = [
@@ -268,7 +327,10 @@ export default function MessagesPage() {
                                 ) : null}
                               </div>
                               {conversation.patientName ? <p className={`mt-0.5 text-[11px] font-bold ${active ? "text-white/70" : "text-slate-400"}`} dir="ltr">{conversation.phone}</p> : null}
-                              <p className={`mt-1 truncate text-xs font-bold ${active ? "text-white/75" : "text-slate-500"}`}>{conversation.lastMessage.body}</p>
+                              <p className={`mt-1 truncate text-xs font-bold ${active ? "text-white/75" : "text-slate-500"}`}>
+                                {conversation.lastMessage.direction === "outbound" ? "أنت: " : ""}
+                                {conversation.lastMessage.body}
+                              </p>
                             </div>
                           </div>
                         </button>
@@ -338,21 +400,58 @@ export default function MessagesPage() {
                   </div>
 
                   <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4 md:p-6">
-                    {[...selectedConversation.messages].reverse().map((message) => (
-                      <div key={message.id} className="flex justify-start">
-                        <div className={`max-w-[78%] rounded-3xl rounded-tr-md px-4 py-3 shadow-sm ring-1 ${
-                          message.read ? "bg-white text-slate-700 ring-slate-200" : "bg-blue-50 text-slate-900 ring-blue-100"
+                    {[...selectedConversation.messages].reverse().map((message) => {
+                      const outgoing = message.direction === "outbound";
+                      return (
+                      <div key={message.id} className={`flex ${outgoing ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[78%] rounded-3xl px-4 py-3 shadow-sm ring-1 ${
+                          outgoing
+                            ? "rounded-tl-md bg-emerald-600 text-white ring-emerald-600"
+                            : message.read
+                              ? "rounded-tr-md bg-white text-slate-700 ring-slate-200"
+                              : "rounded-tr-md bg-blue-50 text-slate-900 ring-blue-100"
                         }`}>
                           <p className="whitespace-pre-wrap text-sm font-bold leading-7">{message.body}</p>
-                          <p className="mt-2 text-[11px] font-bold text-slate-400">{formatTime(message.createdAt)}</p>
+                          <div className={`mt-2 flex flex-wrap items-center gap-2 text-[11px] font-bold ${outgoing ? "text-white/75" : "text-slate-400"}`}>
+                            <span>{formatTime(message.createdAt)}</span>
+                            {outgoing ? <span>{message.status === "failed" ? "فشل الإرسال" : message.status === "pending" ? "قيد الإرسال" : "مرسل"}</span> : null}
+                          </div>
+                          {message.status === "failed" && message.error ? (
+                            <p className="mt-2 text-[11px] font-bold text-white/85">{message.error}</p>
+                          ) : null}
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
 
                   <div className="border-t border-slate-200 bg-white p-4">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500">
-                      الرد الشخصي عبر واتساب سيضاف في المرحلة الثانية بعد اعتماد شكل الـ Inbox.
+                    <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                      {QUICK_REPLIES.map((reply) => (
+                        <button
+                          key={reply}
+                          type="button"
+                          onClick={() => setReplyText(reply)}
+                          className="shrink-0 rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-200"
+                        >
+                          {reply.slice(0, 28)}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-col gap-3 md:flex-row">
+                      <textarea
+                        value={replyText}
+                        onChange={(event) => setReplyText(event.target.value)}
+                        placeholder="اكتب رد العيادة هنا..."
+                        rows={2}
+                        className="min-h-14 flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                      />
+                      <button
+                        onClick={sendReply}
+                        disabled={sending || !replyText.trim()}
+                        className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white transition hover:bg-emerald-700 disabled:opacity-50 md:self-end"
+                      >
+                        {sending ? "جاري الإرسال..." : "إرسال واتساب"}
+                      </button>
                     </div>
                   </div>
                 </>
