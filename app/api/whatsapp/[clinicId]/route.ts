@@ -74,12 +74,23 @@ function formatSlot(time: string): string {
 function normalizeText(value: string) {
   return value
     .trim()
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
     .toLowerCase()
     .replace(/[إأآا]/g, "ا")
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
     .replace(/[^\p{L}\p{N}\s]/gu, "")
     .replace(/\s+/g, " ");
+}
+
+function parseArabicNumber(value: string) {
+  const normalized = value
+    .trim()
+    .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
+    .replace(/\D/g, "");
+  return parseInt(normalized, 10);
 }
 
 function detectIntent(message: string): BotIntent {
@@ -422,7 +433,7 @@ export async function POST(
     const datePrefix = parts[1]; // YYYY-MM-DD
     const slots = parts[2].split(","); // ["15:00","15:20",...]
     const patientId = parts[3];
-    const choice = parseInt(messageBody, 10);
+    const choice = parseArabicNumber(messageBody);
 
     if (intent === "menu") {
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
