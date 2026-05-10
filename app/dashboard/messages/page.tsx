@@ -259,10 +259,10 @@ export default function MessagesPage() {
           ))}
         </section>
 
-        <section className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-          <div className="grid min-h-[640px] lg:grid-cols-[390px_minmax(0,1fr)]">
-            <aside className="border-b border-slate-200 bg-slate-50/70 lg:border-b-0 lg:border-l">
-              <div className="space-y-3 border-b border-slate-200 p-4">
+        <section className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)] lg:h-[calc(100vh-290px)] lg:min-h-[620px] lg:max-h-[820px]">
+          <div className="grid min-h-[640px] lg:h-full lg:min-h-0 lg:grid-cols-[390px_minmax(0,1fr)]">
+            <aside className="flex min-h-0 flex-col border-b border-slate-200 bg-slate-50/70 lg:border-b-0 lg:border-l">
+              <div className="shrink-0 space-y-3 border-b border-slate-200 p-4">
                 <input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
@@ -290,7 +290,7 @@ export default function MessagesPage() {
                 </div>
               </div>
 
-              <div className="max-h-[560px] overflow-y-auto p-3">
+              <div className="min-h-0 flex-1 overflow-y-auto p-3">
                 {loading ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map((item) => <div key={item} className="h-20 animate-pulse rounded-2xl bg-slate-100" />)}
@@ -341,12 +341,12 @@ export default function MessagesPage() {
               </div>
             </aside>
 
-            <main className="flex min-h-[640px] flex-col bg-white">
+            <main className="flex min-h-[640px] flex-col bg-white lg:min-h-0">
               {!selectedConversation ? (
                 <div className="flex flex-1 items-center justify-center text-sm font-black text-slate-400">اختر محادثة لعرضها</div>
               ) : (
                 <>
-                  <div className="border-b border-slate-200 p-5">
+                  <div className="shrink-0 border-b border-slate-200 p-5">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -399,7 +399,7 @@ export default function MessagesPage() {
                     ) : null}
                   </div>
 
-                  <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4 md:p-6">
+                  <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4 md:p-6">
                     {[...selectedConversation.messages].reverse().map((message) => {
                       const outgoing = message.direction === "outbound";
                       return (
@@ -424,7 +424,7 @@ export default function MessagesPage() {
                     )})}
                   </div>
 
-                  <div className="border-t border-slate-200 bg-white p-4">
+                  <div className="shrink-0 border-t border-slate-200 bg-white p-4">
                     <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
                       {QUICK_REPLIES.map((reply) => (
                         <button
