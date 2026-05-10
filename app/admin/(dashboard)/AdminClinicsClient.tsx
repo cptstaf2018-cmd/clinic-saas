@@ -8,6 +8,7 @@ type Subscription = {
   status: string;
   expiresAt: string;
 };
+
 type Clinic = {
   id: string;
   name: string;
@@ -15,27 +16,48 @@ type Clinic = {
   subscription: Subscription | null;
 };
 
-const STATUS_LABELS: Record<string, string> = { active: "فعّال", inactive: "متوقف", trial: "تجريبي" };
-const STATUS_COLORS: Record<string, string> = {
-  active:   "bg-green-100 text-green-800",
-  inactive: "bg-red-100 text-red-800",
-  trial:    "bg-yellow-100 text-yellow-800",
+type StatusFilter = "all" | "active" | "trial" | "inactive" | "expiring";
+
+const STATUS_LABELS: Record<string, string> = {
+  active: "فعال",
+  inactive: "متوقف",
+  trial: "تجريبي",
 };
+
+const STATUS_COLORS: Record<string, string> = {
+  active: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  inactive: "bg-rose-50 text-rose-700 ring-rose-100",
+  trial: "bg-amber-50 text-amber-700 ring-amber-100",
+};
+
+const PLAN_LABELS: Record<string, string> = {
+  trial: "تجريبي",
+  basic: "أساسية",
+  standard: "متوسطة",
+  premium: "مميزة",
+};
+
 const PLAN_OPTIONS = [
-  { value: "trial",    label: "تجريبي" },
-  { value: "basic",    label: "أساسية" },
+  { value: "trial", label: "تجريبي" },
+  { value: "basic", label: "أساسية" },
   { value: "standard", label: "متوسطة" },
-  { value: "premium",  label: "مميزة" },
+  { value: "premium", label: "مميزة" },
 ];
+
 const STATUS_OPTIONS = [
-  { value: "active",   label: "فعّال" },
-  { value: "trial",    label: "تجريبي" },
+  { value: "active", label: "فعال" },
+  { value: "trial", label: "تجريبي" },
   { value: "inactive", label: "متوقف" },
 ];
 
 function toDateInput(iso: string | undefined) {
   if (!iso) return "";
   return new Date(iso).toISOString().slice(0, 10);
+}
+
+function formatDate(iso: string | undefined) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleDateString("ar-IQ");
 }
 
 export default function AdminClinicsClient({
@@ -48,9 +70,9 @@ export default function AdminClinicsClient({
   const router = useRouter();
   const [clinics, setClinics] = useState<Clinic[]>(initialClinics);
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Edit state
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editWhatsapp, setEditWhatsapp] = useState("");
@@ -58,41 +80,57 @@ export default function AdminClinicsClient({
   const [editStatus, setEditStatus] = useState("active");
   const [editExpires, setEditExpires] = useState("");
 
-  // Delete state
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
-  // Delete ALL state
   const [showDeleteAll, setShowDeleteAll] = useState(false);
   const [deleteAllConfirm, setDeleteAllConfirm] = useState("");
   const [deletingAll, setDeletingAll] = useState(false);
-
   const [error, setError] = useState("");
   const [now] = useState(() => Date.now());
+
   const activeCount = clinics.filter((clinic) => clinic.subscription?.status === "active").length;
+  const trialCount = clinics.filter((clinic) => clinic.subscription?.status === "trial").length;
   const inactiveCount = clinics.filter((clinic) => clinic.subscription?.status !== "active").length;
   const expiringCount = clinics.filter((clinic) => {
     if (!clinic.subscription?.expiresAt) return false;
     const diff = new Date(clinic.subscription.expiresAt).getTime() - now;
     return diff > 0 && diff <= 7 * 86400000;
   }).length;
+
   const filteredClinics = clinics.filter((clinic) => {
     const term = query.trim();
-    if (!term) return true;
-    return clinic.name.includes(term) || clinic.whatsappNumber.includes(term);
+    const matchesQuery = !term || clinic.name.includes(term) || clinic.whatsappNumber.includes(term);
+    if (!matchesQuery) return false;
+
+    const status = clinic.subscription?.status ?? "inactive";
+    if (statusFilter === "all") return true;
+    if (statusFilter === "expiring") {
+      if (!clinic.subscription?.expiresAt) return false;
+      const diff = new Date(clinic.subscription.expiresAt).getTime() - now;
+      return diff > 0 && diff <= 7 * 86400000;
+    }
+    return status === statusFilter;
   });
+
+  const filterTabs: { value: StatusFilter; label: string; count: number }[] = [
+    { value: "all", label: "الكل", count: clinics.length },
+    { value: "active", label: "نشطة", count: activeCount },
+    { value: "trial", label: "تجريبية", count: trialCount },
+    { value: "inactive", label: "متوقفة", count: inactiveCount },
+    { value: "expiring", label: "تنتهي قريباً", count: expiringCount },
+  ];
 
   function enterClinic(clinicId: string) {
     const origin = publicBaseUrl || window.location.origin;
     window.open(new URL(`/api/admin/enter/${clinicId}`, origin).toString(), "_blank", "noopener,noreferrer");
   }
 
-  function startEdit(c: Clinic) {
-    setEditId(c.id);
-    setEditName(c.name);
-    setEditWhatsapp(c.whatsappNumber);
-    setEditPlan(c.subscription?.plan ?? "basic");
-    setEditStatus(c.subscription?.status ?? "active");
-    setEditExpires(toDateInput(c.subscription?.expiresAt));
+  function startEdit(clinic: Clinic) {
+    setEditId(clinic.id);
+    setEditName(clinic.name);
+    setEditWhatsapp(clinic.whatsappNumber);
+    setEditPlan(clinic.subscription?.plan ?? "basic");
+    setEditStatus(clinic.subscription?.status ?? "active");
+    setEditExpires(toDateInput(clinic.subscription?.expiresAt));
     setDeleteId(null);
     setError("");
   }
@@ -114,24 +152,31 @@ export default function AdminClinicsClient({
           expiresAt: editExpires ? new Date(editExpires).toISOString() : undefined,
         }),
       });
+
       if (res.ok) {
-        setClinics((prev) => prev.map((c) =>
-          c.id === editId ? {
-            ...c,
-            name: editName,
-            whatsappNumber: editWhatsapp,
-            subscription: {
-              plan: editPlan,
-              status: editStatus,
-              expiresAt: editExpires ? new Date(editExpires).toISOString() : (c.subscription?.expiresAt ?? ""),
-            },
-          } : c
-        ));
+        setClinics((prev) =>
+          prev.map((clinic) =>
+            clinic.id === editId
+              ? {
+                  ...clinic,
+                  name: editName,
+                  whatsappNumber: editWhatsapp,
+                  subscription: {
+                    plan: editPlan,
+                    status: editStatus,
+                    expiresAt: editExpires
+                      ? new Date(editExpires).toISOString()
+                      : clinic.subscription?.expiresAt ?? "",
+                  },
+                }
+              : clinic
+          )
+        );
         setEditId(null);
         router.refresh();
       } else {
-        const d = await res.json();
-        setError(d.error ?? "حدث خطأ");
+        const data = await res.json();
+        setError(data.error ?? "حدث خطأ");
       }
     } catch {
       setError("حدث خطأ في الاتصال");
@@ -140,8 +185,7 @@ export default function AdminClinicsClient({
   }
 
   async function toggleStatus(clinic: Clinic) {
-    const status = clinic.subscription?.status;
-    const action = status === "active" ? "deactivate" : "activate";
+    const action = clinic.subscription?.status === "active" ? "deactivate" : "activate";
     const newStatus = action === "activate" ? "active" : "inactive";
     setActionLoading(clinic.id + "_toggle");
     try {
@@ -151,11 +195,13 @@ export default function AdminClinicsClient({
         body: JSON.stringify({ action }),
       });
       if (res.ok) {
-        setClinics((prev) => prev.map((c) =>
-          c.id === clinic.id
-            ? { ...c, subscription: c.subscription ? { ...c.subscription, status: newStatus } : null }
-            : c
-        ));
+        setClinics((prev) =>
+          prev.map((item) =>
+            item.id === clinic.id
+              ? { ...item, subscription: item.subscription ? { ...item.subscription, status: newStatus } : null }
+              : item
+          )
+        );
         router.refresh();
       }
     } catch {
@@ -169,12 +215,12 @@ export default function AdminClinicsClient({
     try {
       const res = await fetch(`/api/admin/clinics/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setClinics((prev) => prev.filter((c) => c.id !== id));
+        setClinics((prev) => prev.filter((clinic) => clinic.id !== id));
         setDeleteId(null);
         router.refresh();
       } else {
-        const d = await res.json();
-        setError(d.error ?? "حدث خطأ");
+        const data = await res.json();
+        setError(data.error ?? "حدث خطأ");
       }
     } catch {
       setError("حدث خطأ في الاتصال");
@@ -191,8 +237,8 @@ export default function AdminClinicsClient({
         setShowDeleteAll(false);
         setDeleteAllConfirm("");
       } else {
-        const d = await res.json();
-        setError(d.error ?? "حدث خطأ");
+        const data = await res.json();
+        setError(data.error ?? "حدث خطأ");
       }
     } catch {
       setError("حدث خطأ في الاتصال");
@@ -201,271 +247,583 @@ export default function AdminClinicsClient({
   }
 
   return (
-    <div dir="rtl" className="space-y-6">
-      <section className="rounded-[30px] bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm ring-1 ring-slate-200">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-black text-slate-500">مركز التحكم</p>
-            <h1 className="mt-2 text-4xl font-black text-slate-950">العيادات</h1>
-            <p className="mt-2 text-sm font-semibold text-slate-500">إدارة الاشتراكات، الدخول للعيادات، ومتابعة التشغيل من شاشة واحدة.</p>
-          </div>
-          <div className="grid grid-cols-3 gap-3 lg:min-w-[420px]">
-            {[
-              { label: "الكل", value: clinics.length },
-              { label: "نشطة", value: activeCount },
-              { label: "تنتهي قريباً", value: expiringCount },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-2xl bg-white p-4 text-center ring-1 ring-slate-200">
-                <p className="text-3xl font-black text-slate-950">{stat.value}</p>
-                <p className="mt-1 text-xs font-black text-slate-400">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-[26px] bg-white p-4 shadow-sm ring-1 ring-slate-200">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative lg:w-[420px]">
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="بحث باسم العيادة أو رقم الهاتف"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:bg-white focus:ring-4 focus:ring-slate-100"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-black text-slate-500">{filteredClinics.length} نتيجة</span>
-            <span className="rounded-full bg-rose-50 px-3 py-2 text-xs font-black text-rose-600">{inactiveCount} تحتاج متابعة</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Delete All Modal */}
-      {showDeleteAll && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" dir="rtl">
-            <div className="text-center mb-5">
-              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth={2} className="w-7 h-7">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                </svg>
-              </div>
-              <h2 className="text-xl font-extrabold text-gray-900">حذف جميع العيادات</h2>
-              <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-                سيتم حذف <strong className="text-red-600">{clinics.length} عيادة</strong> مع جميع المرضى والمواعيد والمدفوعات نهائياً.
-                <br/>هذا الإجراء <strong>لا يمكن التراجع عنه</strong>.
+    <div dir="rtl" className="space-y-5">
+      <section className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+        <div className="border-b border-slate-100 px-5 py-5 lg:px-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-black text-blue-600">لوحة السوبر أدمن</p>
+              <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">إدارة العيادات</h1>
+              <p className="mt-2 text-sm font-semibold text-slate-500">
+                متابعة الاشتراكات، الحالات، والدخول التشغيلي للعيادات من شاشة واحدة.
               </p>
             </div>
-
-            <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-600 mb-2">
-                اكتب <span className="text-red-600 font-bold">حذف الكل</span> للتأكيد
-              </label>
-              <input
-                value={deleteAllConfirm}
-                onChange={(e) => setDeleteAllConfirm(e.target.value)}
-                placeholder="حذف الكل"
-                className="w-full border-2 border-gray-200 focus:border-red-400 rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-colors"
-              />
-            </div>
-
-            {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-
-            <div className="flex gap-3">
-              <button
-                onClick={deleteAll}
-                disabled={deleteAllConfirm !== "حذف الكل" || deletingAll}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white font-bold py-2.5 rounded-xl text-sm transition-colors"
-              >
-                {deletingAll ? "جاري الحذف..." : "نعم، احذف الكل نهائياً"}
-              </button>
-              <button
-                onClick={() => setShowDeleteAll(false)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
-              >
-                إلغاء
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100">
+                {filteredClinics.length} نتيجة
+              </span>
+              <span className="rounded-full bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-100">
+                {inactiveCount} تحتاج متابعة
+              </span>
             </div>
           </div>
         </div>
+
+        <div className="grid gap-px bg-slate-100 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: "إجمالي العيادات", value: clinics.length, accent: "text-slate-950", sub: "كل الحسابات" },
+            { label: "العيادات النشطة", value: activeCount, accent: "text-emerald-700", sub: "تعمل حالياً" },
+            { label: "تنتهي قريباً", value: expiringCount, accent: "text-amber-700", sub: "خلال 7 أيام" },
+            { label: "تحتاج متابعة", value: inactiveCount, accent: "text-rose-700", sub: "متوقفة أو معلقة" },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white px-5 py-4">
+              <p className="text-xs font-black text-slate-400">{stat.label}</p>
+              <div className="mt-2 flex items-end justify-between gap-3">
+                <p className={`text-3xl font-black ${stat.accent}`}>{stat.value}</p>
+                <p className="pb-1 text-[11px] font-bold text-slate-400">{stat.sub}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="بحث باسم العيادة أو رقم الهاتف"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-50 xl:w-[420px]"
+          />
+          <div className="flex gap-2 overflow-x-auto pb-1 xl:pb-0">
+            {filterTabs.map((tab) => {
+              const active = statusFilter === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => setStatusFilter(tab.value)}
+                  className={`shrink-0 rounded-lg px-3 py-2 text-xs font-black ring-1 transition ${
+                    active
+                      ? "bg-slate-950 text-white ring-slate-950"
+                      : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {tab.label}
+                  <span className={`mr-2 rounded-full px-2 py-0.5 ${active ? "bg-white/15" : "bg-slate-100 text-slate-500"}`}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {showDeleteAll && (
+        <DeleteAllModal
+          clinicsCount={clinics.length}
+          confirmText={deleteAllConfirm}
+          setConfirmText={setDeleteAllConfirm}
+          error={error}
+          deleting={deletingAll}
+          onConfirm={deleteAll}
+          onCancel={() => setShowDeleteAll(false)}
+        />
       )}
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
-      <div className="grid gap-3">
-        {filteredClinics.map((clinic) => {
-          const status = clinic.subscription?.status ?? "inactive";
-          const plan   = clinic.subscription?.plan   ?? "—";
-          const expires = clinic.subscription?.expiresAt
-            ? new Date(clinic.subscription.expiresAt).toLocaleDateString("ar-IQ")
-            : "—";
-          const isEdit   = editId   === clinic.id;
-          const isDelete = deleteId === clinic.id;
+      <section className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="min-w-full border-separate border-spacing-0 text-right">
+            <thead className="bg-slate-50">
+              <tr className="text-[11px] font-black text-slate-400">
+                <th className="px-5 py-3">العيادة</th>
+                <th className="px-5 py-3">الهاتف</th>
+                <th className="px-5 py-3">الخطة</th>
+                <th className="px-5 py-3">الحالة</th>
+                <th className="px-5 py-3">انتهاء الاشتراك</th>
+                <th className="px-5 py-3 text-left">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredClinics.map((clinic) => (
+                <ClinicTableRow
+                  key={clinic.id}
+                  clinic={clinic}
+                  editId={editId}
+                  deleteId={deleteId}
+                  actionLoading={actionLoading}
+                  enterClinic={enterClinic}
+                  toggleStatus={toggleStatus}
+                  startEdit={startEdit}
+                  requestDelete={(id) => {
+                    setDeleteId(id);
+                    setEditId(null);
+                    setError("");
+                  }}
+                  deleteClinic={deleteClinic}
+                  cancelDelete={() => setDeleteId(null)}
+                  editProps={{
+                    editName,
+                    editWhatsapp,
+                    editPlan,
+                    editStatus,
+                    editExpires,
+                    setEditName,
+                    setEditWhatsapp,
+                    setEditPlan,
+                    setEditStatus,
+                    setEditExpires,
+                    saveEdit,
+                    cancelEdit: () => setEditId(null),
+                    saving: actionLoading === editId + "_edit",
+                  }}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-          return (
-            <div
+        <div className="grid gap-3 p-3 lg:hidden">
+          {filteredClinics.map((clinic) => (
+            <ClinicCard
               key={clinic.id}
-              className={`bg-white rounded-[24px] border shadow-sm transition-all ${
-                isEdit   ? "border-blue-200 ring-1 ring-blue-100" :
-                isDelete ? "border-rose-200 ring-1 ring-rose-100"  :
-                "border-slate-200"
-              }`}
-            >
-              {/* Normal row */}
-              {!isEdit && !isDelete && (
-                <div className="grid gap-4 px-5 py-4 xl:grid-cols-[1fr_auto_auto] xl:items-center">
-                  {/* Info */}
-                  <div className="min-w-0">
-                    <p className="truncate text-lg font-black text-slate-950">{clinic.name}</p>
-                    <p className="mt-1 text-xs font-bold text-slate-400 dir-ltr">{clinic.whatsappNumber}</p>
-                  </div>
-                  {/* Meta */}
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">{plan}</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-black ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700"}`}>
-                      {STATUS_LABELS[status] ?? status}
-                    </span>
-                    <span className="rounded-full bg-slate-50 px-3 py-1 text-xs font-black text-slate-400 ring-1 ring-slate-200">{expires}</span>
-                  </div>
-                  {/* Actions */}
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => enterClinic(clinic.id)}
-                      className="rounded-2xl bg-slate-950 px-4 py-2.5 text-xs font-black text-white transition hover:bg-slate-800"
-                    >
-                      دخول
-                    </button>
-                    {status !== "active" ? (
-                      <button
-                        onClick={() => toggleStatus(clinic)}
-                        disabled={actionLoading === clinic.id + "_toggle"}
-                        className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:opacity-50"
-                      >
-                        تفعيل
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => toggleStatus(clinic)}
-                        disabled={actionLoading === clinic.id + "_toggle"}
-                        className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-700 ring-1 ring-amber-100 transition hover:bg-amber-100 disabled:opacity-50"
-                      >
-                        إيقاف
-                      </button>
-                    )}
-                    <button
-                      onClick={() => startEdit(clinic)}
-                      className="rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
-                    >
-                      تعديل
-                    </button>
-                    <button
-                      onClick={() => { setDeleteId(clinic.id); setEditId(null); setError(""); }}
-                      className="rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-500 ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-700"
-                    >
-                      حذف
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Edit form */}
-              {isEdit && (
-                <div className="px-5 py-4 space-y-3" dir="rtl">
-                  <p className="text-sm font-bold text-blue-700 mb-1">تعديل بيانات العيادة</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">اسم العيادة</label>
-                      <input value={editName} onChange={(e) => setEditName(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">رقم الواتساب</label>
-                      <input value={editWhatsapp} onChange={(e) => setEditWhatsapp(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" dir="ltr" />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">الباقة</label>
-                      <select value={editPlan} onChange={(e) => setEditPlan(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
-                        {PLAN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">الحالة</label>
-                      <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
-                        {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                      </select>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs text-gray-500 mb-1">تاريخ انتهاء الاشتراك</label>
-                      <input type="date" value={editExpires} onChange={(e) => setEditExpires(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" dir="ltr" />
-                    </div>
-                  </div>
-                  <div className="flex gap-2 pt-1">
-                    <button onClick={saveEdit} disabled={actionLoading === editId + "_edit"}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-sm disabled:opacity-50 transition-colors">
-                      {actionLoading === editId + "_edit" ? "جاري الحفظ..." : "حفظ التعديلات"}
-                    </button>
-                    <button onClick={() => setEditId(null)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg text-sm transition-colors">
-                      إلغاء
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Delete confirmation */}
-              {isDelete && (
-                <div className="px-5 py-4" dir="rtl">
-                  <p className="font-bold text-red-700 mb-1">حذف {clinic.name}؟</p>
-                  <p className="text-xs text-gray-500 mb-4">
-                    سيتم حذف العيادة والمستخدمين والمرضى والمواعيد والمدفوعات نهائياً. لا يمكن التراجع.
-                  </p>
-                  <div className="flex gap-2">
-                    <button onClick={() => deleteClinic(clinic.id)}
-                      disabled={actionLoading === clinic.id + "_delete"}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-sm disabled:opacity-50 transition-colors">
-                      {actionLoading === clinic.id + "_delete" ? "جاري الحذف..." : "نعم، احذف نهائياً"}
-                    </button>
-                    <button onClick={() => setDeleteId(null)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg text-sm transition-colors">
-                      إلغاء
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+              clinic={clinic}
+              editId={editId}
+              deleteId={deleteId}
+              actionLoading={actionLoading}
+              enterClinic={enterClinic}
+              toggleStatus={toggleStatus}
+              startEdit={startEdit}
+              requestDelete={(id) => {
+                setDeleteId(id);
+                setEditId(null);
+                setError("");
+              }}
+              deleteClinic={deleteClinic}
+              cancelDelete={() => setDeleteId(null)}
+              editProps={{
+                editName,
+                editWhatsapp,
+                editPlan,
+                editStatus,
+                editExpires,
+                setEditName,
+                setEditWhatsapp,
+                setEditPlan,
+                setEditStatus,
+                setEditExpires,
+                saveEdit,
+                cancelEdit: () => setEditId(null),
+                saving: actionLoading === editId + "_edit",
+              }}
+            />
+          ))}
+        </div>
 
         {filteredClinics.length === 0 && (
-          <div className="text-center py-16 text-gray-400">لا توجد عيادات مسجلة</div>
+          <div className="border-t border-slate-100 py-16 text-center text-sm font-bold text-slate-400">
+            لا توجد عيادات مطابقة
+          </div>
         )}
-      </div>
+      </section>
 
       {clinics.length > 0 && (
-        <section className="rounded-[26px] bg-white p-5 shadow-sm ring-1 ring-rose-100">
+        <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-rose-100">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-black text-slate-950">منطقة الخطر</h2>
-              <p className="mt-1 text-sm font-semibold text-slate-500">إجراءات الحذف الشامل محفوظة هنا حتى لا تضغطها بالخطأ.</p>
+              <h2 className="text-base font-black text-slate-950">منطقة الخطر</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                إجراءات الحذف الشامل محفوظة هنا حتى لا تضغطها بالخطأ.
+              </p>
             </div>
             <button
-              onClick={() => { setShowDeleteAll(true); setDeleteAllConfirm(""); setError(""); }}
-              className="rounded-2xl bg-rose-50 px-5 py-3 text-sm font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+              onClick={() => {
+                setShowDeleteAll(true);
+                setDeleteAllConfirm("");
+                setError("");
+              }}
+              className="rounded-lg bg-rose-50 px-5 py-3 text-sm font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
             >
               حذف كل العيادات
             </button>
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+type EditPanelProps = {
+  editName: string;
+  editWhatsapp: string;
+  editPlan: string;
+  editStatus: string;
+  editExpires: string;
+  setEditName: (value: string) => void;
+  setEditWhatsapp: (value: string) => void;
+  setEditPlan: (value: string) => void;
+  setEditStatus: (value: string) => void;
+  setEditExpires: (value: string) => void;
+  saveEdit: () => void;
+  cancelEdit: () => void;
+  saving: boolean;
+};
+
+function ClinicTableRow({
+  clinic,
+  editId,
+  deleteId,
+  actionLoading,
+  enterClinic,
+  toggleStatus,
+  startEdit,
+  requestDelete,
+  deleteClinic,
+  cancelDelete,
+  editProps,
+}: {
+  clinic: Clinic;
+  editId: string | null;
+  deleteId: string | null;
+  actionLoading: string | null;
+  enterClinic: (id: string) => void;
+  toggleStatus: (clinic: Clinic) => void;
+  startEdit: (clinic: Clinic) => void;
+  requestDelete: (id: string) => void;
+  deleteClinic: (id: string) => void;
+  cancelDelete: () => void;
+  editProps: EditPanelProps;
+}) {
+  const status = clinic.subscription?.status ?? "inactive";
+  const plan = clinic.subscription?.plan ?? "-";
+  const isEdit = editId === clinic.id;
+  const isDelete = deleteId === clinic.id;
+
+  return (
+    <tr className={isEdit || isDelete ? "bg-blue-50/40 align-top" : "bg-white align-middle hover:bg-slate-50/70"}>
+      {!isEdit && !isDelete && (
+        <>
+          <td className="max-w-[260px] px-5 py-4">
+            <p className="truncate text-sm font-black text-slate-950">{clinic.name}</p>
+            <p className="mt-1 text-[11px] font-bold text-slate-400">ID: {clinic.id.slice(0, 8)}</p>
+          </td>
+          <td className="px-5 py-4 text-sm font-bold text-slate-500" dir="ltr">{clinic.whatsappNumber}</td>
+          <td className="px-5 py-4">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">{PLAN_LABELS[plan] ?? plan}</span>
+          </td>
+          <td className="px-5 py-4">
+            <StatusBadge status={status} />
+          </td>
+          <td className="px-5 py-4 text-sm font-bold text-slate-500">{formatDate(clinic.subscription?.expiresAt)}</td>
+          <td className="px-5 py-4">
+            <RowActions
+              status={status}
+              loading={actionLoading}
+              clinic={clinic}
+              enterClinic={enterClinic}
+              toggleStatus={toggleStatus}
+              startEdit={startEdit}
+              requestDelete={requestDelete}
+            />
+          </td>
+        </>
+      )}
+
+      {isEdit && (
+        <td colSpan={6} className="px-5 py-4">
+          <EditPanel {...editProps} />
+        </td>
+      )}
+
+      {isDelete && (
+        <td colSpan={6} className="px-5 py-4">
+          <DeletePanel
+            clinicName={clinic.name}
+            deleting={actionLoading === clinic.id + "_delete"}
+            confirm={() => deleteClinic(clinic.id)}
+            cancel={cancelDelete}
+          />
+        </td>
+      )}
+    </tr>
+  );
+}
+
+function ClinicCard({
+  clinic,
+  editId,
+  deleteId,
+  actionLoading,
+  enterClinic,
+  toggleStatus,
+  startEdit,
+  requestDelete,
+  deleteClinic,
+  cancelDelete,
+  editProps,
+}: {
+  clinic: Clinic;
+  editId: string | null;
+  deleteId: string | null;
+  actionLoading: string | null;
+  enterClinic: (id: string) => void;
+  toggleStatus: (clinic: Clinic) => void;
+  startEdit: (clinic: Clinic) => void;
+  requestDelete: (id: string) => void;
+  deleteClinic: (id: string) => void;
+  cancelDelete: () => void;
+  editProps: EditPanelProps;
+}) {
+  const status = clinic.subscription?.status ?? "inactive";
+  const plan = clinic.subscription?.plan ?? "-";
+  const isEdit = editId === clinic.id;
+  const isDelete = deleteId === clinic.id;
+
+  return (
+    <div className={`rounded-lg border bg-white p-4 shadow-sm ${isEdit ? "border-blue-200 ring-1 ring-blue-100" : isDelete ? "border-rose-200 ring-1 ring-rose-100" : "border-slate-200"}`}>
+      {!isEdit && !isDelete && (
+        <>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-base font-black text-slate-950">{clinic.name}</p>
+              <p className="mt-1 text-xs font-bold text-slate-400" dir="ltr">{clinic.whatsappNumber}</p>
+            </div>
+            <StatusBadge status={status} />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-bold text-slate-500">
+            <div className="rounded-lg bg-slate-50 p-3">الخطة: <span className="text-slate-900">{PLAN_LABELS[plan] ?? plan}</span></div>
+            <div className="rounded-lg bg-slate-50 p-3">الانتهاء: <span className="text-slate-900">{formatDate(clinic.subscription?.expiresAt)}</span></div>
+          </div>
+          <div className="mt-4">
+            <RowActions
+              status={status}
+              loading={actionLoading}
+              clinic={clinic}
+              enterClinic={enterClinic}
+              toggleStatus={toggleStatus}
+              startEdit={startEdit}
+              requestDelete={requestDelete}
+              compact
+            />
+          </div>
+        </>
+      )}
+
+      {isEdit && <EditPanel {...editProps} />}
+      {isDelete && (
+        <DeletePanel
+          clinicName={clinic.name}
+          deleting={actionLoading === clinic.id + "_delete"}
+          confirm={() => deleteClinic(clinic.id)}
+          cancel={cancelDelete}
+        />
+      )}
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-700 ring-gray-200"}`}>
+      {STATUS_LABELS[status] ?? status}
+    </span>
+  );
+}
+
+function RowActions({
+  status,
+  loading,
+  clinic,
+  enterClinic,
+  toggleStatus,
+  startEdit,
+  requestDelete,
+  compact = false,
+}: {
+  status: string;
+  loading: string | null;
+  clinic: Clinic;
+  enterClinic: (id: string) => void;
+  toggleStatus: (clinic: Clinic) => void;
+  startEdit: (clinic: Clinic) => void;
+  requestDelete: (id: string) => void;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`flex gap-2 ${compact ? "flex-wrap" : "justify-end"}`}>
+      <button onClick={() => enterClinic(clinic.id)} className="rounded-lg bg-slate-950 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-800">دخول</button>
+      <button
+        onClick={() => toggleStatus(clinic)}
+        disabled={loading === clinic.id + "_toggle"}
+        className={`rounded-lg px-3 py-2 text-xs font-black ring-1 transition disabled:opacity-50 ${
+          status === "active"
+            ? "bg-amber-50 text-amber-700 ring-amber-100 hover:bg-amber-100"
+            : "bg-emerald-50 text-emerald-700 ring-emerald-100 hover:bg-emerald-100"
+        }`}
+      >
+        {status === "active" ? "إيقاف" : "تفعيل"}
+      </button>
+      <button onClick={() => startEdit(clinic)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50">تعديل</button>
+      <button onClick={() => requestDelete(clinic.id)} className="rounded-lg bg-white px-3 py-2 text-xs font-black text-slate-500 ring-1 ring-slate-200 transition hover:bg-rose-50 hover:text-rose-700">حذف</button>
+    </div>
+  );
+}
+
+function EditPanel({
+  editName,
+  editWhatsapp,
+  editPlan,
+  editStatus,
+  editExpires,
+  setEditName,
+  setEditWhatsapp,
+  setEditPlan,
+  setEditStatus,
+  setEditExpires,
+  saveEdit,
+  cancelEdit,
+  saving,
+}: EditPanelProps) {
+  return (
+    <div className="space-y-3" dir="rtl">
+      <div>
+        <p className="text-sm font-black text-blue-700">تعديل بيانات العيادة</p>
+        <p className="mt-1 text-xs font-semibold text-slate-500">حدّث الاشتراك والمعلومات الأساسية ثم احفظ التغيير.</p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+        <label className="md:col-span-2">
+          <span className="mb-1 block text-xs font-bold text-slate-500">اسم العيادة</span>
+          <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50" />
+        </label>
+        <label>
+          <span className="mb-1 block text-xs font-bold text-slate-500">رقم الواتساب</span>
+          <input value={editWhatsapp} onChange={(e) => setEditWhatsapp(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50" dir="ltr" />
+        </label>
+        <label>
+          <span className="mb-1 block text-xs font-bold text-slate-500">الباقة</span>
+          <select value={editPlan} onChange={(e) => setEditPlan(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50">
+            {PLAN_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-1 block text-xs font-bold text-slate-500">الحالة</span>
+          <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50">
+            {STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <span className="mb-1 block text-xs font-bold text-slate-500">الانتهاء</span>
+          <input type="date" value={editExpires} onChange={(e) => setEditExpires(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50" dir="ltr" />
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={saveEdit} disabled={saving} className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-50">
+          {saving ? "جاري الحفظ..." : "حفظ التعديلات"}
+        </button>
+        <button onClick={cancelEdit} className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-700 transition hover:bg-slate-200">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DeletePanel({
+  clinicName,
+  deleting,
+  confirm,
+  cancel,
+}: {
+  clinicName: string;
+  deleting: boolean;
+  confirm: () => void;
+  cancel: () => void;
+}) {
+  return (
+    <div dir="rtl">
+      <p className="font-black text-red-700">حذف {clinicName}؟</p>
+      <p className="mb-4 mt-1 text-xs font-semibold text-gray-500">سيتم حذف العيادة والمستخدمين والمرضى والمواعيد والمدفوعات نهائياً. لا يمكن التراجع.</p>
+      <div className="flex gap-2">
+        <button onClick={confirm} disabled={deleting} className="rounded-lg bg-red-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-red-700 disabled:opacity-50">
+          {deleting ? "جاري الحذف..." : "نعم، احذف نهائياً"}
+        </button>
+        <button onClick={cancel} className="rounded-lg bg-gray-100 px-5 py-2.5 text-sm font-black text-gray-700 transition hover:bg-gray-200">
+          إلغاء
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DeleteAllModal({
+  clinicsCount,
+  confirmText,
+  setConfirmText,
+  error,
+  deleting,
+  onConfirm,
+  onCancel,
+}: {
+  clinicsCount: number;
+  confirmText: string;
+  setConfirmText: (value: string) => void;
+  error: string;
+  deleting: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl" dir="rtl">
+        <div className="mb-5 text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth={2} className="h-7 w-7">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </div>
+          <h2 className="text-xl font-extrabold text-gray-900">حذف جميع العيادات</h2>
+          <p className="mt-2 text-sm leading-relaxed text-gray-500">
+            سيتم حذف <strong className="text-red-600">{clinicsCount} عيادة</strong> مع جميع المرضى والمواعيد والمدفوعات نهائياً.
+            <br/>هذا الإجراء <strong>لا يمكن التراجع عنه</strong>.
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-2 block text-xs font-semibold text-gray-600">
+            اكتب <span className="font-bold text-red-600">حذف الكل</span> للتأكيد
+          </label>
+          <input
+            value={confirmText}
+            onChange={(event) => setConfirmText(event.target.value)}
+            placeholder="حذف الكل"
+            className="w-full rounded-lg border-2 border-gray-200 px-4 py-2.5 text-sm transition-colors focus:border-red-400 focus:outline-none"
+          />
+        </div>
+
+        {error && <p className="mb-3 text-sm text-red-500">{error}</p>}
+
+        <div className="flex gap-3">
+          <button
+            onClick={onConfirm}
+            disabled={confirmText !== "حذف الكل" || deleting}
+            className="flex-1 rounded-lg bg-red-600 py-2.5 text-sm font-bold text-white transition-colors hover:bg-red-700 disabled:opacity-40"
+          >
+            {deleting ? "جاري الحذف..." : "نعم، احذف الكل نهائياً"}
+          </button>
+          <button
+            onClick={onCancel}
+            className="flex-1 rounded-lg bg-gray-100 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+          >
+            إلغاء
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
