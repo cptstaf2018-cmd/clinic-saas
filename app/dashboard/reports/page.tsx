@@ -234,7 +234,6 @@ export default async function ReportsPage() {
                 summary={summary}
                 clinicName={clinic?.name ?? ""}
                 specialty={specialtyConfig.nameAr}
-                whatsappPhone={clinic?.whatsappNumber}
               />
             ) : null}
           </div>
