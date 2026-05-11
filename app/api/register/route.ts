@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
     data: {
       name: clinicName,
       whatsappNumber: phone.trim(),
+      specialtyOnboardingRequired: true,
       users: {
         create: { passwordHash, role: "doctor" },
       },

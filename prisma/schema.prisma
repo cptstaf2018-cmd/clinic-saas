@@ -16,6 +16,8 @@ model Clinic {
   logoUrl                String?
   address                String?
   locationUrl            String?
+  specialty              String?
+  specialtyOnboardingRequired Boolean @default(false)
   whatsappAccessToken    String?
   whatsappPhoneNumberId  String?
   whatsappWelcomeMessage String?

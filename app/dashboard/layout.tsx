@@ -27,6 +27,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!clinicId) redirect("/login");
 
   const clinic = await getClinicData(clinicId);
+  if (clinic?.specialtyOnboardingRequired && !clinic.specialty) {
+    redirect("/onboarding/specialty");
+  }
+
   const name = clinic?.name ?? "العيادة";
   const subStatus = clinic?.subscription?.status ?? "trial";
   const badge = STATUS_BADGE[subStatus] ?? STATUS_BADGE.inactive;
