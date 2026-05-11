@@ -7,6 +7,7 @@ export default function SpecialtyOnboardingClient() {
   const [selected, setSelected] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const selectedSpecialty = MEDICAL_SPECIALTIES.find((specialty) => specialty.key === selected);
 
   async function submit() {
     if (!selected || loading) return;
@@ -66,8 +67,14 @@ export default function SpecialtyOnboardingClient() {
 
         <div className="mt-6 flex flex-col items-stretch gap-3 rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-black text-slate-950">بعد الاختيار</p>
-            <p className="mt-1 text-xs font-bold text-slate-500">ستدخل لوحة العيادة وتبدأ القوالب المناسبة بالظهور في الزيارات الطبية.</p>
+            <p className="text-sm font-black text-slate-950">
+              {selectedSpecialty ? `ستتابع كعيادة ${selectedSpecialty.name}` : "بعد الاختيار"}
+            </p>
+            <p className="mt-1 text-xs font-bold text-slate-500">
+              {selectedSpecialty
+                ? selectedSpecialty.description
+                : "ستدخل لوحة العيادة وتبدأ القوالب المناسبة بالظهور في الزيارات الطبية."}
+            </p>
           </div>
           <button
             type="button"
@@ -75,7 +82,7 @@ export default function SpecialtyOnboardingClient() {
             disabled={!selected || loading}
             className="rounded-2xl bg-blue-600 px-8 py-3 text-sm font-black text-white shadow-[0_10px_24px_rgba(37,99,235,0.25)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "جاري الحفظ..." : "متابعة إلى لوحة العيادة"}
+            {loading ? "جاري الحفظ..." : selectedSpecialty ? `متابعة كعيادة ${selectedSpecialty.name}` : "متابعة إلى لوحة العيادة"}
           </button>
         </div>
 
