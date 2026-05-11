@@ -73,3 +73,39 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeIn 0.4s ease forwards; }
+
+/* ══════════════════════════════════════════
+   Print styles — تصميم الطباعة الرسمية
+══════════════════════════════════════════ */
+@media print {
+  /* إخفاء كل شيء ما عدا محتوى التقرير */
+  nav, aside, header,
+  [data-sidebar],
+  .print\:hidden { display: none !important; }
+
+  body { background: white !important; }
+
+  /* إظهار عناصر الطباعة */
+  .print\:block { display: block !important; }
+
+  /* ضبط الصفحة */
+  @page {
+    size: A4;
+    margin: 15mm 15mm 20mm 15mm;
+  }
+
+  /* منع قطع البطاقات بين الصفحات */
+  article, section { break-inside: avoid; }
+
+  /* إزالة الظلال والزوايا المدورة للطباعة */
+  * {
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* تصغير الخطوط قليلاً للطباعة */
+  body { font-size: 12px; }
+  h1 { font-size: 18px !important; }
+  h2 { font-size: 15px !important; }
+}

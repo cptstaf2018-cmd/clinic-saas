@@ -23,9 +23,10 @@ export default async function ReportsPage() {
   if (!session?.user?.clinicId) redirect("/login");
 
   const clinicId = session.user.clinicId;
-  const [subscription, specialtyConfig] = await Promise.all([
+  const [subscription, specialtyConfig, clinic] = await Promise.all([
     db.subscription.findUnique({ where: { clinicId } }),
     getClinicSpecialtyConfig(clinicId),
+    db.clinic.findUnique({ where: { id: clinicId }, select: { name: true, logoUrl: true, whatsappNumber: true } }),
   ]);
   const canViewReports = canUseFeature(subscription?.plan, "dailyReports");
 
@@ -67,13 +68,34 @@ export default async function ReportsPage() {
     .filter((payment) => payment.status === "approved")
     .reduce((sum, payment) => sum + payment.amount, 0);
 
+  const now = new Date();
+  const reportTime = now.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
+  const reportNumber = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+
   const summary = [
-    `تقرير العيادة - ${formatDate(today)}`,
-    `الاختصاص: ${specialtyConfig.nameAr}`,
-    `حجوزات اليوم: ${appointments.length}`,
-    `زيارات مكتملة: ${completed}`,
-    `سجلات طبية اليوم: ${medicalRecordsToday}`,
-    `إيراد اليوم: ${formatMoney(todayRevenue)} د.ع`,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    `📋 تقرير العيادة اليومي الرسمي`,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    `🏥 ${clinic?.name ?? "العيادة"}`,
+    `⚕️ الاختصاص: ${specialtyConfig.nameAr}`,
+    `📅 التاريخ: ${formatDate(today)}`,
+    `🕐 الوقت: ${reportTime}`,
+    `🔢 رقم التقرير: ${reportNumber}`,
+    ``,
+    `📊 الإحصائيات:`,
+    `• حجوزات اليوم: ${appointments.length}`,
+    `• زيارات مكتملة: ${completed}`,
+    `• زيارات ملغاة: ${cancelled}`,
+    `• مراجعون جدد: ${newPatients}`,
+    `• سجلات طبية: ${medicalRecordsToday}`,
+    ``,
+    `💰 المالية:`,
+    `• إيراد اليوم: ${formatMoney(todayRevenue)} د.ع`,
+    `• إيراد الشهر: ${formatMoney(monthRevenue)} د.ع`,
+    ``,
+    `💬 واتساب: ${incomingMessages} رسالة`,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    `وزارة الصحة العراقية | Iraqi Ministry of Health`,
   ].join("\n");
 
   const reportGroups = [
@@ -136,9 +158,69 @@ export default async function ReportsPage() {
   ];
 
   return (
-    <div className="p-4 print:bg-white md:p-8" dir="rtl">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100 print:shadow-none">
+    <div className="p-4 print:p-0 print:bg-white md:p-8" dir="rtl">
+      <div className="mx-auto max-w-6xl space-y-6 print:max-w-none print:space-y-4">
+
+        {/* ═══════════════════════════════════════════════════════
+            رأس الطباعة الرسمي — يظهر فقط عند الطباعة
+        ═══════════════════════════════════════════════════════ */}
+        <div className="hidden print:block border-b-2 border-slate-800 pb-4 mb-4">
+          <div className="flex items-center justify-between gap-4">
+
+            {/* يمين — شعار العيادة + الاسم */}
+            <div className="flex items-center gap-3 min-w-0">
+              {clinic?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={clinic.logoUrl} alt="شعار العيادة" className="h-16 w-16 rounded-full object-cover border border-slate-300" />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-black border border-blue-200">
+                  {clinic?.name?.slice(0, 1) ?? "ع"}
+                </div>
+              )}
+              <div>
+                <p className="text-base font-black text-slate-900">{clinic?.name ?? "العيادة"}</p>
+                <p className="text-sm font-bold text-blue-700">اختصاص {specialtyConfig.nameAr}</p>
+                <p className="text-xs text-slate-500">{clinic?.whatsappNumber}</p>
+              </div>
+            </div>
+
+            {/* وسط — شعار وزارة الصحة العراقية */}
+            <div className="flex flex-col items-center gap-1 text-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/moh-iraq.svg" alt="وزارة الصحة العراقية" className="h-20 w-20" />
+              <p className="text-xs font-black text-slate-700">جمهورية العراق</p>
+              <p className="text-xs font-black text-red-700">وزارة الصحة العراقية</p>
+              <p className="text-[10px] text-slate-500">Iraqi Ministry of Health</p>
+            </div>
+
+            {/* يسار — التاريخ والوقت ورقم التقرير */}
+            <div className="text-left min-w-0 space-y-1">
+              <div className="rounded-lg bg-slate-100 px-3 py-1">
+                <p className="text-[10px] text-slate-500">التاريخ</p>
+                <p className="text-sm font-black text-slate-900">{formatDate(today)}</p>
+              </div>
+              <div className="rounded-lg bg-slate-100 px-3 py-1">
+                <p className="text-[10px] text-slate-500">الوقت</p>
+                <p className="text-sm font-black text-slate-900">{reportTime}</p>
+              </div>
+              <div className="rounded-lg bg-blue-50 px-3 py-1 border border-blue-200">
+                <p className="text-[10px] text-blue-600">رقم التقرير</p>
+                <p className="text-xs font-black text-blue-800" dir="ltr">{reportNumber}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* عنوان التقرير */}
+          <div className="mt-4 text-center border-t border-slate-300 pt-3">
+            <h1 className="text-xl font-black text-slate-900">التقرير اليومي الرسمي للعيادة</h1>
+            <p className="text-sm text-slate-500">وثيقة رسمية صادرة عن نظام إدارة عيادتي</p>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════
+            رأس الويب العادي — يختفي عند الطباعة
+        ═══════════════════════════════════════════════════════ */}
+        <section className="print:hidden rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-black text-emerald-700">مركز التقارير</p>
@@ -147,7 +229,14 @@ export default async function ReportsPage() {
                 مركز واحد للتقارير الطبية، المالية، المواعيد، المرضى، واتساب مع الطباعة والمشاركة.
               </p>
             </div>
-            {canViewReports ? <ReportActions summary={summary} /> : null}
+            {canViewReports ? (
+              <ReportActions
+                summary={summary}
+                clinicName={clinic?.name ?? ""}
+                specialty={specialtyConfig.nameAr}
+                whatsappPhone={clinic?.whatsappNumber}
+              />
+            ) : null}
           </div>
         </section>
 
