@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature, upgradeMessage } from "@/lib/feature-gates";
+import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
+
+function cleanContentJson(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, fieldValue]) => [
+      key,
+      typeof fieldValue === "string" ? fieldValue.trim() : String(fieldValue ?? "").trim(),
+    ])
+  );
+}
 
 export async function PATCH(
   req: Request,
@@ -18,7 +29,7 @@ export async function PATCH(
   if (!record)
     return NextResponse.json({ error: "السجل غير موجود" }, { status: 404 });
 
-  const { complaint, diagnosis, prescription, notes, date, followUpDate } = await req.json();
+  const { complaint, diagnosis, prescription, notes, date, followUpDate, specialtyCode, contentJson } = await req.json();
   if (!complaint?.trim())
     return NextResponse.json({ error: "الشكوى مطلوبة" }, { status: 400 });
 
@@ -26,6 +37,12 @@ export async function PATCH(
   if (followUpDate && !canUseFeature(subscription?.plan, "followUpTracking")) {
     return NextResponse.json({ error: upgradeMessage("followUpTracking") }, { status: 402 });
   }
+
+  const specialtyConfig = await getClinicSpecialtyConfig(clinicId);
+  const recordSpecialtyCode = typeof specialtyCode === "string" && specialtyCode.trim()
+    ? specialtyCode.trim()
+    : record.specialtyCode ?? specialtyConfig.code;
+  const cleanedContent = cleanContentJson(contentJson);
 
   const updated = await db.medicalRecord.update({
     where: { id },
@@ -36,6 +53,8 @@ export async function PATCH(
       notes: notes?.trim() || null,
       date: date ? new Date(date) : record.date,
       followUpDate: followUpDate ? new Date(followUpDate) : null,
+      specialtyCode: recordSpecialtyCode,
+      contentJson: cleanedContent,
     },
   });
 

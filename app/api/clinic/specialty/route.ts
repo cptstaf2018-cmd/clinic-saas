@@ -14,13 +14,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "يرجى اختيار اختصاص صحيح" }, { status: 400 });
   }
 
-  await db.clinic.update({
-    where: { id: session.user.clinicId },
-    data: {
-      specialty,
-      specialtyOnboardingRequired: false,
-    },
-  });
+  await db.$transaction([
+    db.clinic.update({
+      where: { id: session.user.clinicId },
+      data: {
+        specialty,
+        specialtyOnboardingRequired: false,
+      },
+    }),
+    db.clinicSettings.upsert({
+      where: { clinicId: session.user.clinicId },
+      create: {
+        clinicId: session.user.clinicId,
+        specialtyCode: specialty,
+        setupCompleted: true,
+      },
+      update: {
+        specialtyCode: specialty,
+        setupCompleted: true,
+      },
+    }),
+  ]);
 
   return NextResponse.json({ success: true });
 }

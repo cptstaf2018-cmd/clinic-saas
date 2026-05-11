@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import MedicalRecordsClient from "./MedicalRecordsClient";
 import { getEntitlements } from "@/lib/feature-gates";
+import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "معلق",
@@ -63,6 +64,7 @@ export default async function PatientProfilePage({
 
   const subscription = await db.subscription.findUnique({ where: { clinicId } });
   const entitlements = getEntitlements(subscription?.plan);
+  const specialtyConfig = await getClinicSpecialtyConfig(clinicId);
 
   const now = new Date();
   const completedCount = patient.appointments.filter((appointment) => appointment.status === "completed").length;
@@ -79,6 +81,8 @@ export default async function PatientProfilePage({
     prescription: record.prescription,
     notes: record.notes,
     followUpDate: record.followUpDate ? record.followUpDate.toISOString() : null,
+    specialtyCode: record.specialtyCode,
+    contentJson: record.contentJson,
   }));
 
   return (
@@ -154,9 +158,25 @@ export default async function PatientProfilePage({
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
-          <MedicalRecordsClient patientId={patient.id} initialRecords={serializedRecords} canUseFollowUp={entitlements.features.includes("followUpTracking")} />
+          <MedicalRecordsClient
+            patientId={patient.id}
+            initialRecords={serializedRecords}
+            canUseFollowUp={entitlements.features.includes("followUpTracking")}
+            specialtyConfig={specialtyConfig}
+          />
 
           <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
+            <div className="mb-5 rounded-[24px] bg-blue-50 p-4 ring-1 ring-blue-100">
+              <p className="text-xs font-black text-blue-700">اختصاص العيادة</p>
+              <h2 className="mt-1 text-2xl font-black text-slate-950">{specialtyConfig.nameAr}</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {specialtyConfig.dashboardWidgets.map((widget) => (
+                  <span key={widget.id} className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-blue-700 ring-1 ring-blue-100">
+                    {widget.labelAr}
+                  </span>
+                ))}
+              </div>
+            </div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-2xl font-black text-slate-950">الزيارات</h2>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">

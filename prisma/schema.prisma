@@ -32,6 +32,7 @@ model Clinic {
   patients               Patient[]
   payments               Payment[]
   subscription           Subscription?
+  settings               ClinicSettings?
   featureTrials          ClinicFeatureTrial[]
   systemEvents           SystemEvent[]
   users                  User[]
@@ -80,6 +81,16 @@ model Subscription {
   expiresAt DateTime
   createdAt DateTime @default(now())
   clinic    Clinic   @relation(fields: [clinicId], references: [id])
+}
+
+model ClinicSettings {
+  clinicId       String   @id @map("clinic_id")
+  specialtyCode  String   @map("specialty_code")
+  setupCompleted Boolean  @default(true) @map("setup_completed")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  clinic         Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@map("clinic_settings")
 }
 
 model Patient {
@@ -199,6 +210,8 @@ model MedicalRecord {
   prescription String?
   notes        String?
   followUpDate DateTime?
+  specialtyCode String?
+  contentJson  Json?
   createdAt    DateTime @default(now())
   clinic       Clinic   @relation(fields: [clinicId], references: [id])
   patient      Patient  @relation(fields: [patientId], references: [id])
