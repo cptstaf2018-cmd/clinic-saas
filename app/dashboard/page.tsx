@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import TodayAppointmentsClient from "./TodayAppointmentsClient";
+import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
 const ARABIC_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const ARABIC_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -45,6 +46,7 @@ export default async function DashboardPage() {
   const nextWaiting = waiting[0];
   const currentQueue = current?.queueNumber ?? null;
   const nextQueue = nextWaiting?.queueNumber ?? null;
+  const specialtyConfig = await getClinicSpecialtyConfig(clinicId);
 
   const serialized = appointments.map((appointment) => ({
     id: appointment.id,
@@ -64,10 +66,14 @@ export default async function DashboardPage() {
           <div className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-5 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100 md:p-6">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
               <div>
-                <p className="text-sm font-black text-sky-700">{arabicDate(today)}</p>
-                <h1 className="mt-2 text-3xl font-black md:text-4xl">الرئيسية</h1>
+                <p className="text-sm font-black text-sky-700">
+                  {arabicDate(today)} | {specialtyConfig.nameAr}
+                </p>
+                <h1 className="mt-2 text-3xl font-black md:text-4xl">
+                  لوحة {specialtyConfig.nameAr}
+                </h1>
                 <p className="mt-2 max-w-xl text-sm font-bold leading-7 text-slate-500">
-                  نظرة سريعة على حجوزات العيادة والدور الحالي.
+                  نظرة سريعة على الحجوزات، الدور الحالي، وقوالب {specialtyConfig.nameAr} الجاهزة.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -96,6 +102,50 @@ export default async function DashboardPage() {
                   <p className="mt-1 text-4xl font-black text-slate-900">{arabicNumber(stat.value)}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-5 rounded-[26px] bg-white/80 p-4 ring-1 ring-sky-100">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black text-blue-700">التجربة السريرية لهذا الاختصاص</p>
+                  <h2 className="mt-1 text-xl font-black text-slate-950">قوالب {specialtyConfig.nameAr} فعالة</h2>
+                </div>
+                <Link href="/dashboard/patients" className="rounded-2xl bg-slate-950 px-4 py-2.5 text-xs font-black text-white transition hover:bg-slate-800">
+                  فتح ملفات المراجعين
+                </Link>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-2xl bg-blue-50 p-3 ring-1 ring-blue-100">
+                  <p className="text-xs font-black text-blue-700">حقول الزيارة</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {specialtyConfig.encounterSections.slice(0, 5).map((section) => (
+                      <span key={section.id} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-blue-100">
+                        {section.labelAr}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-emerald-50 p-3 ring-1 ring-emerald-100">
+                  <p className="text-xs font-black text-emerald-700">تشخيصات سريعة</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5" dir="ltr">
+                    {specialtyConfig.quickDiagnoses.slice(0, 3).map((diagnosis) => (
+                      <span key={diagnosis} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-emerald-100">
+                        {diagnosis}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-100">
+                  <p className="text-xs font-black text-amber-700">مستندات الاختصاص</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {specialtyConfig.documentTypes.map((documentType) => (
+                      <span key={documentType.id} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-amber-100">
+                        {documentType.labelAr}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
