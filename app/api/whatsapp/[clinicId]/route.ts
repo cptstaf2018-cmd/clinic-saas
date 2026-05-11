@@ -7,7 +7,7 @@ import { sendWhatsApp } from "@/lib/whatsapp";
 import { logSystemEvent } from "@/lib/system-events";
 
 const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
-const MENU_WORDS = ["قائمة", "القائمة", "مساعدة", "help", "menu", "رجوع", "ابدأ", "ابدا", "0"];
+const MENU_WORDS = ["قائمة", "القائمة", "مساعدة", "help", "menu", "رجوع", "ابدأ", "ابدا", "0", "مرحبا", "مرحباً", "مربحا", "هلا", "اهلا", "أهلا", "السلام", "الو", "الوو", "hi", "hello"];
 const HANDOFF_WORDS = ["موظف", "دعم", "ادمن", "إنسان", "انسان", "تواصل", "مساعدة موظف"];
 const WORKING_HOURS_WORDS = ["دوام", "اوقات الدوام", "اوقات", "وقت", "متى تفتح", "متى تغلق"];
 const LOCATION_WORDS = ["موقع", "موقعكم", "عنوان", "العنوان", "مكان", "المكان", "وين", "اين", "خريطة", "خريطه", "لوكيشن", "كوكل", "قوقل", "google", "maps"];
@@ -155,7 +155,7 @@ function medicalDisclaimerMessage(clinic: BotClinic) {
 
 function outOfScopeMessage(clinic: BotClinic) {
   return clinic.botOutOfScopeMessage?.trim() ||
-    `أنا مساعد ${clinic.name}، أستطيع مساعدتك في الحجز، موعدك القادم، تعديل الموعد، أوقات الدوام، أو التواصل مع موظف العيادة فقط.\n\nأرسل 0 لعرض القائمة.`;
+    `أنا مساعد ${clinic.name}، أستطيع مساعدتك بخدمات العيادة فقط.\n\n${mainMenuMessage(clinic)}`;
 }
 
 function handoffMessage(clinic: BotClinic) {
@@ -559,6 +559,11 @@ export async function POST(
         },
       },
     });
+
+    if (intent === "menu") {
+      await reply(mainMenuMessage(botClinic, patient?.name));
+      return NextResponse.json({ ok: true });
+    }
 
     if (intent === "book") {
       if (!patient) {
