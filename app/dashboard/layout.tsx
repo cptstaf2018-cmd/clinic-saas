@@ -2,6 +2,8 @@ import { auth, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import DashboardNav, { MobileDashboardNav } from "./DashboardNav";
+import { getAssistantAccess } from "@/lib/assistant-access";
+import DashboardAssistantFloating from "./DashboardAssistantFloating";
 
 async function getClinicData(clinicId: string) {
   return db.clinic.findUnique({
@@ -28,6 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const name = clinic?.name ?? "العيادة";
   const subStatus = clinic?.subscription?.status ?? "trial";
   const badge = STATUS_BADGE[subStatus] ?? STATUS_BADGE.inactive;
+  const assistantAccess = await getAssistantAccess(clinicId, clinic?.subscription ?? null, false);
 
   return (
     <div className="min-h-screen flex bg-[#eef7f4]" dir="rtl">
@@ -103,6 +106,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <main className="flex-1 overflow-y-auto pb-20 md:pb-6">
           {children}
         </main>
+        <DashboardAssistantFloating initialAccess={assistantAccess} />
 
         {/* Mobile bottom nav */}
         <nav className="md:hidden fixed bottom-0 inset-x-0 bg-[#0C1F3F] border-t border-white/10 flex z-20">
