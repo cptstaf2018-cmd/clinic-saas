@@ -31,6 +31,11 @@ const NAV = [
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/><path d="M18 7h-4"/><path d="M18 7v4"/></svg>,
   },
   {
+    href: "/dashboard/assistant",
+    label: "المساعد",
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 3a7 7 0 0 0-7 7v2a7 7 0 0 0 14 0v-2a7 7 0 0 0-7-7Z"/><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M9.5 14a4 4 0 0 0 5 0"/><path d="M12 19v2"/><path d="M8 21h8"/></svg>,
+  },
+  {
     href: "/dashboard/working-hours",
     label: "أوقات العمل",
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>,

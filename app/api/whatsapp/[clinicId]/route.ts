@@ -163,23 +163,36 @@ function handoffMessage(clinic: BotClinic) {
     "تم تحويل طلبك إلى موظف العيادة.\nسنرد عليك قريباً عبر واتساب.\n\nللعودة إلى الخدمات الآلية أرسل 0.";
 }
 
+function cleanLocationValue(value?: string | null) {
+  return value?.trim().replace(/\s+/g, " ") || "";
+}
+
+function isHttpUrl(value: string) {
+  return /^https?:\/\/\S+$/i.test(value);
+}
+
 function clinicLocationMessage(clinic: BotClinic) {
   if (!clinic.address && !clinic.locationUrl) {
     return `لم يتم إضافة موقع ${clinic.name} بعد.\nللتواصل مع موظف العيادة أرسل 4.`;
   }
 
-  const lines = [`موقع ${clinic.name}:`];
-  const address = clinic.address?.trim();
-  const locationValue = clinic.locationUrl?.trim();
+  const lines = [`موقع ${clinic.name}`];
+  const address = cleanLocationValue(clinic.address);
+  const locationValue = cleanLocationValue(clinic.locationUrl);
+
   if (address) lines.push(`العنوان: ${address}`);
   if (locationValue) {
-    const isUrl = /^https?:\/\//i.test(locationValue);
-    const mapUrl = isUrl
-      ? locationValue
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${locationValue} ${address ?? clinic.name}`)}`;
-    lines.push(`رابط الخريطة: ${mapUrl}`);
+    if (isHttpUrl(locationValue)) {
+      lines.push(`رابط الخريطة:\n${locationValue}`);
+    } else {
+      lines.push(`كود الموقع على الخريطة: ${locationValue}`);
+      lines.push("افتح خرائط Google وابحث بالكود أو العنوان أعلاه.");
+    }
   }
-  lines.push("\nللحجز أرسل 1، وللعودة إلى القائمة أرسل 0.");
+
+  lines.push("");
+  lines.push("1 - للحجز");
+  lines.push("0 - العودة إلى القائمة");
   return lines.join("\n");
 }
 

@@ -44,7 +44,7 @@ Patient (WhatsApp)          Clinic (Dashboard)        Super Admin (Dashboard)
 ## Subscription Plans
 
 ### Trial
-- **Duration:** 3 days free upon registration
+- **Duration:** 14 days free upon registration
 - **Access:** Full system access
 - After trial ends → subscription becomes inactive until payment
 
@@ -100,7 +100,7 @@ Rejected → no activation, clinic notified
 
 ## Subscription Rules
 
-- New clinic → 3 days free trial → `status: trial`, `expiresAt: now + 3 days`
+- New clinic → 14 days free trial → `status: trial`, `expiresAt: now + 14 days`
 - Cron runs daily → checks `expiresAt` → if passed → `status: inactive`
 - If `status = inactive` or `trial expired`:
   - WhatsApp bot replies: "العيادة غير متاحة حالياً"
@@ -317,7 +317,7 @@ Clinic can also send manual reminders from the dashboard at any time.
 4. No double-booking: check for existing appointment at same date/time before creating
 5. Available slots are based on clinic WorkingHours minus already booked appointments
 6. Reminders track sent status to prevent duplicate messages
-7. New clinic gets 3-day free trial automatically upon registration
+7. New clinic gets 14-day free trial automatically upon registration
 8. System must be fast and mobile-friendly (primary users are in Iraq on mobile)
 9. All bot messages must be in Arabic
 10. All payments must be auditable — never delete a payment record
@@ -342,7 +342,7 @@ Clinic can also send manual reminders from the dashboard at any time.
 
 Build only:
 1. Database + Prisma schema
-2. Clinic registration (auto-creates 3-day trial)
+2. Clinic registration (auto-creates 14-day trial)
 3. Clinic login + Super Admin login (NextAuth)
 4. Working hours management (clinic dashboard)
 5. WhatsApp bot (receive → register patient → show slots → book appointment)

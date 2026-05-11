@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { extractPlanFromReference, isPlanId, planFromAmount } from "@/lib/plans";
 import { createPaymentActivationCode } from "@/lib/activation-codes";
+import { dateAfterDays, PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
 
 export async function PATCH(
   req: Request,
@@ -24,7 +25,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const body: { action: "approve" | "reject"; plan?: string; durationDays?: number } = await req.json();
+  const body: { action: "approve" | "reject"; plan?: string } = await req.json();
 
   const payment = await db.payment.findUnique({
     where: { id },
@@ -37,9 +38,8 @@ export async function PATCH(
   if (body.action === "approve") {
     const inferredPlan = extractPlanFromReference(payment.reference) ?? planFromAmount(payment.amount) ?? "basic";
     const plan = isPlanId(body.plan) ? body.plan : inferredPlan;
-    const days = body.durationDays ?? 30;
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
+    const days = PAID_SUBSCRIPTION_DAYS;
+    const expiresAt = dateAfterDays(days);
 
     await db.$transaction([
       db.payment.update({ where: { id }, data: { status: "approved" } }),

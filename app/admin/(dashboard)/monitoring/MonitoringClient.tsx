@@ -79,7 +79,9 @@ export default function MonitoringClient({
     return runAction("scan", () => fetch("/api/admin/maintenance/scan", { method: "POST" }));
   }
 
-  function fixAll(action: "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions") {
+  type FixAction = "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions" | "resolve-whatsapp-errors";
+
+  function fixAll(action: FixAction) {
     return runAction(action, () =>
       fetch("/api/admin/maintenance/fix", {
         method: "POST",
@@ -89,7 +91,7 @@ export default function MonitoringClient({
     );
   }
 
-  function fixClinic(action: "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions", clinicId: string) {
+  function fixClinic(action: FixAction, clinicId: string) {
     return runAction(`${action}:${clinicId}`, () =>
       fetch("/api/admin/maintenance/fix", {
         method: "POST",
@@ -196,6 +198,14 @@ export default function MonitoringClient({
               <span>إغلاق المواعيد القديمة المعلقة</span>
               <span className="rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-700">{arabicNumber(maintenanceStats.oldPendingAppointments)}</span>
             </button>
+            <button
+              onClick={() => fixAll("resolve-whatsapp-errors")}
+              disabled={busy === "resolve-whatsapp-errors"}
+              className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              <span>إغلاق أخطاء واتساب بعد المراجعة</span>
+              <span className="rounded-full bg-blue-50 px-2 py-1 text-xs text-blue-700">يدوي</span>
+            </button>
           </div>
         </div>
 
@@ -229,11 +239,12 @@ function EventActions({
   event: EventItem;
   busy: string | null;
   resolveEvent: (id: string) => void;
-  fixClinic: (action: "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions", clinicId: string) => void;
+  fixClinic: (action: "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions" | "resolve-whatsapp-errors", clinicId: string) => void;
 }) {
   const canFixStuck = event.type === "stuck_whatsapp_sessions" && event.clinicId;
   const canFixPending = event.type === "old_pending_appointments" && event.clinicId;
   const canResetWhatsapp = event.type === "whatsapp_inbound_without_reply" && event.clinicId;
+  const canReviewWhatsapp = ["whatsapp_send_failed", "whatsapp_bot_reply_failed", "whatsapp_bot_subscription_inactive"].includes(event.type) && event.clinicId;
 
   return (
     <div className="flex flex-wrap items-start gap-2 lg:justify-end">
@@ -262,6 +273,15 @@ function EventActions({
           className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100 disabled:opacity-50"
         >
           إعادة تشغيل البوت
+        </button>
+      ) : null}
+      {canReviewWhatsapp ? (
+        <button
+          onClick={() => fixClinic("resolve-whatsapp-errors", event.clinicId as string)}
+          disabled={busy === `resolve-whatsapp-errors:${event.clinicId}`}
+          className="rounded-lg bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100 disabled:opacity-50"
+        >
+          إغلاق واتساب
         </button>
       ) : null}
       {!event.resolved ? (

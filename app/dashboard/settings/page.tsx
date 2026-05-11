@@ -268,10 +268,13 @@ export default function SettingsPage() {
                 className={inputCls}
                 value={settings.locationUrl ?? ""}
                 onChange={(e) => setSettings({ ...settings, locationUrl: e.target.value })}
-                placeholder="https://maps.google.com/... أو JM3J+F6G, Tikrit"
+                placeholder="https://maps.app.goo.gl/... أو كود مثل JM3J+F6G"
                 dir="ltr"
               />
             </Field>
+            <p className="text-xs font-bold leading-6 text-slate-400">
+              إذا أدخلت كود موقع فقط سيعرضه البوت كنص واضح، ولن يصنع رابط Google طويل تلقائياً.
+            </p>
             <button
               onClick={() => saveSettings({ address: settings.address, locationUrl: settings.locationUrl })}
               disabled={saving}

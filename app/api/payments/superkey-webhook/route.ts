@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { encodePaymentReference, isPlanId, PLAN_PRICES, PlanId } from "@/lib/plans";
 import { createPaymentActivationCode } from "@/lib/activation-codes";
 import { validatePaymentReference } from "@/lib/payment-reference";
+import { dateAfterDays, PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
 
 export async function POST(req: Request) {
   const secret   = req.headers.get("x-superkey-secret") ?? "";
@@ -75,8 +76,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "العيادة غير موجودة" }, { status: 404 });
   }
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30);
+  const expiresAt = dateAfterDays(PAID_SUBSCRIPTION_DAYS);
 
   const [payment] = await db.$transaction([
     db.payment.create({
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
     clinicName: clinic.name,
     whatsappNumber: clinic.whatsappNumber,
     plan: body.plan,
-    days: 30,
+    days: PAID_SUBSCRIPTION_DAYS,
   });
 
   return NextResponse.json({ success: true, activationCode: activation.code });

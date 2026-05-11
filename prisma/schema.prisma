@@ -30,6 +30,7 @@ model Clinic {
   patients               Patient[]
   payments               Payment[]
   subscription           Subscription?
+  featureTrials          ClinicFeatureTrial[]
   systemEvents           SystemEvent[]
   users                  User[]
   workingHours           WorkingHours[]
@@ -171,6 +172,19 @@ model Payment {
 model PlatformSettings {
   id      String  @id @default("singleton")
   logoUrl String?
+}
+
+model ClinicFeatureTrial {
+  id        String   @id @default(cuid())
+  clinicId  String
+  feature   String
+  startedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+
+  @@unique([clinicId, feature])
+  @@index([clinicId])
+  @@index([feature])
 }
 
 model MedicalRecord {

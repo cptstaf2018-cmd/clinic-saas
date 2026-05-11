@@ -10,6 +10,7 @@ export type FeatureKey =
   | "patientPdfExport"
   | "patientImages"
   | "advancedWhatsApp"
+  | "clinicAssistant"
   | "multiBranch"
   | "prioritySupport"
   | "auditLog"
@@ -34,6 +35,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   patientPdfExport: "تصدير تقارير المرضى PDF",
   patientImages: "رفع صور وتحاليل المرضى",
   advancedWhatsApp: "متابعة وردود واتساب متقدمة",
+  clinicAssistant: "مساعد استخدام العيادة",
   multiBranch: "إدارة الفروع",
   prioritySupport: "دعم أولوية",
   auditLog: "سجل التدقيق",
@@ -53,6 +55,7 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
     "patientPdfExport",
     "patientImages",
     "advancedWhatsApp",
+    "clinicAssistant",
   ],
   premium: [
     "appointments",
@@ -64,6 +67,7 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
     "patientPdfExport",
     "patientImages",
     "advancedWhatsApp",
+    "clinicAssistant",
     "multiBranch",
     "prioritySupport",
     "auditLog",

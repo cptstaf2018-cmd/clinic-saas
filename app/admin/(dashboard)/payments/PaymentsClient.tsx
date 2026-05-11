@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
 
 interface Payment {
   id: string;
@@ -55,7 +56,6 @@ export default function PaymentsClient({
   const [payments] = useState<Payment[]>(initialPayments);
   const [approving, setApproving] = useState<string | null>(null);
   const [plan, setPlan] = useState<Record<string, string>>({});
-  const [duration, setDuration] = useState<Record<string, string>>({});
   const pending = payments.filter((payment) => payment.status === "pending").length;
   const approved = payments.filter((payment) => payment.status === "approved").length;
 
@@ -67,7 +67,6 @@ export default function PaymentsClient({
       body: JSON.stringify({
         action: "approve",
         plan: plan[id] ?? payments.find((p) => p.id === id)?.requestedPlan ?? "basic",
-        durationDays: parseInt(duration[id] ?? "30", 10),
       }),
     });
     setApproving(null);
@@ -166,18 +165,8 @@ export default function PaymentsClient({
                           </option>
                         ))}
                       </select>
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          min={1}
-                          max={365}
-                          value={duration[payment.id] ?? "30"}
-                          onChange={(e) =>
-                            setDuration((d) => ({ ...d, [payment.id]: e.target.value }))
-                          }
-                          className="border border-gray-200 rounded-lg px-2 py-1 text-xs w-16 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                        />
-                        <span className="text-xs text-gray-500">يوم</span>
+                      <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                        مدة التفعيل: {PAID_SUBSCRIPTION_DAYS} يوم
                       </div>
                       <div className="flex gap-1">
                         <button

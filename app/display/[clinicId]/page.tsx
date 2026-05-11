@@ -119,7 +119,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", logoUrl: null, current: null, waiting: [] });
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
-  const prevQueueRef = useRef<number | null | undefined>(undefined);
+  const prevAnnouncementRef = useRef<string | null | undefined>(undefined);
   const [soundEnabled] = useState(true);
   const audioUnlockedRef = useRef(false);
 
@@ -160,8 +160,9 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, [clinicId]);
 
-  async function announceQueue(queueNumber: number) {
-    const text = `رقم ${toArabic(queueNumber)}، تفضل إلى العيادة`;
+  async function announceQueue(current: NonNullable<DisplayData["current"]>) {
+    const queuePart = current.queueNumber !== null ? `، رقم ${toArabic(current.queueNumber)}` : "";
+    const text = `المراجع ${current.name}${queuePart}، تفضل إلى العيادة`;
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
@@ -183,17 +184,18 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     }
   }
 
-  // نداء صوتي عند تغيّر الرقم الحالي
+  // نداء صوتي عند تغيّر المراجع الحالي
   useEffect(() => {
-    const queueNumber = data.current?.queueNumber ?? null;
-    if (prevQueueRef.current === undefined) {
-      prevQueueRef.current = queueNumber;
+    const current = data.current;
+    const announcementKey = current ? `${current.queueNumber ?? "no-number"}:${current.name}` : null;
+    if (prevAnnouncementRef.current === undefined) {
+      prevAnnouncementRef.current = announcementKey;
       return;
     }
-    if (queueNumber && queueNumber !== prevQueueRef.current && soundEnabled) {
-      announceQueue(queueNumber);
+    if (current && announcementKey !== prevAnnouncementRef.current && soundEnabled) {
+      announceQueue(current);
     }
-    prevQueueRef.current = queueNumber;
+    prevAnnouncementRef.current = announcementKey;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.current, soundEnabled]);
 

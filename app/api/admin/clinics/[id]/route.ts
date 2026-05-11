@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logSystemEvent } from "@/lib/system-events";
+import { dateAfterDays, PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
 
 type AdminSession = {
   user?: {
@@ -69,9 +70,7 @@ export async function PATCH(
   // ── Activate ──────────────────────────────────────────────────────────────
   if (body.action === "activate") {
     const plan = body.plan ?? "basic";
-    const days = body.durationDays ?? 30;
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + days);
+    const expiresAt = dateAfterDays(PAID_SUBSCRIPTION_DAYS);
     await db.subscription.upsert({
       where: { clinicId: id },
       update: { status: "active", plan, expiresAt },

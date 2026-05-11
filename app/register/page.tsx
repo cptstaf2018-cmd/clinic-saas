@@ -96,6 +96,9 @@ export default function RegisterPage() {
             <div className="mb-7">
               <h2 className="text-2xl font-extrabold text-[#0C1F3F]">تسجيل عيادة جديدة</h2>
               <p className="text-[#64748B] text-sm mt-1">أدخل كود الدعوة الخاص بك</p>
+              <p className="mt-2 rounded-xl bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700">
+                يتضمن الحساب فترة تجريبية لمدة 14 يوم.
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">

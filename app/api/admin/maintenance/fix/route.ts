@@ -88,5 +88,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, message: `تم إكمال ${result.count} موعد قديم.` });
   }
 
+  if (body.action === "resolve-whatsapp-errors") {
+    const result = await db.systemEvent.updateMany({
+      where: {
+        type: {
+          in: [
+            "whatsapp_send_failed",
+            "whatsapp_bot_reply_failed",
+            "whatsapp_inbound_without_reply",
+            "whatsapp_bot_subscription_inactive",
+          ],
+        },
+        clinicId: body.clinicId ? body.clinicId : undefined,
+        resolved: false,
+      },
+      data: { resolved: true, resolvedAt: now },
+    });
+
+    await logSystemEvent({
+      clinicId: body.clinicId ?? null,
+      type: "whatsapp_errors_reviewed",
+      severity: "success",
+      source: "super_admin_fix",
+      title: "مراجعة أخطاء واتساب",
+      message: `تم إغلاق ${result.count} خطأ واتساب بعد المراجعة.`,
+      metadata: { count: result.count },
+    });
+
+    return NextResponse.json({ success: true, message: `تم إغلاق ${result.count} خطأ واتساب.` });
+  }
+
   return NextResponse.json({ error: "إجراء غير معروف" }, { status: 400 });
 }

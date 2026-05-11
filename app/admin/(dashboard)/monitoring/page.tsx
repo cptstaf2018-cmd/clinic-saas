@@ -35,7 +35,7 @@ export default async function AdminMonitoringPage() {
     expiringClinics,
   ] = await Promise.all([
     db.systemEvent.count(),
-    db.systemEvent.count({ where: { severity: "error", createdAt: { gte: dayStart } } }),
+    db.systemEvent.count({ where: { severity: "error", resolved: false } }),
     db.systemEvent.count({ where: { severity: "error", resolved: false } }),
     db.systemEvent.count({
       where: {
@@ -48,10 +48,10 @@ export default async function AdminMonitoringPage() {
             "whatsapp_bot_subscription_inactive",
           ],
         },
-        createdAt: { gte: dayStart },
+        resolved: false,
       },
     }),
-    db.systemEvent.count({ where: { type: { in: ["reminder_24h_failed", "reminder_1h_failed"] }, createdAt: { gte: dayStart } } }),
+    db.systemEvent.count({ where: { type: { in: ["reminder_24h_failed", "reminder_1h_failed"] }, resolved: false } }),
     Promise.all([
       db.whatsappSession.count({ where: { updatedAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } } }),
       db.appointment.count({ where: { status: "pending", date: { lt: dayStart } } }),
@@ -72,10 +72,10 @@ export default async function AdminMonitoringPage() {
 
   const healthCards = [
     { label: "قاعدة البيانات", value: dbOk ? "تعمل" : "خطأ", detail: dbOk ? "الاتصال مستقر" : "فشل الاتصال", tone: dbOk ? "success" : "error" },
-    { label: "أخطاء اليوم", value: arabicNumber(todayErrors), detail: "أحداث بدرجة خطأ", tone: todayErrors > 0 ? "error" : "success" },
+    { label: "أخطاء مفتوحة", value: arabicNumber(todayErrors), detail: "أحداث بدرجة خطأ غير معالجة", tone: todayErrors > 0 ? "error" : "success" },
     { label: "غير معالجة", value: arabicNumber(unresolvedErrors), detail: "أخطاء تحتاج مراجعة", tone: unresolvedErrors > 0 ? "warning" : "success" },
-    { label: "فشل واتساب", value: arabicNumber(whatsappFailures), detail: "خلال اليوم", tone: whatsappFailures > 0 ? "error" : "success" },
-    { label: "فشل التذكيرات", value: arabicNumber(reminderFailures), detail: "خلال اليوم", tone: reminderFailures > 0 ? "warning" : "success" },
+    { label: "فشل واتساب", value: arabicNumber(whatsappFailures), detail: "أخطاء مفتوحة", tone: whatsappFailures > 0 ? "error" : "success" },
+    { label: "فشل التذكيرات", value: arabicNumber(reminderFailures), detail: "أخطاء مفتوحة", tone: reminderFailures > 0 ? "warning" : "success" },
     { label: "عيادات نشطة", value: arabicNumber(activeClinics), detail: `${arabicNumber(expiringClinics)} تنتهي قريباً`, tone: expiringClinics > 0 ? "warning" : "info" },
   ];
 

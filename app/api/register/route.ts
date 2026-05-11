@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { dateAfterDays, TRIAL_PERIOD_DAYS } from "@/lib/subscription-durations";
 
 export async function POST(req: NextRequest) {
   const { clinicName, phone, password, invitationCode } = await req.json();
@@ -42,8 +43,7 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const trialExpiresAt = new Date();
-  trialExpiresAt.setDate(trialExpiresAt.getDate() + 3);
+  const trialExpiresAt = dateAfterDays(TRIAL_PERIOD_DAYS);
 
   const clinic = await db.clinic.create({
     data: {
