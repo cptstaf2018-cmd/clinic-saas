@@ -159,12 +159,12 @@ export default async function ReportsPage() {
 
   return (
     <div className="p-4 print:p-0 print:bg-white md:p-8" dir="rtl">
-      <div className="mx-auto max-w-6xl space-y-6 print:max-w-none print:space-y-4">
+      <div className="mx-auto max-w-6xl space-y-6 print:max-w-none print:space-y-4" data-report-container>
 
         {/* ═══════════════════════════════════════════════════════
             رأس الطباعة الرسمي — يظهر فقط عند الطباعة
         ═══════════════════════════════════════════════════════ */}
-        <div className="hidden print:block border-b-2 border-slate-800 pb-4 mb-4">
+        <div className="hidden print:block border-b-2 border-slate-800 pb-4 mb-4" data-print-header>
           <div className="flex items-center justify-between gap-4">
 
             {/* يمين — شعار العيادة + الاسم */}
