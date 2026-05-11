@@ -70,7 +70,7 @@ export default async function ReportsPage() {
 
   const now = new Date();
   const reportTime = now.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
-  const reportNumber = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const reportNumber = `RPT-${String(now.getHours()).padStart(2,"0")}${String(now.getMinutes()).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}${String(now.getMonth()+1).padStart(2,"0")}`;
 
   const summary = [
     `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
