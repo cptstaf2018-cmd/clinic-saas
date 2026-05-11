@@ -21,9 +21,9 @@ function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
 
-export default function PatientSearchClient({ patients: initial }: { patients: Patient[] }) {
+export default function PatientSearchClient({ patients: initial, initialQuery = "" }: { patients: Patient[]; initialQuery?: string }) {
   const [patients, setPatients] = useState(initial);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");

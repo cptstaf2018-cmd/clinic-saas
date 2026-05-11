@@ -119,9 +119,9 @@ export default async function DashboardPage() {
                   <p className="text-xs font-black text-blue-700">حقول الزيارة</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {specialtyConfig.encounterSections.slice(0, 5).map((section) => (
-                      <span key={section.id} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-blue-100">
+                      <Link key={section.id} href="/dashboard/patients" className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-blue-100 transition hover:bg-blue-600 hover:text-white hover:ring-blue-600">
                         {section.labelAr}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -129,9 +129,9 @@ export default async function DashboardPage() {
                   <p className="text-xs font-black text-emerald-700">تشخيصات سريعة</p>
                   <div className="mt-2 flex flex-wrap gap-1.5" dir="ltr">
                     {specialtyConfig.quickDiagnoses.slice(0, 3).map((diagnosis) => (
-                      <span key={diagnosis} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-emerald-100">
+                      <Link key={diagnosis} href={`/dashboard/patients?q=${encodeURIComponent(diagnosis)}`} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-emerald-100 transition hover:bg-emerald-600 hover:text-white hover:ring-emerald-600">
                         {diagnosis}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -139,9 +139,9 @@ export default async function DashboardPage() {
                   <p className="text-xs font-black text-amber-700">مستندات الاختصاص</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {specialtyConfig.documentTypes.map((documentType) => (
-                      <span key={documentType.id} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-amber-100">
+                      <Link key={documentType.id} href={`/dashboard/patients?q=${encodeURIComponent(documentType.labelAr)}`} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-amber-100 transition hover:bg-amber-500 hover:text-white hover:ring-amber-500">
                         {documentType.labelAr}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 </div>

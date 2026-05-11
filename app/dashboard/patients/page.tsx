@@ -8,10 +8,12 @@ function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
 
-export default async function PatientsPage() {
+export default async function PatientsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const session = await auth();
   if (!session?.user?.clinicId) redirect("/login");
   const clinicId = session.user.clinicId as string;
+  const { q } = await searchParams;
+  const initialQuery = q ?? "";
 
   const patients = await db.patient.findMany({
     where: { clinicId },
@@ -76,7 +78,7 @@ export default async function PatientsPage() {
           <div className="mb-4 flex justify-end">
             <ClearClinicDataButton />
           </div>
-          <PatientSearchClient patients={serialized} />
+          <PatientSearchClient patients={serialized} initialQuery={initialQuery} />
         </section>
       </div>
     </div>
