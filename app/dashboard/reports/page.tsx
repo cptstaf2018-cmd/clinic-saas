@@ -187,7 +187,7 @@ export default async function ReportsPage() {
             {/* وسط — شعار وزارة الصحة العراقية */}
             <div className="flex flex-col items-center gap-1 text-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/moh-iraq.svg" alt="وزارة الصحة العراقية" className="h-20 w-20" />
+              <img src="/moh-iraq.webp" alt="وزارة الصحة العراقية" className="h-20 w-20 object-contain" />
               <p className="text-xs font-black text-slate-700">جمهورية العراق</p>
               <p className="text-xs font-black text-red-700">وزارة الصحة العراقية</p>
               <p className="text-[10px] text-slate-500">Iraqi Ministry of Health</p>
