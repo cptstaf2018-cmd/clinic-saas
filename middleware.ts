@@ -85,8 +85,8 @@ export async function middleware(req: NextRequest) {
       );
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
-    // ✅ Only /dashboard is allowed
-    if (!pathname.startsWith("/dashboard") && !pathname.startsWith("/api/")) {
+    // ✅ Clinic staff can use dashboard, onboarding, and clinic APIs
+    if (!pathname.startsWith("/dashboard") && !pathname.startsWith("/onboarding") && !pathname.startsWith("/api/")) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
