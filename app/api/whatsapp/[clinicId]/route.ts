@@ -1,5 +1,5 @@
 // WasenderAPI Webhook Handler
-// Each clinic configures: https://clinicplt.vercel.app/api/whatsapp/[clinicId]
+// Each clinic configures: https://ayadti.duckdns.org/api/whatsapp/[clinicId]
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";

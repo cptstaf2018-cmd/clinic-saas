@@ -52,6 +52,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputCls = "w-full h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100";
+const officialAppUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://ayadti.duckdns.org").replace(/\/$/, "");
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("profile");
@@ -167,6 +168,8 @@ export default function SettingsPage() {
 
   if (loading) return <div className="p-8 text-center text-sm font-bold text-slate-400">جاري التحميل...</div>;
   if (!settings) return <div className="p-8 text-center text-sm font-bold text-red-500">خطأ في تحميل الإعدادات</div>;
+
+  const webhookUrl = `${officialAppUrl}/api/whatsapp/${settings.id}`;
 
   return (
     <div className="p-4 md:p-8" dir="rtl">
@@ -426,11 +429,11 @@ export default function SettingsPage() {
                 <p className="text-xs text-gray-400 mb-1">رابط الـ Webhook — أدخله في لوحة WasenderAPI:</p>
                 <div className="flex items-center gap-2">
                   <code className="text-xs text-green-400 flex-1 break-all font-mono">
-                    {`https://clinicplt.vercel.app/api/whatsapp/${settings.id}`}
+                    {webhookUrl}
                   </code>
                   <button
                     type="button"
-                    onClick={() => navigator.clipboard.writeText(`https://clinicplt.vercel.app/api/whatsapp/${settings.id}`)}
+                    onClick={() => navigator.clipboard.writeText(webhookUrl)}
                     className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-lg shrink-0 transition-colors"
                   >
                     نسخ
