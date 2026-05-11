@@ -21,6 +21,139 @@ function formatTime(date?: Date) {
   return date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
 }
 
+const SPECIALTY_DASHBOARD: Record<string, {
+  headline: string;
+  description: string;
+  focusMetrics: { label: string; hint: string; source: "appointments" | "waiting" | "completed" }[];
+  actions: { label: string; href: string; tone: string }[];
+  followups: string[];
+}> = {
+  dentistry: {
+    headline: "تشغيل عيادة الأسنان",
+    description: "متابعة الحجوزات، خطط العلاج، والأشعة من لوحة هادئة ومباشرة.",
+    focusMetrics: [
+      { label: "حجوزات اليوم", hint: "كل مواعيد الأسنان", source: "appointments" },
+      { label: "قائمة الانتظار", hint: "جاهزون للدخول", source: "waiting" },
+      { label: "زيارات منتهية", hint: "تم إغلاقها اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "فتح ملفات المراجعين", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقرير علاج أسنان", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["خطط علاج مفتوحة", "أشعة تحتاج مراجعة", "تنظيف وحشوات", "مراجعات ألم حاد"],
+  },
+  pediatrics: {
+    headline: "تشغيل عيادة الأطفال",
+    description: "متابعة مراجعات الأطفال، النمو، الحرارة، والتطعيمات من مكان واحد.",
+    focusMetrics: [
+      { label: "حجوزات الأطفال", hint: "كل مواعيد اليوم", source: "appointments" },
+      { label: "ينتظرون الدور", hint: "داخل الانتظار", source: "waiting" },
+      { label: "زيارات مكتملة", hint: "أغلقت اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "ملفات الأطفال", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقارير نمو وتطعيم", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["تطعيمات قادمة", "متابعة وزن وطول", "حالات حرارة", "مراجعات نمو"],
+  },
+  dermatology: {
+    headline: "تشغيل عيادة الجلدية",
+    description: "تنظيم الجلسات، صور المتابعة، وتقارير تطور الحالة.",
+    focusMetrics: [
+      { label: "مواعيد اليوم", hint: "جلسات ومراجعات", source: "appointments" },
+      { label: "بانتظار الدخول", hint: "في العيادة", source: "waiting" },
+      { label: "جلسات منتهية", hint: "تمت اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "ملفات الحالات", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقارير قبل/بعد", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["صور قبل/بعد", "متابعة تطور الحالة", "جلسات علاج", "مراجعة وصفات"],
+  },
+  cardiology: {
+    headline: "تشغيل عيادة القلب",
+    description: "مراقبة مواعيد القلب، الضغط، ECG، والتقارير الطبية الحساسة.",
+    focusMetrics: [
+      { label: "مواعيد القلب", hint: "مراجعات اليوم", source: "appointments" },
+      { label: "في الانتظار", hint: "بانتظار الفحص", source: "waiting" },
+      { label: "فحوص منتهية", hint: "أغلقت اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "ملفات المرضى", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقارير ECG وضغط", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["ضغط غير مضبوط", "ECG للمراجعة", "إيكو مطلوب", "متابعة أدوية"],
+  },
+  gynecology: {
+    headline: "تشغيل عيادة النسائية",
+    description: "تنظيم مراجعات الحمل، السونار، والمتابعة النسائية اليومية.",
+    focusMetrics: [
+      { label: "مواعيد اليوم", hint: "متابعات وفحوص", source: "appointments" },
+      { label: "في الانتظار", hint: "بانتظار الدخول", source: "waiting" },
+      { label: "زيارات مكتملة", hint: "أغلقت اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "ملفات المراجعات", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقارير حمل وسونار", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["متابعة حمل", "سونار مطلوب", "مراجعة تحاليل", "خطة متابعة"],
+  },
+  ophthalmology: {
+    headline: "تشغيل عيادة العيون",
+    description: "متابعة فحوص النظر، ضغط العين، والوصفات البصرية.",
+    focusMetrics: [
+      { label: "فحوص اليوم", hint: "مواعيد العيون", source: "appointments" },
+      { label: "في الانتظار", hint: "بانتظار الفحص", source: "waiting" },
+      { label: "فحوص مكتملة", hint: "أنجزت اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "ملفات المرضى", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقارير نظر ونظارات", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["ضغط العين", "وصفة نظارات", "فحص قاع العين", "متابعة نظر"],
+  },
+  orthopedics: {
+    headline: "تشغيل عيادة العظام",
+    description: "تنظيم مراجعات الألم، الحركة، الأشعة، وخطط التأهيل.",
+    focusMetrics: [
+      { label: "مواعيد العظام", hint: "حالات اليوم", source: "appointments" },
+      { label: "في الانتظار", hint: "بانتظار الفحص", source: "waiting" },
+      { label: "زيارات مكتملة", hint: "أنجزت اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "ملفات الحالات", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقارير أشعة وتأهيل", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["أشعة للمراجعة", "مدى الحركة", "خطة تأهيل", "إجراء قادم"],
+  },
+  internal_medicine: {
+    headline: "تشغيل العيادة الباطنية",
+    description: "متابعة المواعيد، الأمراض المزمنة، التحاليل، وخطط العلاج.",
+    focusMetrics: [
+      { label: "حجوزات اليوم", hint: "كل المواعيد", source: "appointments" },
+      { label: "ينتظرون الدور", hint: "داخل الانتظار", source: "waiting" },
+      { label: "زيارات مكتملة", hint: "تم إنهاؤها اليوم", source: "completed" },
+    ],
+    actions: [
+      { label: "فتح المراجعين", href: "/dashboard/patients", tone: "bg-slate-950 text-white" },
+      { label: "تقارير طبية ومالية", href: "/dashboard/reports", tone: "bg-white text-blue-700 ring-1 ring-blue-100" },
+      { label: "شاشة الانتظار", href: "#display", tone: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100" },
+    ],
+    followups: ["أمراض مزمنة", "تحاليل للمراجعة", "متابعة ضغط وسكر", "خطط علاج"],
+  },
+};
+
+function dashboardBlueprint(code: string) {
+  return SPECIALTY_DASHBOARD[code] ?? SPECIALTY_DASHBOARD.internal_medicine;
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.clinicId) redirect("/login");
@@ -47,6 +180,12 @@ export default async function DashboardPage() {
   const currentQueue = current?.queueNumber ?? null;
   const nextQueue = nextWaiting?.queueNumber ?? null;
   const specialtyConfig = await getClinicSpecialtyConfig(clinicId);
+  const blueprint = dashboardBlueprint(specialtyConfig.code);
+  const metricValue = {
+    appointments: appointments.length,
+    waiting: waiting.length,
+    completed,
+  };
 
   const serialized = appointments.map((appointment) => ({
     id: appointment.id,
@@ -69,11 +208,9 @@ export default async function DashboardPage() {
                 <p className="text-sm font-black text-sky-700">
                   {arabicDate(today)} | {specialtyConfig.nameAr}
                 </p>
-                <h1 className="mt-2 text-3xl font-black md:text-4xl">
-                  لوحة {specialtyConfig.nameAr}
-                </h1>
+                <h1 className="mt-2 text-3xl font-black md:text-4xl">{blueprint.headline}</h1>
                 <p className="mt-2 max-w-xl text-sm font-bold leading-7 text-slate-500">
-                  نظرة سريعة على الحجوزات، الدور الحالي، وقوالب {specialtyConfig.nameAr} الجاهزة.
+                  {blueprint.description}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -90,60 +227,43 @@ export default async function DashboardPage() {
             </div>
 
             <div className="mt-6 grid gap-3 md:grid-cols-3">
-              {[
-                { label: "حجوزات اليوم", hint: "كل المواعيد المسجلة", value: appointments.length, tone: "bg-blue-500" },
-                { label: "ينتظرون الدور", hint: "داخل قائمة الانتظار", value: waiting.length, tone: "bg-amber-400" },
-                { label: "زيارات مكتملة", hint: "تم إنهاؤها اليوم", value: completed, tone: "bg-emerald-500" },
-              ].map((stat) => (
+              {blueprint.focusMetrics.map((stat, index) => (
                 <div key={stat.label} className="rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                  <div className={`h-2 w-12 rounded-full ${stat.tone}`} />
+                  <div className={`h-2 w-12 rounded-full ${index === 0 ? "bg-blue-500" : index === 1 ? "bg-amber-400" : "bg-emerald-500"}`} />
                   <p className="mt-4 text-sm font-black text-slate-500">{stat.label}</p>
                   <p className="mt-1 text-xs font-bold text-slate-400">{stat.hint}</p>
-                  <p className="mt-1 text-4xl font-black text-slate-900">{arabicNumber(stat.value)}</p>
+                  <p className="mt-1 text-4xl font-black text-slate-900">{arabicNumber(metricValue[stat.source])}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 rounded-[26px] bg-white/80 p-4 ring-1 ring-sky-100">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-5 grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-[26px] bg-white/85 p-4 ring-1 ring-sky-100">
                 <div>
-                  <p className="text-xs font-black text-blue-700">التجربة السريرية لهذا الاختصاص</p>
-                  <h2 className="mt-1 text-xl font-black text-slate-950">قوالب {specialtyConfig.nameAr} فعالة</h2>
+                  <p className="text-xs font-black text-blue-700">إجراءات سريعة</p>
+                  <h2 className="mt-1 text-xl font-black text-slate-950">ابدأ العمل اليومي</h2>
                 </div>
-                <Link href="/dashboard/patients" className="rounded-2xl bg-slate-950 px-4 py-2.5 text-xs font-black text-white transition hover:bg-slate-800">
-                  فتح ملفات المراجعين
-                </Link>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {blueprint.actions.map((action) => (
+                    <Link
+                      key={action.label}
+                      href={action.href === "#display" ? `/display/${clinicId}` : action.href}
+                      target={action.href === "#display" ? "_blank" : undefined}
+                      className={`rounded-2xl px-4 py-2.5 text-xs font-black transition hover:-translate-y-0.5 ${action.tone}`}
+                    >
+                      {action.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <div className="rounded-2xl bg-blue-50 p-3 ring-1 ring-blue-100">
-                  <p className="text-xs font-black text-blue-700">حقول الزيارة</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {specialtyConfig.encounterSections.slice(0, 5).map((section) => (
-                      <Link key={section.id} href="/dashboard/patients" className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-blue-100 transition hover:bg-blue-600 hover:text-white hover:ring-blue-600">
-                        {section.labelAr}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-emerald-50 p-3 ring-1 ring-emerald-100">
-                  <p className="text-xs font-black text-emerald-700">تشخيصات سريعة</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5" dir="ltr">
-                    {specialtyConfig.quickDiagnoses.slice(0, 3).map((diagnosis) => (
-                      <Link key={diagnosis} href={`/dashboard/patients?q=${encodeURIComponent(diagnosis)}`} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-emerald-100 transition hover:bg-emerald-600 hover:text-white hover:ring-emerald-600">
-                        {diagnosis}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-100">
-                  <p className="text-xs font-black text-amber-700">مستندات الاختصاص</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {specialtyConfig.documentTypes.map((documentType) => (
-                      <Link key={documentType.id} href={`/dashboard/patients?q=${encodeURIComponent(documentType.labelAr)}`} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-amber-100 transition hover:bg-amber-500 hover:text-white hover:ring-amber-500">
-                        {documentType.labelAr}
-                      </Link>
-                    ))}
-                  </div>
+              <div className="rounded-[26px] bg-white/85 p-4 ring-1 ring-sky-100">
+                <p className="text-xs font-black text-emerald-700">متابعة {specialtyConfig.nameAr}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {blueprint.followups.map((item) => (
+                    <div key={item} className="rounded-2xl bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-100">
+                      {item}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
