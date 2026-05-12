@@ -104,16 +104,27 @@ export default async function PatientReportPage({
           <PrintButton />
         </div>
 
-        <header className="border-b border-slate-200 pb-6">
-          <div className="flex flex-wrap items-start justify-between gap-6">
-            <div>
-              <p className="text-sm font-black text-blue-700">{clinic.name}</p>
-              <h1 className="mt-2 text-4xl font-black tracking-normal text-slate-950">تقرير المراجع</h1>
-              <p className="mt-2 text-sm font-bold text-slate-500">تاريخ التقرير: {formatDateTime(reportDate)}</p>
+        <header className="border-b-2 border-slate-200 pb-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            {/* شعار + معلومات العيادة */}
+            <div className="flex items-start gap-4">
+              {clinic.logoUrl && (
+                <img src={clinic.logoUrl} alt="شعار العيادة" className="h-16 w-16 rounded-2xl object-contain ring-1 ring-slate-200" />
+              )}
+              <div>
+                <h1 className="text-2xl font-black text-slate-950">{clinic.name}</h1>
+                {clinic.specialty && <p className="mt-1 text-sm font-bold text-blue-700">{clinic.specialty}</p>}
+                {clinic.address && <p className="mt-1 text-sm font-bold text-slate-500">{clinic.address}</p>}
+                <p className="mt-1 text-sm font-bold text-slate-500" dir="ltr">{clinic.whatsappNumber}</p>
+              </div>
             </div>
-            <div className="rounded-3xl bg-slate-50 p-5 text-left ring-1 ring-slate-200" dir="ltr">
-              <p className="text-xs font-black uppercase text-slate-400">Clinic Platform</p>
-              <p className="mt-2 text-lg font-black text-slate-950">{clinic.whatsappNumber}</p>
+            {/* رقم التقرير والتاريخ */}
+            <div className="rounded-2xl bg-slate-50 p-4 text-right ring-1 ring-slate-200">
+              <p className="text-xs font-black text-slate-400">تقرير المراجع</p>
+              <p className="mt-1 text-lg font-black text-slate-950">
+                RPT-{String(reportDate.getMonth() + 1).padStart(2, "0")}{String(reportDate.getDate()).padStart(2, "0")}-{patient.id.slice(-4).toUpperCase()}
+              </p>
+              <p className="mt-1 text-xs font-bold text-slate-500">{formatDateTime(reportDate)}</p>
             </div>
           </div>
         </header>
@@ -206,8 +217,22 @@ export default async function PatientReportPage({
           </div>
         </section>
 
-        <footer className="mt-10 border-t border-slate-200 pt-5 text-xs font-bold leading-6 text-slate-400">
-          هذا التقرير صادر من نظام العيادة ويعتمد على البيانات المسجلة داخل حساب العيادة وقت إنشاء التقرير.
+        {/* سطر التوقيع */}
+        <section className="mt-10 grid grid-cols-2 gap-8 border-t border-slate-200 pt-6">
+          <div>
+            <p className="text-xs font-black text-slate-400">توقيع الطبيب</p>
+            <div className="mt-6 border-b border-slate-400" />
+            <p className="mt-2 text-xs font-bold text-slate-400">الاسم والتوقيع</p>
+          </div>
+          <div>
+            <p className="text-xs font-black text-slate-400">التاريخ والختم</p>
+            <div className="mt-6 border-b border-slate-400" />
+            <p className="mt-2 text-xs font-bold text-slate-400">{formatDate(reportDate)}</p>
+          </div>
+        </section>
+
+        <footer className="mt-6 border-t border-slate-100 pt-4 text-xs font-bold leading-6 text-slate-400">
+          هذا التقرير صادر من {clinic.name} ويعتمد على البيانات المسجلة داخل نظام العيادة وقت إنشاء التقرير.
         </footer>
       </div>
     </main>
