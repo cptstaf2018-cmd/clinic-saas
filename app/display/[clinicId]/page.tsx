@@ -174,8 +174,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     const queuePart = current.queueNumber !== null ? `، رقم ${toArabic(current.queueNumber)}` : "";
     const isFemale = detectFemale(current.name);
     const text = isFemale
-      ? `المراجعة ${current.name}${queuePart}، تفضلي إلى العيادة`
-      : `المراجع ${current.name}${queuePart}، تفضل إلى العيادة`;
+      ? `الأخت ${current.name}${queuePart}، اتفضلي للعيادة من فضلج`
+      : `الأخ ${current.name}${queuePart}، اتفضل للعيادة من فضلك`;
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
