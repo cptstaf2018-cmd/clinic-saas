@@ -17,5 +17,10 @@ export async function GET(req: NextRequest) {
     data: { status: "inactive" },
   });
 
-  return NextResponse.json({ expired: expired.count });
+  // حذف رموز OTP القديمة المنتهية الصلاحية
+  const otpCleaned = await db.otpCode.deleteMany({
+    where: { expiresAt: { lt: now } },
+  });
+
+  return NextResponse.json({ expired: expired.count, otpCleaned: otpCleaned.count });
 }

@@ -18,11 +18,17 @@ function formatDate(value: Date) {
   return value.toLocaleDateString("ar-IQ", { year: "numeric", month: "long", day: "numeric" });
 }
 
-export default async function ReportsPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.clinicId) redirect("/login");
 
   const clinicId = session.user.clinicId;
+  const { date: dateParam } = await searchParams;
+
   const [subscription, specialtyConfig, clinic] = await Promise.all([
     db.subscription.findUnique({ where: { clinicId } }),
     getClinicSpecialtyConfig(clinicId),
@@ -30,11 +36,12 @@ export default async function ReportsPage() {
   ]);
   const canViewReports = canUseFeature(subscription?.plan, "dailyReports");
 
-  const today = new Date();
+  const today = dateParam ? new Date(dateParam) : new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const todayIso = today.toISOString().slice(0, 10);
 
   const [appointments, newPatients, totalPatients, medicalRecordsToday, medicalRecordsMonth, incomingMessages, paymentsToday, paymentsMonth] = canViewReports
     ? await Promise.all([
@@ -124,7 +131,6 @@ export default async function ReportsPage() {
       ],
       actions: [
         { label: "فتح الاشتراك", href: "/dashboard/subscription" },
-        { label: "طباعة مالي", href: "#print" },
       ],
     },
     {
@@ -229,13 +235,30 @@ export default async function ReportsPage() {
                 مركز واحد للتقارير الطبية، المالية، المواعيد، المرضى، واتساب مع الطباعة والمشاركة.
               </p>
             </div>
-            {canViewReports ? (
-              <ReportActions
-                summary={summary}
-                clinicName={clinic?.name ?? ""}
-                specialty={specialtyConfig.nameAr}
-              />
-            ) : null}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* منتقي التاريخ */}
+              <form method="GET" className="flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 ring-1 ring-slate-200">
+                <label className="text-xs font-black text-slate-500">التاريخ</label>
+                <input
+                  type="date"
+                  name="date"
+                  defaultValue={todayIso}
+                  max={new Date().toISOString().slice(0, 10)}
+                  className="text-sm font-bold text-slate-800 outline-none"
+                  onChange={undefined}
+                />
+                <button type="submit" className="rounded-xl bg-blue-600 px-3 py-1 text-xs font-black text-white hover:bg-blue-700">
+                  عرض
+                </button>
+              </form>
+              {canViewReports ? (
+                <ReportActions
+                  summary={summary}
+                  clinicName={clinic?.name ?? ""}
+                  specialty={specialtyConfig.nameAr}
+                />
+              ) : null}
+            </div>
           </div>
         </section>
 
