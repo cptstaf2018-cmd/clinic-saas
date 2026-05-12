@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         access,
-        error: "انتهت تجربة مساعد العيادة. هذه الميزة متاحة في Pro فما فوق.",
+        error: "انتهت تجربة مساعد العيادة. هذه الميزة متاحة في باقة متوسطة فما فوق.",
       },
       { status: 403 }
     );
