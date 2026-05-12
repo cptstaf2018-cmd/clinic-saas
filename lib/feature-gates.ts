@@ -19,10 +19,10 @@ export type FeatureKey =
 type PlanWithTrial = PlanId | "trial";
 
 export const PLAN_DISPLAY: Record<PlanWithTrial, { name: string; shortName: string; rank: number }> = {
-  trial: { name: "تجريبي", shortName: "Trial", rank: 0 },
-  basic: { name: "Basic", shortName: "Basic", rank: 1 },
-  standard: { name: "Pro", shortName: "Pro", rank: 2 },
-  premium: { name: "Enterprise", shortName: "Enterprise", rank: 3 },
+  trial: { name: "تجريبي", shortName: "تجريبي", rank: 0 },
+  basic: { name: "أساسية", shortName: "أساسية", rank: 1 },
+  standard: { name: "متوسطة", shortName: "متوسطة", rank: 2 },
+  premium: { name: "مميزة", shortName: "مميزة", rank: 3 },
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
