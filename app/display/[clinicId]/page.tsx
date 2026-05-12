@@ -160,9 +160,21 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, [clinicId]);
 
+  function detectFemale(name: string): boolean {
+    const first = name.trim().split(/\s+/)[0];
+    if (!first) return false;
+    const FEMALE_ENDINGS = ["ة", "ى", "ا", "اء", "ين"];
+    if (FEMALE_ENDINGS.some(e => first.endsWith(e))) return true;
+    const FEMALE_NAMES = ["هند","ريم","نور","دينا","لينا","سارة","مها","رنا","رند","غادة","أمل","سلام","ايمان","إيمان","وفاء","بشرى","ابتسام","انتصار","إنتصار","بتول","زينب","رقية","سكينة","فدوى","وداد","نهاد","سناء","ضحى","روان","جمان","لجين","شهد","براءة","صفاء","أريج","عبير","نجاح","هناء","حنان","منى","تهاني","ألاء","آلاء","عذراء","شيماء","أسماء","سمراء","زهراء","حوراء","عطراء","مروة","حياة","رحاب","أحلام","أنوار","نوار","ميساء","شيرين","ناهد"];
+    return FEMALE_NAMES.includes(first);
+  }
+
   async function announceQueue(current: NonNullable<DisplayData["current"]>) {
     const queuePart = current.queueNumber !== null ? `، رقم ${toArabic(current.queueNumber)}` : "";
-    const text = `المراجع ${current.name}${queuePart}، تفضل إلى العيادة`;
+    const isFemale = detectFemale(current.name);
+    const text = isFemale
+      ? `المراجعة ${current.name}${queuePart}، تفضلي إلى العيادة`
+      : `المراجع ${current.name}${queuePart}، تفضل إلى العيادة`;
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
