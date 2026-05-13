@@ -33,6 +33,7 @@ export default async function AdminMonitoringPage() {
     recentEvents,
     activeClinics,
     expiringClinics,
+    subscriptions,
   ] = await Promise.all([
     db.systemEvent.count(),
     db.systemEvent.count({ where: { severity: "error", resolved: false } }),
@@ -67,6 +68,17 @@ export default async function AdminMonitoringPage() {
         status: "active",
         expiresAt: { gte: now, lte: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) },
       },
+    }),
+    db.subscription.findMany({
+      where: { status: { in: ["active", "trial"] } },
+      select: {
+        clinicId: true,
+        plan: true,
+        status: true,
+        expiresAt: true,
+        clinic: { select: { name: true } },
+      },
+      orderBy: { expiresAt: "asc" },
     }),
   ]);
 
@@ -126,6 +138,13 @@ export default async function AdminMonitoringPage() {
           stuckSessions: maintenanceStats[0],
           oldPendingAppointments: maintenanceStats[1],
         }}
+        subscriptions={subscriptions.map((s) => ({
+          clinicName: s.clinic?.name ?? "عيادة",
+          plan: s.plan,
+          status: s.status,
+          daysLeft: Math.max(0, Math.ceil((new Date(s.expiresAt).getTime() - now.getTime()) / 86400000)),
+          expiresAt: s.expiresAt.toISOString(),
+        }))}
       />
     </div>
   );

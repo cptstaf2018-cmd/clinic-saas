@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type EventItem = {
   id: string;
@@ -19,6 +19,14 @@ type EventItem = {
 type MaintenanceStats = {
   stuckSessions: number;
   oldPendingAppointments: number;
+};
+
+type SubscriptionInfo = {
+  clinicName: string;
+  plan: string;
+  status: string;
+  daysLeft: number;
+  expiresAt: string;
 };
 
 const SEVERITY_LABELS: Record<string, string> = {
@@ -52,14 +60,26 @@ export default function MonitoringClient({
   events,
   totalEvents,
   maintenanceStats,
+  subscriptions,
 }: {
   events: EventItem[];
   totalEvents: number;
   maintenanceStats: MaintenanceStats;
+  subscriptions: SubscriptionInfo[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  // تحديث تلقائي كل 30 ثانية
+  useEffect(() => {
+    const t = setInterval(() => {
+      router.refresh();
+      setLastRefresh(new Date());
+    }, 30000);
+    return () => clearInterval(t);
+  }, [router]);
 
   async function runAction(key: string, request: () => Promise<Response>) {
     setBusy(key);
@@ -127,8 +147,15 @@ export default function MonitoringClient({
             >
               {busy === "scan" ? "جاري الفحص..." : "إعادة الفحص"}
             </button>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
-              آخر 30
+            <button
+              onClick={() => fixAll("resolve-old-errors" as any)}
+              disabled={busy === "resolve-old-errors"}
+              className="rounded-lg bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100 disabled:opacity-50"
+            >
+              {busy === "resolve-old-errors" ? "جاري المسح..." : "مسح أخطاء +7 أيام"}
+            </button>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-400 ring-1 ring-slate-200">
+              آخر تحديث: {lastRefresh.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
           </div>
         </div>
@@ -218,12 +245,28 @@ export default function MonitoringClient({
           </div>
         </div>
 
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-          <p className="text-xs font-black text-amber-700">قادم لاحقاً</p>
-          <h3 className="mt-2 text-lg font-black text-slate-950">إعادة إرسال واتساب</h3>
-          <p className="mt-2 text-sm font-bold leading-7 text-amber-800/80">
-            الخطوة التالية ستكون زر إعادة إرسال رسالة محددة بعد حفظ رقم الموعد ونوع الرسالة داخل الحدث.
-          </p>
+        {/* widget الاشتراكات */}
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-black text-slate-950">اشتراكات العيادات</h2>
+          <p className="mt-1 text-xs font-bold text-slate-400">الأيام المتبقية لكل عيادة</p>
+          <div className="mt-4 space-y-3">
+            {subscriptions.map((s, i) => {
+              const pct = Math.min(100, Math.round((s.daysLeft / 30) * 100));
+              const color = s.daysLeft <= 7 ? "bg-rose-500" : s.daysLeft <= 15 ? "bg-amber-400" : "bg-emerald-500";
+              const textColor = s.daysLeft <= 7 ? "text-rose-600" : s.daysLeft <= 15 ? "text-amber-600" : "text-emerald-600";
+              return (
+                <div key={i}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-black text-slate-700 truncate">{s.clinicName}</span>
+                    <span className={`text-xs font-black ${textColor}`}>{arabicNumber(s.daysLeft)} يوم</span>
+                  </div>
+                  <div className="mt-1 h-2 w-full rounded-full bg-slate-100">
+                    <div className={`h-2 rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </aside>
     </section>
