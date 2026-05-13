@@ -71,6 +71,7 @@ export default function MonitoringClient({
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [showResolved, setShowResolved] = useState(false);
 
   // تحديث تلقائي كل 30 ثانية
   useEffect(() => {
@@ -139,6 +140,12 @@ export default function MonitoringClient({
             <h2 className="text-lg font-black text-slate-950">آخر الأحداث</h2>
             <p className="mt-1 text-xs font-bold text-slate-400">{arabicNumber(totalEvents)} حدث مسجل في النظام</p>
           </div>
+          <button
+            onClick={() => setShowResolved(v => !v)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-black transition ring-1 ${showResolved ? "bg-slate-800 text-white ring-slate-800" : "bg-white text-slate-500 ring-slate-200 hover:bg-slate-50"}`}
+          >
+            {showResolved ? "إخفاء المحلولة" : "إظهار المحلولة"}
+          </button>
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={scanSystem}
@@ -167,10 +174,10 @@ export default function MonitoringClient({
         ) : null}
 
         <div className="divide-y divide-slate-100">
-          {events.length === 0 ? (
-            <div className="p-10 text-center text-sm font-black text-slate-400">لا توجد أحداث مسجلة بعد.</div>
+          {events.filter(e => showResolved ? true : !e.resolved).length === 0 ? (
+            <div className="p-10 text-center text-sm font-black text-emerald-600">✅ لا توجد أخطاء مفتوحة — النظام يعمل بشكل طبيعي</div>
           ) : (
-            events.map((event) => (
+            events.filter(e => showResolved ? true : !e.resolved).map((event) => (
               <article key={event.id} className={`grid gap-3 px-5 py-4 transition hover:bg-slate-50 lg:grid-cols-[145px_120px_1fr_170px] ${event.resolved ? "bg-slate-50/60 opacity-70" : "bg-white"}`}>
                 <div className="text-xs font-bold text-slate-400">{formatDate(event.createdAt)}</div>
                 <div>
