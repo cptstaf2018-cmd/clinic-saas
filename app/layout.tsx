@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo } from "next/font/google";
+import { Cairo, Geist } from "next/font/google";
 import "./globals.css";
 import RegisterSW from "./components/RegisterSW";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
@@ -33,7 +36,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`}>
+    <html lang="ar" dir="rtl" className={cn("h-full", cairo.variable, "font-sans", geist.variable)}>
       <body className="min-h-full flex flex-col bg-[#EEF2F9] text-[#0F172A] antialiased">
         <RegisterSW />
         {children}
