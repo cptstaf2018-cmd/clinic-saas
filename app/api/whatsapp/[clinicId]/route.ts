@@ -1,10 +1,20 @@
 // WasenderAPI Webhook Handler
-// Each clinic configures: https://ayadti.duckdns.org/api/whatsapp/[clinicId]
+// Each clinic configures: https://clinicplt.vercel.app/api/whatsapp/[clinicId]
+// Auth: X-Webhook-Signature header must match clinic.whatsappWebhookSecret
 
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { logSystemEvent } from "@/lib/system-events";
+
+function verifyWebhookSignature(received: string | null, expected: string | null): boolean {
+  if (!received || !expected) return false;
+  const r = Buffer.from(received);
+  const e = Buffer.from(expected);
+  if (r.length !== e.length) return false;
+  return timingSafeEqual(r, e);
+}
 
 const EMOJI_NUMBERS = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
 const MENU_WORDS = ["قائمة", "القائمة", "مساعدة", "help", "menu", "رجوع", "ابدأ", "ابدا", "0", "مرحبا", "مرحباً", "مربحا", "هلا", "اهلا", "أهلا", "السلام", "الو", "الوو", "hi", "hello"];
@@ -321,6 +331,33 @@ export async function POST(
   });
 
   if (!clinic) return NextResponse.json({ ok: false, error: "Clinic not found" }, { status: 404 });
+
+  // Verify webhook signature — only if clinic has configured a secret
+  // (allows gradual rollout: clinics without a secret still work but log a warning)
+  if (clinic.whatsappWebhookSecret) {
+    const receivedSignature = req.headers.get("x-webhook-signature");
+    if (!verifyWebhookSignature(receivedSignature, clinic.whatsappWebhookSecret)) {
+      await logSystemEvent({
+        clinicId,
+        type: "whatsapp_webhook_unauthorized",
+        severity: "warning",
+        source: "whatsapp_bot",
+        title: "محاولة وصول غير مصرّحة للـ webhook",
+        message: "وصل طلب لـ webhook العيادة بتوقيع غير صحيح أو مفقود.",
+        metadata: { hasSignature: !!receivedSignature },
+      });
+      return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
+    }
+  } else {
+    await logSystemEvent({
+      clinicId,
+      type: "whatsapp_webhook_no_secret",
+      severity: "warning",
+      source: "whatsapp_bot",
+      title: "العيادة بدون حماية webhook",
+      message: "هذه العيادة لم تضبط whatsappWebhookSecret — أي طلب مزيف سيمر.",
+    });
+  }
 
   const botClinic = clinic;
   const apiKey = clinic.whatsappAccessToken ?? undefined;

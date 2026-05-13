@@ -19,6 +19,7 @@ model Clinic {
   specialty              String?
   specialtyOnboardingRequired Boolean @default(false)
   whatsappAccessToken    String?
+  whatsappWebhookSecret  String?
   whatsappPhoneNumberId  String?
   whatsappWelcomeMessage String?
   botOutOfScopeMessage   String?
