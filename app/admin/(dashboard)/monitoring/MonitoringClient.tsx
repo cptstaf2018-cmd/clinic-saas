@@ -152,7 +152,7 @@ export default function MonitoringClient({
               disabled={busy === "resolve-old-errors"}
               className="rounded-lg bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100 disabled:opacity-50"
             >
-              {busy === "resolve-old-errors" ? "جاري المسح..." : "مسح أخطاء +7 أيام"}
+              {busy === "resolve-old-errors" ? "جاري المسح..." : "مسح كل الأخطاء التاريخية"}
             </button>
             <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-400 ring-1 ring-slate-200">
               آخر تحديث: {lastRefresh.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}

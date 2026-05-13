@@ -119,20 +119,33 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "resolve-old-errors") {
-    const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const result = await db.systemEvent.updateMany({
-      where: { resolved: false, createdAt: { lt: cutoff } },
+      where: {
+        resolved: false,
+        type: {
+          in: [
+            "whatsapp_send_failed",
+            "whatsapp_bot_reply_failed",
+            "whatsapp_api_key_missing",
+            "whatsapp_bot_subscription_inactive",
+            "old_pending_appointments",
+            "stuck_whatsapp_sessions",
+            "reminder_24h_failed",
+            "reminder_1h_failed",
+          ],
+        },
+      },
       data: { resolved: true, resolvedAt: now },
     });
     await logSystemEvent({
       type: "old_errors_bulk_resolved",
       severity: "success",
       source: "super_admin_fix",
-      title: "مسح الأخطاء القديمة",
-      message: `تم حل ${result.count} خطأ أقدم من 7 أيام.`,
+      title: "مسح الأخطاء التاريخية",
+      message: `تم حل ${result.count} خطأ تاريخي دفعة واحدة.`,
       metadata: { count: result.count },
     });
-    return NextResponse.json({ success: true, message: `تم حل ${result.count} خطأ قديم.` });
+    return NextResponse.json({ success: true, message: `تم حل ${result.count} خطأ.` });
   }
 
   return NextResponse.json({ error: "إجراء غير معروف" }, { status: 400 });
