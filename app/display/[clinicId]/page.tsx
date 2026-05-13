@@ -122,6 +122,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const prevAnnouncementRef = useRef<string | null | undefined>(undefined);
   const [soundEnabled] = useState(true);
   const audioUnlockedRef = useRef(false);
+  const currentAudioRef = useRef<{ audio: HTMLAudioElement; url: string } | null>(null);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
@@ -171,25 +172,68 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   }
 
   async function announceQueue(current: NonNullable<DisplayData["current"]>) {
+    // Cancel any in-flight announcement before starting a new one
+    if (currentAudioRef.current) {
+      try { currentAudioRef.current.audio.pause(); } catch {}
+      URL.revokeObjectURL(currentAudioRef.current.url);
+      currentAudioRef.current = null;
+    }
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
     const queuePart = current.queueNumber !== null ? `، رقم ${toArabic(current.queueNumber)}` : "";
     const isFemale = detectFemale(current.name);
     const text = isFemale
       ? `الأخت ${current.name}${queuePart}، اتفضلي للعيادة من فضلج`
       : `الأخ ${current.name}${queuePart}، اتفضل للعيادة من فضلك`;
+
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.onended = () => URL.revokeObjectURL(url);
+        const audio = new Audio();
+        audio.preload = "auto";
+        audio.src = url;
+        currentAudioRef.current = { audio, url };
+
+        // Wait for audio to be fully buffered before playing — prevents choppy/cut-off playback
+        await new Promise<void>((resolve, reject) => {
+          let resolved = false;
+          const cleanup = () => {
+            audio.removeEventListener("canplaythrough", onReady);
+            audio.removeEventListener("error", onError);
+          };
+          const onReady = () => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
+            resolve();
+          };
+          const onError = () => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
+            reject(new Error("audio load failed"));
+          };
+          audio.addEventListener("canplaythrough", onReady, { once: true });
+          audio.addEventListener("error", onError, { once: true });
+          // Safety timeout — start playing after 1.5s even if not fully buffered
+          setTimeout(onReady, 1500);
+          audio.load();
+        });
+
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          if (currentAudioRef.current?.audio === audio) currentAudioRef.current = null;
+        };
+
         await audio.play();
         return;
       }
     } catch {}
+
     // Fallback: Web Speech API
     if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "ar-SA";
       u.rate = 0.82;
