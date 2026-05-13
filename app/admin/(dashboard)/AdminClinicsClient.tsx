@@ -720,6 +720,27 @@ function EditPanel({
         <label>
           <span className="mb-1 block text-xs font-bold text-slate-500">الانتهاء</span>
           <input type="date" value={editExpires} onChange={(e) => setEditExpires(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50" dir="ltr" />
+          <div className="mt-2 flex flex-wrap gap-1">
+            {[
+              { label: "شهر", months: 1 },
+              { label: "3 أشهر", months: 3 },
+              { label: "6 أشهر", months: 6 },
+              { label: "سنة", months: 12 },
+            ].map(({ label, months }) => (
+              <button
+                key={months}
+                type="button"
+                onClick={() => {
+                  const d = new Date();
+                  d.setMonth(d.getMonth() + months);
+                  setEditExpires(d.toISOString().slice(0, 10));
+                }}
+                className="rounded-lg bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100 hover:bg-blue-600 hover:text-white transition"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </label>
       </div>
       <div className="flex gap-2">
