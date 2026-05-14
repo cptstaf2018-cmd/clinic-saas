@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import AdminClinicsClient from "./AdminClinicsClient";
+import AdminClinicsClientPremium from "./AdminClinicsClientPremium";
 
 export default async function AdminClinicsPage() {
   const session = await auth();
@@ -30,5 +30,5 @@ export default async function AdminClinicsPage() {
       : null,
   }));
 
-  return <AdminClinicsClient initialClinics={serialized} publicBaseUrl={publicBaseUrl} />;
+  return <AdminClinicsClientPremium initialClinics={serialized} publicBaseUrl={publicBaseUrl} />;
 }

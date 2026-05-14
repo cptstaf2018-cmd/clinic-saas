@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import ClearClinicDataButton from "../ClearClinicDataButton";
+import AppointmentsCalendarPremium from "@/components/AppointmentsCalendarPremium";
 
 type Appt = {
   id: string;
