@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+export const maxDuration = 30;
+
+const ONE_DAY_MS   = 24 * 60 * 60 * 1000;
 const NINETY_DAYS_MS = 90 * ONE_DAY_MS;
+const SIX_MONTHS_MS  = 180 * ONE_DAY_MS;
 
 export async function GET(req: NextRequest) {
   const secret = req.headers.get("authorization");
@@ -39,11 +42,21 @@ export async function GET(req: NextRequest) {
     where: { resolved: true, resolvedAt: { lt: thirtyDaysAgo } },
   });
 
+  // حذف المواعيد المكتملة أو الملغاة الأقدم من 6 أشهر
+  const sixMonthsAgo = new Date(now.getTime() - SIX_MONTHS_MS);
+  const appointmentsCleaned = await db.appointment.deleteMany({
+    where: {
+      status: { in: ["completed", "cancelled"] },
+      date: { lt: sixMonthsAgo },
+    },
+  });
+
   return NextResponse.json({
     expired: expired.count,
     otpCleaned: otpCleaned.count,
     sessionsCleaned: sessionsCleaned.count,
     messagesCleaned: messagesCleaned.count,
     eventsCleaned: eventsCleaned.count,
+    appointmentsCleaned: appointmentsCleaned.count,
   });
 }
