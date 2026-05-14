@@ -96,11 +96,18 @@ const SPECIALTY_CONFIG: Record<
 export default function ClinicDashboardPremium({
   specialty = "dentistry",
   stats = { appointmentsToday: 0, waitingCount: 0, completedCount: 0, specialty: "dentistry" },
+  clinicId = "",
 }: {
   specialty?: string;
   stats?: DashboardStats;
+  clinicId?: string;
 }) {
   const config = SPECIALTY_CONFIG[specialty] || SPECIALTY_CONFIG.dentistry;
+  // استبدال #display بالرابط الحقيقي لشاشة الانتظار
+  const resolvedActions = config.actions.map((action) => ({
+    ...action,
+    href: action.href === "#display" ? `/display/${clinicId}` : action.href,
+  }));
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -132,10 +139,11 @@ export default function ClinicDashboardPremium({
         </div>
         <div className="p-5">
           <div className="grid gap-3 sm:grid-cols-3">
-            {config.actions.map((action) => (
+            {resolvedActions.map((action) => (
               <Link
                 key={action.href}
                 href={action.href}
+                target={action.href.startsWith("/display/") ? "_blank" : undefined}
                 className={`rounded-lg px-4 py-3 text-center text-sm font-black transition ${
                   action.variant === "primary"
                     ? "bg-slate-950 text-white hover:bg-slate-800"

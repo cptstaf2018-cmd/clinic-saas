@@ -95,6 +95,19 @@ const PLANS: Array<{
     bestFor: "مركز كبير",
     features: ["كل Pro", "دعم أولوية", "نسخ احتياطي متقدم", "جاهز للفروع"],
   },
+  {
+    id: "vip",
+    name: "مميزة VIP",
+    title: "للمراكز المتميزة",
+    pitch: "ملف طبي كامل مع رفع تحاليل وأشعة ووصفات لكل مريض.",
+    outcome: "تجربة طبية احترافية متكاملة لا مثيل لها.",
+    price: PLAN_PRICES.vip,
+    tone: "from-violet-50 via-[#f8f8ff] to-[#f5f0ff] ring-violet-200",
+    dot: "bg-violet-600",
+    highlight: "الأقوى",
+    bestFor: "مركز متميز",
+    features: ["كل مميزة", "🧪 تحاليل المرضى", "🩻 أشعة ووصفات", "رفع ملفات PDF وصور", "رسائل اطمئنان تلقائية"],
+  },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }> = {

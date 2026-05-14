@@ -205,7 +205,7 @@ export default async function DashboardPage() {
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-7xl">
-        <ClinicDashboardPremium specialty={specialtyConfig.code} stats={{ appointmentsToday: active.length, waitingCount: waiting.length, completedCount: completed, specialty: specialtyConfig.code }} />
+        <ClinicDashboardPremium specialty={specialtyConfig.code} clinicId={clinicId} stats={{ appointmentsToday: active.length, waitingCount: waiting.length, completedCount: completed, specialty: specialtyConfig.code }} />
         <TodayAppointmentsClient appointments={serialized} canCheer={canCheer} />
       </div>
     </div>
