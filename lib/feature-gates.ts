@@ -42,9 +42,36 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   backupRestore: "نسخ احتياطي مع استرجاع",
 };
 
+const ALL_FEATURES: FeatureKey[] = [
+  "appointments",
+  "queueDisplay",
+  "medicalRecords",
+  "followUpTracking",
+  "autoReminders",
+  "dailyReports",
+  "patientPdfExport",
+  "patientImages",
+  "advancedWhatsApp",
+  "clinicAssistant",
+  "multiBranch",
+  "prioritySupport",
+  "auditLog",
+  "backupRestore",
+];
+
 const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
-  trial: ["appointments", "queueDisplay", "medicalRecords", "autoReminders", "dailyReports"],
-  basic: ["appointments", "queueDisplay", "medicalRecords", "dailyReports"],
+  // Trial: full access to evaluate every feature (per CLAUDE.md)
+  trial: ALL_FEATURES,
+  // أساسية — جوهر العمل: الحجوزات + البوت + السجل الطبي + التذكيرات + PDF التقارير
+  basic: [
+    "appointments",
+    "queueDisplay",
+    "medicalRecords",
+    "autoReminders",
+    "dailyReports",
+    "patientPdfExport",
+  ],
+  // متوسطة — يضيف: المساعد + صور المرضى + المتابعة
   standard: [
     "appointments",
     "queueDisplay",
@@ -54,25 +81,10 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
     "dailyReports",
     "patientPdfExport",
     "patientImages",
-    "advancedWhatsApp",
     "clinicAssistant",
   ],
-  premium: [
-    "appointments",
-    "queueDisplay",
-    "medicalRecords",
-    "followUpTracking",
-    "autoReminders",
-    "dailyReports",
-    "patientPdfExport",
-    "patientImages",
-    "advancedWhatsApp",
-    "clinicAssistant",
-    "multiBranch",
-    "prioritySupport",
-    "auditLog",
-    "backupRestore",
-  ],
+  // مميزة — يضيف: واتساب متقدم + فروع + دعم أولوية + سجل تدقيق + نسخ احتياطي
+  premium: ALL_FEATURES,
 };
 
 export const PLAN_LIMITS: Record<PlanWithTrial, { users: number; whatsappMessages: number; storageGb: number; branches: number }> = {
