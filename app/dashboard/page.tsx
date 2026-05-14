@@ -5,6 +5,7 @@ import Link from "next/link";
 import TodayAppointmentsClient from "./TodayAppointmentsClient";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import ClinicDashboardPremium from "@/components/ClinicDashboardPremium";
+import { canUseFeature } from "@/lib/feature-gates";
 
 const ARABIC_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const ARABIC_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -182,6 +183,8 @@ export default async function DashboardPage() {
   const nextQueue = nextWaiting?.queueNumber ?? null;
   const specialtyConfig = await getClinicSpecialtyConfig(clinicId);
   const blueprint = dashboardBlueprint(specialtyConfig.code);
+  const subscription = await db.subscription.findUnique({ where: { clinicId }, select: { plan: true } });
+  const canCheer = canUseFeature(subscription?.plan, "cheerMessages");
   const metricValue = {
     appointments: appointments.length,
     waiting: waiting.length,
@@ -203,7 +206,7 @@ export default async function DashboardPage() {
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-7xl">
         <ClinicDashboardPremium specialty={specialtyConfig.code} stats={{ appointmentsToday: active.length, waitingCount: waiting.length, completedCount: completed, specialty: specialtyConfig.code }} />
-        <TodayAppointmentsClient appointments={serialized} />
+        <TodayAppointmentsClient appointments={serialized} canCheer={canCheer} />
       </div>
     </div>
   );

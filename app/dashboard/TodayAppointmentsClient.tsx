@@ -38,12 +38,13 @@ function arabicNumber(value: number) {
 
 type PatchBody = { status?: string; queueStatus?: string };
 
-export default function TodayAppointmentsClient({ appointments: initial }: { appointments: Appointment[] }) {
+export default function TodayAppointmentsClient({ appointments: initial, canCheer = false }: { appointments: Appointment[]; canCheer?: boolean }) {
   const router = useRouter();
   const [appointments, setAppointments] = useState(initial);
   const [removing, setRemoving] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<string | null>(null);
   const [reminded, setReminded] = useState<Set<string>>(new Set());
+  const [cheered, setCheered] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ name: string; patientId: string } | null>(null);
 
   function showToast(name: string, patientId: string) {
@@ -111,6 +112,23 @@ export default function TodayAppointmentsClient({ appointments: initial }: { app
       router.refresh();
     } catch {
       alert("حدث خطأ");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function cheer(id: string) {
+    setLoading(`${id}_cheer`);
+    try {
+      const res = await fetch("/api/appointments/cheer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId: id }),
+      });
+      if (!res.ok) throw new Error();
+      setCheered((prev) => new Set(prev).add(id));
+    } catch {
+      alert("فشل إرسال رسالة الاطمئنان");
     } finally {
       setLoading(null);
     }
@@ -222,6 +240,20 @@ export default function TodayAppointmentsClient({ appointments: initial }: { app
                     <button onClick={() => patch(appointment.id, { status: "cancelled" })} disabled={loading === appointment.id} className="rounded-2xl bg-red-50 px-4 py-2.5 text-xs font-black text-red-700 ring-1 ring-red-100 transition hover:bg-red-100 disabled:opacity-50">
                       إلغاء
                     </button>
+                    {canCheer && (
+                      <button
+                        onClick={() => cheer(appointment.id)}
+                        disabled={loading === `${appointment.id}_cheer` || cheered.has(appointment.id)}
+                        title="إرسال رسالة اطمئنان للمريض عبر واتساب"
+                        className={`rounded-2xl px-4 py-2.5 text-xs font-black ring-1 transition disabled:opacity-50 ${
+                          cheered.has(appointment.id)
+                            ? "bg-emerald-100 text-emerald-700 ring-emerald-200 cursor-default"
+                            : "bg-pink-50 text-pink-700 ring-pink-100 hover:bg-pink-100"
+                        }`}
+                      >
+                        {cheered.has(appointment.id) ? "✓ أُرسل" : "💚 اطمئنان"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

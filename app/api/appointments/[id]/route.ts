@@ -33,19 +33,13 @@ export async function PATCH(
   const validStatuses = ["pending", "confirmed", "completed", "cancelled"];
   const validQueueStatuses = ["waiting", "current", "done"];
 
-  const data: { status?: string; queueStatus?: string; cheerAt?: Date } = {};
+  const data: { status?: string; queueStatus?: string } = {};
 
   if (body.status !== undefined) {
     if (!validStatuses.includes(body.status)) {
       return NextResponse.json({ error: "حالة غير صالحة" }, { status: 400 });
     }
     data.status = body.status;
-    // جدولة رسالة الاطمئنان بعد يومين عند إكمال الموعد
-    if (body.status === "completed") {
-      const cheerAt = new Date();
-      cheerAt.setDate(cheerAt.getDate() + 2);
-      data.cheerAt = cheerAt;
-    }
   }
 
   if (body.queueStatus !== undefined) {
