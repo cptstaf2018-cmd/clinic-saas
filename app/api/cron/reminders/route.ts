@@ -13,7 +13,7 @@ type ReminderAppointment = {
   clinicId: string;
   patientId: string;
   date: Date;
-  patient: { whatsappPhone: string };
+  patient: { name: string; whatsappPhone: string };
   clinic: { name: string; whatsappAccessToken: string | null };
 };
 
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
         date: { gte: now, lte: in24h },
       },
       include: {
-        patient: { select: { whatsappPhone: true } },
+        patient: { select: { name: true, whatsappPhone: true } },
         clinic: { select: { name: true, whatsappAccessToken: true } },
       },
       orderBy: { id: "asc" },
@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
         date: { gte: now, lte: in1h },
       },
       include: {
-        patient: { select: { whatsappPhone: true } },
+        patient: { select: { name: true, whatsappPhone: true } },
         clinic: { select: { name: true, whatsappAccessToken: true } },
       },
       orderBy: { id: "asc" },
