@@ -15,50 +15,59 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div dir="rtl" className="flex min-h-screen bg-[#EEF3F8] text-slate-950">
 
       {/* Sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-l border-slate-200 bg-white/95 shadow-[0_20px_80px_rgba(15,23,42,0.06)] md:flex">
+      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 md:flex">
 
         {/* Logo */}
-        <div className="border-b border-slate-200 px-5 py-5">
+        <div className="border-b border-white/10 px-5 py-5">
           <div className="flex items-center gap-3">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logoUrl}
-                alt="الشعار"
-                className="h-11 w-11 shrink-0 rounded-lg object-contain ring-1 ring-slate-200"
-              />
+              <img src={logoUrl} alt="الشعار" className="h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-white/20" />
             ) : (
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-lg shadow-blue-500/30">
                 <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="h-5 w-5">
                   <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
                 </svg>
               </div>
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-black text-slate-950">Ayadti Cloud</p>
+              <p className="truncate text-sm font-black text-white">Ayadti Cloud</p>
               <p className="mt-0.5 text-[11px] font-bold text-slate-400">Super Admin Console</p>
+            </div>
+          </div>
+        </div>
+
+        {/* User badge */}
+        <div className="border-b border-white/10 px-5 py-3">
+          <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-xs font-black text-white">
+              {userEmail[0]?.toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-black text-white">{userEmail}</p>
+              <p className="text-[10px] font-bold text-slate-400">Super Admin</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="mb-3 px-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Workspace</p>
+          <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Workspace</p>
           <AdminNav />
         </div>
 
-        {/* Logout */}
-        <div className="space-y-3 border-t border-slate-200 px-3 py-4">
-          <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3">
+        {/* Status + Logout */}
+        <div className="space-y-2 border-t border-white/10 px-3 py-4">
+          <div className="rounded-xl bg-emerald-500/10 px-3 py-2.5 ring-1 ring-emerald-500/20">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs font-black text-emerald-800">Production</span>
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.14)]" />
+              <span className="text-xs font-black text-emerald-400">Production</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.2)]" />
             </div>
-            <p className="mt-1 text-[11px] font-bold text-emerald-700/75">VPS متصل وشهادة HTTPS فعالة</p>
+            <p className="mt-0.5 text-[11px] font-bold text-emerald-500/70">VPS متصل وشهادة HTTPS فعالة</p>
           </div>
           <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-            <button className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold text-slate-500 transition-all hover:bg-rose-50 hover:text-rose-700">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-400 transition hover:bg-rose-500/10 hover:text-rose-400">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
               تسجيل الخروج
