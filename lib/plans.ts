@@ -2,6 +2,7 @@ export const PLAN_PRICES = {
   basic: 35000,
   standard: 45000,
   premium: 55000,
+  vip: 75000,
 } as const;
 
 export type PlanId = keyof typeof PLAN_PRICES;
@@ -11,10 +12,11 @@ export const PLAN_LABELS: Record<PlanId | "trial", string> = {
   basic: "أساسية",
   standard: "متوسطة",
   premium: "مميزة",
+  vip: "مميزة VIP",
 };
 
 export function isPlanId(value: unknown): value is PlanId {
-  return value === "basic" || value === "standard" || value === "premium";
+  return value === "basic" || value === "standard" || value === "premium" || value === "vip";
 }
 
 export function planFromAmount(amount: number): PlanId | null {
@@ -27,10 +29,10 @@ export function encodePaymentReference(plan: PlanId, reference: string) {
 }
 
 export function extractPlanFromReference(reference?: string | null): PlanId | null {
-  const match = reference?.match(/\[plan:(basic|standard|premium)\]/);
+  const match = reference?.match(/\[plan:(basic|standard|premium|vip)\]/);
   return match ? (match[1] as PlanId) : null;
 }
 
 export function cleanPaymentReference(reference?: string | null) {
-  return reference?.replace(/\[plan:(basic|standard|premium)\]\s*/, "").trim() || null;
+  return reference?.replace(/\[plan:(basic|standard|premium|vip)\]\s*/, "").trim() || null;
 }

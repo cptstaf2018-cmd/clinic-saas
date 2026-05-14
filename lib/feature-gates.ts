@@ -15,15 +15,17 @@ export type FeatureKey =
   | "prioritySupport"
   | "auditLog"
   | "backupRestore"
-  | "cheerMessages";
+  | "cheerMessages"
+  | "fullMedicalFile";
 
 type PlanWithTrial = PlanId | "trial";
 
 export const PLAN_DISPLAY: Record<PlanWithTrial, { name: string; shortName: string; rank: number }> = {
-  trial: { name: "تجريبي", shortName: "تجريبي", rank: 0 },
-  basic: { name: "أساسية", shortName: "أساسية", rank: 1 },
-  standard: { name: "متوسطة", shortName: "متوسطة", rank: 2 },
-  premium: { name: "مميزة", shortName: "مميزة", rank: 3 },
+  trial:   { name: "تجريبي",     shortName: "تجريبي", rank: 0 },
+  basic:   { name: "أساسية",     shortName: "أساسية",  rank: 1 },
+  standard:{ name: "متوسطة",     shortName: "متوسطة",  rank: 2 },
+  premium: { name: "مميزة",      shortName: "مميزة",   rank: 3 },
+  vip:     { name: "مميزة VIP",  shortName: "VIP",     rank: 4 },
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
@@ -41,6 +43,8 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   prioritySupport: "دعم أولوية",
   auditLog: "سجل التدقيق",
   backupRestore: "نسخ احتياطي مع استرجاع",
+  cheerMessages: "رسائل اطمئنان تلقائية للمرضى",
+  fullMedicalFile: "الملف الطبي الكامل — تحاليل وأشعة ووصفات",
 };
 
 const ALL_FEATURES: FeatureKey[] = [
@@ -87,17 +91,21 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
   ],
   // مميزة — يضيف: واتساب متقدم + فروع + دعم أولوية + سجل تدقيق + نسخ احتياطي
   premium: ALL_FEATURES,
+  // مميزة VIP — كل شيء + الملف الطبي الكامل (تحاليل + أشعة + وصفات) حصرياً
+  vip: [...ALL_FEATURES, "fullMedicalFile"],
 };
 
 export const PLAN_LIMITS: Record<PlanWithTrial, { users: number; whatsappMessages: number; storageGb: number; branches: number }> = {
-  trial: { users: 1, whatsappMessages: 150, storageGb: 1, branches: 1 },
-  basic: { users: 2, whatsappMessages: 500, storageGb: 2, branches: 1 },
-  standard: { users: 6, whatsappMessages: 2500, storageGb: 20, branches: 1 },
+  trial:   { users: 1,  whatsappMessages: 150,   storageGb: 1,   branches: 1 },
+  basic:   { users: 2,  whatsappMessages: 500,   storageGb: 2,   branches: 1 },
+  standard:{ users: 6,  whatsappMessages: 2500,  storageGb: 20,  branches: 1 },
   premium: { users: 25, whatsappMessages: 10000, storageGb: 100, branches: 5 },
+  vip:     { users: 50, whatsappMessages: 25000, storageGb: 500, branches: 10 },
 };
 
 export function normalizePlan(plan: string | null | undefined): PlanWithTrial {
   if (plan === "trial") return "trial";
+  if (plan === "vip") return "vip";
   return isPlanId(plan) ? plan : "basic";
 }
 

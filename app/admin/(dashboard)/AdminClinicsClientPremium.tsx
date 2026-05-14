@@ -43,6 +43,7 @@ const PLAN_LABELS: Record<string, string> = {
   basic: "أساسية",
   standard: "متوسطة",
   premium: "مميزة",
+  vip: "مميزة VIP",
 };
 
 function formatDate(iso: string | undefined) {
@@ -354,7 +355,7 @@ export default function AdminClinicsClientPremium({
                   <label className="mb-1 block text-xs font-bold text-slate-500">الخطة</label>
                   <select value={editPlan} onChange={e => setEditPlan(e.target.value)}
                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400">
-                    {[{v:"trial",l:"تجريبي"},{v:"basic",l:"أساسية"},{v:"standard",l:"متوسطة"},{v:"premium",l:"مميزة"}].map(o=>(
+                    {[{v:"trial",l:"تجريبي"},{v:"basic",l:"أساسية"},{v:"standard",l:"متوسطة"},{v:"premium",l:"مميزة"},{v:"vip",l:"مميزة VIP"}].map(o=>(
                       <option key={o.v} value={o.v}>{o.l}</option>
                     ))}
                   </select>
