@@ -12,10 +12,16 @@ export default async function AdminClinicsPage() {
     process.env.NEXTAUTH_URL ??
     "";
 
-  const clinics = await db.clinic.findMany({
-    include: { subscription: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const PAGE_SIZE = 50;
+
+  const [clinics, total] = await Promise.all([
+    db.clinic.findMany({
+      include: { subscription: true },
+      orderBy: { createdAt: "desc" },
+      take: PAGE_SIZE,
+    }),
+    db.clinic.count(),
+  ]);
 
   const serialized = clinics.map((c) => ({
     id: c.id,
@@ -30,5 +36,11 @@ export default async function AdminClinicsPage() {
       : null,
   }));
 
-  return <AdminClinicsClient initialClinics={serialized} publicBaseUrl={publicBaseUrl} />;
+  return (
+    <AdminClinicsClient
+      initialClinics={serialized}
+      totalClinics={total}
+      publicBaseUrl={publicBaseUrl}
+    />
+  );
 }
