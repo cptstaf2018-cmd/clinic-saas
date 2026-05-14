@@ -347,7 +347,7 @@ export default function SubscriptionPage() {
 
         {showPaymentForm && !submitted && (
           <form onSubmit={handleSubmit} className="grid gap-7 xl:grid-cols-[1fr_380px]">
-            <section className="grid gap-4 md:grid-cols-3">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {selectablePlans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 return (
