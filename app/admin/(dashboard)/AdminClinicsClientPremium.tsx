@@ -266,45 +266,54 @@ export default function AdminClinicsClientPremium({
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
                 <tr className="text-right text-[11px] font-black text-slate-400">
-                  <th className="px-5 py-3">العيادة</th>
-                  <th className="px-5 py-3">الهاتف</th>
-                  <th className="px-5 py-3">الخطة</th>
-                  <th className="px-5 py-3">الحالة</th>
-                  <th className="px-5 py-3">انتهاء الاشتراك</th>
-                  <th className="px-5 py-3 text-left">الإجراءات</th>
+                  <th className="px-4 py-3">الإجراءات</th>
+                  <th className="px-4 py-3">العيادة</th>
+                  <th className="px-4 py-3">الهاتف</th>
+                  <th className="px-4 py-3">الخطة</th>
+                  <th className="px-4 py-3">الحالة</th>
+                  <th className="px-4 py-3">انتهاء الاشتراك</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredClinics.map((clinic) => (
                   <tr key={clinic.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-4">
-                      <p className="truncate text-sm font-black text-slate-950">{clinic.name}</p>
-                      <p className="mt-1 text-[11px] font-bold text-slate-400">ID: {clinic.id.slice(0, 8)}</p>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => enterClinic(clinic.id)}
+                          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-black text-white transition hover:bg-blue-700"
+                        >دخول</button>
+                        <button
+                          onClick={() => startEdit(clinic)}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-700 transition hover:bg-slate-50"
+                        >تعديل</button>
+                        <button
+                          onClick={() => { setDeleteId(clinic.id); setError(""); }}
+                          className="rounded-lg border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-black text-red-600 transition hover:bg-red-100"
+                        >حذف</button>
+                      </div>
                     </td>
-                    <td className="px-5 py-4 text-sm font-bold text-slate-500" dir="ltr">
+                    <td className="px-4 py-3">
+                      <p className="text-sm font-black text-slate-950">{clinic.name}</p>
+                      <p className="mt-0.5 text-[11px] font-bold text-slate-400">ID: {clinic.id.slice(0, 8)}</p>
+                    </td>
+                    <td className="px-4 py-3 text-sm font-bold text-slate-500" dir="ltr">
                       {clinic.whatsappNumber}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <Badge
                         label={PLAN_LABELS[clinic.subscription?.plan ?? "-"] ?? clinic.subscription?.plan ?? "-"}
                         color="slate"
                       />
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <Badge
                         label={STATUS_LABELS[clinic.subscription?.status ?? "inactive"] ?? clinic.subscription?.status ?? "inactive"}
                         color={clinic.subscription?.status === "active" ? "emerald" : clinic.subscription?.status === "trial" ? "amber" : "rose"}
                       />
                     </td>
-                    <td className="px-5 py-4 text-sm font-bold text-slate-500">
+                    <td className="px-4 py-3 text-sm font-bold text-slate-500">
                       {formatDate(clinic.subscription?.expiresAt)}
-                    </td>
-                    <td className="px-5 py-4 text-left">
-                      <div className="flex gap-2">
-                        <ActionButton label={LABELS.enter} onClick={() => enterClinic(clinic.id)} size="sm" />
-                        <ActionButton label={LABELS.edit} onClick={() => startEdit(clinic)} variant="secondary" size="sm" />
-                        <ActionButton label={LABELS.delete} onClick={() => { setDeleteId(clinic.id); setError(""); }} variant="danger" size="sm" />
-                      </div>
                     </td>
                   </tr>
                 ))}
