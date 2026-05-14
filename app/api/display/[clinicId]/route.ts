@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+// Cache في الذاكرة لمدة 3 ثواني لكل عيادة
+const cache = new Map<string, { data: unknown; expiresAt: number }>();
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ clinicId: string }> }
 ) {
   const { clinicId } = await params;
+
+  // أرجع من الـ cache إذا لم تنتهِ مدته
+  const cached = cache.get(clinicId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return NextResponse.json(cached.data);
+  }
 
   const today = new Date();
   const startOfDay = new Date(today);
@@ -39,7 +48,7 @@ export async function GET(
     }),
   ]);
 
-  return NextResponse.json({
+  const data = {
     clinicName: clinic?.name ?? "",
     logoUrl: clinic?.logoUrl ?? null,
     current: current
@@ -49,5 +58,9 @@ export async function GET(
       name: a.patient.name,
       queueNumber: a.queueNumber,
     })),
-  });
+  };
+
+  cache.set(clinicId, { data, expiresAt: Date.now() + 3000 });
+
+  return NextResponse.json(data);
 }
