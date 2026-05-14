@@ -34,6 +34,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -252,7 +253,13 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
                 <div className="mt-3">
                   {a.fileType === "image" ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.fileUrl} alt={a.title} className="max-h-64 w-full rounded-xl object-contain bg-slate-100" />
+                    <img
+                      src={a.fileUrl}
+                      alt={a.title}
+                      onClick={() => setLightbox({ url: a.fileUrl!, title: a.title })}
+                      className="max-h-64 w-full rounded-xl object-contain bg-slate-100 cursor-zoom-in transition hover:opacity-90"
+                      title="اضغط لعرض بحجم كامل"
+                    />
                   ) : (
                     <a
                       href={a.fileUrl}
@@ -267,6 +274,39 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
               )}
             </div>
           ))}
+        </div>
+      )}
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <div className="relative max-h-full max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-black text-white">{lightbox.title}</p>
+              <button
+                onClick={() => setLightbox(null)}
+                className="rounded-xl bg-white/20 px-3 py-1.5 text-sm font-black text-white hover:bg-white/30"
+              >
+                ✕ إغلاق
+              </button>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={lightbox.url}
+              alt={lightbox.title}
+              className="max-h-[80vh] w-full rounded-2xl object-contain bg-slate-900"
+            />
+            <a
+              href={lightbox.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-white/10 py-2 text-sm font-black text-white hover:bg-white/20"
+            >
+              🔗 فتح في تبويب جديد
+            </a>
+          </div>
         </div>
       )}
     </div>
