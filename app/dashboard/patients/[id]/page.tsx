@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import MedicalRecordsClient from "./MedicalRecordsClient";
+import PatientAttachmentsClient from "./PatientAttachmentsClient";
 import { getEntitlements } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
@@ -156,6 +157,12 @@ export default async function PatientProfilePage({
             </div>
           </div>
         </section>
+
+        {entitlements.features.includes("fullMedicalFile") && (
+          <section>
+            <PatientAttachmentsClient patientId={patient.id} />
+          </section>
+        )}
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
           <MedicalRecordsClient

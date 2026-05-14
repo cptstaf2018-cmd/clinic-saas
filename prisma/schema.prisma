@@ -30,6 +30,7 @@ model Clinic {
   appointments           Appointment[]
   incomingMessages       IncomingMessage[]
   medicalRecords         MedicalRecord[]
+  patientAttachments     PatientAttachment[]
   patients               Patient[]
   payments               Payment[]
   subscription           Subscription?
@@ -100,9 +101,10 @@ model Patient {
   name          String
   whatsappPhone String
   createdAt     DateTime      @default(now())
-  appointments   Appointment[]
-  medicalRecords MedicalRecord[]
-  clinic         Clinic          @relation(fields: [clinicId], references: [id])
+  appointments        Appointment[]
+  medicalRecords      MedicalRecord[]
+  patientAttachments  PatientAttachment[]
+  clinic              Clinic              @relation(fields: [clinicId], references: [id])
 
   @@unique([clinicId, whatsappPhone])
   @@index([clinicId])
@@ -222,6 +224,27 @@ model MedicalRecord {
   @@index([clinicId])
   @@index([patientId])
   @@index([clinicId, patientId])
+}
+
+model PatientAttachment {
+  id        String   @id @default(cuid())
+  clinicId  String
+  patientId String
+  type      String   // "lab" | "xray" | "prescription" | "other"
+  title     String
+  notes     String?
+  fileUrl   String?
+  fileName  String?
+  fileType  String?  // "pdf" | "image"
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  patient   Patient  @relation(fields: [patientId], references: [id])
+
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([clinicId, patientId])
+  @@index([type])
 }
 
 model SystemEvent {
