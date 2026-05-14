@@ -80,6 +80,76 @@ export default function AdminClinicsClientPremium({
   const [error, setError] = useState("");
   const [now] = useState(() => Date.now());
 
+  // ── Action handlers ────────────────────────────────────────────────────────
+  function enterClinic(clinicId: string) {
+    const origin = publicBaseUrl || window.location.origin;
+    window.open(new URL(`/api/admin/enter/${clinicId}`, origin).toString(), "_blank", "noopener,noreferrer");
+  }
+
+  function startEdit(clinic: Clinic) {
+    setEditId(clinic.id);
+    setEditName(clinic.name);
+    setEditWhatsapp(clinic.whatsappNumber);
+    setEditPlan(clinic.subscription?.plan ?? "basic");
+    setEditStatus(clinic.subscription?.status ?? "active");
+    setEditExpires(toDateInput(clinic.subscription?.expiresAt));
+    setDeleteId(null);
+    setError("");
+  }
+
+  async function saveEdit() {
+    if (!editId) return;
+    setActionLoading(editId + "_edit");
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/clinics/${editId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "edit",
+          name: editName,
+          whatsappNumber: editWhatsapp,
+          plan: editPlan,
+          status: editStatus,
+          expiresAt: editExpires ? new Date(editExpires).toISOString() : undefined,
+        }),
+      });
+      if (res.ok) {
+        setClinics((prev) =>
+          prev.map((c) =>
+            c.id === editId
+              ? { ...c, name: editName, whatsappNumber: editWhatsapp,
+                  subscription: { plan: editPlan, status: editStatus,
+                    expiresAt: editExpires ? new Date(editExpires).toISOString() : c.subscription?.expiresAt ?? "" } }
+              : c
+          )
+        );
+        setEditId(null);
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setError(data.error ?? "حدث خطأ");
+      }
+    } catch { setError("حدث خطأ في الاتصال"); }
+    setActionLoading(null);
+  }
+
+  async function deleteClinic(id: string) {
+    setActionLoading(id + "_delete");
+    try {
+      const res = await fetch(`/api/admin/clinics/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setClinics((prev) => prev.filter((c) => c.id !== id));
+        setDeleteId(null);
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setError(data.error ?? "حدث خطأ");
+      }
+    } catch { setError("حدث خطأ في الاتصال"); }
+    setActionLoading(null);
+  }
+
   const activeCount = clinics.filter((clinic) => clinic.subscription?.status === "active").length;
   const trialCount = clinics.filter((clinic) => clinic.subscription?.status === "trial").length;
   const inactiveCount = clinics.filter((clinic) => clinic.subscription?.status !== "active").length;
@@ -231,9 +301,9 @@ export default function AdminClinicsClientPremium({
                     </td>
                     <td className="px-5 py-4 text-left">
                       <div className="flex gap-2">
-                        <ActionButton label={LABELS.enter} onClick={() => {}} size="sm" />
-                        <ActionButton label={LABELS.edit} onClick={() => {}} variant="secondary" size="sm" />
-                        <ActionButton label={LABELS.delete} onClick={() => {}} variant="danger" size="sm" />
+                        <ActionButton label={LABELS.enter} onClick={() => enterClinic(clinic.id)} size="sm" />
+                        <ActionButton label={LABELS.edit} onClick={() => startEdit(clinic)} variant="secondary" size="sm" />
+                        <ActionButton label={LABELS.delete} onClick={() => { setDeleteId(clinic.id); setError(""); }} variant="danger" size="sm" />
                       </div>
                     </td>
                   </tr>
@@ -242,6 +312,84 @@ export default function AdminClinicsClientPremium({
             </table>
           </div>
         </Panel>
+      )}
+
+      {/* Edit Modal */}
+      {editId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" dir="rtl">
+            <h2 className="mb-4 text-xl font-black text-slate-900">تعديل العيادة</h2>
+            {error && <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-500">اسم العيادة</label>
+                <input value={editName} onChange={e => setEditName(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-500">رقم الواتساب</label>
+                <input value={editWhatsapp} onChange={e => setEditWhatsapp(e.target.value)} dir="ltr"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-500">الخطة</label>
+                  <select value={editPlan} onChange={e => setEditPlan(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400">
+                    {[{v:"trial",l:"تجريبي"},{v:"basic",l:"أساسية"},{v:"standard",l:"متوسطة"},{v:"premium",l:"مميزة"}].map(o=>(
+                      <option key={o.v} value={o.v}>{o.l}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-slate-500">الحالة</label>
+                  <select value={editStatus} onChange={e => setEditStatus(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400">
+                    {[{v:"active",l:"فعال"},{v:"trial",l:"تجريبي"},{v:"inactive",l:"متوقف"}].map(o=>(
+                      <option key={o.v} value={o.v}>{o.l}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-500">تاريخ الانتهاء</label>
+                <input type="date" value={editExpires} onChange={e => setEditExpires(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400" />
+              </div>
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button onClick={saveEdit} disabled={actionLoading === editId + "_edit"}
+                className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-60">
+                {actionLoading === editId + "_edit" ? "جاري الحفظ..." : "حفظ التعديلات"}
+              </button>
+              <button onClick={() => { setEditId(null); setError(""); }}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-50">
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl" dir="rtl">
+            <h2 className="mb-2 text-xl font-black text-slate-900">حذف العيادة</h2>
+            <p className="mb-5 text-sm text-slate-500">هل أنت متأكد من حذف هذه العيادة؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            {error && <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+            <div className="flex gap-3">
+              <button onClick={() => deleteClinic(deleteId)} disabled={actionLoading === deleteId + "_delete"}
+                className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-black text-white transition hover:bg-red-700 disabled:opacity-60">
+                {actionLoading === deleteId + "_delete" ? "جاري الحذف..." : "نعم، احذف"}
+              </button>
+              <button onClick={() => { setDeleteId(null); setError(""); }}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-black text-slate-600 transition hover:bg-slate-50">
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Danger Zone */}
