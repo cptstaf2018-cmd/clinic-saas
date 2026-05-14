@@ -145,5 +145,55 @@ export async function GET(req: NextRequest) {
     if (batch.length < BATCH_SIZE) break;
   }
 
-  return NextResponse.json({ sent24h, sent1h, clinics: clinicIds.length });
+  // رسائل الاطمئنان — بعد يومين من إكمال الموعد، مرة واحدة فقط
+  let sentCheer = 0;
+  cursor = undefined;
+  while (true) {
+    const batch = await db.appointment.findMany({
+      where: {
+        status: "completed",
+        cheerAt: { lte: now },
+        cheerSent: false,
+      },
+      include: {
+        patient: { select: { name: true, whatsappPhone: true } },
+        clinic: { select: { name: true, whatsappAccessToken: true } },
+      },
+      orderBy: { id: "asc" },
+      take: BATCH_SIZE,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+    });
+
+    if (batch.length === 0) break;
+
+    const results = await Promise.allSettled(
+      batch.map(async (appt) => {
+        const firstName = appt.patient.name.split(" ")[0];
+        const message = [
+          `السلام عليكم ${firstName} 🌿`,
+          ``,
+          `${appt.clinic.name} تطمئن عليكم وتتمنى أن تكونوا بأتم الصحة والعافية 💙`,
+          ``,
+          `إذا احتجتم أي شيء، عيادتنا دائماً بخدمتكم.`,
+        ].join("\n");
+
+        await sendWhatsApp(
+          appt.patient.whatsappPhone,
+          message,
+          appt.clinic.whatsappAccessToken ?? undefined,
+          { clinicId: appt.clinicId, source: "cron_cheer", appointmentId: appt.id }
+        );
+        await db.appointment.update({
+          where: { id: appt.id },
+          data: { cheerSent: true },
+        });
+      })
+    );
+
+    sentCheer += results.filter((r) => r.status === "fulfilled").length;
+    cursor = batch[batch.length - 1].id;
+    if (batch.length < BATCH_SIZE) break;
+  }
+
+  return NextResponse.json({ sent24h, sent1h, sentCheer, clinics: clinicIds.length });
 }

@@ -116,9 +116,11 @@ model Appointment {
   status          String   @default("pending")
   queueNumber     Int?
   queueStatus     String   @default("waiting")
-  reminder24hSent Boolean  @default(false)
-  reminder1hSent  Boolean  @default(false)
-  createdAt       DateTime @default(now())
+  reminder24hSent Boolean   @default(false)
+  reminder1hSent  Boolean   @default(false)
+  cheerAt         DateTime?
+  cheerSent       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
   clinic          Clinic   @relation(fields: [clinicId], references: [id])
   patient         Patient  @relation(fields: [patientId], references: [id])
 
