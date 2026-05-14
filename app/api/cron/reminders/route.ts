@@ -145,12 +145,17 @@ export async function GET(req: NextRequest) {
     if (batch.length < BATCH_SIZE) break;
   }
 
-  // رسائل الاطمئنان — بعد يومين من إكمال الموعد، مرة واحدة فقط
+  // رسائل الاطمئنان — مميزة فقط، بعد يومين من إكمال الموعد، مرة واحدة فقط
+  const cheerClinicIds = activeSubscriptions
+    .filter((s) => canUseFeature(s.plan, "cheerMessages"))
+    .map((s) => s.clinicId);
+
   let sentCheer = 0;
   cursor = undefined;
-  while (true) {
+  while (cheerClinicIds.length > 0) {
     const batch = await db.appointment.findMany({
       where: {
+        clinicId: { in: cheerClinicIds },
         status: "completed",
         cheerAt: { lte: now },
         cheerSent: false,

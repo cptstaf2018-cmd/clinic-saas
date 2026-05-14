@@ -14,7 +14,8 @@ export type FeatureKey =
   | "multiBranch"
   | "prioritySupport"
   | "auditLog"
-  | "backupRestore";
+  | "backupRestore"
+  | "cheerMessages";
 
 type PlanWithTrial = PlanId | "trial";
 
@@ -57,6 +58,7 @@ const ALL_FEATURES: FeatureKey[] = [
   "prioritySupport",
   "auditLog",
   "backupRestore",
+  "cheerMessages",
 ];
 
 const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
