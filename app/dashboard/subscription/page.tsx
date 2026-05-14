@@ -49,113 +49,66 @@ const PLANS: Array<{
   id: PlanId;
   name: string;
   title: string;
-  pitch: string;
-  outcome: string;
   price: number;
-  tone: string;
-  dot: string;
-  highlight?: string;
-  bestFor: string;
+  color: string;
+  badge?: string;
   features: string[];
 }> = [
   {
     id: "basic",
     name: "أساسية",
     title: "للعيادات الصغيرة",
-    pitch: "تشغيل أساسي للمرضى والحجوزات وشاشة الانتظار.",
-    outcome: "تنظيم يومي واضح بدون تعقيد.",
     price: PLAN_PRICES.basic,
-    tone: "from-sky-50 via-[#f8fbf8] to-[#f3faf6] ring-sky-100",
-    dot: "bg-sky-600",
-    bestFor: "عيادة صغيرة",
-    features: ["المرضى والحجوزات", "شاشة الانتظار", "السجل الطبي", "تقرير يومي مختصر"],
+    color: "border-slate-200 bg-white",
+    features: ["المرضى والحجوزات", "شاشة الانتظار", "السجل الطبي", "تقرير يومي"],
   },
   {
     id: "standard",
     name: "متوسطة",
-    title: "للعيادات المتوسطة",
-    pitch: "متابعة المرضى والتذكيرات والتقارير للعيادة النشطة.",
-    outcome: "متابعة أفضل للمراجعين وتقليل الغياب.",
+    title: "للعيادات النشطة",
     price: PLAN_PRICES.standard,
-    tone: "from-emerald-50 via-[#f8fbf8] to-[#f2faf5] ring-emerald-100",
-    dot: "bg-emerald-600",
-    highlight: "الأكثر مناسبة",
-    bestFor: "عيادة نشطة",
-    features: ["كل Basic", "تذكيرات واتساب", "متابعة مراجعات", "تقارير و PDF"],
+    color: "border-emerald-300 bg-emerald-50",
+    badge: "الأكثر اختياراً",
+    features: ["كل أساسية", "تذكيرات واتساب", "متابعة مراجعات", "تقارير PDF"],
   },
   {
     id: "premium",
     name: "مميزة",
     title: "للمراكز الكبيرة",
-    pitch: "تشغيل متقدم ودعم أولوية وتجهيز للتوسع والفروع.",
-    outcome: "تحكم أعلى وتجربة أقوى للمراكز الكبيرة.",
     price: PLAN_PRICES.premium,
-    tone: "from-indigo-50 via-[#f8fbf8] to-[#f2f8fb] ring-indigo-100",
-    dot: "bg-indigo-600",
-    bestFor: "مركز كبير",
-    features: ["كل Pro", "دعم أولوية", "نسخ احتياطي متقدم", "جاهز للفروع"],
+    color: "border-blue-300 bg-blue-50",
+    features: ["كل متوسطة", "واتساب متقدم", "دعم أولوية", "فروع متعددة"],
   },
   {
     id: "vip",
     name: "مميزة VIP",
     title: "للمراكز المتميزة",
-    pitch: "ملف طبي كامل مع رفع تحاليل وأشعة ووصفات لكل مريض.",
-    outcome: "تجربة طبية احترافية متكاملة لا مثيل لها.",
     price: PLAN_PRICES.vip,
-    tone: "from-violet-50 via-[#f8f8ff] to-[#f5f0ff] ring-violet-200",
-    dot: "bg-violet-600",
-    highlight: "الأقوى",
-    bestFor: "مركز متميز",
-    features: ["كل مميزة", "🧪 تحاليل المرضى", "🩻 أشعة ووصفات", "رفع ملفات PDF وصور", "رسائل اطمئنان تلقائية"],
+    color: "border-violet-300 bg-violet-50",
+    badge: "الأقوى",
+    features: ["كل مميزة", "🧪 تحاليل وأشعة", "💊 وصفات مرضى", "📎 رفع ملفات", "💚 رسائل اطمئنان"],
   },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }> = {
-  trial: { label: "تجريبي", cls: "bg-amber-50 text-amber-700 ring-amber-200", dot: "bg-amber-500" },
-  active: { label: "نشط", cls: "bg-emerald-50 text-emerald-700 ring-emerald-200", dot: "bg-emerald-500" },
-  inactive: { label: "منتهي", cls: "bg-red-50 text-red-700 ring-red-200", dot: "bg-red-500" },
+  trial:    { label: "تجريبي", cls: "bg-amber-50 text-amber-700 ring-amber-200",   dot: "bg-amber-500"  },
+  active:   { label: "نشط",    cls: "bg-emerald-50 text-emerald-700 ring-emerald-200", dot: "bg-emerald-500" },
+  inactive: { label: "منتهي", cls: "bg-red-50 text-red-700 ring-red-200",          dot: "bg-red-500"    },
 };
 
-const PLAN_RANK: Record<PlanId, number> = {
-  basic: 1,
-  standard: 2,
-  premium: 3,
-  vip: 4,
-};
+const PLAN_RANK: Record<PlanId, number> = { basic: 1, standard: 2, premium: 3, vip: 4 };
 
-interface Subscription {
-  plan: string;
-  status: string;
-  startDate: string;
-  expiresAt: string;
-}
+interface Subscription { plan: string; status: string; startDate: string; expiresAt: string; }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ar-IQ", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  return new Date(iso).toLocaleDateString("ar-IQ", { year: "numeric", month: "long", day: "numeric" });
 }
-
-function formatMoney(value: number) {
-  return value.toLocaleString("ar-IQ");
-}
-
-function arabicNumber(value: number) {
-  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} className="h-4 w-4">
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
+function formatMoney(v: number) { return v.toLocaleString("ar-IQ"); }
+function arabicNumber(v: number) { return String(v).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]); }
 
 export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null | "loading">("loading");
+  const [step, setStep] = useState<"plans" | "payment">("plans");
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("standard");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodId>("superkey");
   const [purchaseMode, setPurchaseMode] = useState<PurchaseMode | null>(null);
@@ -174,169 +127,101 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     if (!submitted) return;
-
-    const checkSubscription = async () => {
-      try {
-        const res = await fetch("/api/subscription", { cache: "no-store" });
-        if (!res.ok) return;
-        const latest = (await res.json()) as Subscription | null;
-        setSubscription(latest);
-        if (latest?.status === "active" && latest.plan === selectedPlan) {
-          setSubmitted(false);
-          setReference("");
-        }
-      } catch {}
+    const check = async () => {
+      const res = await fetch("/api/subscription", { cache: "no-store" });
+      if (!res.ok) return;
+      const latest = (await res.json()) as Subscription | null;
+      setSubscription(latest);
+      if (latest?.status === "active" && latest.plan === selectedPlan) {
+        setSubmitted(false); setReference(""); setStep("plans");
+      }
     };
-
-    checkSubscription();
-    const timer = setInterval(checkSubscription, 5000);
-    return () => clearInterval(timer);
+    check();
+    const t = setInterval(check, 5000);
+    return () => clearInterval(t);
   }, [selectedPlan, submitted]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const method = PAYMENT_METHODS.find((item) => item.id === selectedMethod)!;
-    const referenceCheck = validatePaymentReference(method.id, reference);
-
-    if (!referenceCheck.ok) {
-      setError(referenceCheck.error);
-      return;
-    }
-
-    setSubmitting(true);
-    setError("");
-
+    const method = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
+    const check = validatePaymentReference(method.id, reference);
+    if (!check.ok) { setError(check.error); return; }
+    setSubmitting(true); setError("");
     const plan = PLANS.find((p) => p.id === selectedPlan)!;
     const res = await fetch("/api/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        amount: plan.price,
-        method: method.id,
-        plan: plan.id,
-        reference: referenceCheck.reference,
-      }),
+      body: JSON.stringify({ amount: plan.price, method: method.id, plan: plan.id, reference: check.reference }),
     });
-
-    if (res.ok) {
-      setSubmitted(true);
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "تعذر إرسال طلب الدفع");
-    }
-
+    if (res.ok) { setSubmitted(true); }
+    else { const d = await res.json(); setError(d.error ?? "تعذر إرسال طلب الدفع"); }
     setSubmitting(false);
   }
 
   if (subscription === "loading") {
-    return (
-      <div className="p-6 text-center text-sm font-semibold text-slate-400">
-        جاري تحميل الاشتراك...
-      </div>
-    );
+    return <div className="p-6 text-center text-sm text-slate-400">جاري تحميل الاشتراك...</div>;
   }
 
-  const selected = PLANS.find((p) => p.id === selectedPlan)!;
-  const selectedPaymentMethod = PAYMENT_METHODS.find((method) => method.id === selectedMethod)!;
   const status = subscription ? STATUS_CONFIG[subscription.status] ?? STATUS_CONFIG.inactive : null;
-  const daysLeft = subscription
-    ? Math.max(0, Math.ceil((new Date(subscription.expiresAt).getTime() - now) / 86400000))
-    : 0;
+  const daysLeft = subscription ? Math.max(0, Math.ceil((new Date(subscription.expiresAt).getTime() - now) / 86400000)) : 0;
   const activePlan = subscription && isPlanId(subscription.plan) ? subscription.plan : "basic";
-  const isActiveSubscription = subscription?.status === "active" && daysLeft > 0;
-  const selectablePlans = isActiveSubscription
-    ? purchaseMode === "renew"
-      ? PLANS.filter((plan) => plan.id === activePlan)
-      : purchaseMode === "upgrade"
-        ? PLANS.filter((plan) => PLAN_RANK[plan.id] > PLAN_RANK[activePlan])
-        : []
-    : PLANS;
-  const showPaymentForm = !isActiveSubscription || purchaseMode !== null;
+  const isActive = subscription?.status === "active" && daysLeft > 0;
+  const selectedPaymentMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
+  const selected = PLANS.find((p) => p.id === selectedPlan)!;
+  const selectablePlans = isActive
+    ? purchaseMode === "renew" ? PLANS.filter((p) => p.id === activePlan)
+    : purchaseMode === "upgrade" ? PLANS.filter((p) => PLAN_RANK[p.id] > PLAN_RANK[activePlan])
+    : [] : PLANS;
 
   return (
-    <div className="p-4 md:p-8 bg-[#eef7f4]" dir="rtl">
-      <div className="mx-auto max-w-6xl space-y-7">
-        <section className="rounded-[30px] bg-gradient-to-br from-[#f9fcf8] via-sky-50 to-emerald-50 p-5 md:p-7 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.09)] ring-1 ring-sky-100">
-          <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-            <div>
-              <p className="text-sm font-bold text-emerald-700">إدارة الاشتراك والدفع</p>
-              <h1 className="mt-2 text-3xl font-black md:text-4xl">باقات تشغيل العيادة</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-                اختر الباقة المناسبة وطريقة الدفع، ثم أدخل رقم العملية. بعد التحقق من الدفع يتم تفعيل الحساب أو ترقيته تلقائياً.
-              </p>
-            </div>
+    <div className="p-4 md:p-8" dir="rtl">
+      <div className="mx-auto max-w-5xl space-y-6">
 
-            <div className="rounded-[24px] bg-[#fbfdf9] p-5 shadow-sm ring-1 ring-emerald-100">
-              <p className="text-sm font-bold text-slate-500">الاشتراك الحالي</p>
-              {subscription && status ? (
-                <>
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-black ring-1 ${status.cls}`}>
-                      <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-                      {status.label}
-                    </span>
-                    <span className="text-sm font-black">
-                      {PLAN_LABELS[subscription.plan as keyof typeof PLAN_LABELS] ?? subscription.plan}
-                    </span>
-                  </div>
-                  <p className="mt-4 text-3xl font-black">{arabicNumber(daysLeft)}</p>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">
-                    يوم متبقي، ينتهي {formatDate(subscription.expiresAt)}
-                  </p>
-                </>
-              ) : (
-                <p className="mt-4 text-sm font-semibold text-slate-500">لا يوجد اشتراك مسجل لهذه العيادة.</p>
-              )}
+        {/* Header */}
+        <section className="rounded-[30px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 shadow-[0_24px_70px_rgba(37,99,235,0.09)] ring-1 ring-sky-100">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-black text-emerald-700">إدارة الاشتراك</p>
+              <h1 className="mt-1 text-3xl font-black text-slate-950">باقات تشغيل العيادة</h1>
             </div>
+            {subscription && status && (
+              <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-slate-100 text-center min-w-[160px]">
+                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-black ring-1 ${status.cls}`}>
+                  <span className={`h-2 w-2 rounded-full ${status.dot}`} />
+                  {status.label}
+                </span>
+                <p className="mt-2 text-2xl font-black text-slate-950">{arabicNumber(daysLeft)}</p>
+                <p className="text-xs font-bold text-slate-400">يوم متبقي</p>
+                <p className="mt-1 text-xs font-black text-slate-600">
+                  {PLAN_LABELS[subscription.plan as keyof typeof PLAN_LABELS] ?? subscription.plan}
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
-        {isActiveSubscription && (
-          <section className="rounded-[26px] bg-[#fbfdf9] p-5 shadow-[0_14px_38px_rgba(15,23,42,0.06)] ring-1 ring-emerald-100/80">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {/* Active subscription actions */}
+        {isActive && (
+          <section className="rounded-[26px] bg-white p-5 shadow-sm ring-1 ring-emerald-100">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-black text-slate-950">اشتراكك نشط</h2>
-                <p className="mt-1 text-sm font-semibold text-slate-500">
-                  كروت الباقات مخفية لأن الاشتراك مفعل. اختر تجديد الباقة الحالية أو ترقية فقط عند الحاجة.
-                </p>
+                <h2 className="text-lg font-black text-slate-950">اشتراكك نشط ✅</h2>
+                <p className="text-sm font-semibold text-slate-500">ينتهي {formatDate(subscription!.expiresAt)}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPurchaseMode("renew");
-                    setSelectedPlan(activePlan);
-                    setReference("");
-                    setError("");
-                  }}
-                  className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white transition hover:bg-blue-700"
-                >
+                <button onClick={() => { setPurchaseMode("renew"); setSelectedPlan(activePlan); setStep("plans"); setError(""); }}
+                  className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white hover:bg-blue-700">
                   تجديد الباقة
                 </button>
-                {activePlan !== "premium" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPurchaseMode("upgrade");
-                      setSelectedPlan(activePlan === "basic" ? "standard" : "premium");
-                      setReference("");
-                      setError("");
-                    }}
-                    className="rounded-2xl bg-emerald-50 px-5 py-3 text-sm font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100"
-                  >
+                {activePlan !== "vip" && (
+                  <button onClick={() => { setPurchaseMode("upgrade"); setSelectedPlan(activePlan === "basic" ? "standard" : activePlan === "standard" ? "premium" : "vip"); setStep("plans"); setError(""); }}
+                    className="rounded-2xl bg-emerald-50 px-5 py-2.5 text-sm font-black text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100">
                     ترقية الاشتراك
                   </button>
                 )}
                 {purchaseMode && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPurchaseMode(null);
-                      setReference("");
-                      setError("");
-                    }}
-                    className="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-black text-slate-600 transition hover:bg-slate-200"
-                  >
+                  <button onClick={() => { setPurchaseMode(null); setStep("plans"); }}
+                    className="rounded-2xl bg-slate-100 px-5 py-2.5 text-sm font-black text-slate-600 hover:bg-slate-200">
                     إلغاء
                   </button>
                 )}
@@ -345,179 +230,140 @@ export default function SubscriptionPage() {
           </section>
         )}
 
-        {showPaymentForm && !submitted && (
-          <form onSubmit={handleSubmit} className="grid gap-7 xl:grid-cols-[1fr_380px]">
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {/* STEP 1 — Plan cards */}
+        {(!isActive || purchaseMode) && step === "plans" && !submitted && (
+          <section>
+            <p className="mb-4 text-sm font-black text-slate-500">اختر الباقة المناسبة لعيادتك</p>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {selectablePlans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
                 return (
-                  <button
+                  <div
                     key={plan.id}
-                    type="button"
                     onClick={() => setSelectedPlan(plan.id)}
-                    className={`relative rounded-[26px] bg-gradient-to-br ${plan.tone} p-5 text-right shadow-[0_14px_38px_rgba(15,23,42,0.07)] ring-1 transition hover:-translate-y-0.5 ${
-                      isSelected ? "outline outline-2 outline-offset-2 outline-blue-600" : ""
+                    className={`relative cursor-pointer rounded-[26px] border-2 p-5 transition hover:-translate-y-0.5 hover:shadow-lg ${plan.color} ${
+                      isSelected ? "border-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" : ""
                     }`}
                   >
-                    {plan.highlight && (
-                      <span className="absolute left-5 top-5 rounded-full bg-blue-600 px-3 py-1 text-xs font-black text-white">
-                        {plan.highlight}
+                    {plan.badge && (
+                      <span className="absolute -top-3 right-4 rounded-full bg-blue-600 px-3 py-1 text-xs font-black text-white shadow">
+                        {plan.badge}
                       </span>
                     )}
-                    <div className={`h-2 w-14 rounded-full ${plan.dot}`} />
-                    <div className="mt-6">
-                      <p className="text-xs font-black text-slate-500">{plan.title}</p>
-                      <div className="mt-1 flex items-end justify-between gap-3">
-                        <h2 className="text-2xl font-black text-slate-950">{plan.name}</h2>
-                        <span className="rounded-full bg-[#f7fbf8] px-3 py-1 text-[11px] font-black text-slate-500 ring-1 ring-slate-200">
-                          {plan.bestFor}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-5">
-                      <span className="text-4xl font-black text-slate-950">{formatMoney(plan.price)}</span>
-                      <span className="mr-1 text-xs font-bold text-slate-400">د.ع / شهر</span>
-                    </div>
-                    <p className="mt-3 min-h-12 text-sm font-bold leading-6 text-slate-600">{plan.outcome}</p>
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {plan.features.map((feature) => (
-                        <span key={feature} className="rounded-full bg-[#fbfdf9] px-3 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200/70">
-                          {feature}
-                        </span>
+                    <p className="text-xs font-bold text-slate-400">{plan.title}</p>
+                    <h2 className="mt-1 text-2xl font-black text-slate-950">{plan.name}</h2>
+                    <p className="mt-3 text-3xl font-black text-slate-950">
+                      {formatMoney(plan.price)}
+                      <span className="text-sm font-bold text-slate-400 mr-1">د.ع / شهر</span>
+                    </p>
+                    <ul className="mt-4 space-y-2">
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                          <span className="text-emerald-500">✓</span> {f}
+                        </li>
                       ))}
-                    </div>
-                    <div className={`mt-6 flex items-center justify-between rounded-2xl px-4 py-3 ring-1 ${
-                      isSelected ? "bg-blue-600 text-white ring-blue-600" : "bg-[#f7fbf8] text-slate-700 ring-slate-200"
+                    </ul>
+                    <div className={`mt-5 w-full rounded-2xl py-2.5 text-center text-sm font-black transition ${
+                      isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
                     }`}>
-                      <span className="text-sm font-black">{isSelected ? "الباقة المختارة" : "اختيار الباقة"}</span>
-                      <span className={`flex h-6 w-6 items-center justify-center rounded-full ${isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-300"}`}>
-                        <CheckIcon />
-                      </span>
+                      {isSelected ? "✓ مختارة" : "اختيار"}
                     </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-5 flex justify-center">
+              <button
+                onClick={() => { setStep("payment"); setError(""); }}
+                className="rounded-2xl bg-blue-600 px-10 py-3.5 text-base font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5 hover:bg-blue-700"
+              >
+                متابعة الدفع ← {selected.name} · {formatMoney(selected.price)} د.ع
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* STEP 2 — Payment form */}
+        {(!isActive || purchaseMode) && step === "payment" && !submitted && (
+          <form onSubmit={handleSubmit} className="rounded-[30px] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] ring-1 ring-slate-200">
+            <div className="mb-5 flex items-center gap-3">
+              <button type="button" onClick={() => setStep("plans")}
+                className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-black text-slate-600 hover:bg-slate-200">
+                ← تغيير الباقة
+              </button>
+              <div className="rounded-2xl bg-slate-50 px-4 py-2 ring-1 ring-slate-200">
+                <span className="text-sm font-black text-slate-950">{selected.name}</span>
+                <span className="mr-2 text-sm font-bold text-emerald-700">{formatMoney(selected.price)} د.ع / شهر</span>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-black text-slate-950">طريقة الدفع</h2>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {PAYMENT_METHODS.map((method) => {
+                const isSel = selectedMethod === method.id;
+                return (
+                  <button key={method.id} type="button"
+                    onClick={() => { setSelectedMethod(method.id); setReference(""); }}
+                    className={`rounded-2xl p-3 text-right ring-1 transition ${
+                      isSel ? "bg-blue-600 text-white ring-blue-600" : "bg-slate-50 text-slate-700 ring-slate-200 hover:bg-blue-50"
+                    }`}>
+                    <p className="font-black">{method.label}</p>
+                    <p className={`text-xs mt-0.5 ${isSel ? "text-blue-100" : "text-slate-400"}`}>{method.scope}</p>
                   </button>
                 );
               })}
-            </section>
+            </div>
 
-            <section className="rounded-[30px] bg-[#fbfdf9] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.07)] ring-1 ring-emerald-100/80">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-black text-slate-950">إرسال طلب الدفع</h2>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">بعد التحقق من العملية يتم تفعيل الباقة تلقائياً.</p>
+            <div className="mt-5 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+              <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
+              <p className="mt-1 text-xl font-black tracking-wide text-emerald-950" dir="ltr">{selectedPaymentMethod.destination}</p>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {[`أكمل الدفع عبر ${selectedPaymentMethod.label}.`,
+                selectedMethod === "crypto" ? "انسخ Hash أو TXID من منصة التحويل." : "انسخ رقم العملية من تطبيق الدفع.",
+                "أدخل رقم العملية هنا للتحقق والتفعيل.",
+              ].map((step, i) => (
+                <div key={i} className="flex gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">
+                    {arabicNumber(i + 1)}
+                  </span>
+                  <p className="pt-0.5 text-sm font-semibold text-slate-600">{step}</p>
                 </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
-                  {selectedPaymentMethod.label}
-                </span>
-              </div>
+              ))}
+            </div>
 
-              <div className="mt-5 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                <p className="text-xs font-black text-slate-500">الباقة المختارة</p>
-                <div className="mt-2 flex items-end justify-between gap-3">
-                  <p className="text-2xl font-black text-slate-950">{selected.name}</p>
-                  <p className="text-lg font-black text-emerald-700">{formatMoney(selected.price)} د.ع</p>
-                </div>
-              </div>
+            <label className="mt-5 block">
+              <span className="text-xs font-black text-slate-500">{selectedPaymentMethod.referenceLabel}</span>
+              <input type="text" value={reference} onChange={(e) => setReference(e.target.value)}
+                placeholder={selectedPaymentMethod.referencePlaceholder}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                dir={selectedMethod === "crypto" ? "ltr" : "rtl"} />
+            </label>
 
-              <div className="mt-5">
-                <p className="text-xs font-black text-slate-500">طريقة الدفع</p>
-                <div className="mt-2 grid gap-2">
-                  {PAYMENT_METHODS.map((method) => {
-                    const isSelected = selectedMethod === method.id;
-                    return (
-                      <button
-                        key={method.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedMethod(method.id);
-                          setReference("");
-                        }}
-                        className={`rounded-2xl p-3 text-right ring-1 transition ${
-                          isSelected
-                            ? "bg-blue-600 text-white ring-blue-600"
-                            : "bg-[#f8fbf8] text-slate-700 ring-slate-200 hover:bg-emerald-50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm font-black">{method.label}</span>
-                          <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${isSelected ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500"}`}>
-                            {method.scope}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            {error && <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ring-1 ring-red-100">{error}</p>}
 
-              <div className="mt-4 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
-                <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
-                <p className="mt-2 break-all text-lg font-black tracking-wide text-emerald-950" dir="ltr">
-                  {selectedPaymentMethod.destination}
-                </p>
-              </div>
+            <button type="submit" disabled={submitting}
+              className="mt-4 w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50">
+              {submitting ? "جاري الإرسال..." : "إرسال للتحقق والتفعيل ✓"}
+            </button>
 
-              <div className="mt-5 space-y-3">
-                {[
-                  `أكمل الدفع عبر ${selectedPaymentMethod.label}.`,
-                  selectedMethod === "crypto" ? "انسخ Hash أو TXID من منصة التحويل." : "انسخ رقم العملية من تطبيق الدفع.",
-                  "أدخل بيانات العملية هنا ليبدأ التحقق والتفعيل.",
-                ].map((step, index) => (
-                  <div key={step} className="flex gap-3 rounded-2xl bg-[#f8fbf8] p-3 ring-1 ring-slate-200">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">
-                      {arabicNumber(index + 1)}
-                    </span>
-                    <p className="pt-1 text-sm font-semibold leading-6 text-slate-600">{step}</p>
-                  </div>
-                ))}
-              </div>
-
-              <a
-                href="/dashboard/support"
-                className="mt-5 block rounded-2xl bg-emerald-600 px-4 py-3 text-center text-sm font-black text-white transition hover:bg-emerald-700"
-              >
-                التواصل مع الدعم عند الحاجة
-              </a>
-
-              <label className="mt-5 block">
-                <span className="text-xs font-black text-slate-500">{selectedPaymentMethod.referenceLabel}</span>
-                <input
-                  type="text"
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                  placeholder={selectedPaymentMethod.referencePlaceholder}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-[#f8fbf8] px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                  dir={selectedMethod === "crypto" ? "ltr" : "rtl"}
-                />
-              </label>
-
-              {error && (
-                <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ring-1 ring-red-100">
-                  {error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-4 w-full rounded-2xl bg-blue-600 px-4 py-3.5 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-50"
-              >
-                {submitting ? "جاري إرسال الطلب..." : "إرسال للتحقق والتفعيل"}
-              </button>
-            </section>
+            <a href="/dashboard/support"
+              className="mt-3 block rounded-2xl bg-slate-50 py-3 text-center text-sm font-black text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100">
+              التواصل مع الدعم
+            </a>
           </form>
         )}
 
+        {/* Success */}
         {submitted && (
-          <section className="rounded-[30px] bg-emerald-50 p-8 text-center shadow-[0_18px_50px_rgba(15,23,42,0.08)] ring-1 ring-emerald-100">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white">
-              <CheckIcon />
-            </div>
-            <h2 className="mt-5 text-2xl font-black text-emerald-900">تم إرسال طلب الدفع</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-7 text-emerald-800/75">
-              تم حفظ الباقة ورقم العملية. عند وصول تأكيد الدفع من الخلفية سيتم تحديث الاشتراك هنا تلقائياً.
-            </p>
+          <section className="rounded-[30px] bg-emerald-50 p-10 text-center ring-1 ring-emerald-100">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-3xl text-white">✓</div>
+            <h2 className="text-2xl font-black text-emerald-900">تم إرسال طلب الدفع</h2>
+            <p className="mt-2 text-sm font-semibold text-emerald-700">بعد التحقق من العملية سيتم تفعيل الباقة تلقائياً.</p>
           </section>
         )}
+
       </div>
     </div>
   );
