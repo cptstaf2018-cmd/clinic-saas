@@ -24,6 +24,8 @@ type Clinic = {
   id: string;
   name: string;
   whatsappNumber: string;
+  patientCount: number;
+  appointmentCount: number;
   subscription: Subscription | null;
 };
 
@@ -268,6 +270,7 @@ export default function AdminClinicsClientPremium({
                 <tr className="text-right text-[11px] font-black text-slate-400">
                   <th className="px-4 py-3">الإجراءات</th>
                   <th className="px-4 py-3">العيادة</th>
+                  <th className="px-4 py-3 text-center">المراجعون</th>
                   <th className="px-4 py-3">الهاتف</th>
                   <th className="px-4 py-3">الخطة</th>
                   <th className="px-4 py-3">الحالة</th>
@@ -296,6 +299,12 @@ export default function AdminClinicsClientPremium({
                     <td className="px-4 py-3">
                       <p className="text-sm font-black text-slate-950">{clinic.name}</p>
                       <p className="mt-0.5 text-[11px] font-bold text-slate-400">ID: {clinic.id.slice(0, 8)}</p>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <p className={`text-lg font-black ${clinic.patientCount > 50 ? "text-rose-600" : clinic.patientCount > 20 ? "text-amber-600" : "text-emerald-600"}`}>
+                        {clinic.patientCount}
+                      </p>
+                      <p className="text-[10px] font-bold text-slate-400">{clinic.appointmentCount} حجز</p>
                     </td>
                     <td className="px-4 py-3 text-sm font-bold text-slate-500" dir="ltr">
                       {clinic.whatsappNumber}

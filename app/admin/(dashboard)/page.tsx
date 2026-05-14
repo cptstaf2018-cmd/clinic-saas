@@ -13,7 +13,10 @@ export default async function AdminClinicsPage() {
     "";
 
   const clinics = await db.clinic.findMany({
-    include: { subscription: true },
+    include: {
+      subscription: true,
+      _count: { select: { patients: true, appointments: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -21,6 +24,8 @@ export default async function AdminClinicsPage() {
     id: c.id,
     name: c.name,
     whatsappNumber: c.whatsappNumber,
+    patientCount: c._count.patients,
+    appointmentCount: c._count.appointments,
     subscription: c.subscription
       ? {
           plan: c.subscription.plan,
