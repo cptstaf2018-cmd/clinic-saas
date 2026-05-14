@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { sendWhatsApp } from "@/lib/whatsapp";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -28,23 +27,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "الموعد غير موجود" }, { status: 404 });
   }
 
-  const patientName = appointment.patient.name.split(" ")[0]; // الاسم الأول فقط
-  const clinicName = appointment.clinic.name;
-  const phone = appointment.patient.whatsappPhone;
+  // جدولة الإرسال بعد يومين — الكرون يتكفل بالإرسال الفعلي
+  const cheerAt = new Date();
+  cheerAt.setDate(cheerAt.getDate() + 2);
 
-  const message = [
-    `السلام عليكم ${patientName} 🌿`,
-    ``,
-    `${clinicName} تطمئن عليكم وتتمنى لكم الشفاء العاجل 💙`,
-    ``,
-    `إذا احتجتم أي شيء، عيادتنا دائماً بخدمتكم.`,
-  ].join("\n");
-
-  await sendWhatsApp(phone, message, undefined, {
-    clinicId,
-    source: "cheer",
-    appointmentId,
+  await db.appointment.update({
+    where: { id: appointmentId },
+    data: { cheerAt, cheerSent: false },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, scheduledFor: cheerAt.toISOString() });
 }

@@ -251,7 +251,7 @@ export default function TodayAppointmentsClient({ appointments: initial, canChee
                             : "bg-pink-50 text-pink-700 ring-pink-100 hover:bg-pink-100"
                         }`}
                       >
-                        {cheered.has(appointment.id) ? "✓ أُرسل" : "💚 اطمئنان"}
+                        {cheered.has(appointment.id) ? "✓ مجدول" : "💚 اطمئنان"}
                       </button>
                     )}
                   </div>
