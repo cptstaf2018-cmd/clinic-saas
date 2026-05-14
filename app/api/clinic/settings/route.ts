@@ -25,6 +25,7 @@ export async function GET() {
       botHandoffMessage: true,
       botShowWorkingHours: true,
       botShowLocation: true,
+      backupEmail: true,
       specialty: true,
       settings: true,
     },
@@ -58,6 +59,7 @@ export async function PATCH(req: Request) {
     "botHandoffMessage",
     "botShowWorkingHours",
     "botShowLocation",
+    "backupEmail",
   ];
 
   const data: Record<string, unknown> = {};

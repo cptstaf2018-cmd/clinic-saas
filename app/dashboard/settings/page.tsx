@@ -21,6 +21,7 @@ interface Settings {
   botShowLocation: boolean;
   clinicId: string;
   specialty: string;
+  backupEmail: string | null;
 }
 
 type Tab = "profile" | "whatsapp" | "reminders" | "security";
@@ -540,6 +541,29 @@ export default function SettingsPage() {
       {/* ── SECURITY TAB ── */}
       {tab === "security" && (
         <>
+        <Section title="📦 النسخ الاحتياطي التلقائي" description="أدخل إيميلك وسنرسل لك نسخة احتياطية كاملة ببيانات العيادة كل أول الشهر تلقائياً.">
+          <Field label="البريد الإلكتروني للنسخ الاحتياطي">
+            <input
+              className={inputCls}
+              type="email"
+              placeholder="example@gmail.com"
+              value={settings?.backupEmail ?? ""}
+              onChange={(e) => setSettings((s) => s ? { ...s, backupEmail: e.target.value } : s)}
+              dir="ltr"
+            />
+          </Field>
+          <p className="mb-3 text-xs font-bold text-slate-400">
+            📅 يُرسل تلقائياً كل أول الشهر — يحتوي على كل المرضى والمواعيد والسجلات الطبية بصيغة Excel (CSV)
+          </p>
+          <button
+            onClick={() => saveSettings({ backupEmail: settings?.backupEmail ?? null })}
+            disabled={saving}
+            className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {saving ? "جاري الحفظ..." : "حفظ الإيميل"}
+          </button>
+        </Section>
+
         <Section title="تغيير كلمة المرور">
           <Field label="كلمة المرور الحالية">
             <input className={inputCls} type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} />
