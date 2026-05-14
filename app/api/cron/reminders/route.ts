@@ -153,7 +153,7 @@ export async function GET(req: NextRequest) {
   let sentCheer = 0;
   cursor = undefined;
   while (cheerClinicIds.length > 0) {
-    const batch = await db.appointment.findMany({
+    const batch: ReminderAppointment[] = await db.appointment.findMany({
       where: {
         clinicId: { in: cheerClinicIds },
         status: "completed",
