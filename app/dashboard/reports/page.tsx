@@ -5,6 +5,7 @@ import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import ReportActions from "./ReportActions";
+import FinancialActions from "./FinancialActions";
 
 function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
@@ -116,8 +117,7 @@ export default async function ReportsPage({
         { label: "أنواع المستندات", value: specialtyConfig.documentTypes.length, hint: specialtyConfig.nameAr },
       ],
       actions: [
-        { label: "فتح ملفات المرضى", href: "/dashboard/patients" },
-        { label: "تقرير مريض PDF", href: "/dashboard/patients" },
+        { label: "ملفات المرضى", href: "/dashboard/patients" },
       ],
     },
     {
@@ -130,7 +130,8 @@ export default async function ReportsPage({
         { label: "مدفوعات اليوم", value: paymentsToday.length, hint: "كل الحالات" },
       ],
       actions: [
-        { label: "فتح الاشتراك", href: "/dashboard/subscription" },
+        { label: "طباعة التقرير المالي", href: "#print" },
+        { label: "إرسال عبر واتساب", href: "#whatsapp" },
       ],
     },
     {
@@ -143,7 +144,7 @@ export default async function ReportsPage({
         { label: "ملغاة", value: cancelled, hint: "إلغاء اليوم" },
       ],
       actions: [
-        { label: "فتح الحجوزات", href: "/dashboard/appointments" },
+        { label: "إدارة الحجوزات", href: "/dashboard/appointments" },
         { label: "شاشة الانتظار", href: `/display/${clinicId}` },
       ],
     },
@@ -157,8 +158,8 @@ export default async function ReportsPage({
         { label: "رسائل اليوم", value: incomingMessages, hint: "واتساب" },
       ],
       actions: [
-        { label: "فتح الرسائل", href: "/dashboard/messages" },
-        { label: "فتح المراجعين", href: "/dashboard/patients" },
+        { label: "صندوق الرسائل", href: "/dashboard/messages" },
+        { label: "قائمة المراجعين", href: "/dashboard/patients" },
       ],
     },
   ];
@@ -292,18 +293,22 @@ export default async function ReportsPage({
                       <ReportCell key={item.label} label={item.label} value={item.value} hint={item.hint} />
                     ))}
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {group.actions.map((action) => (
-                      <Link
-                        key={action.label}
-                        href={action.href === "#print" ? "/dashboard/reports" : action.href}
-                        target={action.href.startsWith("/display/") ? "_blank" : undefined}
-                        className="rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-950 hover:text-white"
-                      >
-                        {action.label}
-                      </Link>
-                    ))}
-                  </div>
+                  {group.title === "التقارير المالية" ? (
+                    <FinancialActions summary={summary} />
+                  ) : (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {group.actions.map((action) => (
+                        <Link
+                          key={action.label}
+                          href={action.href}
+                          target={action.href.startsWith("/display/") ? "_blank" : undefined}
+                          className="rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-950 hover:text-white"
+                        >
+                          {action.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </article>
               ))}
             </section>
@@ -311,19 +316,24 @@ export default async function ReportsPage({
             <section className="rounded-[30px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
               <h2 className="text-2xl font-black text-slate-950">مستندات {specialtyConfig.nameAr}</h2>
               <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
-                تظهر هنا أنواع المستندات التي تخص الاختصاص المختار، وتستخدم داخل السجل الطبي وملف المريض.
+                اختر نوع المستند لإنشائه — ستنتقل لملفات المرضى لاختيار مريض معين.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {specialtyConfig.documentTypes.map((documentType) => (
                   <Link
                     key={documentType.id}
-                    href="/dashboard/patients"
-                    className="rounded-full bg-blue-50 px-4 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-600 hover:text-white"
+                    href={`/dashboard/patients?doc=${documentType.id}`}
+                    title={`إنشاء ${documentType.labelAr} لمريض`}
+                    className="flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-600 hover:text-white"
                   >
+                    <span>📄</span>
                     {documentType.labelAr}
                   </Link>
                 ))}
               </div>
+              <p className="mt-3 text-[11px] font-bold text-slate-400">
+                💡 بعد اختيار المريض، افتح ملفه ثم اضغط &quot;سجل طبي جديد&quot; لإنشاء المستند
+              </p>
             </section>
           </>
         )}
