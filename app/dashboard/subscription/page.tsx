@@ -107,6 +107,7 @@ const PLAN_RANK: Record<PlanId, number> = {
   basic: 1,
   standard: 2,
   premium: 3,
+  vip: 4,
 };
 
 interface Subscription {
