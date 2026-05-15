@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "upgrade-insecure-requests; block-all-mixed-content",
+            value: "upgrade-insecure-requests",
           },
           {
             key: "X-Content-Type-Options",
