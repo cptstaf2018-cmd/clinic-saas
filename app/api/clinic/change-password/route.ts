@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session?.user?.email) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
   const { currentPassword, newPassword } = await req.json();
 
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "كلمة المرور يجب أن تكون 6 أحرف على الأقل" }, { status: 400 });
   }
 
-  const user = await db.user.findUnique({ where: { email: session.user.email } });
+  const user = await db.user.findUnique({ where: { id: session.user.id } });
   if (!user) return NextResponse.json({ error: "المستخدم غير موجود" }, { status: 404 });
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
