@@ -2,8 +2,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import ReportActions from "./ReportActions";
 import FinancialActions from "./FinancialActions";
 
@@ -322,28 +322,6 @@ export default async function ReportsPage({
               ))}
             </section>
 
-            <section className="rounded-[30px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
-              <h2 className="text-2xl font-black text-slate-950">مستندات {specialtyConfig.nameAr}</h2>
-              <p className="mt-2 text-sm font-bold leading-7 text-slate-500">
-                اختر نوع المستند لإنشائه — ستنتقل لملفات المرضى لاختيار مريض معين.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {specialtyConfig.documentTypes.map((documentType) => (
-                  <Link
-                    key={documentType.id}
-                    href={`/dashboard/patients?doc=${documentType.id}`}
-                    title={`إنشاء ${documentType.labelAr} لمريض`}
-                    className="flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-600 hover:text-white"
-                  >
-                    <span>📄</span>
-                    {documentType.labelAr}
-                  </Link>
-                ))}
-              </div>
-              <p className="mt-3 text-[11px] font-bold text-slate-400">
-                💡 بعد اختيار المريض، افتح ملفه ثم اضغط &quot;سجل طبي جديد&quot; لإنشاء المستند
-              </p>
-            </section>
           </>
         )}
       </div>
