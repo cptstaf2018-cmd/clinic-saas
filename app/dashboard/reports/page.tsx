@@ -145,7 +145,6 @@ export default async function ReportsPage({
       ],
       actions: [
         { label: "إدارة الحجوزات", href: "/dashboard/appointments" },
-        { label: "شاشة الانتظار", href: `/display/${clinicId}` },
       ],
     },
     {
