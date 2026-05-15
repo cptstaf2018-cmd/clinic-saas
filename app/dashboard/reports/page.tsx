@@ -110,7 +110,9 @@ export default async function ReportsPage({
     {
       title: "التقارير الطبية",
       description: `تقارير ${specialtyConfig.nameAr}، ملفات المرضى، الوصفات، والمستندات الطبية.`,
-      tone: "bg-white ring-slate-200",
+      icon: "🩺",
+      accent: "border-t-4 border-blue-500",
+      iconBg: "bg-blue-50 text-blue-600",
       items: [
         { label: "سجلات اليوم", value: medicalRecordsToday, hint: "زيارات موثقة" },
         { label: "سجلات الشهر", value: medicalRecordsMonth, hint: "نشاط طبي" },
@@ -123,21 +125,22 @@ export default async function ReportsPage({
     {
       title: "التقارير المالية",
       description: "الإيرادات، المدفوعات، الذمم، والملخصات المالية حسب الفترة.",
-      tone: "bg-white ring-slate-200",
+      icon: "💰",
+      accent: "border-t-4 border-emerald-500",
+      iconBg: "bg-emerald-50 text-emerald-600",
       items: [
         { label: "إيراد اليوم", value: `${formatMoney(todayRevenue)} د.ع`, hint: "مدفوعات مؤكدة" },
         { label: "إيراد الشهر", value: `${formatMoney(monthRevenue)} د.ع`, hint: "من بداية الشهر" },
         { label: "مدفوعات اليوم", value: paymentsToday.length, hint: "كل الحالات" },
       ],
-      actions: [
-        { label: "طباعة التقرير المالي", href: "#print" },
-        { label: "إرسال عبر واتساب", href: "#whatsapp" },
-      ],
+      actions: [],
     },
     {
-      title: "تقارير المواعيد والازدحام",
+      title: "تقارير المواعيد",
       description: "حالة الحجوزات، الانتظار، الإلغاء، والإنتاجية اليومية.",
-      tone: "bg-white ring-slate-200",
+      icon: "📅",
+      accent: "border-t-4 border-orange-500",
+      iconBg: "bg-orange-50 text-orange-600",
       items: [
         { label: "حجوزات اليوم", value: appointments.length, hint: `${arabicNumber(active)} قيد المتابعة` },
         { label: "مكتملة", value: completed, hint: "انتهت اليوم" },
@@ -148,9 +151,11 @@ export default async function ReportsPage({
       ],
     },
     {
-      title: "تقارير المرضى والتواصل",
+      title: "تقارير المرضى",
       description: "المراجعين الجدد، إجمالي الملفات، رسائل واتساب والتنبيهات.",
-      tone: "bg-slate-50 ring-slate-200",
+      icon: "👥",
+      accent: "border-t-4 border-purple-500",
+      iconBg: "bg-purple-50 text-purple-600",
       items: [
         { label: "مراجعون جدد", value: newPatients, hint: "أضيفوا اليوم" },
         { label: "إجمالي المرضى", value: totalPatients, hint: "ملفات العيادة" },
@@ -280,34 +285,39 @@ export default async function ReportsPage({
 
             <section className="grid gap-4 xl:grid-cols-2">
               {reportGroups.map((group) => (
-                <article key={group.title} className={`rounded-[30px] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] ring-1 ${group.tone}`}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h2 className="text-2xl font-black text-slate-950">{group.title}</h2>
-                      <p className="mt-2 text-sm font-bold leading-7 text-slate-500">{group.description}</p>
+                <article key={group.title} className={`rounded-[24px] overflow-hidden bg-white shadow-[0_4px_24px_rgba(15,23,42,0.07)] ring-1 ring-slate-200 ${group.accent}`}>
+                  <div className="p-5">
+                    <div className="flex items-center gap-3">
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg ${group.iconBg}`}>
+                        {group.icon}
+                      </span>
+                      <div>
+                        <h2 className="text-lg font-black text-slate-950">{group.title}</h2>
+                        <p className="text-xs font-semibold text-slate-400">{group.description}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    {group.items.map((item) => (
-                      <ReportCell key={item.label} label={item.label} value={item.value} hint={item.hint} />
-                    ))}
-                  </div>
-                  {group.title === "التقارير المالية" ? (
-                    <FinancialActions summary={summary} whatsappNumber={clinic?.whatsappNumber ?? ""} />
-                  ) : (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {group.actions.map((action) => (
-                        <Link
-                          key={action.label}
-                          href={action.href}
-                          target={action.href.startsWith("/display/") ? "_blank" : undefined}
-                          className="rounded-2xl bg-white px-4 py-2.5 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-950 hover:text-white"
-                        >
-                          {action.label}
-                        </Link>
+                    <div className="mt-4 grid gap-3 md:grid-cols-3">
+                      {group.items.map((item) => (
+                        <ReportCell key={item.label} label={item.label} value={item.value} hint={item.hint} />
                       ))}
                     </div>
-                  )}
+                    {group.title === "التقارير المالية" ? (
+                      <FinancialActions summary={summary} whatsappNumber={clinic?.whatsappNumber ?? ""} />
+                    ) : (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {group.actions.map((action) => (
+                          <Link
+                            key={action.label}
+                            href={action.href}
+                            target={action.href.startsWith("/display/") ? "_blank" : undefined}
+                            className="rounded-xl bg-slate-50 px-4 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-950 hover:text-white"
+                          >
+                            {action.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </article>
               ))}
             </section>
