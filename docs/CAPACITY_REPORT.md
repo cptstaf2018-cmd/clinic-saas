@@ -1,7 +1,7 @@
 # تقرير الطاقة الاستيعابية — Capacity Report
 **تاريخ التقرير:** 2026-05-15  
 **المنصة:** Hostinger VPS + PostgreSQL + Next.js 16  
-**URL:** https://ayadti.duckdns.org
+**URL:** https://www.clinic-ai-pro.com
 
 ---
 
@@ -303,10 +303,10 @@ CLINICS=500 PATIENTS_PER_CLINIC=1000 node scripts/seed-large.mjs
 CLINICS=1000 DRY_RUN=true node scripts/seed-large.mjs
 
 # اختبار الأداء
-BASE_URL=https://ayadti.duckdns.org node scripts/load-test.mjs
+BASE_URL=https://www.clinic-ai-pro.com node scripts/load-test.mjs
 
 # اختبار endpoint واحد فقط
-BASE_URL=https://ayadti.duckdns.org ENDPOINT=clinics REQUESTS=50 node scripts/load-test.mjs
+BASE_URL=https://www.clinic-ai-pro.com ENDPOINT=clinics REQUESTS=50 node scripts/load-test.mjs
 
 # تنظيف بيانات الاختبار
 CLEANUP=true node scripts/seed-large.mjs

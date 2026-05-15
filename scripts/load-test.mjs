@@ -4,9 +4,9 @@
  * يقيس زمن الاستجابة وأداء كل endpoint.
  *
  * Usage:
- *   BASE_URL=https://ayadti.duckdns.org node scripts/load-test.mjs
+ *   BASE_URL=https://www.clinic-ai-pro.com node scripts/load-test.mjs
  *   BASE_URL=http://localhost:3000 REQUESTS=50 node scripts/load-test.mjs
- *   BASE_URL=https://ayadti.duckdns.org ENDPOINT=clinics node scripts/load-test.mjs
+ *   BASE_URL=https://www.clinic-ai-pro.com ENDPOINT=clinics node scripts/load-test.mjs
  *
  * متغيرات البيئة:
  *   BASE_URL          عنوان السيرفر   (default: http://localhost:3000)

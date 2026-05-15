@@ -54,7 +54,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputCls = "w-full h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100";
-const officialAppUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://ayadti.duckdns.org").replace(/\/$/, "");
+const officialAppUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clinic-ai-pro.com").replace(/\/$/, "");
 
 export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("profile");

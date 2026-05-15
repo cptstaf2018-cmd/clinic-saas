@@ -4,11 +4,11 @@
 # شغّله مرة واحدة على السيرفر:  bash setup-cron.sh
 # =============================================================
 
-APP_URL="https://ayadti.duckdns.org"
+APP_URL="https://www.clinic-ai-pro.com"
 CRON_SECRET="1617931e9a819bf8834294ac7e8b3841c6a4b4d067b5c24b0865e5532580c491"
 
 # احذف أي Cron قديم للنظام ثم أضف الجديد
-(crontab -l 2>/dev/null | grep -v "ayadti.duckdns.org"; cat <<EOF
+(crontab -l 2>/dev/null | grep -v "www.clinic-ai-pro.com"; cat <<EOF
 
 # ── Clinic SaaS Cron Jobs ──────────────────────────────────────
 

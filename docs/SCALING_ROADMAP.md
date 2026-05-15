@@ -294,7 +294,7 @@ CLINICS=1000 PATIENTS_PER_CLINIC=200 APPOINTMENTS_PER_CLINIC=200 node scripts/se
 CLINICS=5000 DRY_RUN=true node scripts/seed-large.mjs
 
 # اختبار الأداء بعد الإدخال
-BASE_URL=https://ayadti.duckdns.org node scripts/load-test.mjs
+BASE_URL=https://www.clinic-ai-pro.com node scripts/load-test.mjs
 
 # تنظيف كل بيانات الاختبار
 CLEANUP=true node scripts/seed-large.mjs
