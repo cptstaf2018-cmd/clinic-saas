@@ -110,7 +110,7 @@ export default async function ReportsPage({
     {
       title: "التقارير الطبية",
       description: `تقارير ${specialtyConfig.nameAr}، ملفات المرضى، الوصفات، والمستندات الطبية.`,
-      tone: "bg-blue-50 ring-blue-100",
+      tone: "bg-white ring-slate-200",
       items: [
         { label: "سجلات اليوم", value: medicalRecordsToday, hint: "زيارات موثقة" },
         { label: "سجلات الشهر", value: medicalRecordsMonth, hint: "نشاط طبي" },
@@ -123,7 +123,7 @@ export default async function ReportsPage({
     {
       title: "التقارير المالية",
       description: "الإيرادات، المدفوعات، الذمم، والملخصات المالية حسب الفترة.",
-      tone: "bg-emerald-50 ring-emerald-100",
+      tone: "bg-white ring-slate-200",
       items: [
         { label: "إيراد اليوم", value: `${formatMoney(todayRevenue)} د.ع`, hint: "مدفوعات مؤكدة" },
         { label: "إيراد الشهر", value: `${formatMoney(monthRevenue)} د.ع`, hint: "من بداية الشهر" },
@@ -137,7 +137,7 @@ export default async function ReportsPage({
     {
       title: "تقارير المواعيد والازدحام",
       description: "حالة الحجوزات، الانتظار، الإلغاء، والإنتاجية اليومية.",
-      tone: "bg-amber-50 ring-amber-100",
+      tone: "bg-white ring-slate-200",
       items: [
         { label: "حجوزات اليوم", value: appointments.length, hint: `${arabicNumber(active)} قيد المتابعة` },
         { label: "مكتملة", value: completed, hint: "انتهت اليوم" },
