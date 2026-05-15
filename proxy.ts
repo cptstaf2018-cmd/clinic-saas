@@ -12,7 +12,7 @@ function shouldRedirectToHttps(req: NextRequest) {
   return process.env.NODE_ENV === "production" && !localHost && !requestIsSecure(req);
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (shouldRedirectToHttps(req)) {
