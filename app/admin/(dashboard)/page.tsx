@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import AdminClinicsClientPremium from "./AdminClinicsClientPremium";
+import AdminClinicsClient from "./AdminClinicsClient";
 
 export default async function AdminClinicsPage() {
   const session = await auth();
@@ -12,20 +12,21 @@ export default async function AdminClinicsPage() {
     process.env.NEXTAUTH_URL ??
     "";
 
-  const clinics = await db.clinic.findMany({
-    include: {
-      subscription: true,
-      _count: { select: { patients: true, appointments: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const PAGE_SIZE = 50;
+
+  const [clinics, total] = await Promise.all([
+    db.clinic.findMany({
+      include: { subscription: true },
+      orderBy: { createdAt: "desc" },
+      take: PAGE_SIZE,
+    }),
+    db.clinic.count(),
+  ]);
 
   const serialized = clinics.map((c) => ({
     id: c.id,
     name: c.name,
     whatsappNumber: c.whatsappNumber,
-    patientCount: c._count.patients,
-    appointmentCount: c._count.appointments,
     subscription: c.subscription
       ? {
           plan: c.subscription.plan,
@@ -35,5 +36,11 @@ export default async function AdminClinicsPage() {
       : null,
   }));
 
-  return <AdminClinicsClientPremium initialClinics={serialized} publicBaseUrl={publicBaseUrl} />;
+  return (
+    <AdminClinicsClient
+      initialClinics={serialized}
+      totalClinics={total}
+      publicBaseUrl={publicBaseUrl}
+    />
+  );
 }
