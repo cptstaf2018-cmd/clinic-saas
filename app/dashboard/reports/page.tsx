@@ -116,7 +116,6 @@ export default async function ReportsPage({
       items: [
         { label: "سجلات اليوم", value: medicalRecordsToday, hint: "زيارات موثقة" },
         { label: "سجلات الشهر", value: medicalRecordsMonth, hint: "نشاط طبي" },
-        { label: "أنواع المستندات", value: specialtyConfig.documentTypes.length, hint: specialtyConfig.nameAr },
       ],
       actions: [
         { label: "ملفات المرضى", href: "/dashboard/patients" },
@@ -136,7 +135,7 @@ export default async function ReportsPage({
       actions: [],
     },
     {
-      title: "تقارير المواعيد",
+      title: "تقارير الحجوزات",
       description: "حالة الحجوزات، الانتظار، الإلغاء، والإنتاجية اليومية.",
       icon: "📅",
       accent: "border-t-4 border-orange-500",
