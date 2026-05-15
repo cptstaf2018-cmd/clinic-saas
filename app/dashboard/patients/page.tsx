@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import PatientListPremium from "@/components/PatientListPremium";
-import ClearClinicDataButton from "../ClearClinicDataButton";
 
 function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
@@ -56,7 +55,6 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
         
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex justify-end">
-            <ClearClinicDataButton />
           </div>
         </section>
       </div>

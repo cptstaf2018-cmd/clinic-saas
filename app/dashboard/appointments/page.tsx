@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import ClearClinicDataButton from "../ClearClinicDataButton";
 import AppointmentsCalendarPremium from "@/components/AppointmentsCalendarPremium";
 
 type Appt = {
@@ -153,7 +152,6 @@ export default function AppointmentsPage() {
                 </button>
               ))}
             </div>
-            <ClearClinicDataButton />
           </div>
 
           <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_auto]">
