@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const NAV = [
   {
@@ -90,16 +91,55 @@ export default function DashboardNav() {
   );
 }
 
+const MORE_NAV = NAV.slice(5);
+
 export function MobileDashboardNav() {
   const pathname = usePathname();
+  const [showMore, setShowMore] = useState(false);
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
     return pathname.startsWith(href);
   }
 
+  const anyMoreActive = MORE_NAV.some(item => isActive(item.href, item.exact));
+
   return (
     <>
+      {/* Bottom sheet overlay */}
+      {showMore && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50"
+          onClick={() => setShowMore(false)}
+        />
+      )}
+
+      {/* More items sheet */}
+      {showMore && (
+        <div className="fixed bottom-16 inset-x-0 z-50 bg-[#0C1F3F] border-t border-white/10 rounded-t-2xl px-4 py-3">
+          <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
+          <div className="grid grid-cols-2 gap-2">
+            {MORE_NAV.map((item) => {
+              const active = isActive(item.href, item.exact);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setShowMore(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    active ? "bg-white/12 text-blue-300" : "text-blue-200/70 hover:bg-white/8 hover:text-white"
+                  }`}
+                >
+                  <span className="[&_svg]:w-5 [&_svg]:h-5">{item.icon}</span>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Main bottom nav items */}
       {MOBILE_NAV.map((item) => {
         const active = isActive(item.href, item.exact);
         return (
@@ -118,6 +158,20 @@ export function MobileDashboardNav() {
           </Link>
         );
       })}
+
+      {/* المزيد button */}
+      <button
+        onClick={() => setShowMore(v => !v)}
+        className={`flex-1 flex flex-col items-center justify-center py-2.5 transition-colors gap-1 ${
+          anyMoreActive ? "text-blue-300" : "text-blue-200/60 hover:text-blue-300"
+        }`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+          <circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/>
+        </svg>
+        <span className="text-[10px] font-medium">المزيد</span>
+        {anyMoreActive && <span className="w-1 h-1 rounded-full bg-blue-400 mt-0.5" />}
+      </button>
     </>
   );
 }
