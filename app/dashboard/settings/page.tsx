@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MEDICAL_SPECIALTIES } from "@/lib/medical-specialties";
 
 interface Settings {
   id: string;
@@ -251,40 +250,8 @@ export default function SettingsPage() {
                 <span className="text-xs text-gray-400 whitespace-nowrap">للتغيير تواصل مع الدعم</span>
               </div>
             </Field>
-            <Field label="اختصاص العيادة">
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {MEDICAL_SPECIALTIES.map((specialty) => {
-                  const active = settings.specialty === specialty.key;
-                  return (
-                    <button
-                      key={specialty.key}
-                      type="button"
-                      onClick={() => setSettings({ ...settings, specialty: specialty.key })}
-                      className={`min-h-24 rounded-2xl p-3 text-right ring-1 transition ${
-                        active
-                          ? "bg-blue-600 text-white ring-blue-600 shadow-sm"
-                          : "bg-slate-50 text-slate-700 ring-slate-200 hover:bg-white hover:ring-blue-200"
-                      }`}
-                    >
-                      <span className={`inline-flex h-8 min-w-8 items-center justify-center rounded-xl px-2 text-xs font-black ${
-                        active ? "bg-white/15 text-white" : "bg-white text-blue-700"
-                      }`}>
-                        {specialty.icon}
-                      </span>
-                      <p className="mt-2 text-sm font-black">{specialty.name}</p>
-                      <p className={`mt-1 text-[11px] font-bold leading-5 ${active ? "text-blue-50" : "text-slate-400"}`}>
-                        {specialty.description}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-2 text-xs font-bold text-slate-400">
-                عند تغيير الاختصاص ستتغير قوالب السجل الطبي والتشخيصات والمستندات مباشرة.
-              </p>
-            </Field>
             <button
-              onClick={() => saveSettings({ name: settings.name, specialty: settings.specialty })}
+              onClick={() => saveSettings({ name: settings.name })}
               disabled={saving}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
