@@ -159,19 +159,7 @@ export default function ClinicDashboardPremium({
         </div>
       </section>
 
-      {/* Follow-ups Section */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-black text-slate-950">المتابعات المهمة</h2>
-          <p className="mt-1 text-sm font-semibold text-slate-500">الحالات التي تحتاج انتباهك اليوم</p>
-        </div>
-        <div className="p-5">
-          <div className="space-y-2 rounded-lg bg-amber-50 p-4 ring-1 ring-amber-100">
-            <p className="text-sm font-bold text-amber-700">لا توجد متابعات عاجلة حالياً</p>
-            <p className="text-xs font-semibold text-amber-600">جميع الحالات تحت السيطرة</p>
-          </div>
-        </div>
-      </section>
+
     </div>
   );
 }
