@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
 
-const AdminAnalyticsCharts = dynamic(() => import("./AdminAnalyticsCharts"), { ssr: false, loading: () => <div className="h-48 rounded-xl bg-gray-50 animate-pulse" /> });
 import { useRouter } from "next/navigation";
 
 type Subscription = {
@@ -320,7 +318,7 @@ export default function AdminClinicsClient({
       {/* Analytics Charts */}
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <p className="mb-3 text-sm font-black text-slate-700">📊 التحليلات والإحصائيات</p>
-        <AdminAnalyticsCharts />
+        
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
