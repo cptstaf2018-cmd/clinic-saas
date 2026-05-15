@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Read(//c/Users/saad/Desktop/clinic.plt/**)",
+      "Bash(npx prisma *)"
+    ]
+  }
+}
