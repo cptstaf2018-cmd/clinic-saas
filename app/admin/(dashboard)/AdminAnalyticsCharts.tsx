@@ -12,6 +12,7 @@ const PLAN_COLORS: Record<string, string> = {
   أساسية: "#3b82f6",
   متوسطة: "#8b5cf6",
   مميزة: "#f59e0b",
+  "مميزة VIP": "#7c3aed",
 };
 
 type AnalyticsData = {

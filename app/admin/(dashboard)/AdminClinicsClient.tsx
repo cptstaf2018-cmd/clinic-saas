@@ -36,6 +36,7 @@ const PLAN_LABELS: Record<string, string> = {
   basic: "أساسية",
   standard: "متوسطة",
   premium: "مميزة",
+  vip: "مميزة VIP",
 };
 
 const PLAN_OPTIONS = [
@@ -43,6 +44,7 @@ const PLAN_OPTIONS = [
   { value: "basic", label: "أساسية" },
   { value: "standard", label: "متوسطة" },
   { value: "premium", label: "مميزة" },
+  { value: "vip", label: "مميزة VIP" },
 ];
 
 const STATUS_OPTIONS = [
