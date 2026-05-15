@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import AdminNav from "./AdminNav";
 
 export default function AdminMobileDrawer({
@@ -13,20 +14,12 @@ export default function AdminMobileDrawer({
   signOutForm: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => { setMounted(true); }, []);
+
+  const drawer = (
     <>
-      {/* زر ☰ */}
-      <button
-        onClick={() => setOpen(true)}
-        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"
-        aria-label="القائمة"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-5 w-5">
-          <path d="M3 12h18M3 6h18M3 18h18"/>
-        </svg>
-      </button>
-
       {/* Overlay */}
       {open && (
         <div
@@ -102,6 +95,23 @@ export default function AdminMobileDrawer({
           {signOutForm}
         </div>
       </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* زر ☰ */}
+      <button
+        onClick={() => setOpen(true)}
+        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden"
+        aria-label="القائمة"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-5 w-5">
+          <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+      </button>
+
+      {mounted && createPortal(drawer, document.body)}
     </>
   );
 }
