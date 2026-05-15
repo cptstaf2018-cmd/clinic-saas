@@ -297,19 +297,17 @@ export default function AdminClinicsClient({
           </div>
         </div>
 
-        <div className="grid gap-px bg-slate-200 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-px bg-slate-200 lg:grid-cols-4">
           {[
             { label: "إجمالي العيادات", value: clinics.length, accent: "text-slate-950", sub: "كل الحسابات" },
             { label: "العيادات النشطة", value: activeCount, accent: "text-emerald-700", sub: "تعمل حالياً" },
             { label: "تنتهي قريباً", value: expiringCount, accent: "text-amber-700", sub: "خلال 7 أيام" },
             { label: "تحتاج متابعة", value: inactiveCount, accent: "text-rose-700", sub: "متوقفة أو معلقة" },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white px-5 py-4 transition hover:bg-slate-50">
-              <p className="text-xs font-black text-slate-400">{stat.label}</p>
-              <div className="mt-2 flex items-end justify-between gap-3">
-                <p className={`text-3xl font-black ${stat.accent}`}>{stat.value}</p>
-                <p className="pb-1 text-[11px] font-bold text-slate-400">{stat.sub}</p>
-              </div>
+            <div key={stat.label} className="bg-white px-3 py-4 transition hover:bg-slate-50 sm:px-5">
+              <p className="text-[11px] font-black text-slate-400 sm:text-xs">{stat.label}</p>
+              <p className={`mt-2 text-2xl font-black sm:text-3xl ${stat.accent}`}>{stat.value}</p>
+              <p className="mt-1 text-[10px] font-bold text-slate-400 sm:text-[11px]">{stat.sub}</p>
             </div>
           ))}
         </div>

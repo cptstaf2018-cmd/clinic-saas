@@ -11,7 +11,6 @@ export type FeatureKey =
   | "patientImages"
   | "advancedWhatsApp"
   | "clinicAssistant"
-  | "multiBranch"
   | "prioritySupport"
   | "auditLog"
   | "backupRestore"
@@ -39,7 +38,6 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   patientImages: "رفع صور وتحاليل المرضى",
   advancedWhatsApp: "متابعة وردود واتساب متقدمة",
   clinicAssistant: "مساعد استخدام العيادة",
-  multiBranch: "إدارة الفروع",
   prioritySupport: "دعم أولوية",
   auditLog: "سجل التدقيق",
   backupRestore: "نسخ احتياطي مع استرجاع",
@@ -58,7 +56,6 @@ const ALL_FEATURES: FeatureKey[] = [
   "patientImages",
   "advancedWhatsApp",
   "clinicAssistant",
-  "multiBranch",
   "prioritySupport",
   "auditLog",
   "backupRestore",
@@ -95,12 +92,12 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
   vip: [...ALL_FEATURES, "fullMedicalFile"],
 };
 
-export const PLAN_LIMITS: Record<PlanWithTrial, { users: number; whatsappMessages: number; storageGb: number; branches: number }> = {
-  trial:   { users: 1,  whatsappMessages: 150,   storageGb: 1,   branches: 1 },
-  basic:   { users: 2,  whatsappMessages: 500,   storageGb: 2,   branches: 1 },
-  standard:{ users: 6,  whatsappMessages: 2500,  storageGb: 20,  branches: 1 },
-  premium: { users: 25, whatsappMessages: 10000, storageGb: 100, branches: 5 },
-  vip:     { users: 50, whatsappMessages: 25000, storageGb: 500, branches: 10 },
+export const PLAN_LIMITS: Record<PlanWithTrial, { users: number; whatsappMessages: number; storageGb: number }> = {
+  trial:   { users: 1,  whatsappMessages: 150,   storageGb: 1   },
+  basic:   { users: 2,  whatsappMessages: 500,   storageGb: 2   },
+  standard:{ users: 6,  whatsappMessages: 2500,  storageGb: 20  },
+  premium: { users: 25, whatsappMessages: 10000, storageGb: 100 },
+  vip:     { users: 50, whatsappMessages: 25000, storageGb: 500 },
 };
 
 export function normalizePlan(plan: string | null | undefined): PlanWithTrial {
@@ -118,7 +115,7 @@ export function canUseFeature(plan: string | null | undefined, feature: FeatureK
 }
 
 export function getUpgradePlanForFeature(feature: FeatureKey): PlanId {
-  if (["multiBranch", "prioritySupport", "auditLog", "backupRestore"].includes(feature)) {
+  if (["prioritySupport", "auditLog", "backupRestore"].includes(feature)) {
     return "premium";
   }
   return "standard";

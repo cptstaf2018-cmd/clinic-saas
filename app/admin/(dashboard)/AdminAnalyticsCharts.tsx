@@ -80,7 +80,7 @@ export default function AdminAnalyticsCharts() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} interval={Math.floor(data.revenueTrend.length / 5)} />
                 <YAxis tickFormatter={fmtIQD} tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} width={36} />
-                <Tooltip formatter={(v: number) => [`${v.toLocaleString()} د.ع`, "الإيرادات"]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                <Tooltip formatter={(v) => [`${Number(v).toLocaleString()} د.ع`, "الإيرادات"]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
                 <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} fill="url(#revGrad)" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
@@ -101,7 +101,7 @@ export default function AdminAnalyticsCharts() {
                       <Cell key={i} fill={PLAN_COLORS[e.name] ?? "#6366f1"} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number, _: string, props: any) => [v, props.payload.name]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                  <Tooltip formatter={(v, _, props: any) => [v, props.payload.name]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-2 justify-center mt-1">
@@ -127,7 +127,7 @@ export default function AdminAnalyticsCharts() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} interval={Math.floor(data.appointmentsTrend.length / 6)} />
                 <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} tickLine={false} axisLine={false} width={28} />
-                <Tooltip formatter={(v: number) => [v, "حجز"]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                <Tooltip formatter={(v) => [v, "حجز"]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
                 <Bar dataKey="appointments" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={20} />
               </BarChart>
             </ResponsiveContainer>

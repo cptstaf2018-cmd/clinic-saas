@@ -77,7 +77,7 @@ const PLANS: Array<{
     title: "للمراكز الكبيرة",
     price: PLAN_PRICES.premium,
     color: "border-blue-300 bg-blue-50",
-    features: ["كل متوسطة", "واتساب متقدم", "دعم أولوية", "فروع متعددة"],
+    features: ["كل متوسطة", "واتساب متقدم", "دعم أولوية", "نسخ احتياطي متقدم"],
   },
   {
     id: "vip",
