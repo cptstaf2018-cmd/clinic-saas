@@ -91,6 +91,48 @@ const SPECIALTY_CONFIG: Record<
       { label: LABELS.waitingScreen, href: "#display", variant: "success" },
     ],
   },
+  ophthalmology: {
+    headline: LABELS.clinicOphthalmology,
+    description: "متابعة فحوص النظر، ضغط العين، والوصفات البصرية.",
+    focusMetrics: [
+      { label: "فحوص اليوم", value: 0, hint: "مواعيد العيون" },
+      { label: "في الانتظار", value: 0, hint: "بانتظار الفحص" },
+      { label: "فحوص مكتملة", value: 0, hint: "أنجزت اليوم" },
+    ],
+    actions: [
+      { label: "ملفات المرضى", href: "/dashboard/patients", variant: "primary" },
+      { label: "تقارير نظر ونظارات", href: "/dashboard/reports", variant: "secondary" },
+      { label: LABELS.waitingScreen, href: "#display", variant: "success" },
+    ],
+  },
+  orthopedics: {
+    headline: LABELS.clinicOrthopedics,
+    description: "تنظيم مراجعات الألم، الحركة، الأشعة، وخطط التأهيل.",
+    focusMetrics: [
+      { label: "مواعيد العظام", value: 0, hint: "حالات اليوم" },
+      { label: "في الانتظار", value: 0, hint: "بانتظار الفحص" },
+      { label: "زيارات مكتملة", value: 0, hint: "أنجزت اليوم" },
+    ],
+    actions: [
+      { label: "ملفات الحالات", href: "/dashboard/patients", variant: "primary" },
+      { label: "تقارير أشعة وتأهيل", href: "/dashboard/reports", variant: "secondary" },
+      { label: LABELS.waitingScreen, href: "#display", variant: "success" },
+    ],
+  },
+  internal_medicine: {
+    headline: LABELS.clinicInternalMedicine,
+    description: "متابعة المواعيد، الأمراض المزمنة، التحاليل، وخطط العلاج.",
+    focusMetrics: [
+      { label: "حجوزات اليوم", value: 0, hint: "كل المواعيد" },
+      { label: "ينتظرون الدور", value: 0, hint: "داخل الانتظار" },
+      { label: "زيارات مكتملة", value: 0, hint: "تم إنهاؤها اليوم" },
+    ],
+    actions: [
+      { label: "فتح المراجعين", href: "/dashboard/patients", variant: "primary" },
+      { label: "تقارير طبية ومالية", href: "/dashboard/reports", variant: "secondary" },
+      { label: LABELS.waitingScreen, href: "#display", variant: "success" },
+    ],
+  },
 };
 
 export default function ClinicDashboardPremium({

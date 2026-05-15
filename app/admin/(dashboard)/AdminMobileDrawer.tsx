@@ -19,18 +19,18 @@ export default function AdminMobileDrawer({
   useEffect(() => { setMounted(true); }, []);
 
   const drawer = (
-    <>
+    <div dir="rtl" className="md:hidden">
       {/* Overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* الدرج — نفس تصميم الـ Desktop sidebar */}
       <aside
-        className={`fixed inset-y-0 right-0 z-50 flex w-72 flex-col bg-gradient-to-b from-emerald-900 via-teal-900 to-slate-900 shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed inset-y-0 right-0 z-[9999] flex w-72 flex-col bg-gradient-to-b from-emerald-900 via-teal-900 to-slate-900 shadow-2xl transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -95,7 +95,7 @@ export default function AdminMobileDrawer({
           {signOutForm}
         </div>
       </aside>
-    </>
+    </div>
   );
 
   return (

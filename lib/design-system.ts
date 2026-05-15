@@ -136,7 +136,10 @@ export const LABELS = {
   clinicDermatology: 'تشغيل عيادة الجلدية',
   clinicCardiology: 'تشغيل عيادة القلب',
   clinicGynecology: 'تشغيل عيادة النسائية',
-  
+  clinicOphthalmology: 'تشغيل عيادة العيون',
+  clinicOrthopedics: 'تشغيل عيادة العظام',
+  clinicInternalMedicine: 'تشغيل العيادة الباطنية',
+
   appointmentsToday: 'حجوزات اليوم',
   waitingList: 'قائمة الانتظار',
   completedVisits: 'زيارات منتهية',
