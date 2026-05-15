@@ -64,7 +64,7 @@ const navItems = [
   },
 ];
 
-export default function AdminNav() {
+export default function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -76,6 +76,7 @@ export default function AdminNav() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={`group flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition ${
               active
                 ? "bg-blue-50 text-blue-700 ring-1 ring-blue-100"
