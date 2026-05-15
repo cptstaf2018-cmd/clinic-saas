@@ -86,85 +86,88 @@ export default async function PatientProfilePage({
     contentJson: record.contentJson,
   }));
 
+  const waNumber = patient.whatsappPhone.replace(/^0/, "964").replace(/\D/g, "");
+
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-6xl space-y-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <Link href="/dashboard/patients" className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 text-sm font-black text-slate-600 shadow-sm ring-1 ring-slate-200 transition hover:text-slate-950">
-            قائمة المراجعين
-          </Link>
-          <Link href={`/dashboard/patients/${patient.id}/report`} className="inline-flex items-center rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-blue-700">
-            تقرير PDF
-          </Link>
-        </div>
 
-        <section className="grid gap-5 xl:grid-cols-[390px_1fr]">
-          <div className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[28px] bg-blue-600 text-2xl font-black text-white">
-                {initials(patient.name)}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-black text-sky-700">ملف مراجع</p>
-                <h1 className="mt-1 truncate text-3xl font-black">{patient.name}</h1>
-                <p className="mt-1 text-sm font-bold text-slate-500" dir="ltr">{patient.whatsappPhone}</p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-3 gap-3">
-              {[
-                { label: "مواعيد", value: patient.appointments.length },
-                { label: "زيارات", value: completedCount },
-                { label: "سجلات", value: patient.medicalRecords.length },
-              ].map((stat) => (
-                <div key={stat.label} className="rounded-[22px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-100">
-                  <p className="text-3xl font-black text-slate-900">{arabicNumber(stat.value)}</p>
-                  <p className="mt-1 text-xs font-black text-slate-500">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5 rounded-[24px] bg-white p-4 shadow-sm ring-1 ring-slate-100">
-              <p className="text-xs font-black text-slate-400">آخر نشاط</p>
-              <p className="mt-1 text-sm font-black text-slate-900">
-                {lastVisit ? `${formatDate(lastVisit.date)} | ${formatTime(lastVisit.date)}` : "لا توجد زيارات"}
-              </p>
+        {/* ═══ Patient Banner ═══ */}
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {/* Top bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
+            <Link href="/dashboard/patients" className="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-slate-900">
+              ← قائمة المرضى
+            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={`https://wa.me/${waNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-700"
+              >
+                💬 واتساب
+              </a>
+              <Link
+                href={`/dashboard/patients/${patient.id}/report`}
+                className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white transition hover:bg-slate-700"
+              >
+                📄 تقرير PDF
+              </Link>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-[30px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
-              <p className="text-sm font-black text-slate-500">الموعد القادم</p>
-              {upcoming ? (
-                <>
-                  <p className="mt-3 text-2xl font-black text-slate-950">{formatDate(upcoming.date)}</p>
-                  <p className="mt-1 text-sm font-bold text-blue-700">
-                    {formatTime(upcoming.date)}
-                    {upcoming.queueNumber ? ` | رقم ${arabicNumber(upcoming.queueNumber)}` : ""}
-                  </p>
-                </>
-              ) : (
-                <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-                  <p className="text-lg font-black text-slate-400">لا يوجد موعد قادم</p>
-                </div>
-              )}
+          {/* Patient info */}
+          <div className="flex flex-wrap items-center gap-5 px-5 py-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl font-black text-white">
+              {initials(patient.name)}
             </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-black text-slate-950">{patient.name}</h1>
+              <p className="mt-0.5 text-sm font-bold text-slate-400" dir="ltr">{patient.whatsappPhone}</p>
+            </div>
+            <div className="flex flex-wrap gap-4 text-center">
+              {[
+                { label: "مواعيد", value: patient.appointments.length, color: "text-blue-600" },
+                { label: "زيارات مكتملة", value: completedCount, color: "text-emerald-600" },
+                { label: "سجلات طبية", value: patient.medicalRecords.length, color: "text-purple-600" },
+              ].map((s) => (
+                <div key={s.label} className="min-w-[64px]">
+                  <p className={`text-2xl font-black ${s.color}`}>{arabicNumber(s.value)}</p>
+                  <p className="text-xs font-bold text-slate-400">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            <div className="rounded-[30px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
-              <p className="text-sm font-black text-slate-500">ملخص طبي</p>
-              <p className="mt-3 text-2xl font-black text-slate-950">{arabicNumber(patient.medicalRecords.length)}</p>
-              <p className="mt-1 text-sm font-bold text-slate-400">سجل محفوظ</p>
+          {/* Info bar */}
+          <div className="flex flex-wrap gap-0 border-t border-slate-100">
+            <div className="flex-1 px-5 py-3">
+              <p className="text-xs font-bold text-slate-400">آخر زيارة</p>
+              <p className="mt-0.5 text-sm font-black text-slate-800">
+                {lastVisit ? `${formatDate(lastVisit.date)} — ${formatTime(lastVisit.date)}` : "لا توجد زيارات"}
+              </p>
+            </div>
+            <div className="flex-1 border-r border-slate-100 px-5 py-3">
+              <p className="text-xs font-bold text-slate-400">الموعد القادم</p>
+              <p className="mt-0.5 text-sm font-black text-slate-800">
+                {upcoming
+                  ? `${formatDate(upcoming.date)} — ${formatTime(upcoming.date)}`
+                  : "لا يوجد موعد قادم"}
+              </p>
             </div>
           </div>
         </section>
 
+        {/* ═══ Attachments ═══ */}
         {entitlements.features.includes("fullMedicalFile") && (
           <section>
             <PatientAttachmentsClient patientId={patient.id} />
           </section>
         )}
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_430px]">
+        {/* ═══ Medical Records + Visits ═══ */}
+        <section className="grid gap-5 xl:grid-cols-[1fr_360px]">
           <MedicalRecordsClient
             patientId={patient.id}
             initialRecords={serializedRecords}
@@ -172,50 +175,39 @@ export default async function PatientProfilePage({
             specialtyConfig={specialtyConfig}
           />
 
-          <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
-            <div className="mb-5 rounded-[24px] bg-blue-50 p-4 ring-1 ring-blue-100">
-              <p className="text-xs font-black text-blue-700">اختصاص العيادة</p>
-              <h2 className="mt-1 text-2xl font-black text-slate-950">{specialtyConfig.nameAr}</h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {specialtyConfig.dashboardWidgets.map((widget) => (
-                  <span key={widget.id} className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-blue-700 ring-1 ring-blue-100">
-                    {widget.labelAr}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-black text-slate-950">الزيارات</h2>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">
+          {/* Visits */}
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+              <h2 className="text-base font-black text-slate-950">سجل الزيارات</h2>
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-black text-slate-500">
                 {arabicNumber(patient.appointments.length)}
               </span>
             </div>
-            {patient.appointments.length === 0 ? (
-              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
-                <p className="text-sm font-black text-slate-400">لا توجد زيارات</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {patient.appointments.map((appointment) => (
-                  <div key={appointment.id} className="rounded-[24px] bg-slate-50 p-4 ring-1 ring-slate-100">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-black text-slate-950">{formatDate(appointment.date)}</p>
-                        <p className="mt-1 text-xs font-bold text-slate-400">
-                          {formatTime(appointment.date)}
-                          {appointment.queueNumber ? ` | رقم ${arabicNumber(appointment.queueNumber)}` : ""}
-                        </p>
-                      </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${STATUS_COLOR[appointment.status] ?? "bg-slate-100 text-slate-600 ring-slate-200"}`}>
-                        {STATUS_LABEL[appointment.status] ?? appointment.status}
-                      </span>
+            <div className="divide-y divide-slate-100">
+              {patient.appointments.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-sm font-black text-slate-400">لا توجد زيارات</p>
+                </div>
+              ) : (
+                patient.appointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-900">{formatDate(appointment.date)}</p>
+                      <p className="text-xs font-bold text-slate-400">
+                        {formatTime(appointment.date)}
+                        {appointment.queueNumber ? ` · رقم ${arabicNumber(appointment.queueNumber)}` : ""}
+                      </p>
                     </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${STATUS_COLOR[appointment.status] ?? "bg-slate-100 text-slate-600 ring-slate-200"}`}>
+                      {STATUS_LABEL[appointment.status] ?? appointment.status}
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
         </section>
+
       </div>
     </div>
   );
