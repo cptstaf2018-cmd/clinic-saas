@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { extractPlanFromReference, isPlanId, planFromAmount } from "@/lib/plans";
 import { createPaymentActivationCode } from "@/lib/activation-codes";
 import { dateAfterDays, PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 export async function PATCH(
   req: Request,
@@ -69,6 +70,12 @@ export async function PATCH(
 
   if (body.action === "reject") {
     await db.payment.update({ where: { id }, data: { status: "rejected" } });
+    await sendWhatsApp(
+      payment.clinic.whatsappNumber,
+      `عزيزي ${payment.clinic.name} 👋\n\nللأسف لم نتمكن من تأكيد دفعتك.\n\nيرجى التواصل معنا للمساعدة.`,
+      undefined,
+      { clinicId: payment.clinicId, source: "payment_rejected" }
+    );
     return NextResponse.json({ success: true });
   }
 
