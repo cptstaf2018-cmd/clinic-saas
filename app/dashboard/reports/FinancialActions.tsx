@@ -1,15 +1,13 @@
 "use client";
 
-export default function FinancialActions({ summary }: { summary: string }) {
+export default function FinancialActions({ summary, whatsappNumber }: { summary: string; whatsappNumber: string }) {
   function handlePrint() {
     window.print();
   }
 
   async function handleWhatsApp() {
-    try {
-      await navigator.clipboard.writeText(summary);
-    } catch {}
-    window.open(`https://wa.me/?text=${encodeURIComponent(summary)}`, "_blank");
+    const normalized = whatsappNumber.replace(/^0/, "964").replace(/\D/g, "");
+    window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(summary)}`, "_blank");
   }
 
   return (

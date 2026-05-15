@@ -294,7 +294,7 @@ export default async function ReportsPage({
                     ))}
                   </div>
                   {group.title === "التقارير المالية" ? (
-                    <FinancialActions summary={summary} />
+                    <FinancialActions summary={summary} whatsappNumber={clinic?.whatsappNumber ?? ""} />
                   ) : (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {group.actions.map((action) => (
