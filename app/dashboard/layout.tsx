@@ -31,6 +31,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding/specialty");
   }
 
+  if (clinic?.subscription?.status === "inactive") {
+    redirect("/subscription-expired");
+  }
+
   const name = clinic?.name ?? "العيادة";
   const subStatus = clinic?.subscription?.status ?? "trial";
   const badge = STATUS_BADGE[subStatus] ?? STATUS_BADGE.inactive;
