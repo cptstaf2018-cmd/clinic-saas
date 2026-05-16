@@ -16,6 +16,33 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
 
+  const [sendingCode, setSendingCode] = useState(false);
+  const [codeMsg, setCodeMsg]         = useState<{ ok: boolean; text: string } | null>(null);
+  const [phone, setPhone]             = useState("");
+
+  async function handleRequestCode() {
+    if (!/^07\d{8,9}$/.test(phone.trim())) {
+      setCodeMsg({ ok: false, text: "أدخل رقم الواتساب أولاً بشكل صحيح" });
+      return;
+    }
+    setSendingCode(true);
+    setCodeMsg(null);
+    try {
+      const res = await fetch("/api/register/request-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phone.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setCodeMsg({ ok: true, text: "تم إرسال الكود على واتساب ✓" });
+    } catch (err: any) {
+      setCodeMsg({ ok: false, text: err.message });
+    } finally {
+      setSendingCode(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -112,6 +139,8 @@ export default function RegisterPage() {
               <div>
                 <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">رقم واتساب العيادة</label>
                 <input name="phone" type="text" required
+                  value={phone}
+                  onChange={(e) => { setPhone(e.target.value); setCodeMsg(null); }}
                   className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
                   placeholder="07701234567" dir="ltr" />
               </div>
@@ -130,7 +159,23 @@ export default function RegisterPage() {
                   placeholder="TIKRIT-0000" dir="ltr"
                   onChange={(e) => e.target.value = e.target.value.toUpperCase()}
                 />
-                <p className="text-xs text-[#94A3B8] mt-1">احصل على الكود من فريق عيادتي</p>
+                <button
+                  type="button"
+                  onClick={handleRequestCode}
+                  disabled={sendingCode}
+                  className="mt-2 w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] disabled:opacity-60 text-white text-xs font-bold py-2.5 rounded-xl transition-all"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.529 5.843L.057 23.571l5.9-1.548A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.006-1.374l-.359-.214-3.502.919.935-3.416-.234-.371A9.818 9.818 0 1 1 12 21.818z"/>
+                  </svg>
+                  {sendingCode ? "جاري الإرسال..." : "أرسل الكود على واتساب"}
+                </button>
+                {codeMsg && (
+                  <p className={`text-xs font-semibold mt-1.5 ${codeMsg.ok ? "text-green-600" : "text-red-500"}`}>
+                    {codeMsg.text}
+                  </p>
+                )}
               </div>
 
               {error && (
