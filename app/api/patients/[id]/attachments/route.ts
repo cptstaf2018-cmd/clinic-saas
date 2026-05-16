@@ -1,18 +1,17 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature } from "@/lib/feature-gates";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
 
-export async function GET(req: Request, { params }: Params) {
+export async function GET(req: NextRequest, { params }: Params) {
   const session = await auth();
   if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
   const clinicId = session.user.clinicId;
   const { id: patientId } = await params;
-  const { searchParams } = new URL(req.url);
-  const type = searchParams.get("type");
+  const type = req.nextUrl.searchParams.get("type");
 
   const patient = await db.patient.findFirst({ where: { id: patientId, clinicId } });
   if (!patient) return NextResponse.json({ error: "المريض غير موجود" }, { status: 404 });
@@ -25,7 +24,7 @@ export async function GET(req: Request, { params }: Params) {
   return NextResponse.json(attachments);
 }
 
-export async function POST(req: Request, { params }: Params) {
+export async function POST(req: NextRequest, { params }: Params) {
   const session = await auth();
   if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
 
