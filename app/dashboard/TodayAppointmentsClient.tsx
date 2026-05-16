@@ -46,6 +46,8 @@ export default function TodayAppointmentsClient({ appointments: initial, canChee
   const [reminded, setReminded] = useState<Set<string>>(new Set());
   const [cheered, setCheered] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<{ name: string; patientId: string } | null>(null);
+  const [paymentModal, setPaymentModal] = useState<Appointment | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
 
   function showToast(name: string, patientId: string) {
     setToast({ name, patientId });
@@ -134,6 +136,26 @@ export default function TodayAppointmentsClient({ appointments: initial, canChee
     }
   }
 
+  async function completeWithPayment() {
+    if (!paymentModal) return;
+    setLoading(paymentModal.id);
+    try {
+      const amount = parseInt(paymentAmount);
+      if (amount > 0) {
+        await fetch("/api/patient-payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ patientId: paymentModal.patientId, appointmentId: paymentModal.id, amount }),
+        });
+      }
+      await patch(paymentModal.id, { status: "completed" });
+    } finally {
+      setPaymentModal(null);
+      setPaymentAmount("");
+      setLoading(null);
+    }
+  }
+
   async function remind(id: string) {
     setLoading(`${id}_remind`);
     try {
@@ -160,6 +182,41 @@ export default function TodayAppointmentsClient({ appointments: initial, canChee
 
   return (
     <div>
+      {/* مودال تسجيل الدفع */}
+      {paymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" dir="rtl">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-black text-slate-900 mb-1">إكمال الموعد</h3>
+            <p className="text-sm text-slate-500 mb-5">كم دفع {paymentModal.patientName}؟ (اختياري)</p>
+            <input
+              type="number"
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              placeholder="0 د.ع"
+              min="0"
+              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-lg font-black text-center focus:outline-none focus:ring-2 focus:ring-emerald-400 mb-4"
+              dir="ltr"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={completeWithPayment}
+                disabled={loading === paymentModal.id}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black py-3 rounded-xl transition"
+              >
+                {loading === paymentModal.id ? "جاري..." : "إكمال"}
+              </button>
+              <button
+                onClick={() => setPaymentModal(null)}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-3 rounded-xl transition"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div className="fixed top-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-xl">
           تم حفظ موعد {toast.name}
@@ -231,7 +288,7 @@ export default function TodayAppointmentsClient({ appointments: initial, canChee
                         تأكيد
                       </button>
                     )}
-                    <button onClick={() => patch(appointment.id, { status: "completed" })} disabled={loading === appointment.id} className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:opacity-50">
+                    <button onClick={() => { setPaymentModal(appointment); setPaymentAmount(""); }} disabled={loading === appointment.id} className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:opacity-50">
                       إكمال
                     </button>
                     <button onClick={() => remind(appointment.id)} disabled={loading === `${appointment.id}_remind` || reminded.has(appointment.id)} className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-700 ring-1 ring-amber-100 transition hover:bg-amber-100 disabled:opacity-50">

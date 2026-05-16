@@ -32,6 +32,7 @@ model Clinic {
   incomingMessages       IncomingMessage[]
   medicalRecords         MedicalRecord[]
   patientAttachments     PatientAttachment[]
+  patientPayments        PatientPayment[]
   patients               Patient[]
   payments               Payment[]
   subscription           Subscription?
@@ -105,6 +106,7 @@ model Patient {
   appointments        Appointment[]
   medicalRecords      MedicalRecord[]
   patientAttachments  PatientAttachment[]
+  patientPayments     PatientPayment[]
   clinic              Clinic              @relation(fields: [clinicId], references: [id])
 
   @@unique([clinicId, whatsappPhone])
@@ -130,6 +132,21 @@ model Appointment {
   @@index([clinicId])
   @@index([clinicId, date])
   @@index([clinicId, status])
+}
+
+model PatientPayment {
+  id            String      @id @default(cuid())
+  clinicId      String
+  patientId     String
+  appointmentId String?
+  amount        Int
+  note          String?
+  createdAt     DateTime    @default(now())
+  clinic        Clinic      @relation(fields: [clinicId], references: [id])
+  patient       Patient     @relation(fields: [patientId], references: [id])
+
+  @@index([clinicId])
+  @@index([clinicId, createdAt])
 }
 
 model WorkingHours {

@@ -55,13 +55,13 @@ export default async function ReportsPage({
         db.medicalRecord.count({ where: { clinicId, createdAt: { gte: today, lt: tomorrow } } }),
         db.medicalRecord.count({ where: { clinicId, createdAt: { gte: monthStart } } }),
         db.incomingMessage.count({ where: { clinicId, createdAt: { gte: today, lt: tomorrow } } }),
-        db.payment.findMany({
+        db.patientPayment.findMany({
           where: { clinicId, createdAt: { gte: today, lt: tomorrow } },
-          select: { amount: true, status: true },
+          select: { amount: true },
         }),
-        db.payment.findMany({
+        db.patientPayment.findMany({
           where: { clinicId, createdAt: { gte: monthStart } },
-          select: { amount: true, status: true },
+          select: { amount: true },
         }),
       ])
     : [[], 0, 0, 0, 0, 0, [], []];
@@ -69,12 +69,8 @@ export default async function ReportsPage({
   const completed = appointments.filter((appointment) => appointment.status === "completed").length;
   const cancelled = appointments.filter((appointment) => appointment.status === "cancelled").length;
   const active = appointments.length - completed - cancelled;
-  const todayRevenue = paymentsToday
-    .filter((payment) => payment.status === "approved")
-    .reduce((sum, payment) => sum + payment.amount, 0);
-  const monthRevenue = paymentsMonth
-    .filter((payment) => payment.status === "approved")
-    .reduce((sum, payment) => sum + payment.amount, 0);
+  const todayRevenue = (paymentsToday as { amount: number }[]).reduce((sum, p) => sum + p.amount, 0);
+  const monthRevenue = (paymentsMonth as { amount: number }[]).reduce((sum, p) => sum + p.amount, 0);
 
   const now = new Date();
   const reportTime = now.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
