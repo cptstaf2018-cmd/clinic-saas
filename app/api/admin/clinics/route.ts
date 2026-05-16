@@ -43,6 +43,7 @@ export async function DELETE() {
     db.whatsappSession.deleteMany({ where: { clinicId: { in: ids } } }),
     db.incomingMessage.deleteMany({ where: { clinicId: { in: ids } } }),
     db.medicalRecord.deleteMany({ where: { clinicId: { in: ids } } }),
+    db.patientAttachment.deleteMany({ where: { clinicId: { in: ids } } }),
     db.appointment.deleteMany({ where: { clinicId: { in: ids } } }),
     db.patient.deleteMany({ where: { clinicId: { in: ids } } }),
     db.workingHours.deleteMany({ where: { clinicId: { in: ids } } }),
