@@ -44,7 +44,7 @@ export default async function ReportsPage({
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const todayIso = today.toISOString().slice(0, 10);
 
-  const [appointments, newPatients, totalPatients, medicalRecordsToday, medicalRecordsMonth, incomingMessages, paymentsToday, paymentsMonth] = canViewReports
+  const [appointments, newPatients, totalPatients, medicalRecordsToday, medicalRecordsMonth, incomingMessages, paymentsToday, paymentsMonth, subscriptionPayments] = canViewReports
     ? await Promise.all([
         db.appointment.findMany({
           where: { clinicId, date: { gte: today, lt: tomorrow } },
@@ -63,14 +63,21 @@ export default async function ReportsPage({
           where: { clinicId, createdAt: { gte: monthStart } },
           select: { amount: true },
         }),
+        db.payment.findMany({
+          where: { clinicId, status: "approved" },
+          select: { amount: true, createdAt: true },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        }),
       ])
-    : [[], 0, 0, 0, 0, 0, [], []];
+    : [[], 0, 0, 0, 0, 0, [], [], []];
 
   const completed = appointments.filter((appointment) => appointment.status === "completed").length;
   const cancelled = appointments.filter((appointment) => appointment.status === "cancelled").length;
   const active = appointments.length - completed - cancelled;
   const todayRevenue = (paymentsToday as { amount: number }[]).reduce((sum, p) => sum + p.amount, 0);
   const monthRevenue = (paymentsMonth as { amount: number }[]).reduce((sum, p) => sum + p.amount, 0);
+  const lastSubscription = (subscriptionPayments as { amount: number; createdAt: Date }[])[0] ?? null;
 
   const now = new Date();
   const reportTime = now.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
@@ -124,9 +131,9 @@ export default async function ReportsPage({
       accent: "border-t-4 border-emerald-500",
       iconBg: "bg-emerald-50 text-emerald-600",
       items: [
-        { label: "إيراد اليوم", value: `${formatMoney(todayRevenue)} د.ع`, hint: "مدفوعات مؤكدة" },
-        { label: "إيراد الشهر", value: `${formatMoney(monthRevenue)} د.ع`, hint: "من بداية الشهر" },
-        { label: "مدفوعات اليوم", value: paymentsToday.length, hint: "كل الحالات" },
+        { label: "إيراد اليوم من المرضى", value: `${formatMoney(todayRevenue)} د.ع`, hint: "ما دفعه المرضى اليوم" },
+        { label: "إيراد الشهر من المرضى", value: `${formatMoney(monthRevenue)} د.ع`, hint: "من بداية الشهر" },
+        { label: "اشتراك المنصة", value: lastSubscription ? `${formatMoney(lastSubscription.amount)} د.ع` : "—", hint: lastSubscription ? `آخر دفعة: ${formatDate(new Date(lastSubscription.createdAt))}` : "لا توجد دفعات" },
       ],
       actions: [],
     },
