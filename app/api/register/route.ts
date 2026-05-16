@@ -3,7 +3,33 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { dateAfterDays, TRIAL_PERIOD_DAYS } from "@/lib/subscription-durations";
 
+// In-memory rate limiter: max 5 attempts per IP per 15 minutes
+const attempts = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = attempts.get(ip);
+  if (!record || now > record.resetAt) {
+    attempts.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 });
+    return false;
+  }
+  record.count++;
+  return record.count > 5;
+}
+
 export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: "محاولات كثيرة، حاول بعد 15 دقيقة" },
+      { status: 429 }
+    );
+  }
+
   const { clinicName, phone, password, invitationCode } = await req.json();
 
   if (!clinicName || !phone || !password || !invitationCode) {
@@ -25,11 +51,8 @@ export async function POST(req: NextRequest) {
     where: { code: invitationCode.trim().toUpperCase() },
   });
 
-  if (!codeRecord) {
-    return NextResponse.json({ error: "كود الدعوة غير صحيح" }, { status: 400 });
-  }
-  if (codeRecord.used) {
-    return NextResponse.json({ error: "كود الدعوة مستخدم مسبقاً" }, { status: 400 });
+  if (!codeRecord || codeRecord.used) {
+    return NextResponse.json({ error: "كود الدعوة غير صالح" }, { status: 400 });
   }
 
   // Atomic claim — prevents two concurrent requests from using the same code
@@ -39,7 +62,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (claimed.count === 0) {
-    return NextResponse.json({ error: "كود الدعوة مستخدم مسبقاً" }, { status: 400 });
+    return NextResponse.json({ error: "كود الدعوة غير صالح" }, { status: 400 });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);

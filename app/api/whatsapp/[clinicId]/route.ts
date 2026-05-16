@@ -1,5 +1,5 @@
 // WasenderAPI Webhook Handler
-// Each clinic configures: https://clinicplt.vercel.app/api/whatsapp/[clinicId]
+// Each clinic configures: https://www.clinic-ai-pro.com/api/whatsapp/[clinicId]
 // Auth: X-Webhook-Signature header must match clinic.whatsappWebhookSecret
 
 import { NextRequest, NextResponse } from "next/server";

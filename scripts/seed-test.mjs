@@ -65,7 +65,7 @@ async function main() {
   }
 
   console.log("\n✅ تم إضافة 5 مرضى و5 مواعيد اليوم");
-  console.log(`🔗 رابط الشاشة: https://clinicplt.vercel.app/display/${clinic.id}`);
+  console.log(`🔗 رابط الشاشة: https://www.clinic-ai-pro.com/display/${clinic.id}`);
 }
 
 main()

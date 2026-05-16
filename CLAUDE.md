@@ -436,6 +436,6 @@ app/
 
 ## Deployed URL
 
-- **Production**: https://clinicplt.vercel.app
-- **Admin**: https://clinicplt.vercel.app/admin/login
-- **Last deployed**: 2026-05-08
+- **Production**: https://www.clinic-ai-pro.com
+- **Admin**: https://www.clinic-ai-pro.com/admin/login
+- **Last deployed**: 2026-05-16

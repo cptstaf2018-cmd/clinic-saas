@@ -23,7 +23,7 @@ export async function sendBackupEmail({
   const fileName = `backup-${clinicName.replace(/\s+/g, "-")}-${month}.csv`;
 
   await resend.emails.send({
-    from: "عيادتي <backup@clinicplt.vercel.app>",
+    from: "عيادتي <backup@clinic-ai-pro.com>",
     to,
     subject: `📦 نسخة احتياطية — ${clinicName} — ${month}`,
     html: `

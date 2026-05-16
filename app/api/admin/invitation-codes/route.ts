@@ -7,10 +7,9 @@ function isSuperAdmin(session: any) {
 }
 
 function generateCode(): string {
-  const words = ["TIKRIT", "CLINIC", "SAAD", "CARE", "DOC", "MED", "HEAL"];
-  const word = words[Math.floor(Math.random() * words.length)];
-  const num  = Math.floor(1000 + Math.random() * 9000);
-  return `${word}-${num}`;
+  // Excludes confusing chars: 0/O, 1/I, 5/S
+  const chars = "ABCDEFGHJKLMNPQRTUVWXYZ2346789";
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
 }
 
 export async function GET() {
