@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendBackupEmail } from "@/lib/email";
+import { canUseFeature } from "@/lib/feature-gates";
 
 export const maxDuration = 60;
 
@@ -28,17 +29,21 @@ export async function GET(req: NextRequest) {
 
   const clinics = await db.clinic.findMany({
     where: { backupEmail: { not: null } },
-    select: { id: true, name: true, backupEmail: true },
+    select: { id: true, name: true, backupEmail: true, subscription: { select: { plan: true, status: true } } },
   });
 
-  if (clinics.length === 0) {
-    return NextResponse.json({ sent: 0, message: "no clinics with backup email" });
+  const eligibleClinics = clinics.filter((c) =>
+    canUseFeature(c.subscription?.plan, "backupRestore")
+  );
+
+  if (eligibleClinics.length === 0) {
+    return NextResponse.json({ sent: 0, message: "no eligible clinics" });
   }
 
   const month = new Date().toLocaleDateString("ar-IQ", { year: "numeric", month: "long" });
   let sent = 0;
 
-  for (const clinic of clinics) {
+  for (const clinic of eligibleClinics) {
     try {
       const [patients, appointments, records] = await Promise.all([
         db.patient.findMany({ where: { clinicId: clinic.id }, select: { name: true, whatsappPhone: true, createdAt: true } }),
@@ -72,5 +77,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ sent, total: clinics.length });
+  return NextResponse.json({ sent, total: eligibleClinics.length });
 }
