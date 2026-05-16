@@ -5,7 +5,6 @@ import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import ReportActions from "./ReportActions";
-import FinancialActions from "./FinancialActions";
 
 function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
@@ -260,7 +259,6 @@ export default async function ReportsPage({
               </form>
               {canViewReports ? (
                 <ReportActions
-                  summary={summary}
                   clinicName={clinic?.name ?? ""}
                   specialty={specialtyConfig.nameAr}
                 />
@@ -303,22 +301,18 @@ export default async function ReportsPage({
                         <ReportCell key={item.label} label={item.label} value={item.value} hint={item.hint} />
                       ))}
                     </div>
-                    {group.title === "التقارير المالية" ? (
-                      <FinancialActions summary={summary} whatsappNumber={clinic?.whatsappNumber ?? ""} />
-                    ) : (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {group.actions.map((action) => (
-                          <Link
-                            key={action.label}
-                            href={action.href}
-                            target={action.href.startsWith("/display/") ? "_blank" : undefined}
-                            className="rounded-xl bg-slate-50 px-4 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-950 hover:text-white"
-                          >
-                            {action.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {group.actions.map((action) => (
+                        <Link
+                          key={action.label}
+                          href={action.href}
+                          target={action.href.startsWith("/display/") ? "_blank" : undefined}
+                          className="rounded-xl bg-slate-50 px-4 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-950 hover:text-white"
+                        >
+                          {action.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </article>
               ))}
