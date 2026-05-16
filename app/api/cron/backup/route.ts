@@ -36,10 +36,6 @@ export async function GET(req: NextRequest) {
     canUseFeature(c.subscription?.plan, "backupRestore")
   );
 
-  if (eligibleClinics.length === 0) {
-    return NextResponse.json({ sent: 0, message: "no eligible clinics" });
-  }
-
   const month = new Date().toLocaleDateString("ar-IQ", { year: "numeric", month: "long" });
   let sent = 0;
 
