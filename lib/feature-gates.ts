@@ -63,32 +63,41 @@ const ALL_FEATURES: FeatureKey[] = [
 ];
 
 const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
-  // Trial: full access to evaluate every feature (per CLAUDE.md)
-  trial: ALL_FEATURES,
-  // أساسية — جوهر العمل: الحجوزات + البوت + السجل الطبي + التذكيرات + PDF التقارير
+  // Trial: full access to evaluate every feature
+  trial: [...ALL_FEATURES, "fullMedicalFile"],
+  // أساسية — المرضى والحجوزات + شاشة الانتظار + السجل الطبي + تقرير يومي
   basic: [
     "appointments",
     "queueDisplay",
     "medicalRecords",
-    "autoReminders",
     "dailyReports",
-    "patientPdfExport",
   ],
-  // متوسطة — يضيف: المساعد + صور المرضى + المتابعة
+  // متوسطة — يضيف: تذكيرات واتساب + متابعة مراجعات + تقارير PDF
   standard: [
     "appointments",
     "queueDisplay",
     "medicalRecords",
-    "followUpTracking",
-    "autoReminders",
     "dailyReports",
+    "autoReminders",
+    "followUpTracking",
     "patientPdfExport",
-    "patientImages",
+  ],
+  // مميزة — يضيف: واتساب متقدم + دعم أولوية + نسخ احتياطي + مساعد ذكي
+  premium: [
+    "appointments",
+    "queueDisplay",
+    "medicalRecords",
+    "dailyReports",
+    "autoReminders",
+    "followUpTracking",
+    "patientPdfExport",
+    "advancedWhatsApp",
+    "prioritySupport",
+    "backupRestore",
+    "auditLog",
     "clinicAssistant",
   ],
-  // مميزة — يضيف: واتساب متقدم + فروع + دعم أولوية + سجل تدقيق + نسخ احتياطي
-  premium: ALL_FEATURES,
-  // مميزة VIP — كل شيء + الملف الطبي الكامل (تحاليل + أشعة + وصفات) حصرياً
+  // مميزة VIP — يضيف: تحاليل وأشعة + رفع ملفات + رسائل اطمئنان + الملف الطبي الكامل
   vip: [...ALL_FEATURES, "fullMedicalFile"],
 };
 
@@ -115,7 +124,10 @@ export function canUseFeature(plan: string | null | undefined, feature: FeatureK
 }
 
 export function getUpgradePlanForFeature(feature: FeatureKey): PlanId {
-  if (["prioritySupport", "auditLog", "backupRestore"].includes(feature)) {
+  if (["patientImages", "cheerMessages", "fullMedicalFile"].includes(feature)) {
+    return "vip";
+  }
+  if (["advancedWhatsApp", "prioritySupport", "backupRestore", "auditLog", "clinicAssistant"].includes(feature)) {
     return "premium";
   }
   return "standard";
