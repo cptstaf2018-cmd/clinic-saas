@@ -20,6 +20,32 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
   const [copied, setCopied]     = useState<string | null>(null);
   const [tab, setTab] = useState<"available" | "used">("available");
 
+  const [sendingId, setSendingId]   = useState<string | null>(null);
+  const [sendPhone, setSendPhone]   = useState("");
+  const [sendLoading, setSendLoading] = useState(false);
+  const [sendMsg, setSendMsg]       = useState<{ id: string; ok: boolean; text: string } | null>(null);
+
+  async function sendCode(codeId: string) {
+    setSendLoading(true);
+    setSendMsg(null);
+    try {
+      const res = await fetch("/api/admin/invitation-codes/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codeId, phone: sendPhone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSendMsg({ id: codeId, ok: true, text: "تم الإرسال بنجاح ✓" });
+      setSendingId(null);
+      setSendPhone("");
+    } catch (err: any) {
+      setSendMsg({ id: codeId, ok: false, text: err.message });
+    } finally {
+      setSendLoading(false);
+    }
+  }
+
   async function createCode() {
     setCreating(true);
     const res = await fetch("/api/admin/invitation-codes", {
@@ -98,27 +124,63 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">متاحة للاستخدام</p>
             <div className="space-y-2">
               {available.map((c) => (
-                <div key={c.id} className="bg-white rounded-xl border border-green-200 shadow-sm px-5 py-3 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <span className="font-mono text-lg font-extrabold text-[#2563EB] tracking-widest bg-blue-50 px-3 py-1 rounded-lg">
-                      {c.code}
-                    </span>
-                    {c.note && <span className="text-sm text-gray-500">{c.note}</span>}
+                <div key={c.id} className="bg-white rounded-xl border border-green-200 shadow-sm px-5 py-3 space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono text-lg font-extrabold text-[#2563EB] tracking-widest bg-blue-50 px-3 py-1 rounded-lg">
+                        {c.code}
+                      </span>
+                      {c.note && <span className="text-sm text-gray-500">{c.note}</span>}
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button onClick={() => copyCode(c.code)}
+                        className={`text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors ${
+                          copied === c.code
+                            ? "bg-green-100 text-green-700 border border-green-200"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200"
+                        }`}>
+                        {copied === c.code ? "✓ نُسخ" : "نسخ"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSendingId(sendingId === c.id ? null : c.id);
+                          setSendPhone("");
+                          setSendMsg(null);
+                        }}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 transition-colors">
+                        إرسال
+                      </button>
+                      <button onClick={() => deleteCode(c.id)}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors">
+                        حذف
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => copyCode(c.code)}
-                      className={`text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors ${
-                        copied === c.code
-                          ? "bg-green-100 text-green-700 border border-green-200"
-                          : "bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200"
-                      }`}>
-                      {copied === c.code ? "✓ نُسخ" : "نسخ"}
-                    </button>
-                    <button onClick={() => deleteCode(c.id)}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors">
-                      حذف
-                    </button>
-                  </div>
+
+                  {sendingId === c.id && (
+                    <div className="flex gap-2 items-center pt-1 border-t border-gray-100">
+                      <input
+                        type="text"
+                        value={sendPhone}
+                        onChange={(e) => setSendPhone(e.target.value)}
+                        placeholder="07701234567"
+                        dir="ltr"
+                        className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-gray-50"
+                      />
+                      <button
+                        onClick={() => sendCode(c.id)}
+                        disabled={sendLoading || !sendPhone}
+                        className="bg-[#25D366] hover:bg-[#1ebe5d] disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg transition whitespace-nowrap">
+                        {sendLoading ? "..." : "إرسال واتساب"}
+                      </button>
+                    </div>
+                  )}
+
+                  {sendMsg?.id === c.id && (
+                    <p className={`text-xs font-semibold ${sendMsg.ok ? "text-green-600" : "text-red-500"}`}>
+                      {sendMsg.text}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
