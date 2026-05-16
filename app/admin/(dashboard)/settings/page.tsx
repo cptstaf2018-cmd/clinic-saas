@@ -15,6 +15,11 @@ export default function AdminSettingsPage() {
   const [passLoading, setPassLoading] = useState(false);
   const [passMsg, setPassMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
+  const [wasenderKey, setWasenderKey] = useState("");
+  const [hasWasenderKey, setHasWasenderKey] = useState(false);
+  const [wasenderLoading, setWasenderLoading] = useState(false);
+  const [wasenderMsg, setWasenderMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
   useEffect(() => {
     fetch("/api/admin/settings")
       .then((r) => r.json())
@@ -23,6 +28,7 @@ export default function AdminSettingsPage() {
           setLogoUrl(d.logoUrl);
           setLogoPreview(d.logoUrl);
         }
+        setHasWasenderKey(!!d.hasWasenderKey);
       });
   }, []);
 
@@ -181,6 +187,76 @@ export default function AdminSettingsPage() {
             </p>
           )}
         </div>
+      </section>
+
+      {/* WhatsApp System Key */}
+      <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
+        <h2 className="text-lg font-bold text-[#0C1F3F] flex items-center gap-2">
+          <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.529 5.843L.057 23.571l5.9-1.548A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.006-1.374l-.359-.214-3.502.919.935-3.416-.234-.371A9.818 9.818 0 1 1 12 21.818z"/>
+            </svg>
+          </span>
+          واتساب النظام
+        </h2>
+        <p className="text-xs text-gray-400">يُستخدم لإرسال رسائل الترحيب عند تسجيل عيادة جديدة.</p>
+
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          setWasenderLoading(true);
+          setWasenderMsg(null);
+          try {
+            const res = await fetch("/api/admin/settings", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "wasender", key: wasenderKey }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "خطأ في الخادم");
+            setHasWasenderKey(true);
+            setWasenderKey("");
+            setWasenderMsg({ ok: true, text: "تم حفظ المفتاح بنجاح" });
+          } catch (err: any) {
+            setWasenderMsg({ ok: false, text: err.message });
+          } finally {
+            setWasenderLoading(false);
+          }
+        }} className="space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-medium text-gray-700">الحالة:</span>
+            {hasWasenderKey
+              ? <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">مفعّل ✓</span>
+              : <span className="text-xs bg-red-100 text-red-600 font-semibold px-2 py-0.5 rounded-full">غير مفعّل</span>
+            }
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              {hasWasenderKey ? "تغيير المفتاح" : "مفتاح WasenderAPI"}
+            </label>
+            <input
+              type="password"
+              value={wasenderKey}
+              onChange={(e) => setWasenderKey(e.target.value)}
+              required
+              placeholder="أدخل API Key من wasenderapi.com"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              dir="ltr"
+            />
+          </div>
+          {wasenderMsg && (
+            <p className={`text-sm font-medium ${wasenderMsg.ok ? "text-green-600" : "text-red-500"}`}>
+              {wasenderMsg.ok ? "✓ " : "✗ "}{wasenderMsg.text}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={wasenderLoading || !wasenderKey}
+            className="bg-[#0C1F3F] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#1a3060] transition disabled:opacity-50"
+          >
+            {wasenderLoading ? "جاري الحفظ..." : "حفظ المفتاح"}
+          </button>
+        </form>
       </section>
 
       {/* Password */}

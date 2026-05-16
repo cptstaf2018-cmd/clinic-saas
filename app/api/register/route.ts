@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { dateAfterDays, TRIAL_PERIOD_DAYS } from "@/lib/subscription-durations";
+import { sendWhatsApp } from "@/lib/whatsapp";
 
 // In-memory rate limiter: max 5 attempts per IP per 15 minutes
 const attempts = new Map<string, { count: number; resetAt: number }>();
@@ -87,6 +88,18 @@ export async function POST(req: NextRequest) {
     where: { id: codeRecord.id },
     data: { clinicId: clinic.id },
   });
+
+  // Welcome message — fire and forget, never blocks registration
+  try {
+    const settings = await db.platformSettings.findUnique({ where: { id: "singleton" } });
+    if (settings?.adminWasenderKey) {
+      await sendWhatsApp(
+        phone.trim(),
+        `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nلديك فترة تجريبية مجانية لمدة 14 يوم.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق عيادتي`,
+        settings.adminWasenderKey
+      );
+    }
+  } catch {}
 
   return NextResponse.json({ success: true, clinicId: clinic.id });
 }

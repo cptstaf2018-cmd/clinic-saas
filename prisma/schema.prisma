@@ -189,8 +189,9 @@ model Payment {
 }
 
 model PlatformSettings {
-  id      String  @id @default("singleton")
-  logoUrl String?
+  id               String  @id @default("singleton")
+  logoUrl          String?
+  adminWasenderKey String?
 }
 
 model ClinicFeatureTrial {

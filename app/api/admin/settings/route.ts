@@ -14,7 +14,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const settings = await db.platformSettings.findUnique({ where: { id: "singleton" } });
-  return NextResponse.json({ logoUrl: settings?.logoUrl ?? null });
+  return NextResponse.json({
+    logoUrl: settings?.logoUrl ?? null,
+    hasWasenderKey: !!settings?.adminWasenderKey,
+  });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -61,6 +64,19 @@ export async function PATCH(req: NextRequest) {
     const passwordHash = await bcrypt.hash(newPassword, 10);
     await db.user.update({ where: { id: admin.id }, data: { passwordHash } });
 
+    return NextResponse.json({ success: true });
+  }
+
+  if (body.type === "wasender") {
+    const { key } = body as { key: string };
+    if (!key?.trim())
+      return NextResponse.json({ error: "المفتاح مطلوب" }, { status: 400 });
+
+    await db.platformSettings.upsert({
+      where: { id: "singleton" },
+      create: { id: "singleton", adminWasenderKey: key.trim() },
+      update: { adminWasenderKey: key.trim() },
+    });
     return NextResponse.json({ success: true });
   }
 
