@@ -77,5 +77,59 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ sent, total: eligibleClinics.length });
+  // ── تنظيف شهري تلقائي بعد إرسال النسخ الاحتياطية ──────────────────────
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+  const [deletedAppointments, deletedMessages, deletedEvents, deletedOtp] = await Promise.all([
+    // المواعيد المكتملة أو الملغاة من الشهر الماضي
+    db.appointment.deleteMany({
+      where: {
+        status: { in: ["completed", "cancelled"] },
+        date: { lt: oneMonthAgo },
+      },
+    }),
+    // رسائل الواتساب أقدم من شهر
+    db.incomingMessage.deleteMany({
+      where: { createdAt: { lt: oneMonthAgo } },
+    }),
+    // أحداث النظام المحلولة أقدم من شهر
+    db.systemEvent.deleteMany({
+      where: {
+        resolved: true,
+        createdAt: { lt: oneMonthAgo },
+      },
+    }),
+    // OTP codes المنتهية الصلاحية
+    db.otpCode.deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    }),
+  ]);
+
+  await db.systemEvent.create({
+    data: {
+      type: "monthly_cleanup_completed",
+      severity: "success",
+      source: "cron_backup",
+      title: "تنظيف شهري اكتمل",
+      message: `حُذف: ${deletedAppointments.count} موعد، ${deletedMessages.count} رسالة واتساب، ${deletedEvents.count} حدث نظام، ${deletedOtp.count} OTP منتهي.`,
+      metadata: {
+        deletedAppointments: deletedAppointments.count,
+        deletedMessages: deletedMessages.count,
+        deletedEvents: deletedEvents.count,
+        deletedOtp: deletedOtp.count,
+      },
+    },
+  });
+
+  return NextResponse.json({
+    sent,
+    total: eligibleClinics.length,
+    cleanup: {
+      appointments: deletedAppointments.count,
+      messages: deletedMessages.count,
+      systemEvents: deletedEvents.count,
+      otpCodes: deletedOtp.count,
+    },
+  });
 }
