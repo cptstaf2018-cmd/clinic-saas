@@ -16,31 +16,35 @@ export async function POST() {
   const endOfDay = new Date(today);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Mark current patient as completed before calling the next one.
-  await db.appointment.updateMany({
-    where: { clinicId, queueStatus: "current", date: { gte: startOfDay, lte: endOfDay } },
-    data: { queueStatus: "done", status: "completed" },
+  const updated = await db.$transaction(async (tx) => {
+    // Mark current patient as done
+    await tx.appointment.updateMany({
+      where: { clinicId, queueStatus: "current", date: { gte: startOfDay, lte: endOfDay } },
+      data: { queueStatus: "done", status: "completed" },
+    });
+
+    // Find next waiting patient (lowest queueNumber)
+    const next = await tx.appointment.findFirst({
+      where: {
+        clinicId,
+        queueStatus: "waiting",
+        status: { in: ["pending", "confirmed"] },
+        date: { gte: startOfDay, lte: endOfDay },
+      },
+      orderBy: { queueNumber: "asc" },
+    });
+
+    if (!next) return null;
+
+    return tx.appointment.update({
+      where: { id: next.id },
+      data: { queueStatus: "current" },
+    });
   });
 
-  // Find next waiting patient (lowest queueNumber)
-  const next = await db.appointment.findFirst({
-    where: {
-      clinicId,
-      queueStatus: "waiting",
-      status: { in: ["pending", "confirmed"] },
-      date: { gte: startOfDay, lte: endOfDay },
-    },
-    orderBy: { queueNumber: "asc" },
-  });
-
-  if (!next) {
+  if (!updated) {
     return NextResponse.json({ error: "لا يوجد مريض في الانتظار" }, { status: 404 });
   }
-
-  const updated = await db.appointment.update({
-    where: { id: next.id },
-    data: { queueStatus: "current" },
-  });
 
   return NextResponse.json(updated);
 }
