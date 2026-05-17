@@ -183,22 +183,6 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return `${queuePart}يرجى من المراجع ${name} التوجه إلى العيادة الآن.`;
   }
 
-  function speakBrowser(text: string): Promise<void> {
-    return new Promise((resolve) => {
-      if (!("speechSynthesis" in window)) { resolve(); return; }
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "ar-SA";
-      u.rate = 0.86;
-      const voices = window.speechSynthesis.getVoices();
-      const arabicVoice = voices.find((v) => v.lang.toLowerCase().startsWith("ar"));
-      if (arabicVoice) u.voice = arabicVoice;
-      u.onend = () => resolve();
-      u.onerror = () => resolve();
-      window.speechSynthesis.speak(u);
-    });
-  }
-
   async function announceQueue(current: NonNullable<DisplayData["current"]>) {
     const audio = audioElRef.current;
     if (!audio || !audioUnlockedRef.current) return;
@@ -210,38 +194,37 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     }
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 
-    const name = cleanNameForSpeech(current.name) || "المراجع";
-    const queuePart = current.queueNumber !== null ? `رقم الانتظار ${current.queueNumber}.` : "";
+    const text = buildAnnouncementText(current);
 
-    setAudioStatus("playing");
-
-    // 1. Browser TTS: الجزء الثابت قبل الاسم
-    if (queuePart) await speakBrowser(queuePart);
-    await speakBrowser("يرجى من المراجع");
-
-    // 2. ElevenLabs: الاسم فقط (~10-15 حرف بدل 65)
-    let nameSpoken = false;
     try {
-      const res = await fetch(`/api/tts?text=${encodeURIComponent(name)}`);
+      const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         currentBlobUrl.current = url;
         audio.src = url;
-        await new Promise<void>((resolve) => {
-          audio.onended = () => { URL.revokeObjectURL(url); if (currentBlobUrl.current === url) currentBlobUrl.current = null; resolve(); };
-          audio.onerror = () => resolve();
-          audio.play().catch(() => resolve());
-        });
-        nameSpoken = true;
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          if (currentBlobUrl.current === url) currentBlobUrl.current = null;
+          setAudioStatus("unlocked");
+        };
+        setAudioStatus("playing");
+        await audio.play();
+        return;
       }
     } catch {}
 
-    if (!nameSpoken) await speakBrowser(name);
-
-    // 3. Browser TTS: الجزء الثابت بعد الاسم
-    await speakBrowser("التوجه إلى العيادة الآن");
-
+    // Fallback: browser TTS
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ar-SA";
+      u.rate = 0.86;
+      const voices = window.speechSynthesis.getVoices();
+      const arabicVoice = voices.find((v) => v.lang.toLowerCase().startsWith("ar"));
+      if (arabicVoice) u.voice = arabicVoice;
+      window.speechSynthesis.speak(u);
+    }
     setAudioStatus("unlocked");
   }
 
