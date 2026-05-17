@@ -259,14 +259,17 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   }, []);
 
   // Slideshow — يتبدل كل 8 ثوانٍ عند السكون
+  // نستخدم .length بدل المصفوفة كاملة حتى لا يُعاد تشغيل الـ interval مع كل poll
+  const slideshowCount = data.slideshowImages.length;
   useEffect(() => {
-    if (!data.current && data.slideshowImages.length > 1) {
+    if (!data.current && slideshowCount > 1) {
       const t = setInterval(() => {
-        setSlideIndex((i) => (i + 1) % data.slideshowImages.length);
+        setSlideIndex((i) => (i + 1) % slideshowCount);
       }, 8000);
       return () => clearInterval(t);
     }
-  }, [data.current, data.slideshowImages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.current, slideshowCount]);
 
   const waiting = data.waiting.slice(0, 4);
 
