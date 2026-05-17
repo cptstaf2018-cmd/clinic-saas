@@ -47,9 +47,14 @@ export async function POST(req: Request) {
   const base64 = Buffer.from(buffer).toString("base64");
   const dataUrl = `data:${file.type};base64,${base64}`;
 
+  const current = await db.clinic.findUnique({
+    where: { id: session.user.clinicId },
+    select: { slideshowImages: true },
+  });
+
   const updated = await db.clinic.update({
     where: { id: session.user.clinicId },
-    data: { slideshowImages: { push: dataUrl } },
+    data: { slideshowImages: [...(current?.slideshowImages ?? []), dataUrl] },
     select: { slideshowImages: true },
   });
 
