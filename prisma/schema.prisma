@@ -28,6 +28,7 @@ model Clinic {
   botShowWorkingHours    Boolean           @default(true)
   botShowLocation        Boolean           @default(false)
   backupEmail            String?
+  slideshowImages        String[]
   appointments           Appointment[]
   incomingMessages       IncomingMessage[]
   medicalRecords         MedicalRecord[]

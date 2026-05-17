@@ -69,6 +69,11 @@ export default function SettingsPage() {
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
+  // Slideshow
+  const [slides, setSlides] = useState<string[]>([]);
+  const [uploadingSlide, setUploadingSlide] = useState(false);
+  const slideRef = useRef<HTMLInputElement>(null);
+
   // Password
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -94,7 +99,37 @@ export default function SettingsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    fetch("/api/clinic/slideshow")
+      .then((r) => r.json())
+      .then((d) => setSlides(d.images ?? []))
+      .catch(() => {});
   }, []);
+
+  async function handleSlideUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingSlide(true);
+    const form = new FormData();
+    form.append("image", file);
+    const res = await fetch("/api/clinic/slideshow", { method: "POST", body: form });
+    const d = await res.json();
+    if (res.ok) { setSlides(d.images); setSaved("تم رفع الصورة"); setTimeout(() => setSaved(""), 3000); }
+    else { setError(d.error ?? "فشل رفع الصورة"); }
+    setUploadingSlide(false);
+    if (slideRef.current) slideRef.current.value = "";
+  }
+
+  async function deleteSlide(index: number) {
+    const res = await fetch("/api/clinic/slideshow", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ index }),
+    });
+    const d = await res.json();
+    if (res.ok) { setSlides(d.images); setSaved("تم حذف الصورة"); setTimeout(() => setSaved(""), 3000); }
+    else { setError(d.error ?? "فشل الحذف"); }
+  }
 
   async function saveSettings(patch: Partial<Settings>) {
     setSaving(true); setError(""); setSaved("");
@@ -311,6 +346,35 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+          </Section>
+
+          <Section title="صور الدعاية في شاشة الانتظار" description="تظهر عند السكون — حتى 5 صور تتبدل تلقائياً">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 mb-4">
+              {slides.map((src, i) => (
+                <div key={i} className="relative group aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt={`slide ${i + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => deleteSlide(i)}
+                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-black"
+                  >
+                    حذف
+                  </button>
+                </div>
+              ))}
+              {slides.length < 5 && (
+                <button
+                  onClick={() => slideRef.current?.click()}
+                  disabled={uploadingSlide}
+                  className="aspect-video rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 flex flex-col items-center justify-center gap-1 text-blue-400 hover:border-blue-400 hover:bg-blue-100 transition disabled:opacity-50"
+                >
+                  <span className="text-2xl">+</span>
+                  <span className="text-xs font-bold">{uploadingSlide ? "جاري الرفع..." : "إضافة صورة"}</span>
+                </button>
+              )}
+            </div>
+            <p className="text-xs font-bold text-slate-400">{slides.length}/5 صور — JPG, PNG, WEBP — حد أقصى 1MB للصورة</p>
+            <input ref={slideRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleSlideUpload} />
           </Section>
         </>
       )}

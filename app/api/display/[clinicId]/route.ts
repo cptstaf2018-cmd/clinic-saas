@@ -24,7 +24,7 @@ export async function GET(
 
   const clinic = await db.clinic.findUnique({
     where: { id: clinicId },
-    select: { name: true, logoUrl: true },
+    select: { name: true, logoUrl: true, slideshowImages: true },
   });
 
   const [current, waiting] = await Promise.all([
@@ -51,6 +51,7 @@ export async function GET(
   const data = {
     clinicName: clinic?.name ?? "",
     logoUrl: clinic?.logoUrl ?? null,
+    slideshowImages: clinic?.slideshowImages ?? [],
     current: current
       ? { name: current.patient.name, queueNumber: current.queueNumber }
       : null,

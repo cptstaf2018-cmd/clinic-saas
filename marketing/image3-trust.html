@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=1200"/>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 630px; overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: #f8fafc;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top bar */
+  .topbar {
+    background: linear-gradient(90deg, #1e3a5f 0%, #2563eb 50%, #0ea5e9 100%);
+    padding: 8px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .topbar-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .topbar-item { display: flex; align-items: center; gap: 6px; }
+  .topbar-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
+  .topbar-logo {
+    font-size: 16px;
+    font-weight: 900;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Main content */
+  .main {
+    flex: 1;
+    display: flex;
+    padding: 0 48px;
+    gap: 40px;
+    align-items: center;
+  }
+
+  /* Left - Hero */
+  .hero { flex: 1.1; }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 50px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: #2563eb;
+    font-weight: 800;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .headline {
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1.15;
+    color: #0f172a;
+    margin-bottom: 14px;
+  }
+  .headline .blue { color: #2563eb; }
+  .headline .green { color: #059669; }
+  .subline {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 420px;
+  }
+
+  /* Trust stats */
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .stat-box {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px 18px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .stat-num {
+    font-size: 26px;
+    font-weight: 900;
+    color: #2563eb;
+    line-height: 1;
+  }
+  .stat-label { font-size: 10px; color: #94a3b8; margin-top: 3px; font-weight: 600; }
+
+  /* Testimonials */
+  .testimonials { display: flex; flex-direction: column; gap: 10px; }
+  .testi {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .testi-content { flex: 1; }
+  .testi-name { font-size: 12px; font-weight: 800; color: #0f172a; }
+  .testi-role { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+  .testi-text { font-size: 11.5px; color: #475569; line-height: 1.5; }
+  .stars { color: #f59e0b; font-size: 11px; margin-bottom: 2px; }
+
+  /* Right - Features */
+  .right-col { width: 360px; display: flex; flex-direction: column; gap: 10px; }
+
+  .feature-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .feature-card.highlight {
+    background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+    border-color: #bfdbfe;
+  }
+  .feat-icon {
+    width: 44px; height: 44px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .feat-info { flex: 1; }
+  .feat-title { font-size: 13px; font-weight: 800; color: #0f172a; }
+  .feat-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .feat-badge {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 50px;
+  }
+  .badge-green { background: #dcfce7; color: #16a34a; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-purple { background: #f3e8ff; color: #7c3aed; }
+
+  /* CTA */
+  .cta-box {
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.35);
+  }
+  .cta-text { color: white; }
+  .cta-title { font-size: 14px; font-weight: 900; }
+  .cta-sub { font-size: 10px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+  .cta-btn {
+    background: white;
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 8px 18px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+
+  /* Bottom bar */
+  .bottombar {
+    background: #0f172a;
+    padding: 10px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .trust-badges {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 600;
+  }
+  .trust-badge span { font-size: 14px; }
+  .url { font-size: 13px; color: #475569; letter-spacing: 1px; }
+  .trial-pill {
+    background: linear-gradient(90deg, #059669, #10b981);
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 16px;
+    border-radius: 50px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-text">
+      <div class="topbar-item"><span class="topbar-dot"></span> النظام يعمل بشكل طبيعي — ٩٩.٩٪ uptime</div>
+      <div class="topbar-item">🔒 بيانات مشفرة بالكامل</div>
+      <div class="topbar-item">⚡ دعم فني ٢٤ ساعة</div>
+    </div>
+    <div class="topbar-logo">
+      <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+        <rect x="15" y="4" width="10" height="32" rx="3" fill="white"/>
+        <rect x="4" y="15" width="32" height="10" rx="3" fill="white" fill-opacity="0.7"/>
+      </svg>
+      عيادتي
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Left -->
+    <div class="hero">
+      <div class="eyebrow">🏆 الأفضل في إدارة العيادات بالعراق</div>
+      <div class="headline">
+        عيادتك تستحق<br/>
+        نظاماً <span class="blue">ذكياً</span> و<span class="green">احترافياً</span>
+      </div>
+      <div class="subline">
+        آلاف المرضى يحجزون عبر واتساب بشكل تلقائي. سجلات طبية منظمة. تذكيرات تلقائية. كل شيء في مكان واحد — ابدأ اليوم مجاناً.
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-num">+٥٠٠</div>
+          <div class="stat-label">عيادة نشطة</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">+٢٠,٠٠٠</div>
+          <div class="stat-label">مريض مسجل</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">٩٩.٩٪</div>
+          <div class="stat-label">وقت التشغيل</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">٤.٩ ⭐</div>
+          <div class="stat-label">تقييم الأطباء</div>
+        </div>
+      </div>
+
+      <div class="testimonials">
+        <div class="testi">
+          <div class="avatar" style="background:#eff6ff">👨‍⚕️</div>
+          <div class="testi-content">
+            <div class="stars">★★★★★</div>
+            <div class="testi-name">د. أحمد الجبوري</div>
+            <div class="testi-role">عيادة تخصصية — تكريت</div>
+            <div class="testi-text">"البوت يحجز للمرضى وأنا نائم! وفّر عليّ ساعات يومياً. أنصح به كل طبيب."</div>
+          </div>
+        </div>
+        <div class="testi">
+          <div class="avatar" style="background:#f0fdf4">👩‍⚕️</div>
+          <div class="testi-content">
+            <div class="stars">★★★★★</div>
+            <div class="testi-name">د. سارة المحمد</div>
+            <div class="testi-role">عيادة أطفال — بغداد</div>
+            <div class="testi-text">"شاشة الانتظار الذكية غيّرت شكل العيادة كلياً. المرضى مبسوطون جداً."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div class="right-col">
+
+      <div class="feature-card highlight">
+        <div class="feat-icon" style="background:#dbeafe">💬</div>
+        <div class="feat-info">
+          <div class="feat-title">بوت واتساب ذكي</div>
+          <div class="feat-sub">يحجز ويؤكد ويذكّر تلقائياً — بدون تدخل</div>
+        </div>
+        <div class="feat-badge badge-blue">مجاني</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feat-icon" style="background:#dcfce7">📺</div>
+        <div class="feat-info">
+          <div class="feat-title">شاشة الانتظار الذكية</div>
+          <div class="feat-sub">تنادي المرضى بالصوت — على التلفزيون</div>
+        </div>
+        <div class="feat-badge badge-green">مجاني</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feat-icon" style="background:#f3e8ff">🏥</div>
+        <div class="feat-info">
+          <div class="feat-title">السجل الطبي الكامل</div>
+          <div class="feat-sub">تشخيص، وصفات، مراجعات، وتحاليل</div>
+        </div>
+        <div class="feat-badge badge-purple">لكل الباقات</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feat-icon" style="background:#fef3c7">🔔</div>
+        <div class="feat-info">
+          <div class="feat-title">تذكيرات واتساب تلقائية</div>
+          <div class="feat-sub">قبل ٢٤ ساعة وساعة من الموعد</div>
+        </div>
+        <div class="feat-badge badge-blue">متوسطة+</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feat-icon" style="background:#fee2e2">📊</div>
+        <div class="feat-info">
+          <div class="feat-title">تقارير وإحصائيات</div>
+          <div class="feat-sub">أداء عيادتك يومياً وشهرياً بالتفصيل</div>
+        </div>
+        <div class="feat-badge badge-blue">متوسطة+</div>
+      </div>
+
+      <div class="cta-box">
+        <div class="cta-text">
+          <div class="cta-title">ابدأ تجربتك المجانية الآن</div>
+          <div class="cta-sub">١٤ يوم كامل — بدون بطاقة ائتمان</div>
+        </div>
+        <div class="cta-btn">سجّل مجاناً ←</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="bottombar">
+    <div class="trust-badges">
+      <div class="trust-badge"><span>🔒</span> بيانات مشفرة SSL</div>
+      <div class="trust-badge"><span>☁️</span> سحابي — لا تثبيت</div>
+      <div class="trust-badge"><span>📱</span> يعمل من الموبايل</div>
+      <div class="trust-badge"><span>🇮🇶</span> مصمم للعراق</div>
+    </div>
+    <div class="trial-pill">✦ ١٤ يوم تجريبي مجاناً</div>
+    <div class="url">www.clinic-ai-pro.com</div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=1200"/>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 630px; overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 48px;
+    gap: 24px;
+    position: relative;
+  }
+  .bg-glow {
+    position: absolute;
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(37,99,235,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    z-index: 2;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(37,99,235,0.2);
+    border: 1px solid rgba(37,99,235,0.4);
+    border-radius: 50px;
+    padding: 5px 16px;
+    font-size: 12px;
+    color: #93c5fd;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    color: white;
+  }
+  .header h1 span { color: #60a5fa; }
+  .header p {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  /* Plans grid */
+  .plans {
+    display: flex;
+    gap: 14px;
+    width: 100%;
+    z-index: 2;
+  }
+  .plan {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .plan.popular {
+    background: linear-gradient(160deg, rgba(37,99,235,0.2), rgba(14,165,233,0.1));
+    border: 1.5px solid rgba(37,99,235,0.5);
+    box-shadow: 0 0 40px rgba(37,99,235,0.15);
+  }
+  .plan.vip {
+    background: linear-gradient(160deg, rgba(168,85,247,0.15), rgba(236,72,153,0.08));
+    border: 1.5px solid rgba(168,85,247,0.4);
+  }
+  .popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #2563eb, #0ea5e9);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+  .vip-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #7c3aed, #db2777);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 14px;
+    border-radius: 50px;
+    white-space: nowrap;
+  }
+
+  .plan-header { text-align: center; }
+  .plan-name {
+    font-size: 16px;
+    font-weight: 900;
+    color: white;
+  }
+  .plan-target {
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+  .plan-price {
+    font-size: 26px;
+    font-weight: 900;
+    margin-top: 6px;
+  }
+  .plan-price .currency {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+  .plan.popular .plan-price { color: #60a5fa; }
+  .plan.vip .plan-price { color: #c084fc; }
+  .plan-period {
+    font-size: 10px;
+    color: #64748b;
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+  }
+
+  .features { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+  .feat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: #cbd5e1;
+  }
+  .feat-check { color: #22c55e; font-size: 13px; font-weight: 900; flex-shrink: 0; }
+  .feat-x { color: #ef4444; font-size: 13px; flex-shrink: 0; }
+  .feat-plus { color: #f59e0b; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+
+  /* Footer */
+  .footer {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    z-index: 2;
+  }
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 900;
+    color: white;
+  }
+  .footer-logo-icon {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .footer-logo-icon svg { width: 16px; height: 16px; }
+  .footer-sep { width: 1px; height: 20px; background: #334155; }
+  .footer-url { font-size: 13px; color: #475569; }
+  .footer-trial {
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 50px;
+    padding: 5px 16px;
+    font-size: 11px;
+    color: #4ade80;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">💊 منصة عيادتي — إدارة العيادات الذكية</div>
+    <h1>اختر الباقة <span>المناسبة لعيادتك</span></h1>
+    <p>جميع الباقات تشمل بوت واتساب + إدارة المواعيد + شاشة الانتظار</p>
+  </div>
+
+  <!-- Plans -->
+  <div class="plans">
+
+    <!-- أساسية -->
+    <div class="plan">
+      <div class="plan-header">
+        <div class="plan-name">أساسية</div>
+        <div class="plan-target">للعيادات الصغيرة</div>
+        <div class="plan-price">٣٥,٠٠٠ <span class="currency">د.ع</span></div>
+        <div class="plan-period">شهرياً</div>
+      </div>
+      <div class="divider"></div>
+      <div class="features">
+        <div class="feat"><span class="feat-check">✓</span> المرضى والحجوزات</div>
+        <div class="feat"><span class="feat-check">✓</span> شاشة الانتظار الذكية</div>
+        <div class="feat"><span class="feat-check">✓</span> بوت واتساب تلقائي</div>
+        <div class="feat"><span class="feat-check">✓</span> السجل الطبي والوصفات</div>
+        <div class="feat"><span class="feat-check">✓</span> تقرير يومي</div>
+        <div class="feat"><span class="feat-x">✗</span> تذكيرات تلقائية</div>
+        <div class="feat"><span class="feat-x">✗</span> تقارير PDF</div>
+      </div>
+    </div>
+
+    <!-- متوسطة -->
+    <div class="plan popular">
+      <div class="popular-badge">⭐ الأكثر اختياراً</div>
+      <div class="plan-header">
+        <div class="plan-name">متوسطة</div>
+        <div class="plan-target">للعيادات النشطة</div>
+        <div class="plan-price">٤٥,٠٠٠ <span class="currency">د.ع</span></div>
+        <div class="plan-period">شهرياً</div>
+      </div>
+      <div class="divider"></div>
+      <div class="features">
+        <div class="feat"><span class="feat-check">✓</span> كل ميزات الأساسية</div>
+        <div class="feat"><span class="feat-plus">+</span> تذكيرات واتساب تلقائية</div>
+        <div class="feat"><span class="feat-plus">+</span> متابعة المراجعات</div>
+        <div class="feat"><span class="feat-plus">+</span> تقارير PDF للمرضى</div>
+        <div class="feat"><span class="feat-x">✗</span> واتساب متقدم</div>
+        <div class="feat"><span class="feat-x">✗</span> نسخ احتياطي</div>
+        <div class="feat"><span class="feat-x">✗</span> دعم أولوية</div>
+      </div>
+    </div>
+
+    <!-- مميزة -->
+    <div class="plan">
+      <div class="plan-header">
+        <div class="plan-name">مميزة</div>
+        <div class="plan-target">للمراكز الكبيرة</div>
+        <div class="plan-price">٥٥,٠٠٠ <span class="currency">د.ع</span></div>
+        <div class="plan-period">شهرياً</div>
+      </div>
+      <div class="divider"></div>
+      <div class="features">
+        <div class="feat"><span class="feat-check">✓</span> كل ميزات المتوسطة</div>
+        <div class="feat"><span class="feat-plus">+</span> واتساب متقدم</div>
+        <div class="feat"><span class="feat-plus">+</span> مساعد ذكي للعيادة</div>
+        <div class="feat"><span class="feat-plus">+</span> نسخ احتياطي شهري</div>
+        <div class="feat"><span class="feat-plus">+</span> دعم أولوية</div>
+        <div class="feat"><span class="feat-x">✗</span> تحاليل وأشعة</div>
+        <div class="feat"><span class="feat-x">✗</span> رسائل اطمئنان</div>
+      </div>
+    </div>
+
+    <!-- VIP -->
+    <div class="plan vip">
+      <div class="vip-badge">👑 الأقوى</div>
+      <div class="plan-header">
+        <div class="plan-name">مميزة VIP</div>
+        <div class="plan-target">للمراكز المتميزة</div>
+        <div class="plan-price">٧٥,٠٠٠ <span class="currency">د.ع</span></div>
+        <div class="plan-period">شهرياً</div>
+      </div>
+      <div class="divider"></div>
+      <div class="features">
+        <div class="feat"><span class="feat-check">✓</span> كل ميزات المميزة</div>
+        <div class="feat"><span class="feat-plus">+</span> رفع تحاليل وأشعة</div>
+        <div class="feat"><span class="feat-plus">+</span> وصفات طبية متقدمة</div>
+        <div class="feat"><span class="feat-plus">+</span> رسائل اطمئنان تلقائية</div>
+        <div class="feat"><span class="feat-plus">+</span> الملف الطبي الكامل</div>
+        <div class="feat"><span class="feat-plus">+</span> رفع ملفات المرضى</div>
+        <div class="feat"><span class="feat-plus">+</span> أولوية قصوى في الدعم</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-logo">
+      <div class="footer-logo-icon">
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect x="15" y="4" width="10" height="32" rx="3" fill="white"/>
+          <rect x="4" y="15" width="32" height="10" rx="3" fill="white" fill-opacity="0.7"/>
+        </svg>
+      </div>
+      عيادتي
+    </div>
+    <div class="footer-sep"></div>
+    <div class="footer-url">www.clinic-ai-pro.com</div>
+    <div class="footer-sep"></div>
+    <div class="footer-trial">✦ ١٤ يوم تجريبي مجاني</div>
+  </div>
+
+</body>
+</html>

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 interface DisplayData {
   clinicName: string;
   logoUrl: string | null;
+  slideshowImages: string[];
   current: { name: string; queueNumber: number | null } | null;
   waiting: { name: string; queueNumber: number | null }[];
 }
@@ -116,7 +117,8 @@ function AnalogClock() {
 
 export default function DisplayPage({ params }: { params: Promise<{ clinicId: string }> }) {
   const [clinicId, setClinicId] = useState<string | null>(null);
-  const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", logoUrl: null, current: null, waiting: [] });
+  const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", logoUrl: null, slideshowImages: [], current: null, waiting: [] });
+  const [slideIndex, setSlideIndex] = useState(0);
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
   const prevAnnouncementRef = useRef<string | null | undefined>(undefined);
@@ -255,6 +257,16 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     const t = setInterval(update, 60000);
     return () => clearInterval(t);
   }, []);
+
+  // Slideshow — يتبدل كل 8 ثوانٍ عند السكون
+  useEffect(() => {
+    if (!data.current && data.slideshowImages.length > 1) {
+      const t = setInterval(() => {
+        setSlideIndex((i) => (i + 1) % data.slideshowImages.length);
+      }, 8000);
+      return () => clearInterval(t);
+    }
+  }, [data.current, data.slideshowImages]);
 
   const waiting = data.waiting.slice(0, 4);
 
@@ -517,6 +529,46 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           <div className="dp-aya">وَإِذَا مَرِضْتُ فَهُوَ يَشْفِينِ</div>
           <div className="dp-aya-ref">سورة الشعراء — الآية ٨٠</div>
         </div>
+
+        {/* Slideshow — يظهر عند السكون فقط */}
+        {!data.current && data.slideshowImages.length > 0 && (
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 10,
+            background: "#000",
+          }}>
+            {data.slideshowImages.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                src={src}
+                alt=""
+                style={{
+                  position: "absolute", inset: 0,
+                  width: "100%", height: "100%",
+                  objectFit: "cover",
+                  opacity: i === slideIndex ? 1 : 0,
+                  transition: "opacity 1s ease-in-out",
+                }}
+              />
+            ))}
+            {/* مؤشر الصور */}
+            {data.slideshowImages.length > 1 && (
+              <div style={{
+                position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
+                display: "flex", gap: 8, zIndex: 11,
+              }}>
+                {data.slideshowImages.map((_, i) => (
+                  <div key={i} style={{
+                    width: i === slideIndex ? 24 : 8, height: 8,
+                    borderRadius: 999,
+                    background: i === slideIndex ? "white" : "rgba(255,255,255,0.4)",
+                    transition: "all 0.4s",
+                  }} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* المحتوى الرئيسي */}
         <div className="dp-main">
