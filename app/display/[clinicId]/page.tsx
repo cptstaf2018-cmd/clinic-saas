@@ -185,7 +185,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
 
   async function announceQueue(current: NonNullable<DisplayData["current"]>) {
     const audio = audioElRef.current;
-    if (!audio || !audioUnlockedRef.current) return;
+    if (!audio) return;
 
     audio.pause();
     if (currentBlobUrl.current) {
