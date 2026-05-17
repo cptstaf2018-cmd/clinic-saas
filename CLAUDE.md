@@ -331,7 +331,7 @@ Clinic can also send manual reminders from the dashboard at any time.
 | Frontend + Backend | Next.js 14 (App Router) |
 | Database | PostgreSQL + Prisma ORM |
 | Auth | NextAuth.js (JWT) |
-| WhatsApp | Twilio or Meta Cloud API |
+| WhatsApp | WasenderAPI |
 | Hosting | Vercel |
 | Cron Jobs | Vercel Cron |
 | Online Payment | SuperKey API (07706688044) |
