@@ -161,14 +161,20 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, [clinicId]);
 
-  function detectFemale(name: string): boolean {
-    const first = name.trim().split(/\s+/)[0];
-    if (!first) return false;
-    // "ة" موثوقة دائماً للأنثى
-    if (first.endsWith("ة")) return true;
-    // قائمة صريحة للأسماء الأنثوية التي لا تنتهي بـ"ة"
-    const FEMALE_NAMES = new Set(["هند","ريم","نور","دينا","لينا","سارة","مها","رنا","رند","غادة","أمل","سلام","ايمان","إيمان","وفاء","بشرى","ابتسام","انتصار","إنتصار","بتول","زينب","رقية","سكينة","فدوى","وداد","نهاد","سناء","ضحى","روان","جمان","لجين","شهد","براءة","صفاء","أريج","عبير","نجاح","هناء","حنان","منى","تهاني","ألاء","آلاء","شيماء","أسماء","زهراء","حوراء","مروة","حياة","رحاب","أحلام","أنوار","نوار","ميساء","شيرين","ناهد","سلمى","ليلى","نجوى","لمى","ولاء","دعاء","رجاء","سماء","هيا","رهف","ملاك","غلا","تالا","لارا","نايا","ديما","ريما","جنى","لنا","علا","ندى","هبة","سبأ","شذى","جود"]);
-    return FEMALE_NAMES.has(first);
+  function cleanNameForSpeech(name: string) {
+    return name
+      .replace(/[^ء-يa-zA-Z\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function buildAnnouncementText(current: NonNullable<DisplayData["current"]>) {
+    const name = cleanNameForSpeech(current.name) || "المراجع";
+    const queuePart = current.queueNumber !== null
+      ? `رقم الانتظار ${current.queueNumber}. `
+      : "";
+
+    return `${queuePart}يرجى من المراجع ${name} التوجه إلى العيادة الآن.`;
   }
 
   async function announceQueue(current: NonNullable<DisplayData["current"]>) {
@@ -180,12 +186,21 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     }
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 
-    const queuePart = current.queueNumber !== null ? `، رقم ${toArabic(current.queueNumber)}` : "";
-    const isFemale = detectFemale(current.name);
-    const text = isFemale
-      ? `الأخت ${current.name}${queuePart}، اتفضلي للعيادة من فضلج`
-      : `الأخ ${current.name}${queuePart}، اتفضل للعيادة من فضلك`;
+    const text = buildAnnouncementText(current);
 
+    const speakInBrowser = () => {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ar-SA";
+      u.rate = 0.86;
+      const voices = window.speechSynthesis.getVoices();
+      const arabicVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith("ar"));
+      if (arabicVoice) u.voice = arabicVoice;
+      window.speechSynthesis.speak(u);
+    };
+
+    // Always try ElevenLabs first — browser TTS is only a fallback
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
@@ -196,28 +211,11 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
         audio.src = url;
         currentAudioRef.current = { audio, url };
 
-        // Wait for audio to be fully buffered before playing — prevents choppy/cut-off playback
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve) => {
           let resolved = false;
-          const cleanup = () => {
-            audio.removeEventListener("canplaythrough", onReady);
-            audio.removeEventListener("error", onError);
-          };
-          const onReady = () => {
-            if (resolved) return;
-            resolved = true;
-            cleanup();
-            resolve();
-          };
-          const onError = () => {
-            if (resolved) return;
-            resolved = true;
-            cleanup();
-            reject(new Error("audio load failed"));
-          };
+          const onReady = () => { if (!resolved) { resolved = true; resolve(); } };
           audio.addEventListener("canplaythrough", onReady, { once: true });
-          audio.addEventListener("error", onError, { once: true });
-          // Safety timeout — start playing after 1.5s even if not fully buffered
+          audio.addEventListener("error", onReady, { once: true });
           setTimeout(onReady, 1500);
           audio.load();
         });
@@ -228,17 +226,13 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
         };
 
         await audio.play();
+        audioUnlockedRef.current = true;
         return;
       }
     } catch {}
 
-    // Fallback: Web Speech API
-    if ("speechSynthesis" in window) {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "ar-SA";
-      u.rate = 0.82;
-      window.speechSynthesis.speak(u);
-    }
+    // Fallback: browser TTS (only if audio was unlocked by user interaction)
+    if (audioUnlockedRef.current) speakInBrowser();
   }
 
   // نداء صوتي عند تغيّر المراجع الحالي
