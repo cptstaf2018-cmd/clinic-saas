@@ -124,6 +124,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const audioUnlockedRef = useRef(false);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const currentBlobUrl = useRef<string | null>(null);
+  const [audioStatus, setAudioStatus] = useState<"waiting" | "unlocked" | "playing">("waiting");
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
@@ -135,9 +136,11 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
 
     function unlockOnInteraction() {
       if (audioUnlockedRef.current) return;
-      // شغّل صوت صامت على نفس العنصر — يفتح autoplay للمتصفح
       audio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
-      audio.play().then(() => { audioUnlockedRef.current = true; }).catch(() => {});
+      audio.play().then(() => {
+        audioUnlockedRef.current = true;
+        setAudioStatus("unlocked");
+      }).catch(() => {});
     }
 
     document.addEventListener("click", unlockOnInteraction, { once: true });
@@ -204,7 +207,9 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
         audio.onended = () => {
           URL.revokeObjectURL(url);
           if (currentBlobUrl.current === url) currentBlobUrl.current = null;
+          setAudioStatus("unlocked");
         };
+        setAudioStatus("playing");
         await audio.play();
         return;
       }
@@ -568,7 +573,18 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           </div>
         </div>
 
-        <div className="dp-footer">عيادتي — نظام إدارة العيادة</div>
+        <div className="dp-footer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+          <span>عيادتي — نظام إدارة العيادة</span>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "3px 12px", borderRadius: 999, fontSize: 11, fontWeight: 700,
+            background: audioStatus === "waiting" ? "#fef2f2" : audioStatus === "playing" ? "#eff6ff" : "#f0fdf4",
+            color: audioStatus === "waiting" ? "#ef4444" : audioStatus === "playing" ? "#3b82f6" : "#22c55e",
+            border: `1px solid ${audioStatus === "waiting" ? "#fecaca" : audioStatus === "playing" ? "#bfdbfe" : "#bbf7d0"}`,
+          }}>
+            {audioStatus === "waiting" ? "🔇 انقر لتفعيل الصوت" : audioStatus === "playing" ? "🔊 يُشغَّل الآن" : "🔈 الصوت فعّال"}
+          </span>
+        </div>
       </div>
     </>
   );
