@@ -43,7 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </div>
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-black text-white">Ayadti Cloud</p>
+              <p className="truncate text-sm font-black text-white">Clinic AI Pro</p>
               <p className="mt-0.5 text-[11px] font-bold text-slate-400">Super Admin Console</p>
             </div>
           </div>
