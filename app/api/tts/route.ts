@@ -24,9 +24,12 @@ export async function GET(req: Request) {
       body: JSON.stringify({
         text: safeText,
         model_id: "eleven_multilingual_v2",
+        language_code: "ar",
         voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
+          stability: 0.75,
+          similarity_boost: 0.85,
+          style: 0.2,
+          use_speaker_boost: true,
         },
       }),
     });
