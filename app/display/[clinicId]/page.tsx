@@ -260,9 +260,10 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, []);
 
-  // عند استدعاء مريض → أخفِ الدعاية، وبعد 30 ثانية أعدها
+  // نستخدم key ثابت للمريض بدل المرجع حتى لا يُعاد تشغيل المؤقت مع كل poll
+  const currentKey = data.current ? `${data.current.queueNumber}:${data.current.name}` : null;
   useEffect(() => {
-    if (data.current) {
+    if (currentKey) {
       setShowSlideshow(false);
       if (slideshowTimerRef.current) clearTimeout(slideshowTimerRef.current);
       slideshowTimerRef.current = setTimeout(() => setShowSlideshow(true), 30000);
@@ -271,7 +272,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
       setShowSlideshow(true);
     }
     return () => { if (slideshowTimerRef.current) clearTimeout(slideshowTimerRef.current); };
-  }, [data.current]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentKey]);
 
   // Slideshow — يتبدل كل 8 ثوانٍ
   const slideshowCount = data.slideshowImages.length;
