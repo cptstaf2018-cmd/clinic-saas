@@ -110,14 +110,18 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingSlide(true);
-    const form = new FormData();
-    form.append("image", file);
-    const res = await fetch("/api/clinic/slideshow", { method: "POST", body: form });
-    const d = await res.json();
-    if (res.ok) { setSlides(d.images); setSaved("تم رفع الصورة"); setTimeout(() => setSaved(""), 3000); }
-    else { setError(d.error ?? "فشل رفع الصورة"); }
-    setUploadingSlide(false);
-    if (slideRef.current) slideRef.current.value = "";
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      const res = await fetch("/api/clinic/slideshow", { method: "POST", body: form });
+      const d = await res.json();
+      if (res.ok) { setSlides(d.images); setSaved("تم رفع الصورة"); setTimeout(() => setSaved(""), 3000); }
+      else { setError(d.error ?? "فشل رفع الصورة"); }
+    } catch { setError("فشل الاتصال بالسيرفر"); }
+    finally {
+      setUploadingSlide(false);
+      if (slideRef.current) slideRef.current.value = "";
+    }
   }
 
   async function deleteSlide(index: number) {
