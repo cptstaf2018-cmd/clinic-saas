@@ -183,40 +183,9 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return `${queuePart}يرجى من المراجع ${name} التوجه إلى العيادة الآن.`;
   }
 
-  async function announceQueue(current: NonNullable<DisplayData["current"]>) {
-    const audio = audioElRef.current;
-    if (!audio || !audioUnlockedRef.current) return;
-
-    // إيقاف أي نداء جارٍ
-    audio.pause();
-    if (currentBlobUrl.current) {
-      URL.revokeObjectURL(currentBlobUrl.current);
-      currentBlobUrl.current = null;
-    }
-
-    const text = buildAnnouncementText(current);
-
-    try {
-      const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        currentBlobUrl.current = url;
-
-        audio.src = url;
-        audio.onended = () => {
-          URL.revokeObjectURL(url);
-          if (currentBlobUrl.current === url) currentBlobUrl.current = null;
-          setAudioStatus("unlocked");
-        };
-        setAudioStatus("playing");
-        await audio.play();
-        return;
-      }
-    } catch {}
-
-    // Fallback: browser TTS
-    if ("speechSynthesis" in window) {
+  function speakBrowser(text: string): Promise<void> {
+    return new Promise((resolve) => {
+      if (!("speechSynthesis" in window)) { resolve(); return; }
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = "ar-SA";
@@ -224,8 +193,56 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
       const voices = window.speechSynthesis.getVoices();
       const arabicVoice = voices.find((v) => v.lang.toLowerCase().startsWith("ar"));
       if (arabicVoice) u.voice = arabicVoice;
+      u.onend = () => resolve();
+      u.onerror = () => resolve();
       window.speechSynthesis.speak(u);
+    });
+  }
+
+  async function announceQueue(current: NonNullable<DisplayData["current"]>) {
+    const audio = audioElRef.current;
+    if (!audio || !audioUnlockedRef.current) return;
+
+    audio.pause();
+    if (currentBlobUrl.current) {
+      URL.revokeObjectURL(currentBlobUrl.current);
+      currentBlobUrl.current = null;
     }
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+
+    const name = cleanNameForSpeech(current.name) || "المراجع";
+    const queuePart = current.queueNumber !== null ? `رقم الانتظار ${current.queueNumber}.` : "";
+
+    setAudioStatus("playing");
+
+    // 1. Browser TTS: الجزء الثابت قبل الاسم
+    if (queuePart) await speakBrowser(queuePart);
+    await speakBrowser("يرجى من المراجع");
+
+    // 2. ElevenLabs: الاسم فقط (~10-15 حرف بدل 65)
+    let nameSpoken = false;
+    try {
+      const res = await fetch(`/api/tts?text=${encodeURIComponent(name)}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        currentBlobUrl.current = url;
+        audio.src = url;
+        await new Promise<void>((resolve) => {
+          audio.onended = () => { URL.revokeObjectURL(url); if (currentBlobUrl.current === url) currentBlobUrl.current = null; resolve(); };
+          audio.onerror = () => resolve();
+          audio.play().catch(() => resolve());
+        });
+        nameSpoken = true;
+      }
+    } catch {}
+
+    if (!nameSpoken) await speakBrowser(name);
+
+    // 3. Browser TTS: الجزء الثابت بعد الاسم
+    await speakBrowser("التوجه إلى العيادة الآن");
+
+    setAudioStatus("unlocked");
   }
 
   // نداء صوتي عند تغيّر المراجع الحالي
