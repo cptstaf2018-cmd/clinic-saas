@@ -119,6 +119,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [clinicId, setClinicId] = useState<string | null>(null);
   const [data, setData] = useState<DisplayData>({ clinicName: "نظام الانتظار", logoUrl: null, slideshowImages: [], current: null, waiting: [] });
   const [slideIndex, setSlideIndex] = useState(0);
+  const [showSlideshow, setShowSlideshow] = useState(true);
+  const slideshowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dateDay, setDateDay] = useState("");
   const [dateFull, setDateFull] = useState("");
   const prevAnnouncementRef = useRef<string | null | undefined>(undefined);
@@ -258,18 +260,30 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     return () => clearInterval(t);
   }, []);
 
-  // Slideshow — يتبدل كل 8 ثوانٍ عند السكون
-  // نستخدم .length بدل المصفوفة كاملة حتى لا يُعاد تشغيل الـ interval مع كل poll
+  // عند استدعاء مريض → أخفِ الدعاية، وبعد 30 ثانية أعدها
+  useEffect(() => {
+    if (data.current) {
+      setShowSlideshow(false);
+      if (slideshowTimerRef.current) clearTimeout(slideshowTimerRef.current);
+      slideshowTimerRef.current = setTimeout(() => setShowSlideshow(true), 30000);
+    } else {
+      if (slideshowTimerRef.current) clearTimeout(slideshowTimerRef.current);
+      setShowSlideshow(true);
+    }
+    return () => { if (slideshowTimerRef.current) clearTimeout(slideshowTimerRef.current); };
+  }, [data.current]);
+
+  // Slideshow — يتبدل كل 8 ثوانٍ
   const slideshowCount = data.slideshowImages.length;
   useEffect(() => {
-    if (!data.current && slideshowCount > 1) {
+    if (slideshowCount > 1) {
       const t = setInterval(() => {
         setSlideIndex((i) => (i + 1) % slideshowCount);
       }, 8000);
       return () => clearInterval(t);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.current, slideshowCount]);
+  }, [slideshowCount]);
 
   const waiting = data.waiting.slice(0, 4);
 
@@ -533,8 +547,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           <div className="dp-aya-ref">سورة الشعراء — الآية ٨٠</div>
         </div>
 
-        {/* Slideshow — يظهر عند السكون فقط */}
-        {!data.current && data.slideshowImages.length > 0 && (
+        {/* Slideshow — يظهر عند السكون أو بعد 30 ثانية من الاستدعاء */}
+        {showSlideshow && data.slideshowImages.length > 0 && (
           <div style={{
             position: "fixed", inset: 0, zIndex: 10,
             background: "#000",
