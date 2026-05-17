@@ -122,26 +122,29 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const prevAnnouncementRef = useRef<string | null | undefined>(undefined);
   const [soundEnabled] = useState(true);
   const audioUnlockedRef = useRef(false);
-  const currentAudioRef = useRef<{ audio: HTMLAudioElement; url: string } | null>(null);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const currentBlobUrl = useRef<string | null>(null);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
-  // فتح الصوت تلقائياً عند أول تفاعل مع الصفحة (نقرة أو لمس)
+  // إنشاء عنصر audio ثابت وفتحه عند أول تفاعل
   useEffect(() => {
+    const audio = new Audio();
+    audio.preload = "auto";
+    audioElRef.current = audio;
+
     function unlockOnInteraction() {
       if (audioUnlockedRef.current) return;
-      audioUnlockedRef.current = true;
-      const silent = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
-      silent.play().catch(() => {});
-      if ("speechSynthesis" in window) {
-        const u = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(u);
-      }
+      // شغّل صوت صامت على نفس العنصر — يفتح autoplay للمتصفح
+      audio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+      audio.play().then(() => { audioUnlockedRef.current = true; }).catch(() => {});
     }
+
     document.addEventListener("click", unlockOnInteraction, { once: true });
     document.addEventListener("touchstart", unlockOnInteraction, { once: true });
     document.addEventListener("keydown", unlockOnInteraction, { once: true });
     return () => {
+      audio.pause();
       document.removeEventListener("click", unlockOnInteraction);
       document.removeEventListener("touchstart", unlockOnInteraction);
       document.removeEventListener("keydown", unlockOnInteraction);
@@ -178,61 +181,46 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   }
 
   async function announceQueue(current: NonNullable<DisplayData["current"]>) {
-    // Cancel any in-flight announcement before starting a new one
-    if (currentAudioRef.current) {
-      try { currentAudioRef.current.audio.pause(); } catch {}
-      URL.revokeObjectURL(currentAudioRef.current.url);
-      currentAudioRef.current = null;
+    const audio = audioElRef.current;
+    if (!audio || !audioUnlockedRef.current) return;
+
+    // إيقاف أي نداء جارٍ
+    audio.pause();
+    if (currentBlobUrl.current) {
+      URL.revokeObjectURL(currentBlobUrl.current);
+      currentBlobUrl.current = null;
     }
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 
     const text = buildAnnouncementText(current);
 
-    const speakInBrowser = () => {
-      if (!("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "ar-SA";
-      u.rate = 0.86;
-      const voices = window.speechSynthesis.getVoices();
-      const arabicVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith("ar"));
-      if (arabicVoice) u.voice = arabicVoice;
-      window.speechSynthesis.speak(u);
-    };
-
-    // Always try ElevenLabs first — browser TTS is only a fallback
     try {
       const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
       if (res.ok) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const audio = new Audio();
-        audio.preload = "auto";
+        currentBlobUrl.current = url;
+
         audio.src = url;
-        currentAudioRef.current = { audio, url };
-
-        await new Promise<void>((resolve) => {
-          let resolved = false;
-          const onReady = () => { if (!resolved) { resolved = true; resolve(); } };
-          audio.addEventListener("canplaythrough", onReady, { once: true });
-          audio.addEventListener("error", onReady, { once: true });
-          setTimeout(onReady, 1500);
-          audio.load();
-        });
-
         audio.onended = () => {
           URL.revokeObjectURL(url);
-          if (currentAudioRef.current?.audio === audio) currentAudioRef.current = null;
+          if (currentBlobUrl.current === url) currentBlobUrl.current = null;
         };
-
         await audio.play();
-        audioUnlockedRef.current = true;
         return;
       }
     } catch {}
 
-    // Fallback: browser TTS (only if audio was unlocked by user interaction)
-    if (audioUnlockedRef.current) speakInBrowser();
+    // Fallback: browser TTS
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ar-SA";
+      u.rate = 0.86;
+      const voices = window.speechSynthesis.getVoices();
+      const arabicVoice = voices.find((v) => v.lang.toLowerCase().startsWith("ar"));
+      if (arabicVoice) u.voice = arabicVoice;
+      window.speechSynthesis.speak(u);
+    }
   }
 
   // نداء صوتي عند تغيّر المراجع الحالي
