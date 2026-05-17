@@ -109,6 +109,13 @@ export default async function PatientProfilePage({
                 💬 واتساب
               </a>
               <Link
+                href={`/dashboard/patients/${patient.id}/prescription`}
+                target="_blank"
+                className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white transition hover:bg-blue-700"
+              >
+                🖊️ وصفة طبية
+              </Link>
+              <Link
                 href={`/dashboard/patients/${patient.id}/report`}
                 className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white transition hover:bg-slate-700"
               >
