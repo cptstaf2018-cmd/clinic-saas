@@ -13,45 +13,46 @@ const TREATMENTS = [
   { key: "other",      label: "أخرى",       color: "#6b7280", alpha: "60" },
 ];
 
-// إحداثيات كل سن في صورة T1 (viewBox 900 x 340 — الجزء العلوي من الصورة فقط)
-// كل سن: { num, x, y, w, h }
+// إحداثيات كل سن — viewBox 900 x 430 (75% من الصورة الأصلية 900x570)
+// الأسنان العلوية: y≈140, الأسنان السفلية: y≈278
+const W = 50; // عرض كل سن
 const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[] = [
-  // ── الصف العلوي — right to left (18 → 11) ──
-  { num: 18, x: 18,  y: 22, w: 48, h: 105 },
-  { num: 17, x: 68,  y: 22, w: 48, h: 105 },
-  { num: 16, x: 118, y: 22, w: 48, h: 105 },
-  { num: 15, x: 168, y: 22, w: 48, h: 105 },
-  { num: 14, x: 218, y: 22, w: 48, h: 105 },
-  { num: 13, x: 268, y: 22, w: 48, h: 105 },
-  { num: 12, x: 318, y: 22, w: 48, h: 105 },
-  { num: 11, x: 368, y: 22, w: 48, h: 105 },
-  // ── الصف العلوي — left (21 → 28) ──
-  { num: 21, x: 430, y: 22, w: 48, h: 105 },
-  { num: 22, x: 480, y: 22, w: 48, h: 105 },
-  { num: 23, x: 530, y: 22, w: 48, h: 105 },
-  { num: 24, x: 580, y: 22, w: 48, h: 105 },
-  { num: 25, x: 630, y: 22, w: 48, h: 105 },
-  { num: 26, x: 680, y: 22, w: 48, h: 105 },
-  { num: 27, x: 730, y: 22, w: 48, h: 105 },
-  { num: 28, x: 780, y: 22, w: 48, h: 105 },
-  // ── الصف السفلي — right (48 → 41) ──
-  { num: 48, x: 18,  y: 210, w: 48, h: 105 },
-  { num: 47, x: 68,  y: 210, w: 48, h: 105 },
-  { num: 46, x: 118, y: 210, w: 48, h: 105 },
-  { num: 45, x: 168, y: 210, w: 48, h: 105 },
-  { num: 44, x: 218, y: 210, w: 48, h: 105 },
-  { num: 43, x: 268, y: 210, w: 48, h: 105 },
-  { num: 42, x: 318, y: 210, w: 48, h: 105 },
-  { num: 41, x: 368, y: 210, w: 48, h: 105 },
-  // ── الصف السفلي — left (31 → 38) ──
-  { num: 31, x: 430, y: 210, w: 48, h: 105 },
-  { num: 32, x: 480, y: 210, w: 48, h: 105 },
-  { num: 33, x: 530, y: 210, w: 48, h: 105 },
-  { num: 34, x: 580, y: 210, w: 48, h: 105 },
-  { num: 35, x: 630, y: 210, w: 48, h: 105 },
-  { num: 36, x: 680, y: 210, w: 48, h: 105 },
-  { num: 37, x: 730, y: 210, w: 48, h: 105 },
-  { num: 38, x: 780, y: 210, w: 48, h: 105 },
+  // ── الصف العلوي — يمين (18 → 11) ──
+  { num: 18, x: 10,  y: 140, w: W, h: 120 },
+  { num: 17, x: 64,  y: 140, w: W, h: 120 },
+  { num: 16, x: 118, y: 140, w: W, h: 120 },
+  { num: 15, x: 172, y: 140, w: W, h: 120 },
+  { num: 14, x: 226, y: 140, w: W, h: 120 },
+  { num: 13, x: 280, y: 140, w: W, h: 120 },
+  { num: 12, x: 334, y: 140, w: W, h: 120 },
+  { num: 11, x: 388, y: 140, w: W, h: 120 },
+  // ── الصف العلوي — يسار (21 → 28) ──
+  { num: 21, x: 455, y: 140, w: W, h: 120 },
+  { num: 22, x: 509, y: 140, w: W, h: 120 },
+  { num: 23, x: 563, y: 140, w: W, h: 120 },
+  { num: 24, x: 617, y: 140, w: W, h: 120 },
+  { num: 25, x: 671, y: 140, w: W, h: 120 },
+  { num: 26, x: 725, y: 140, w: W, h: 120 },
+  { num: 27, x: 779, y: 140, w: W, h: 120 },
+  { num: 28, x: 833, y: 140, w: W, h: 120 },
+  // ── الصف السفلي — يمين (48 → 41) ──
+  { num: 48, x: 10,  y: 278, w: W, h: 120 },
+  { num: 47, x: 64,  y: 278, w: W, h: 120 },
+  { num: 46, x: 118, y: 278, w: W, h: 120 },
+  { num: 45, x: 172, y: 278, w: W, h: 120 },
+  { num: 44, x: 226, y: 278, w: W, h: 120 },
+  { num: 43, x: 280, y: 278, w: W, h: 120 },
+  { num: 42, x: 334, y: 278, w: W, h: 120 },
+  { num: 41, x: 388, y: 278, w: W, h: 120 },
+  // ── الصف السفلي — يسار (31 → 38) ──
+  { num: 31, x: 455, y: 278, w: W, h: 120 },
+  { num: 32, x: 509, y: 278, w: W, h: 120 },
+  { num: 33, x: 563, y: 278, w: W, h: 120 },
+  { num: 34, x: 617, y: 278, w: W, h: 120 },
+  { num: 35, x: 671, y: 278, w: W, h: 120 },
+  { num: 36, x: 725, y: 278, w: W, h: 120 },
+  { num: 37, x: 779, y: 278, w: W, h: 120 },
+  { num: 38, x: 833, y: 278, w: W, h: 120 },
 ];
 
 type Treatment = { id: string; toothNumber: number; treatment: string; notes: string | null };
@@ -111,8 +112,8 @@ export default function ToothChartClient({
     <div dir="rtl">
       {/* الخريطة التفاعلية */}
       <div style={{ position: "relative", width: "100%", borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0" }}>
-        {/* صورة T1 — نعرض الجزء العلوي فقط (الأسنان) */}
-        <div style={{ position: "relative", width: "100%", paddingBottom: "37.8%" /* 340/900 */ }}>
+        {/* صورة T1 — نعرض 75% من الصورة (الأسنان فقط بدون التشريح) */}
+        <div style={{ position: "relative", width: "100%", paddingBottom: "47.8%" /* 430/900 */ }}>
           <Image
             src="/dental-chart.jpg"
             alt="خريطة الأسنان"
@@ -123,7 +124,7 @@ export default function ToothChartClient({
 
           {/* SVG overlay تفاعلي */}
           <svg
-            viewBox="0 0 900 340"
+            viewBox="0 0 900 430"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", cursor: "pointer" }}
           >
             {TOOTH_COORDS.map(({ num, x, y, w, h }) => {
@@ -140,16 +141,18 @@ export default function ToothChartClient({
                     strokeWidth={isSelected ? 3 : 1.5}
                     style={{ transition: "all 0.15s" }}
                   />
-                  {/* رقم السن */}
-                  <text
-                    x={x + w / 2} y={y + h + 14}
-                    textAnchor="middle"
-                    fontSize={11}
-                    fontWeight={700}
-                    fill={isSelected ? "#1e3a8a" : "#64748b"}
-                  >
-                    {num}
-                  </text>
+                  {/* رقم السن — يظهر عند التحديد فقط */}
+                  {isSelected && (
+                    <text
+                      x={x + w / 2} y={y - 5}
+                      textAnchor="middle"
+                      fontSize={12}
+                      fontWeight={900}
+                      fill="#1e3a8a"
+                    >
+                      {num}
+                    </text>
+                  )}
                 </g>
               );
             })}
