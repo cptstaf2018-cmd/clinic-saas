@@ -132,24 +132,34 @@ export default function ToothChartClient({
               const info = t ? getInfo(t.treatment) : null;
               const isSelected = selected === num;
               return (
-                <g key={num} onClick={() => { setSelected(isSelected ? null : num); setNotes(t?.notes ?? ""); }}>
-                  <rect
-                    x={x} y={y} width={w} height={h}
-                    rx={6}
-                    fill={info ? `${info.color}99` : "transparent"}
-                    stroke={isSelected ? "#1e3a8a" : info ? info.color : "transparent"}
-                    strokeWidth={isSelected ? 3 : 1.5}
-                    style={{ transition: "all 0.15s" }}
-                  />
-                  {/* رقم السن — يظهر عند التحديد فقط */}
+                <g key={num} onClick={() => { setSelected(isSelected ? null : num); setNotes(t?.notes ?? ""); }}
+                  style={{ cursor: "pointer" }}>
+                  {/* منطقة النقر الشفافة */}
+                  <rect x={x} y={y} width={w} height={h} rx={8} fill="transparent" />
+                  {/* اللون بـ multiply — يتبع شكل السن تلقائياً */}
+                  {info && (
+                    <rect
+                      x={x} y={y} width={w} height={h}
+                      rx={8}
+                      fill={info.color}
+                      opacity={0.55}
+                      style={{ mixBlendMode: "multiply" } as React.CSSProperties}
+                    />
+                  )}
+                  {/* إطار التحديد */}
                   {isSelected && (
-                    <text
-                      x={x + w / 2} y={y - 5}
-                      textAnchor="middle"
-                      fontSize={12}
-                      fontWeight={900}
-                      fill="#1e3a8a"
-                    >
+                    <rect
+                      x={x - 2} y={y - 2} width={w + 4} height={h + 4}
+                      rx={10}
+                      fill="none"
+                      stroke="#1e3a8a"
+                      strokeWidth={3}
+                      strokeDasharray="6 3"
+                    />
+                  )}
+                  {/* رقم السن عند التحديد */}
+                  {isSelected && (
+                    <text x={x + w / 2} y={y - 6} textAnchor="middle" fontSize={12} fontWeight={900} fill="#1e3a8a">
                       {num}
                     </text>
                   )}
