@@ -4,7 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import MedicalRecordsClient from "./MedicalRecordsClient";
 import PatientAttachmentsClient from "./PatientAttachmentsClient";
-import { getEntitlements } from "@/lib/feature-gates";
+import ToothChartClient from "./ToothChartClient";
+import { getEntitlements, canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -66,6 +67,13 @@ export default async function PatientProfilePage({
   const subscription = await db.subscription.findUnique({ where: { clinicId } });
   const entitlements = getEntitlements(subscription?.plan);
   const specialtyConfig = await getClinicSpecialtyConfig(clinicId);
+
+  const isDental = specialtyConfig.code === "dentistry";
+  const hasDentalChart = canUseFeature(subscription?.plan, "dentalChart");
+
+  const toothTreatments = isDental && hasDentalChart
+    ? await db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
+    : [];
 
   const now = new Date();
   const completedCount = patient.appointments.filter((appointment) => appointment.status === "completed").length;
@@ -165,6 +173,41 @@ export default async function PatientProfilePage({
             </div>
           </div>
         </section>
+
+        {/* ═══ Dental Chart ═══ */}
+        {isDental && (
+          <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+              <div>
+                <h2 className="text-base font-black text-slate-950">🦷 خريطة الأسنان</h2>
+                <p className="text-xs font-bold text-slate-400 mt-0.5">انقر على أي سن لتأشير العلاج</p>
+              </div>
+              {!hasDentalChart && (
+                <span className="rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-600 ring-1 ring-amber-200">
+                  يتطلب الخطة المميزة
+                </span>
+              )}
+            </div>
+            <div className="p-5">
+              {hasDentalChart ? (
+                <ToothChartClient
+                  patientId={patient.id}
+                  initialTreatments={toothTreatments.map((t) => ({
+                    id: t.id,
+                    toothNumber: t.toothNumber,
+                    treatment: t.treatment,
+                    notes: t.notes,
+                  }))}
+                />
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-2xl mb-2">🦷</p>
+                  <p className="text-sm font-black text-slate-500">خريطة الأسنان التفاعلية متاحة في الخطة المميزة فما فوق</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ═══ Attachments ═══ */}
         {entitlements.features.includes("fullMedicalFile") && (

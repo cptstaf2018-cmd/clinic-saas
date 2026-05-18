@@ -35,6 +35,7 @@ model Clinic {
   patientAttachments     PatientAttachment[]
   patientPayments        PatientPayment[]
   patients               Patient[]
+  toothTreatments        ToothTreatment[]
   payments               Payment[]
   subscription           Subscription?
   settings               ClinicSettings?
@@ -108,10 +109,25 @@ model Patient {
   medicalRecords      MedicalRecord[]
   patientAttachments  PatientAttachment[]
   patientPayments     PatientPayment[]
+  toothTreatments     ToothTreatment[]
   clinic              Clinic              @relation(fields: [clinicId], references: [id])
 
   @@unique([clinicId, whatsappPhone])
   @@index([clinicId])
+}
+
+model ToothTreatment {
+  id          String   @id @default(cuid())
+  clinicId    String
+  patientId   String
+  toothNumber Int
+  treatment   String   // filling | extraction | rootCanal | crown | cleaning | implant | other
+  notes       String?
+  createdAt   DateTime @default(now())
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  clinic      Clinic   @relation(fields: [clinicId], references: [id])
+
+  @@index([clinicId, patientId])
 }
 
 model Appointment {

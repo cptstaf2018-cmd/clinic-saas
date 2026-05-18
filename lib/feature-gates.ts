@@ -15,7 +15,8 @@ export type FeatureKey =
   | "auditLog"
   | "backupRestore"
   | "cheerMessages"
-  | "fullMedicalFile";
+  | "fullMedicalFile"
+  | "dentalChart";
 
 type PlanWithTrial = PlanId | "trial";
 
@@ -43,6 +44,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   backupRestore: "نسخ احتياطي مع استرجاع",
   cheerMessages: "رسائل اطمئنان تلقائية للمرضى",
   fullMedicalFile: "الملف الطبي الكامل — تحاليل وأشعة ووصفات",
+  dentalChart: "خريطة الأسنان التفاعلية — تأشير العلاجات لكل مريض",
 };
 
 const ALL_FEATURES: FeatureKey[] = [
@@ -82,7 +84,7 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
     "followUpTracking",
     "patientPdfExport",
   ],
-  // مميزة — يضيف: واتساب متقدم + دعم أولوية + نسخ احتياطي + مساعد ذكي
+  // مميزة — يضيف: واتساب متقدم + دعم أولوية + نسخ احتياطي + مساعد ذكي + خريطة أسنان
   premium: [
     "appointments",
     "queueDisplay",
@@ -96,9 +98,10 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
     "backupRestore",
     "auditLog",
     "clinicAssistant",
+    "dentalChart",
   ],
   // مميزة VIP — يضيف: تحاليل وأشعة + رفع ملفات + رسائل اطمئنان + الملف الطبي الكامل
-  vip: [...ALL_FEATURES, "fullMedicalFile"],
+  vip: [...ALL_FEATURES, "fullMedicalFile", "dentalChart"],
 };
 
 export const PLAN_LIMITS: Record<PlanWithTrial, { users: number; whatsappMessages: number; storageGb: number }> = {
