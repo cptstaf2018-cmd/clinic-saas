@@ -1,22 +1,58 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 const TREATMENTS = [
-  { key: "filling",    label: "حشو",         color: "#f59e0b" },
-  { key: "extraction", label: "خلع",          color: "#ef4444" },
-  { key: "rootCanal",  label: "علاج عصب",    color: "#8b5cf6" },
-  { key: "crown",      label: "تلبيس",        color: "#3b82f6" },
-  { key: "cleaning",   label: "تنظيف جير",   color: "#10b981" },
-  { key: "implant",    label: "زراعة",        color: "#f97316" },
-  { key: "other",      label: "أخرى",         color: "#6b7280" },
+  { key: "filling",    label: "حشو",       color: "#f59e0b", alpha: "60" },
+  { key: "extraction", label: "خلع",        color: "#ef4444", alpha: "60" },
+  { key: "rootCanal",  label: "علاج عصب",  color: "#8b5cf6", alpha: "60" },
+  { key: "crown",      label: "تلبيس",      color: "#3b82f6", alpha: "60" },
+  { key: "cleaning",   label: "تنظيف جير", color: "#10b981", alpha: "60" },
+  { key: "implant",    label: "زراعة",      color: "#f97316", alpha: "60" },
+  { key: "other",      label: "أخرى",       color: "#6b7280", alpha: "60" },
 ];
 
-// ترقيم FDI — علوي: 18-11 | 21-28  سفلي: 48-41 | 31-38
-const UPPER_RIGHT = [18, 17, 16, 15, 14, 13, 12, 11];
-const UPPER_LEFT  = [21, 22, 23, 24, 25, 26, 27, 28];
-const LOWER_RIGHT = [48, 47, 46, 45, 44, 43, 42, 41];
-const LOWER_LEFT  = [31, 32, 33, 34, 35, 36, 37, 38];
+// إحداثيات كل سن في صورة T1 (viewBox 900 x 340 — الجزء العلوي من الصورة فقط)
+// كل سن: { num, x, y, w, h }
+const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[] = [
+  // ── الصف العلوي — right to left (18 → 11) ──
+  { num: 18, x: 18,  y: 22, w: 48, h: 105 },
+  { num: 17, x: 68,  y: 22, w: 48, h: 105 },
+  { num: 16, x: 118, y: 22, w: 48, h: 105 },
+  { num: 15, x: 168, y: 22, w: 48, h: 105 },
+  { num: 14, x: 218, y: 22, w: 48, h: 105 },
+  { num: 13, x: 268, y: 22, w: 48, h: 105 },
+  { num: 12, x: 318, y: 22, w: 48, h: 105 },
+  { num: 11, x: 368, y: 22, w: 48, h: 105 },
+  // ── الصف العلوي — left (21 → 28) ──
+  { num: 21, x: 430, y: 22, w: 48, h: 105 },
+  { num: 22, x: 480, y: 22, w: 48, h: 105 },
+  { num: 23, x: 530, y: 22, w: 48, h: 105 },
+  { num: 24, x: 580, y: 22, w: 48, h: 105 },
+  { num: 25, x: 630, y: 22, w: 48, h: 105 },
+  { num: 26, x: 680, y: 22, w: 48, h: 105 },
+  { num: 27, x: 730, y: 22, w: 48, h: 105 },
+  { num: 28, x: 780, y: 22, w: 48, h: 105 },
+  // ── الصف السفلي — right (48 → 41) ──
+  { num: 48, x: 18,  y: 210, w: 48, h: 105 },
+  { num: 47, x: 68,  y: 210, w: 48, h: 105 },
+  { num: 46, x: 118, y: 210, w: 48, h: 105 },
+  { num: 45, x: 168, y: 210, w: 48, h: 105 },
+  { num: 44, x: 218, y: 210, w: 48, h: 105 },
+  { num: 43, x: 268, y: 210, w: 48, h: 105 },
+  { num: 42, x: 318, y: 210, w: 48, h: 105 },
+  { num: 41, x: 368, y: 210, w: 48, h: 105 },
+  // ── الصف السفلي — left (31 → 38) ──
+  { num: 31, x: 430, y: 210, w: 48, h: 105 },
+  { num: 32, x: 480, y: 210, w: 48, h: 105 },
+  { num: 33, x: 530, y: 210, w: 48, h: 105 },
+  { num: 34, x: 580, y: 210, w: 48, h: 105 },
+  { num: 35, x: 630, y: 210, w: 48, h: 105 },
+  { num: 36, x: 680, y: 210, w: 48, h: 105 },
+  { num: 37, x: 730, y: 210, w: 48, h: 105 },
+  { num: 38, x: 780, y: 210, w: 48, h: 105 },
+];
 
 type Treatment = { id: string; toothNumber: number; treatment: string; notes: string | null };
 
@@ -36,10 +72,8 @@ export default function ToothChartClient({
     return treatments.find((t) => t.toothNumber === tooth);
   }
 
-  function getColor(tooth: number) {
-    const t = getTreatment(tooth);
-    if (!t) return "#e2e8f0";
-    return TREATMENTS.find((x) => x.key === t.treatment)?.color ?? "#6b7280";
+  function getInfo(key: string) {
+    return TREATMENTS.find((t) => t.key === key);
   }
 
   async function saveTreatment(treatmentKey: string) {
@@ -52,10 +86,7 @@ export default function ToothChartClient({
     });
     if (res.ok) {
       const { treatment } = await res.json();
-      setTreatments((prev) => {
-        const filtered = prev.filter((t) => t.toothNumber !== selected);
-        return [...filtered, treatment];
-      });
+      setTreatments((prev) => [...prev.filter((t) => t.toothNumber !== selected), treatment]);
     }
     setSaving(false);
     setSelected(null);
@@ -76,50 +107,53 @@ export default function ToothChartClient({
     setNotes("");
   }
 
-  function ToothButton({ num }: { num: number }) {
-    const color = getColor(num);
-    const isSelected = selected === num;
-    const t = getTreatment(num);
-    return (
-      <button
-        onClick={() => { setSelected(isSelected ? null : num); setNotes(t?.notes ?? ""); }}
-        title={t ? TREATMENTS.find((x) => x.key === t.treatment)?.label : `سن ${num}`}
-        style={{
-          width: 36, height: 44,
-          borderRadius: 8,
-          background: color,
-          border: isSelected ? "2.5px solid #1e3a8a" : "1.5px solid #cbd5e1",
-          display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          gap: 2, cursor: "pointer",
-          boxShadow: isSelected ? "0 0 0 3px rgba(30,58,138,0.25)" : "none",
-          transition: "all 0.15s",
-          fontSize: 9, fontWeight: 700,
-          color: color === "#e2e8f0" ? "#94a3b8" : "white",
-        }}
-      >
-        <span>{num}</span>
-      </button>
-    );
-  }
-
   return (
     <div dir="rtl">
-      {/* الخريطة */}
-      <div style={{ background: "#f8fafc", borderRadius: 16, padding: "16px 12px", border: "1px solid #e2e8f0" }}>
-        {/* صف علوي */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 4, marginBottom: 4 }}>
-          {UPPER_RIGHT.map((n) => <ToothButton key={n} num={n} />)}
-          <div style={{ width: 2, background: "#cbd5e1", borderRadius: 2, margin: "0 4px" }} />
-          {UPPER_LEFT.map((n) => <ToothButton key={n} num={n} />)}
-        </div>
-        {/* فاصل */}
-        <div style={{ height: 1, background: "#e2e8f0", margin: "6px 0" }} />
-        {/* صف سفلي */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 4 }}>
-          {LOWER_RIGHT.map((n) => <ToothButton key={n} num={n} />)}
-          <div style={{ width: 2, background: "#cbd5e1", borderRadius: 2, margin: "0 4px" }} />
-          {LOWER_LEFT.map((n) => <ToothButton key={n} num={n} />)}
+      {/* الخريطة التفاعلية */}
+      <div style={{ position: "relative", width: "100%", borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0" }}>
+        {/* صورة T1 — نعرض الجزء العلوي فقط (الأسنان) */}
+        <div style={{ position: "relative", width: "100%", paddingBottom: "37.8%" /* 340/900 */ }}>
+          <Image
+            src="/dental-chart.jpg"
+            alt="خريطة الأسنان"
+            fill
+            style={{ objectFit: "cover", objectPosition: "top" }}
+            priority
+          />
+
+          {/* SVG overlay تفاعلي */}
+          <svg
+            viewBox="0 0 900 340"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", cursor: "pointer" }}
+          >
+            {TOOTH_COORDS.map(({ num, x, y, w, h }) => {
+              const t = getTreatment(num);
+              const info = t ? getInfo(t.treatment) : null;
+              const isSelected = selected === num;
+              return (
+                <g key={num} onClick={() => { setSelected(isSelected ? null : num); setNotes(t?.notes ?? ""); }}>
+                  <rect
+                    x={x} y={y} width={w} height={h}
+                    rx={6}
+                    fill={info ? `${info.color}99` : "transparent"}
+                    stroke={isSelected ? "#1e3a8a" : info ? info.color : "transparent"}
+                    strokeWidth={isSelected ? 3 : 1.5}
+                    style={{ transition: "all 0.15s" }}
+                  />
+                  {/* رقم السن */}
+                  <text
+                    x={x + w / 2} y={y + h + 14}
+                    textAnchor="middle"
+                    fontSize={11}
+                    fontWeight={700}
+                    fill={isSelected ? "#1e3a8a" : "#64748b"}
+                  >
+                    {num}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
         </div>
       </div>
 
@@ -131,18 +165,11 @@ export default function ToothChartClient({
             {t.label}
           </span>
         ))}
-        <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, color: "#94a3b8" }}>
-          <span style={{ width: 12, height: 12, borderRadius: 3, background: "#e2e8f0", border: "1px solid #cbd5e1", display: "inline-block" }} />
-          بدون علاج
-        </span>
       </div>
 
       {/* بانيل التعديل */}
       {selected && (
-        <div style={{
-          marginTop: 14, background: "white", borderRadius: 14,
-          border: "1.5px solid #dbeafe", padding: 16,
-        }}>
+        <div style={{ marginTop: 14, background: "white", borderRadius: 14, border: "1.5px solid #dbeafe", padding: 16 }}>
           <p style={{ fontSize: 13, fontWeight: 900, color: "#1e3a8a", marginBottom: 10 }}>
             السن {selected} — اختر العلاج:
           </p>
@@ -197,14 +224,14 @@ export default function ToothChartClient({
           <p style={{ fontSize: 12, fontWeight: 900, color: "#64748b", marginBottom: 8 }}>ملخص العلاجات:</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {treatments.map((t) => {
-              const info = TREATMENTS.find((x) => x.key === t.treatment);
+              const info = getInfo(t.treatment);
               return (
                 <span key={t.id} style={{
                   padding: "3px 10px", borderRadius: 20,
-                  background: info?.color + "20",
-                  color: info?.color,
+                  background: (info?.color ?? "#6b7280") + "20",
+                  color: info?.color ?? "#6b7280",
                   fontSize: 11, fontWeight: 800,
-                  border: `1px solid ${info?.color}40`,
+                  border: `1px solid ${(info?.color ?? "#6b7280")}40`,
                 }}>
                   {t.toothNumber} — {info?.label}
                 </span>
