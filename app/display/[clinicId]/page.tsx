@@ -96,7 +96,7 @@ function AnalogClock() {
   }, [ready]);
 
   return (
-    <svg ref={svgRef} width="90" height="90" viewBox="0 0 100 100"
+    <svg ref={svgRef} width="120" height="120" viewBox="0 0 100 100"
       style={{ filter: "drop-shadow(0 4px 14px rgba(37,99,235,0.25))" }}>
       <circle cx="50" cy="50" r="47" fill="rgba(37,99,235,0.05)" />
       <circle cx="50" cy="50" r="45" fill="white" stroke="#dbeafe" strokeWidth="1.5" />
@@ -322,48 +322,48 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           position:relative; z-index:2;
           display:grid; grid-template-columns:1fr auto 1fr;
           align-items:center;
-          padding:10px 26px;
+          padding:16px 48px;
           background:white;
           border-bottom:2px solid #dbeafe;
           box-shadow:0 2px 12px rgba(37,99,235,0.07);
-          gap:10px;
+          gap:20px;
         }
         /* يمين — ساعة عقارب */
         .dp-clock {
-          display:flex; align-items:center; gap:9px;
+          display:flex; align-items:center; gap:14px;
         }
-        .dp-live { font-size:12px; font-weight:700; color:#3b82f6; }
+        .dp-live { font-size:15px; font-weight:700; color:#3b82f6; }
         .dp-dot {
-          width:10px; height:10px; border-radius:50%;
+          width:12px; height:12px; border-radius:50%;
           background:#3b82f6;
           animation:dp-lp 1.4s infinite;
         }
         @keyframes dp-lp {
           0%{box-shadow:0 0 0 0 rgba(59,130,246,0.6);}
-          70%{box-shadow:0 0 0 12px rgba(59,130,246,0);}
+          70%{box-shadow:0 0 0 14px rgba(59,130,246,0);}
           100%{box-shadow:0 0 0 0 rgba(59,130,246,0);}
         }
         /* وسط — اسم العيادة */
         .dp-clinic {
-          display:flex; align-items:center; gap:10px;
+          display:flex; align-items:center; gap:14px;
           white-space:nowrap;
         }
         .dp-logo {
-          width:44px; height:44px; border-radius:13px;
+          width:54px; height:54px; border-radius:15px;
           background:linear-gradient(135deg,#1e40af,#3b82f6);
           display:flex; align-items:center; justify-content:center;
-          font-size:22px;
+          font-size:26px;
           box-shadow:0 4px 14px rgba(37,99,235,0.3);
         }
-        .dp-cname { font-size:21px; font-weight:900; color:#1e3a8a; }
+        .dp-cname { font-size:26px; font-weight:900; color:#1e3a8a; }
         /* يسار — التاريخ */
         .dp-date {
           display:flex; flex-direction:column;
           align-items:flex-end;
           text-align:left;
         }
-        .dp-date-day  { font-size:26px; font-weight:900; color:#1e3a8a; line-height:1; }
-        .dp-date-full { font-size:14px; font-weight:700; color:#3b82f6; margin-top:2px; }
+        .dp-date-day  { font-size:34px; font-weight:900; color:#1e3a8a; line-height:1; }
+        .dp-date-full { font-size:17px; font-weight:700; color:#3b82f6; margin-top:4px; }
 
         /* آية قرآنية */
         .dp-quran {
