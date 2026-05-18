@@ -13,93 +13,47 @@ const TREATMENTS = [
   { key: "other",      label: "أخرى",       color: "#6b7280" },
 ];
 
-type TT = "molar" | "premolar" | "canine" | "incisor";
-
-// viewBox 900×430 — قياسات مبنية على الصورة الأصلية 900×570 (نعرض 75% علوي)
-// x الأرحاء أوسع (67px)، الثنايا أضيق (41-45px)، الأنياب مثلثة الشكل
-// الأسنان العلوية: جذر ↑ تاج ↓ | الأسنان السفلية: تاج ↑ جذر ↓
-const TEETH: { num: number; x: number; y: number; w: number; h: number; t: TT }[] = [
-  // ── الصف العلوي — يمين (18 → 11) ──
-  { num: 18, x: 15,  y: 125, w: 67, h: 125, t: "molar"    },
-  { num: 17, x: 82,  y: 125, w: 63, h: 125, t: "molar"    },
-  { num: 16, x: 145, y: 127, w: 58, h: 123, t: "molar"    },
-  { num: 15, x: 203, y: 129, w: 50, h: 121, t: "premolar" },
-  { num: 14, x: 253, y: 129, w: 50, h: 121, t: "premolar" },
-  { num: 13, x: 303, y: 121, w: 50, h: 129, t: "canine"   },
-  { num: 12, x: 353, y: 129, w: 41, h: 121, t: "incisor"  },
-  { num: 11, x: 394, y: 127, w: 45, h: 123, t: "incisor"  },
+// viewBox 900×430 — إحداثيات دقيقة لكل سن حسب موقعه الفعلي في الصورة
+// عروض متغيرة: أرحاء 58-67px، ضواحك 50px، أنياب 50px، ثنايا 41-45px
+// المنتصف: فجوة 22px بين السن 11 (end=439) والسن 21 (start=461)
+const TEETH: { num: number; x: number; y: number; w: number; h: number }[] = [
+  // ── الصف العلوي — يمين (18 → 11) — جذر ↑ تاج ↓ ──
+  { num: 18, x: 15,  y: 125, w: 67, h: 125 },
+  { num: 17, x: 82,  y: 125, w: 63, h: 125 },
+  { num: 16, x: 145, y: 127, w: 58, h: 123 },
+  { num: 15, x: 203, y: 129, w: 50, h: 121 },
+  { num: 14, x: 253, y: 129, w: 50, h: 121 },
+  { num: 13, x: 303, y: 121, w: 50, h: 129 },
+  { num: 12, x: 353, y: 129, w: 41, h: 121 },
+  { num: 11, x: 394, y: 127, w: 45, h: 123 },
   // ── الصف العلوي — يسار (21 → 28) ──
-  { num: 21, x: 461, y: 127, w: 45, h: 123, t: "incisor"  },
-  { num: 22, x: 506, y: 129, w: 41, h: 121, t: "incisor"  },
-  { num: 23, x: 547, y: 121, w: 50, h: 129, t: "canine"   },
-  { num: 24, x: 597, y: 129, w: 50, h: 121, t: "premolar" },
-  { num: 25, x: 647, y: 129, w: 50, h: 121, t: "premolar" },
-  { num: 26, x: 697, y: 127, w: 58, h: 123, t: "molar"    },
-  { num: 27, x: 755, y: 125, w: 63, h: 125, t: "molar"    },
-  { num: 28, x: 818, y: 125, w: 67, h: 125, t: "molar"    },
-  // ── الصف السفلي — يمين (48 → 41) ──
-  { num: 48, x: 15,  y: 268, w: 67, h: 118, t: "molar"    },
-  { num: 47, x: 82,  y: 268, w: 63, h: 118, t: "molar"    },
-  { num: 46, x: 145, y: 270, w: 58, h: 116, t: "molar"    },
-  { num: 45, x: 203, y: 272, w: 50, h: 114, t: "premolar" },
-  { num: 44, x: 253, y: 272, w: 50, h: 114, t: "premolar" },
-  { num: 43, x: 303, y: 266, w: 50, h: 122, t: "canine"   },
-  { num: 42, x: 353, y: 270, w: 41, h: 116, t: "incisor"  },
-  { num: 41, x: 394, y: 268, w: 45, h: 118, t: "incisor"  },
+  { num: 21, x: 461, y: 127, w: 45, h: 123 },
+  { num: 22, x: 506, y: 129, w: 41, h: 121 },
+  { num: 23, x: 547, y: 121, w: 50, h: 129 },
+  { num: 24, x: 597, y: 129, w: 50, h: 121 },
+  { num: 25, x: 647, y: 129, w: 50, h: 121 },
+  { num: 26, x: 697, y: 127, w: 58, h: 123 },
+  { num: 27, x: 755, y: 125, w: 63, h: 125 },
+  { num: 28, x: 818, y: 125, w: 67, h: 125 },
+  // ── الصف السفلي — يمين (48 → 41) — تاج ↑ جذر ↓ ──
+  { num: 48, x: 15,  y: 268, w: 67, h: 118 },
+  { num: 47, x: 82,  y: 268, w: 63, h: 118 },
+  { num: 46, x: 145, y: 270, w: 58, h: 116 },
+  { num: 45, x: 203, y: 272, w: 50, h: 114 },
+  { num: 44, x: 253, y: 272, w: 50, h: 114 },
+  { num: 43, x: 303, y: 266, w: 50, h: 122 },
+  { num: 42, x: 353, y: 270, w: 41, h: 116 },
+  { num: 41, x: 394, y: 268, w: 45, h: 118 },
   // ── الصف السفلي — يسار (31 → 38) ──
-  { num: 31, x: 461, y: 268, w: 45, h: 118, t: "incisor"  },
-  { num: 32, x: 506, y: 270, w: 41, h: 116, t: "incisor"  },
-  { num: 33, x: 547, y: 266, w: 50, h: 122, t: "canine"   },
-  { num: 34, x: 597, y: 272, w: 50, h: 114, t: "premolar" },
-  { num: 35, x: 647, y: 272, w: 50, h: 114, t: "premolar" },
-  { num: 36, x: 697, y: 270, w: 58, h: 116, t: "molar"    },
-  { num: 37, x: 755, y: 268, w: 63, h: 118, t: "molar"    },
-  { num: 38, x: 818, y: 268, w: 67, h: 118, t: "molar"    },
+  { num: 31, x: 461, y: 268, w: 45, h: 118 },
+  { num: 32, x: 506, y: 270, w: 41, h: 116 },
+  { num: 33, x: 547, y: 266, w: 50, h: 122 },
+  { num: 34, x: 597, y: 272, w: 50, h: 114 },
+  { num: 35, x: 647, y: 272, w: 50, h: 114 },
+  { num: 36, x: 697, y: 270, w: 58, h: 116 },
+  { num: 37, x: 755, y: 268, w: 63, h: 118 },
+  { num: 38, x: 818, y: 268, w: 67, h: 118 },
 ];
-
-// يرسم شكل السن كمضلّع رباعي (شبه منحرف) بدل المستطيل
-// الأسنان العلوية: جذر ضيّق أعلى، تاج أعرض أسفل
-// الأنياب: مثلثية — واسعة أعلى، منتهية بنقطة أسفل (أو العكس للسفلية)
-function toothPoints(
-  num: number, x: number, y: number, w: number, h: number, t: TT, expand = 0
-): string {
-  const isUpper = num >= 11 && num <= 28;
-  const L = x - expand, R = x + w + expand;
-  const T = y - expand, B = y + h + expand;
-  const cx = x + w / 2;
-  const e = expand;
-
-  if (isUpper) {
-    // جذر أعلى (T) → تاج أسفل (B)
-    switch (t) {
-      case "molar":
-        // ضيّق في الجذر، أعرض في التاج
-        return `${L+9},${T} ${R-9},${T} ${R+3+e},${B} ${L-3-e},${B}`;
-      case "premolar":
-        return `${L+7},${T} ${R-7},${T} ${R+2+e},${B} ${L-2-e},${B}`;
-      case "canine":
-        // واسع في الجذر، ضيّق جداً عند طرف التاج (مثلثي)
-        return `${L+2},${T} ${R-2},${T} ${cx+7+e},${B} ${cx-7-e},${B}`;
-      case "incisor":
-        // ضيّق في الجذر، حافة القاطع مستقيمة عريضة
-        return `${L+5},${T} ${R-5},${T} ${R},${B} ${L},${B}`;
-    }
-  } else {
-    // تاج أعلى (T) → جذر أسفل (B)
-    switch (t) {
-      case "molar":
-        return `${L-3-e},${T} ${R+3+e},${T} ${R-9},${B} ${L+9},${B}`;
-      case "premolar":
-        return `${L-2-e},${T} ${R+2+e},${T} ${R-7},${B} ${L+7},${B}`;
-      case "canine":
-        // طرف التاج ضيّق أعلى، يتّسع نحو الجذر
-        return `${cx-7-e},${T} ${cx+7+e},${T} ${R-2},${B} ${L+2},${B}`;
-      case "incisor":
-        return `${L},${T} ${R},${T} ${R-5},${B} ${L+5},${B}`;
-    }
-  }
-  return `${L},${T} ${R},${T} ${R},${B} ${L},${B}`;
-}
 
 type Treatment = { id: string; toothNumber: number; treatment: string; notes: string | null };
 
@@ -171,7 +125,43 @@ export default function ToothChartClient({
             viewBox="0 0 900 430"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", cursor: "pointer" }}
           >
-            {TEETH.map(({ num, x, y, w, h, t }) => {
+            <defs>
+              {/*
+                فلتر يحوّل الصورة إلى قناع:
+                  - البكسلات البيضاء (الخلفية)  → سوداء  → شفافة  → لا يظهر اللون
+                  - البكسلات الكريمية (السن)     → بيضاء  → معتمة  → يظهر اللون
+                المعادلة: output = clamp(-20·R + 20, 0, 1)
+                عند R=1.0 (أبيض):  20-20=0   ← شفاف
+                عند R=0.94(كريمي): 20-18.8=1.2 ← كامل التعتيم
+              */}
+              <filter id="tsf" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+                <feColorMatrix
+                  type="matrix"
+                  values="-20 0 0 0 20
+                           0 -20 0 0 20
+                           0  0 -20 0 20
+                           0  0   0  1  0"
+                />
+              </filter>
+
+              {/*
+                قناع SVG مبني من صورة الأسنان المفلترة.
+                حيث يكون القناع أبيض (= منطقة السن) → يمرّر اللون.
+                حيث يكون أسود (= الخلفية) → يحجب اللون.
+                النتيجة: اللون يتبع شكل السن بالضبط بدون قصّ يدوي.
+              */}
+              <mask id="tmask" maskUnits="userSpaceOnUse">
+                {/* width=900 height=570 = الحجم الحقيقي للصورة؛ viewBox يقصّها تلقائياً عند y=430 */}
+                <image
+                  href="/dental-chart.jpg"
+                  x="0" y="0" width="900" height="570"
+                  preserveAspectRatio="xMinYMin meet"
+                  filter="url(#tsf)"
+                />
+              </mask>
+            </defs>
+
+            {TEETH.map(({ num, x, y, w, h }) => {
               const tr = getTreatment(num);
               const info = tr ? getInfo(tr.treatment) : null;
               const isSelected = selected === num;
@@ -182,23 +172,28 @@ export default function ToothChartClient({
                   onClick={() => { setSelected(isSelected ? null : num); setNotes(tr?.notes ?? ""); }}
                   style={{ cursor: "pointer" }}
                 >
-                  {/* منطقة النقر — مستطيل شفاف */}
+                  {/* منطقة النقر — شفافة تغطي كامل مساحة السن */}
                   <rect x={x} y={y} width={w} height={h} fill="transparent" />
 
-                  {/* لون العلاج — شكل السن الحقيقي (شبه منحرف) */}
+                  {/*
+                    اللون المعالَج بالقناع:
+                    المستطيل يغطي منطقة السن → القناع يُظهره فقط على بكسلات السن الكريمية
+                    الخلفية البيضاء تبقى بيضاء بدون أي تلوين
+                  */}
                   {info && (
-                    <polygon
-                      points={toothPoints(num, x, y, w, h, t)}
+                    <rect
+                      x={x} y={y} width={w} height={h}
                       fill={info.color}
-                      opacity={0.62}
-                      style={{ mixBlendMode: "multiply" } as React.CSSProperties}
+                      opacity={0.85}
+                      mask="url(#tmask)"
                     />
                   )}
 
-                  {/* إطار التحديد — يتبع شكل السن */}
+                  {/* إطار التحديد */}
                   {isSelected && (
-                    <polygon
-                      points={toothPoints(num, x, y, w, h, t, 3)}
+                    <rect
+                      x={x - 3} y={y - 3} width={w + 6} height={h + 6}
+                      rx={10}
                       fill="none"
                       stroke="#1e3a8a"
                       strokeWidth={3}
@@ -206,10 +201,10 @@ export default function ToothChartClient({
                     />
                   )}
 
-                  {/* رقم السن عند التحديد */}
+                  {/* رقم السن */}
                   {isSelected && (
                     <text
-                      x={x + w / 2} y={y - 8}
+                      x={x + w / 2} y={y - 9}
                       textAnchor="middle" fontSize={12} fontWeight={900} fill="#1e3a8a"
                     >
                       {num}
