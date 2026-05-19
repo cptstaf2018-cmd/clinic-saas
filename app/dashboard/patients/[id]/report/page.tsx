@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature, FEATURE_LABELS, PLAN_DISPLAY, upgradeMessage } from "@/lib/feature-gates";
+import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import PrintButton from "./PrintButton";
+import ToothChartReport from "./ToothChartReport";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "معلق",
@@ -50,7 +52,7 @@ export default async function PatientReportPage({
   const { id } = await params;
   const clinicId = session.user.clinicId as string;
 
-  const [clinic, patient] = await Promise.all([
+  const [clinic, patient, specialtyConfig] = await Promise.all([
     db.clinic.findUnique({
       where: { id: clinicId },
       include: { subscription: true },
@@ -62,9 +64,15 @@ export default async function PatientReportPage({
         medicalRecords: { orderBy: { date: "desc" } },
       },
     }),
+    getClinicSpecialtyConfig(clinicId),
   ]);
 
   if (!clinic || !patient) notFound();
+
+  const isDental = specialtyConfig.code === "dentistry";
+  const toothTreatments = isDental
+    ? await db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
+    : [];
 
   const canExport = canUseFeature(clinic.subscription?.plan, "patientPdfExport");
   const planKey = clinic.subscription?.plan === "trial" || clinic.subscription?.plan === "basic" || clinic.subscription?.plan === "standard" || clinic.subscription?.plan === "premium"
@@ -186,6 +194,22 @@ export default async function PatientReportPage({
             </div>
           )}
         </section>
+
+        {isDental && (
+          <section className="mt-8 break-inside-avoid">
+            <h2 className="text-2xl font-black text-slate-950">🦷 خريطة الأسنان</h2>
+            <div className="mt-4 rounded-3xl border border-slate-200 p-5">
+              <ToothChartReport
+                treatments={toothTreatments.map((t) => ({
+                  id: t.id,
+                  toothNumber: t.toothNumber,
+                  treatment: t.treatment,
+                  notes: t.notes,
+                }))}
+              />
+            </div>
+          </section>
+        )}
 
         <section className="mt-8">
           <h2 className="text-2xl font-black text-slate-950">آخر الحجوزات</h2>
