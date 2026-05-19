@@ -13,11 +13,8 @@ const TREATMENTS = [
   { key: "other",      label: "أخرى",       color: "#6b7280" },
 ];
 
-// viewBox 900×430 — إحداثيات دقيقة لكل سن حسب موقعه الفعلي في الصورة
-// عروض متغيرة: أرحاء 58-67px، ضواحك 50px، أنياب 50px، ثنايا 41-45px
-// المنتصف: فجوة 22px بين السن 11 (end=439) والسن 21 (start=461)
+// viewBox 900×430 — إحداثيات دقيقة حسب الصورة
 const TEETH: { num: number; x: number; y: number; w: number; h: number }[] = [
-  // ── الصف العلوي — يمين (18 → 11) — جذر ↑ تاج ↓ ──
   { num: 18, x: 15,  y: 125, w: 67, h: 125 },
   { num: 17, x: 82,  y: 125, w: 63, h: 125 },
   { num: 16, x: 145, y: 127, w: 58, h: 123 },
@@ -26,7 +23,6 @@ const TEETH: { num: number; x: number; y: number; w: number; h: number }[] = [
   { num: 13, x: 303, y: 121, w: 50, h: 129 },
   { num: 12, x: 353, y: 129, w: 41, h: 121 },
   { num: 11, x: 394, y: 127, w: 45, h: 123 },
-  // ── الصف العلوي — يسار (21 → 28) ──
   { num: 21, x: 461, y: 127, w: 45, h: 123 },
   { num: 22, x: 506, y: 129, w: 41, h: 121 },
   { num: 23, x: 547, y: 121, w: 50, h: 129 },
@@ -35,7 +31,6 @@ const TEETH: { num: number; x: number; y: number; w: number; h: number }[] = [
   { num: 26, x: 697, y: 127, w: 58, h: 123 },
   { num: 27, x: 755, y: 125, w: 63, h: 125 },
   { num: 28, x: 818, y: 125, w: 67, h: 125 },
-  // ── الصف السفلي — يمين (48 → 41) — تاج ↑ جذر ↓ ──
   { num: 48, x: 15,  y: 268, w: 67, h: 118 },
   { num: 47, x: 82,  y: 268, w: 63, h: 118 },
   { num: 46, x: 145, y: 270, w: 58, h: 116 },
@@ -44,7 +39,6 @@ const TEETH: { num: number; x: number; y: number; w: number; h: number }[] = [
   { num: 43, x: 303, y: 266, w: 50, h: 122 },
   { num: 42, x: 353, y: 270, w: 41, h: 116 },
   { num: 41, x: 394, y: 268, w: 45, h: 118 },
-  // ── الصف السفلي — يسار (31 → 38) ──
   { num: 31, x: 461, y: 268, w: 45, h: 118 },
   { num: 32, x: 506, y: 270, w: 41, h: 116 },
   { num: 33, x: 547, y: 266, w: 50, h: 122 },
@@ -110,7 +104,6 @@ export default function ToothChartClient({
 
   return (
     <div dir="rtl">
-      {/* الخريطة التفاعلية */}
       <div style={{ position: "relative", width: "100%", borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0" }}>
         <div style={{ position: "relative", width: "100%", paddingBottom: "47.8%" }}>
           <Image
@@ -127,81 +120,84 @@ export default function ToothChartClient({
           >
             <defs>
               {/*
-                فلتر يحوّل الصورة إلى قناع:
-                  - البكسلات البيضاء (الخلفية)  → سوداء  → شفافة  → لا يظهر اللون
-                  - البكسلات الكريمية (السن)     → بيضاء  → معتمة  → يظهر اللون
-                المعادلة: output = clamp(-20·R + 20, 0, 1)
-                عند R=1.0 (أبيض):  20-20=0   ← شفاف
-                عند R=0.94(كريمي): 20-18.8=1.2 ← كامل التعتيم
+                clipPath لكل سن: يحدّد المنطقة التي يظهر فيها الإطار
+                نضيف 6px هامش إضافي لأن الإطار يخرج خارج حدود السن بمقدار radius الـ dilate
               */}
-              <filter id="tsf" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
-                <feColorMatrix
-                  type="matrix"
-                  values="-20 0 0 0 20
-                           0 -20 0 0 20
-                           0  0 -20 0 20
-                           0  0   0  1  0"
-                />
-              </filter>
+              {TEETH.map(({ num, x, y, w, h }) => (
+                <clipPath key={`cp${num}`} id={`cp${num}`} clipPathUnits="userSpaceOnUse">
+                  <rect x={x - 6} y={y - 6} width={w + 12} height={h + 12} />
+                </clipPath>
+              ))}
 
               {/*
-                قناع SVG مبني من صورة الأسنان المفلترة.
-                حيث يكون القناع أبيض (= منطقة السن) → يمرّر اللون.
-                حيث يكون أسود (= الخلفية) → يحجب اللون.
-                النتيجة: اللون يتبع شكل السن بالضبط بدون قصّ يدوي.
+                فلتر إطار لكل لون علاج — سلسلة المعالجة:
+                1. feColorMatrix: يحوّل الصورة لقناع — بكسل أبيض(خلفية)→شفاف، بكسل كريمي(سن)→معتم
+                2. feMorphology dilate: يوسّع القناع 4px → الحافة الخارجية
+                3. feComposite out: dilated ناقص original → حلقة 4px خارج السن فقط
+                4. feFlood + feComposite in: يلوّن الحلقة بلون العلاج
+                النتيجة: إطار ملوّن يتبع شكل السن بالضبط، الصورة الأصلية غير ملوّنة
               */}
-              <mask id="tmask" maskUnits="userSpaceOnUse">
-                {/* width=900 height=570 = الحجم الحقيقي للصورة؛ viewBox يقصّها تلقائياً عند y=430 */}
-                <image
-                  href="/dental-chart.jpg"
-                  x="0" y="0" width="900" height="570"
-                  preserveAspectRatio="xMinYMin meet"
-                  filter="url(#tsf)"
-                />
-              </mask>
+              {TREATMENTS.map(({ key, color }) => (
+                <filter
+                  key={key}
+                  id={`of${key}`}
+                  x="-10%" y="-10%" width="120%" height="120%"
+                  colorInterpolationFilters="sRGB"
+                >
+                  <feColorMatrix
+                    type="matrix"
+                    values="-25 0 0 0 25
+                             0 -25 0 0 25
+                             0  0 -25 0 25
+                             0  0   0  1  0"
+                    result="sil"
+                  />
+                  <feMorphology in="sil" operator="dilate" radius="4" result="dilated" />
+                  <feComposite in="dilated" in2="sil" operator="out" result="ring" />
+                  <feFlood floodColor={color} floodOpacity="1" result="fc" />
+                  <feComposite in="fc" in2="ring" operator="in" />
+                </filter>
+              ))}
             </defs>
 
+            {/*
+              طبقة الإطارات الملوّنة — صورة الأسنان الكاملة + فلتر الإطار + clipPath لكل سن
+              الصورة الأصلية تبقى كما هي، فقط الإطار حول محيط السن يظهر بلون العلاج
+            */}
             {TEETH.map(({ num, x, y, w, h }) => {
               const tr = getTreatment(num);
               const info = tr ? getInfo(tr.treatment) : null;
-              const isSelected = selected === num;
+              if (!info) return null;
+              return (
+                <image
+                  key={`ol${num}`}
+                  href="/dental-chart.jpg"
+                  x="0" y="0" width="900" height="570"
+                  preserveAspectRatio="xMinYMin meet"
+                  filter={`url(#of${info.key})`}
+                  clipPath={`url(#cp${num})`}
+                />
+              );
+            })}
 
+            {/* طبقة النقر والتحديد */}
+            {TEETH.map(({ num, x, y, w, h }) => {
+              const tr = getTreatment(num);
+              const isSelected = selected === num;
               return (
                 <g
                   key={num}
                   onClick={() => { setSelected(isSelected ? null : num); setNotes(tr?.notes ?? ""); }}
                   style={{ cursor: "pointer" }}
                 >
-                  {/* منطقة النقر — شفافة تغطي كامل مساحة السن */}
                   <rect x={x} y={y} width={w} height={h} fill="transparent" />
-
-                  {/*
-                    اللون المعالَج بالقناع:
-                    المستطيل يغطي منطقة السن → القناع يُظهره فقط على بكسلات السن الكريمية
-                    الخلفية البيضاء تبقى بيضاء بدون أي تلوين
-                  */}
-                  {info && (
-                    <rect
-                      x={x} y={y} width={w} height={h}
-                      fill={info.color}
-                      opacity={0.85}
-                      mask="url(#tmask)"
-                    />
-                  )}
-
-                  {/* إطار التحديد */}
                   {isSelected && (
                     <rect
                       x={x - 3} y={y - 3} width={w + 6} height={h + 6}
-                      rx={10}
-                      fill="none"
-                      stroke="#1e3a8a"
-                      strokeWidth={3}
-                      strokeDasharray="6 3"
+                      rx={10} fill="none"
+                      stroke="#1e3a8a" strokeWidth={3} strokeDasharray="6 3"
                     />
                   )}
-
-                  {/* رقم السن */}
                   {isSelected && (
                     <text
                       x={x + w / 2} y={y - 9}
