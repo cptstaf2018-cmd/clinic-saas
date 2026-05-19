@@ -33,7 +33,7 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 25, x: 671, y: 140, w: 44, h: 120 }, // ضاحك
   { num: 26, x: 725, y: 140, w: 50, h: 120 }, // رحى
   { num: 27, x: 779, y: 140, w: 50, h: 120 }, // رحى
-  { num: 28, x: 833, y: 140, w: 50, h: 120 }, // رحى
+  { num: 28, x: 818, y: 140, w: 44, h: 120 }, // رحى
   // ── الصف السفلي — يمين (48 → 41) ──
   { num: 48, x: 30,  y: 278, w: 50, h: 120 },
   { num: 47, x: 90,  y: 278, w: 50, h: 120 },
@@ -51,7 +51,7 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 35, x: 671, y: 278, w: 44, h: 120 },
   { num: 36, x: 725, y: 278, w: 50, h: 120 },
   { num: 37, x: 779, y: 278, w: 50, h: 120 },
-  { num: 38, x: 833, y: 278, w: 50, h: 120 },
+  { num: 38, x: 818, y: 278, w: 44, h: 120 },
 ];
 
 type Treatment = { id: string; toothNumber: number; treatment: string; notes: string | null };
