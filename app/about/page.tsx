@@ -172,6 +172,11 @@ export default function AboutPage() {
           background: var(--gold);
         }
 
+        .nav-link { color: rgba(248,250,252,0.55); transition: color .2s; text-decoration: none; }
+        .nav-link:hover { color: #F8FAFC; }
+        .footer-link { color: inherit; text-decoration: none; }
+        .footer-link:hover { color: var(--gold-light); }
+
         /* Baghdad AI section */
         .bai-card {
           background: linear-gradient(135deg, rgba(201,168,76,0.06), rgba(14,165,233,0.04));
@@ -204,11 +209,9 @@ export default function AboutPage() {
           </div>
 
           {/* Links */}
-          <div style={{ display: "flex", alignItems: "center", gap: 32, fontSize: 14, fontWeight: 700 }} className="hidden-mobile">
+          <div style={{ display: "flex", alignItems: "center", gap: 32, fontSize: 14, fontWeight: 700 }}>
             {[["#features","المميزات"],["#plans","الباقات"],["#bot","البوت"],["#company","الشركة"]].map(([h,l]) => (
-              <a key={h} href={h} style={{ color: "rgba(248,250,252,0.55)", transition: "color .2s" }}
-                 onMouseEnter={e => (e.currentTarget.style.color="#F8FAFC")}
-                 onMouseLeave={e => (e.currentTarget.style.color="rgba(248,250,252,0.55)")}>{l}</a>
+              <a key={h} href={h} className="nav-link">{l}</a>
             ))}
           </div>
 
