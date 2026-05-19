@@ -25,6 +25,7 @@ export async function proxy(req: NextRequest) {
   const publicPaths = [
     "/login",
     "/register",
+    "/about",
     "/impersonate",
     "/admin/login",
     "/display",
