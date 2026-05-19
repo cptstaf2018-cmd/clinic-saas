@@ -30,10 +30,10 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 22, x: 489, y: 140, w: 36, h: 120 }, // رباعي
   { num: 23, x: 530, y: 140, w: 34, h: 120 }, // ناب
   { num: 24, x: 569, y: 140, w: 44, h: 120 }, // ضاحك
-  { num: 25, x: 623, y: 140, w: 44, h: 120 }, // ضاحك
-  { num: 26, x: 677, y: 140, w: 50, h: 120 }, // رحى
-  { num: 27, x: 731, y: 140, w: 50, h: 120 }, // رحى
-  { num: 28, x: 785, y: 140, w: 50, h: 120 }, // رحى
+  { num: 25, x: 615, y: 140, w: 44, h: 120 }, // ضاحك
+  { num: 26, x: 669, y: 140, w: 50, h: 120 }, // رحى
+  { num: 27, x: 723, y: 140, w: 50, h: 120 }, // رحى
+  { num: 28, x: 777, y: 140, w: 50, h: 120 }, // رحى
   // ── الصف السفلي — يمين (48 → 41) ──
   { num: 48, x: 30,  y: 278, w: 50, h: 120 },
   { num: 47, x: 90,  y: 278, w: 50, h: 120 },
@@ -48,10 +48,10 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 32, x: 489, y: 278, w: 30, h: 120 },
   { num: 33, x: 524, y: 278, w: 44, h: 120 },
   { num: 34, x: 573, y: 278, w: 34, h: 120 },
-  { num: 35, x: 627, y: 278, w: 44, h: 120 },
-  { num: 36, x: 681, y: 278, w: 50, h: 120 },
-  { num: 37, x: 735, y: 278, w: 50, h: 120 },
-  { num: 38, x: 789, y: 278, w: 50, h: 120 },
+  { num: 35, x: 619, y: 278, w: 44, h: 120 },
+  { num: 36, x: 673, y: 278, w: 50, h: 120 },
+  { num: 37, x: 727, y: 278, w: 50, h: 120 },
+  { num: 38, x: 781, y: 278, w: 50, h: 120 },
 ];
 
 type Treatment = { id: string; toothNumber: number; treatment: string; notes: string | null };
