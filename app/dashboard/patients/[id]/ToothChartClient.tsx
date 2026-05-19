@@ -47,7 +47,7 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 31, x: 441, y: 278, w: 44, h: 120 },
   { num: 32, x: 489, y: 278, w: 30, h: 120 },
   { num: 33, x: 524, y: 278, w: 44, h: 120 },
-  { num: 34, x: 578, y: 278, w: 44, h: 120 },
+  { num: 34, x: 578, y: 278, w: 38, h: 120 },
   { num: 35, x: 632, y: 278, w: 44, h: 120 },
   { num: 36, x: 686, y: 278, w: 50, h: 120 },
   { num: 37, x: 740, y: 278, w: 50, h: 120 },
