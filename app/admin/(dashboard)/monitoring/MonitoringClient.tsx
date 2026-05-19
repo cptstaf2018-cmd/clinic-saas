@@ -181,12 +181,12 @@ export default function MonitoringClient({
               <article key={event.id} className={`grid gap-3 px-5 py-4 transition hover:bg-slate-50 lg:grid-cols-[145px_120px_1fr_170px] ${event.resolved ? "bg-slate-50/60 opacity-70" : "bg-white"}`}>
                 <div className="text-xs font-bold text-slate-400">{formatDate(event.createdAt)}</div>
                 <div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${SEVERITY_STYLES[event.severity] ?? SEVERITY_STYLES.info}`}>
+                  <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${event.resolved ? "bg-slate-100 text-slate-400 ring-slate-200 line-through" : (SEVERITY_STYLES[event.severity] ?? SEVERITY_STYLES.info)}`}>
                     {SEVERITY_LABELS[event.severity] ?? event.severity}
                   </span>
                   {event.resolved ? (
-                    <span className="mt-2 block rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500 ring-1 ring-slate-200">
-                      محلول
+                    <span className="mt-2 block rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
+                      ✓ تمت المعالجة
                     </span>
                   ) : null}
                 </div>
