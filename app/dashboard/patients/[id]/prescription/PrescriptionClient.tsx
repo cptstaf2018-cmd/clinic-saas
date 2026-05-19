@@ -155,7 +155,6 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
         {/* ═══ منطقة Rx ═══ */}
         <div className="px-8 py-4" style={{ minHeight: "14cm" }}>
           <div className="flex items-start gap-4">
-            <span className="text-5xl font-black text-slate-800 leading-none shrink-0 print:hidden" style={{ fontFamily: "serif" }}>℞</span>
             <div className="flex-1">
               <textarea
                 ref={rxRef}
