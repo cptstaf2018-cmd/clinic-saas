@@ -28,6 +28,7 @@ export default function AdminAnalyticsCharts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     fetch(`/api/admin/analytics?days=${days}`)
       .then((r) => r.json())
@@ -102,7 +103,7 @@ export default function AdminAnalyticsCharts() {
                       <Cell key={i} fill={PLAN_COLORS[e.name] ?? "#6366f1"} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v, _, props: any) => [v, props.payload.name]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                  <Tooltip formatter={(v, _, entry) => [v, (entry as { payload: { name: string } }).payload.name]} contentStyle={{ fontSize: 11, borderRadius: 8 }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-2 justify-center mt-1">

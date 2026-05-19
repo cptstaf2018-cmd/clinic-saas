@@ -149,6 +149,8 @@ model Appointment {
   @@index([clinicId])
   @@index([clinicId, date])
   @@index([clinicId, status])
+  @@index([clinicId, reminder24hSent, date])
+  @@index([clinicId, reminder1hSent, date])
 }
 
 model PatientPayment {

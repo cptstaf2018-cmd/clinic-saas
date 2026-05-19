@@ -105,28 +105,31 @@ export async function POST() {
     }),
   ]);
 
-  const recentInbound = await db.incomingMessage.findMany({
-    where: {
-      direction: "inbound",
-      createdAt: { gte: recentInboundCutoff },
-    },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, clinicId: true, phone: true, body: true, createdAt: true },
-  });
+  const [recentInbound, recentOutbound] = await Promise.all([
+    db.incomingMessage.findMany({
+      where: { direction: "inbound", createdAt: { gte: recentInboundCutoff } },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, clinicId: true, phone: true, body: true, createdAt: true },
+    }),
+    db.incomingMessage.findMany({
+      where: { direction: "outbound", createdAt: { gte: recentInboundCutoff } },
+      select: { clinicId: true, phone: true, createdAt: true },
+    }),
+  ]);
+
+  // Build outbound lookup: "clinicId|phone" → latest outbound time
+  const outboundLatest = new Map<string, Date>();
+  for (const out of recentOutbound) {
+    const key = `${out.clinicId}|${out.phone}`;
+    const existing = outboundLatest.get(key);
+    if (!existing || out.createdAt > existing) outboundLatest.set(key, out.createdAt);
+  }
 
   const unansweredByClinic = new Map<string, { count: number; latestPhone: string; latestBody: string; latestAt: string }>();
   for (const inbound of recentInbound) {
-    const outboundAfter = await db.incomingMessage.findFirst({
-      where: {
-        clinicId: inbound.clinicId,
-        phone: inbound.phone,
-        direction: "outbound",
-        createdAt: { gt: inbound.createdAt },
-      },
-      select: { id: true },
-    });
-
-    if (!outboundAfter) {
+    const key = `${inbound.clinicId}|${inbound.phone}`;
+    const lastOutbound = outboundLatest.get(key);
+    if (!lastOutbound || lastOutbound <= inbound.createdAt) {
       const current = unansweredByClinic.get(inbound.clinicId);
       unansweredByClinic.set(inbound.clinicId, {
         count: (current?.count ?? 0) + 1,

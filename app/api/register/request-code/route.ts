@@ -52,8 +52,9 @@ export async function POST(req: NextRequest) {
     codeStr = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   }
 
+  const masked = `${phone.trim().slice(0, 4)}****${phone.trim().slice(-3)}`;
   const code = await db.invitationCode.create({
-    data: { code: codeStr, note: `تلقائي — ${phone.trim()}` },
+    data: { code: codeStr, note: `تلقائي — ${masked}` },
   });
 
   await sendWhatsApp(

@@ -332,31 +332,31 @@ export async function POST(
 
   if (!clinic) return NextResponse.json({ ok: false, error: "Clinic not found" }, { status: 404 });
 
-  // Verify webhook signature — only if clinic has configured a secret
-  // (allows gradual rollout: clinics without a secret still work but log a warning)
-  if (clinic.whatsappWebhookSecret) {
-    const receivedSignature = req.headers.get("x-webhook-signature");
-    if (!verifyWebhookSignature(receivedSignature, clinic.whatsappWebhookSecret)) {
-      await logSystemEvent({
-        clinicId,
-        type: "whatsapp_webhook_unauthorized",
-        severity: "warning",
-        source: "whatsapp_bot",
-        title: "محاولة وصول غير مصرّحة للـ webhook",
-        message: "وصل طلب لـ webhook العيادة بتوقيع غير صحيح أو مفقود.",
-        metadata: { hasSignature: !!receivedSignature },
-      });
-      return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
-    }
-  } else {
+  // Verify webhook signature — mandatory for all clinics
+  if (!clinic.whatsappWebhookSecret) {
     await logSystemEvent({
       clinicId,
       type: "whatsapp_webhook_no_secret",
-      severity: "warning",
+      severity: "error",
       source: "whatsapp_bot",
       title: "العيادة بدون حماية webhook",
-      message: "هذه العيادة لم تضبط whatsappWebhookSecret — أي طلب مزيف سيمر.",
+      message: "هذه العيادة لم تضبط whatsappWebhookSecret — تم رفض الطلب.",
     });
+    return NextResponse.json({ ok: false, error: "Webhook secret not configured" }, { status: 401 });
+  }
+
+  const receivedSignature = req.headers.get("x-webhook-signature");
+  if (!verifyWebhookSignature(receivedSignature, clinic.whatsappWebhookSecret)) {
+    await logSystemEvent({
+      clinicId,
+      type: "whatsapp_webhook_unauthorized",
+      severity: "warning",
+      source: "whatsapp_bot",
+      title: "محاولة وصول غير مصرّحة للـ webhook",
+      message: "وصل طلب لـ webhook العيادة بتوقيع غير صحيح أو مفقود.",
+      metadata: { hasSignature: !!receivedSignature },
+    });
+    return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
   }
 
   const botClinic = clinic;
