@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import MonitoringClient from "./MonitoringClient";
 
 function arabicNumber(value: number) {
-  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
+  return String(value);
 }
 
 export default async function AdminMonitoringPage() {

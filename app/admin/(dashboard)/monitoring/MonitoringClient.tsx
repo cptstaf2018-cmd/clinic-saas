@@ -44,7 +44,7 @@ const SEVERITY_STYLES: Record<string, string> = {
 };
 
 function arabicNumber(value: number) {
-  return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
+  return String(value);
 }
 
 function formatDate(value: string) {
