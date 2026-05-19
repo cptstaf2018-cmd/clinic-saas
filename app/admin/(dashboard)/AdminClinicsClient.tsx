@@ -14,6 +14,8 @@ type Clinic = {
   id: string;
   name: string;
   whatsappNumber: string;
+  patientCount: number;
+  appointmentCount: number;
   subscription: Subscription | null;
 };
 
@@ -132,10 +134,12 @@ export default function AdminClinicsClient({
       const res  = await fetch(`/api/admin/clinics?page=${page}&limit=50`);
       if (res.ok) {
         const data = await res.json();
-        const incoming: Clinic[] = data.clinics.map((c: any) => ({
+        const incoming: Clinic[] = data.clinics.map((c: { id: string; name: string; whatsappNumber: string; patientCount?: number; appointmentCount?: number; subscription?: { plan: string; status: string; expiresAt: string } }) => ({
           id: c.id,
           name: c.name,
           whatsappNumber: c.whatsappNumber,
+          patientCount: c.patientCount ?? 0,
+          appointmentCount: c.appointmentCount ?? 0,
           subscription: c.subscription
             ? { plan: c.subscription.plan, status: c.subscription.status, expiresAt: c.subscription.expiresAt }
             : null,
@@ -378,6 +382,8 @@ export default function AdminClinicsClient({
               <tr className="text-[11px] font-black text-slate-400">
                 <th className="px-5 py-3">العيادة</th>
                 <th className="px-5 py-3">الهاتف</th>
+                <th className="px-5 py-3">المرضى</th>
+                <th className="px-5 py-3">الحجوزات</th>
                 <th className="px-5 py-3">الخطة</th>
                 <th className="px-5 py-3">الحالة</th>
                 <th className="px-5 py-3">انتهاء الاشتراك</th>
@@ -563,6 +569,16 @@ function ClinicTableRow({
           </td>
           <td className="px-5 py-4 text-sm font-bold text-slate-500" dir="ltr">{clinic.whatsappNumber}</td>
           <td className="px-5 py-4">
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
+              {clinic.patientCount} مريض
+            </span>
+          </td>
+          <td className="px-5 py-4">
+            <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-black text-purple-700">
+              {clinic.appointmentCount} حجز
+            </span>
+          </td>
+          <td className="px-5 py-4">
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">{PLAN_LABELS[plan] ?? plan}</span>
           </td>
           <td className="px-5 py-4">
@@ -584,13 +600,13 @@ function ClinicTableRow({
       )}
 
       {isEdit && (
-        <td colSpan={6} className="px-5 py-4">
+        <td colSpan={8} className="px-5 py-4">
           <EditPanel {...editProps} />
         </td>
       )}
 
       {isDelete && (
-        <td colSpan={6} className="px-5 py-4">
+        <td colSpan={8} className="px-5 py-4">
           <DeletePanel
             clinicName={clinic.name}
             deleting={actionLoading === clinic.id + "_delete"}

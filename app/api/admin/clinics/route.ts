@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const [clinics, total] = await Promise.all([
     db.clinic.findMany({
-      include: { subscription: true },
+      include: { subscription: true, _count: { select: { patients: true, appointments: true } } },
       orderBy: { createdAt: "desc" },
       take: limit,
       skip: page * limit,
@@ -24,7 +24,16 @@ export async function GET(req: NextRequest) {
     db.clinic.count(),
   ]);
 
-  return NextResponse.json({ clinics, total, page, limit });
+  const serialized = clinics.map((c) => ({
+    id: c.id,
+    name: c.name,
+    whatsappNumber: c.whatsappNumber,
+    patientCount: c._count.patients,
+    appointmentCount: c._count.appointments,
+    subscription: c.subscription,
+  }));
+
+  return NextResponse.json({ clinics: serialized, total, page, limit });
 }
 
 export async function DELETE() {
