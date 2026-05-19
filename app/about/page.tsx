@@ -467,7 +467,7 @@ export default function AboutPage() {
       {/* ══ BAGHDAD FUTURE AI ══ */}
       <section id="company" style={{ padding: "100px 24px", background: "var(--light)" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <div className="card" style={{ borderRadius: 28, overflow: "hidden", display: "grid" }} className="grid-2">
+          <div className="card grid-2" style={{ borderRadius: 28, overflow: "hidden", display: "grid" }}>
             {/* Image */}
             <div style={{ height: 380, overflow: "hidden", position: "relative" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
