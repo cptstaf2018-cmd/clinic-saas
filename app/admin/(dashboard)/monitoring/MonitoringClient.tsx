@@ -99,8 +99,29 @@ export default function MonitoringClient({
     setBusy(null);
   }
 
-  function scanSystem() {
-    return runAction("scan", () => fetch("/api/admin/maintenance/scan", { method: "POST" }));
+  async function scanSystem() {
+    setBusy("scan");
+    setToast(null);
+    try {
+      // فحص النظام
+      const res = await fetch("/api/admin/maintenance/scan", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        // بعد الفحص: مسح الأخطاء القديمة تلقائياً
+        await fetch("/api/admin/maintenance/fix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "resolve-old-errors" }),
+        });
+        setToast({ ok: true, text: "✅ اكتمل الفحص — تم تنظيف الصفحة" });
+        router.refresh();
+      } else {
+        setToast({ ok: false, text: data.error ?? "فشل الفحص" });
+      }
+    } catch {
+      setToast({ ok: false, text: "تعذر الاتصال بالخادم" });
+    }
+    setBusy(null);
   }
 
   type FixAction = "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions" | "resolve-whatsapp-errors" | "resolve-old-errors";
