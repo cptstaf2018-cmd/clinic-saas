@@ -18,7 +18,7 @@ export default async function PrescriptionPage({
   const [clinic, patient, specialtyConfig] = await Promise.all([
     db.clinic.findUnique({
       where: { id: clinicId },
-      select: { name: true, logoUrl: true, whatsappNumber: true, address: true },
+      select: { name: true, logoUrl: true, whatsappNumber: true, address: true, doctorDegree: true, doctorUniversity: true, doctorBoard: true },
     }),
     db.patient.findFirst({
       where: { id, clinicId },
@@ -38,6 +38,9 @@ export default async function PrescriptionPage({
       phone={clinic.whatsappNumber}
       address={clinic.address ?? null}
       logoUrl={clinic.logoUrl ?? null}
+      doctorDegree={clinic.doctorDegree ?? null}
+      doctorUniversity={clinic.doctorUniversity ?? null}
+      doctorBoard={clinic.doctorBoard ?? null}
     />
   );
 }

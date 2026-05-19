@@ -10,9 +10,12 @@ type Props = {
   phone: string;
   address: string | null;
   logoUrl: string | null;
+  doctorDegree: string | null;
+  doctorUniversity: string | null;
+  doctorBoard: string | null;
 };
 
-export default function PrescriptionClient({ patientId, patientName, clinicName, specialty, phone, address, logoUrl }: Props) {
+export default function PrescriptionClient({ patientId, patientName, clinicName, specialty, phone, address, logoUrl, doctorDegree, doctorUniversity, doctorBoard }: Props) {
   const rxRef = useRef<HTMLTextAreaElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const ageRef = useRef<HTMLInputElement>(null);
@@ -88,7 +91,10 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
             <div className="text-right">
               <p className="text-base font-black text-slate-900">{clinicName}</p>
               <p className="text-sm font-bold text-blue-700">اختصاص {specialty}</p>
-              {address && <p className="text-xs font-bold text-slate-500 mt-0.5">{address}</p>}
+              {doctorDegree && <p className="text-xs font-bold text-slate-600 mt-0.5">{doctorDegree}</p>}
+              {doctorUniversity && <p className="text-xs font-bold text-slate-500">{doctorUniversity}</p>}
+              {doctorBoard && <p className="text-xs font-bold text-slate-500">{doctorBoard}</p>}
+              {address && <p className="text-xs font-bold text-slate-400 mt-0.5">{address}</p>}
               <p className="text-xs font-bold text-slate-500" dir="ltr">{phone}</p>
             </div>
 

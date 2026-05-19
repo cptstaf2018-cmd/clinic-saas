@@ -26,6 +26,9 @@ export async function GET() {
       botShowWorkingHours: true,
       botShowLocation: true,
       backupEmail: true,
+      doctorDegree: true,
+      doctorUniversity: true,
+      doctorBoard: true,
       specialty: true,
       settings: true,
     },
@@ -60,6 +63,9 @@ export async function PATCH(req: Request) {
     "botShowWorkingHours",
     "botShowLocation",
     "backupEmail",
+    "doctorDegree",
+    "doctorUniversity",
+    "doctorBoard",
   ];
 
   const data: Record<string, unknown> = {};

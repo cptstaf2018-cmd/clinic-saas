@@ -21,6 +21,9 @@ interface Settings {
   clinicId: string;
   specialty: string;
   backupEmail: string | null;
+  doctorDegree: string | null;
+  doctorUniversity: string | null;
+  doctorBoard: string | null;
 }
 
 type Tab = "profile" | "whatsapp" | "reminders" | "security";
@@ -295,6 +298,40 @@ export default function SettingsPage() {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ المعلومات"}
+            </button>
+          </Section>
+
+          <Section title="بيانات الطبيب" description="تظهر تلقائياً في الوصفة الطبية عند الطباعة">
+            <Field label="الدرجة العلمية">
+              <input
+                className={inputCls}
+                value={settings.doctorDegree ?? ""}
+                onChange={(e) => setSettings({ ...settings, doctorDegree: e.target.value })}
+                placeholder="مثال: دكتوراه في طب الأسنان — PhD"
+              />
+            </Field>
+            <Field label="الجامعة">
+              <input
+                className={inputCls}
+                value={settings.doctorUniversity ?? ""}
+                onChange={(e) => setSettings({ ...settings, doctorUniversity: e.target.value })}
+                placeholder="مثال: خريج جامعة بغداد — كلية طب الأسنان"
+              />
+            </Field>
+            <Field label="البورد أو الشهادة التخصصية">
+              <input
+                className={inputCls}
+                value={settings.doctorBoard ?? ""}
+                onChange={(e) => setSettings({ ...settings, doctorBoard: e.target.value })}
+                placeholder="مثال: بورد عربي في طب الأسنان التحفظي"
+              />
+            </Field>
+            <button
+              onClick={() => saveSettings({ doctorDegree: settings.doctorDegree, doctorUniversity: settings.doctorUniversity, doctorBoard: settings.doctorBoard })}
+              disabled={saving}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ بيانات الطبيب"}
             </button>
           </Section>
 
