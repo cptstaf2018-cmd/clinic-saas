@@ -7,14 +7,14 @@ export const metadata = {
 
 // Unsplash 4K images
 const IMGS = {
-  hero:    "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=1400&q=85&auto=format",
-  doctor1: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&q=85&auto=format",
-  doctor2: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800&q=85&auto=format",
-  doctor3: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800&q=85&auto=format",
-  dental:  "https://images.unsplash.com/photo-1588776814546-ec7eac49d9c4?w=900&q=85&auto=format",
-  tablet:  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=85&auto=format",
-  clinic:  "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&q=85&auto=format",
-  team:    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1000&q=85&auto=format",
+  hero:    "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=1400&q=80",
+  doctor1: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80",
+  doctor2: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=800&q=80",
+  doctor3: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=800&q=80",
+  dental:  "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?auto=format&fit=crop&w=900&q=80",
+  tablet:  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=900&q=80",
+  clinic:  "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80",
+  team:    "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=1000&q=80",
 };
 
 export default function AboutPage() {
