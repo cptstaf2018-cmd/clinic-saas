@@ -56,6 +56,10 @@ function formatDate(value: string) {
   });
 }
 
+type FilterTab = "alerts" | "all";
+
+const NOISE_TYPES = ["maintenance_scan_completed", "super_admin_fix", "billing"];
+
 export default function MonitoringClient({
   events,
   totalEvents,
@@ -71,9 +75,8 @@ export default function MonitoringClient({
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
-  const [showResolved, setShowResolved] = useState(false);
+  const [tab, setTab] = useState<FilterTab>("alerts");
 
-  // تحديث تلقائي كل 30 ثانية
   useEffect(() => {
     const t = setInterval(() => {
       router.refresh();
@@ -132,80 +135,110 @@ export default function MonitoringClient({
     );
   }
 
+  // تصفية الأحداث
+  const alertEvents = events.filter(e =>
+    !e.resolved &&
+    (e.severity === "error" || e.severity === "warning") &&
+    !NOISE_TYPES.includes(e.type)
+  );
+
+  const allEvents = events.filter(e => !NOISE_TYPES.includes(e.type));
+  const displayed = tab === "alerts" ? alertEvents : allEvents;
+
   return (
     <section className="grid gap-5 xl:grid-cols-[1fr_340px]">
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-lg font-black text-slate-950">آخر الأحداث</h2>
-            <p className="mt-1 text-xs font-bold text-slate-400">{arabicNumber(totalEvents)} حدث مسجل في النظام</p>
+        {/* Header */}
+        <div className="border-b border-slate-200 px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black text-slate-950">آخر الأحداث</h2>
+              <p className="mt-0.5 text-xs font-bold text-slate-400">{arabicNumber(totalEvents)} حدث مسجل</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={scanSystem}
+                disabled={busy === "scan"}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-700 disabled:opacity-50"
+              >
+                {busy === "scan" ? (
+                  <><span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />جاري الفحص...</>
+                ) : "🔍 فحص النظام"}
+              </button>
+              <span className="text-xs font-bold text-slate-400">
+                {lastRefresh.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </div>
           </div>
-          <button
-            onClick={() => setShowResolved(v => !v)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-black transition ring-1 ${showResolved ? "bg-slate-800 text-white ring-slate-800" : "bg-white text-slate-500 ring-slate-200 hover:bg-slate-50"}`}
-          >
-            {showResolved ? "إخفاء المحلولة" : "إظهار المحلولة"}
-          </button>
-          <div className="flex flex-wrap items-center gap-2">
+
+          {/* Tabs */}
+          <div className="mt-3 flex gap-2">
             <button
-              onClick={scanSystem}
-              disabled={busy === "scan"}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white transition hover:bg-blue-700 disabled:opacity-50"
+              onClick={() => setTab("alerts")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${tab === "alerts" ? "bg-rose-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
-              {busy === "scan" ? "جاري الفحص..." : "إعادة الفحص"}
+              تحتاج انتباه
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${tab === "alerts" ? "bg-white/20" : "bg-rose-100 text-rose-700"}`}>
+                {alertEvents.length}
+              </span>
             </button>
             <button
-              onClick={() => fixAll("resolve-old-errors" as any)}
-              disabled={busy === "resolve-old-errors"}
-              className="rounded-lg bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100 disabled:opacity-50"
+              onClick={() => setTab("all")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${tab === "all" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
             >
-              {busy === "resolve-old-errors" ? "جاري المسح..." : "مسح كل الأخطاء التاريخية"}
+              كل الأحداث
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${tab === "all" ? "bg-white/20" : "bg-slate-200 text-slate-600"}`}>
+                {allEvents.length}
+              </span>
             </button>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-400 ring-1 ring-slate-200">
-              آخر تحديث: {lastRefresh.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </span>
           </div>
         </div>
 
-        {toast ? (
+        {toast && (
           <div className={`border-b px-5 py-3 text-sm font-black ${toast.ok ? "border-emerald-100 bg-emerald-50 text-emerald-700" : "border-rose-100 bg-rose-50 text-rose-700"}`}>
-            {toast.text}
+            {toast.ok ? "✅" : "❌"} {toast.text}
           </div>
-        ) : null}
+        )}
 
         <div className="divide-y divide-slate-100">
-          {events.filter(e => showResolved ? true : !e.resolved).length === 0 ? (
-            <div className="p-10 text-center text-sm font-black text-emerald-600">✅ لا توجد أخطاء مفتوحة — النظام يعمل بشكل طبيعي</div>
+          {displayed.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="text-3xl mb-3">✅</div>
+              <p className="text-sm font-black text-emerald-600">لا توجد أخطاء مفتوحة</p>
+              <p className="mt-1 text-xs font-bold text-slate-400">النظام يعمل بشكل طبيعي</p>
+            </div>
           ) : (
-            events.filter(e => showResolved ? true : !e.resolved).map((event) => (
-              <article key={event.id} className={`grid gap-3 px-5 py-4 transition hover:bg-slate-50 lg:grid-cols-[145px_120px_1fr_170px] ${event.resolved ? "bg-slate-50/60 opacity-70" : "bg-white"}`}>
-                <div className="text-xs font-bold text-slate-400">{formatDate(event.createdAt)}</div>
-                <div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${event.resolved ? "bg-slate-100 text-slate-400 ring-slate-200 line-through" : (SEVERITY_STYLES[event.severity] ?? SEVERITY_STYLES.info)}`}>
-                    {SEVERITY_LABELS[event.severity] ?? event.severity}
-                  </span>
-                  {event.resolved ? (
-                    <span className="mt-2 block rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">
-                      ✓ تمت المعالجة
-                    </span>
-                  ) : null}
-                </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-black text-slate-950">{event.title}</h3>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">{event.source}</span>
+            displayed.map((event) => (
+              <article key={event.id} className={`px-5 py-4 transition hover:bg-slate-50 ${event.resolved ? "opacity-60" : ""}`}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {/* نقطة الخطورة */}
+                    <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                      event.severity === "error" ? "bg-rose-500" :
+                      event.severity === "warning" ? "bg-amber-500" :
+                      event.severity === "success" ? "bg-emerald-500" : "bg-blue-500"
+                    }`} />
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ring-1 ${SEVERITY_STYLES[event.severity] ?? SEVERITY_STYLES.info}`}>
+                          {SEVERITY_LABELS[event.severity] ?? event.severity}
+                        </span>
+                        <h3 className="text-sm font-black text-slate-950">{event.title}</h3>
+                      </div>
+                      {event.message && <p className="mt-1 text-xs font-bold text-slate-500 leading-5">{event.message}</p>}
+                      <div className="mt-1 flex flex-wrap items-center gap-3">
+                        <span className="text-[11px] font-bold text-slate-400">{formatDate(event.createdAt)}</span>
+                        {event.clinic && (
+                          <span className="text-[11px] font-bold text-blue-600">{event.clinic.name}</span>
+                        )}
+                        {event.resolved && (
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-600 ring-1 ring-emerald-100">✓ تمت المعالجة</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  {event.message ? <p className="mt-1 text-xs font-bold leading-6 text-slate-500">{event.message}</p> : null}
-                  <p className="mt-1 text-[11px] font-bold text-slate-400">
-                    {event.clinic ? `${event.clinic.name} · ${event.clinic.whatsappNumber}` : "حدث عام على المنصة"}
-                  </p>
+                  <EventActions event={event} busy={busy} resolveEvent={resolveEvent} fixClinic={fixClinic} />
                 </div>
-                <EventActions
-                  event={event}
-                  busy={busy}
-                  resolveEvent={resolveEvent}
-                  fixClinic={fixClinic}
-                />
               </article>
             ))
           )}
