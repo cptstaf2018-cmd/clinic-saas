@@ -45,7 +45,7 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 41, x: 379, y: 278, w: 44, h: 120 },
   // ── الصف السفلي — يسار (31 → 38) ──
   { num: 31, x: 435, y: 278, w: 44, h: 120 },
-  { num: 32, x: 504, y: 278, w: 30, h: 120 },
+  { num: 32, x: 483, y: 278, w: 30, h: 120 },
   { num: 33, x: 563, y: 278, w: 44, h: 120 },
   { num: 34, x: 617, y: 278, w: 44, h: 120 },
   { num: 35, x: 671, y: 278, w: 44, h: 120 },
