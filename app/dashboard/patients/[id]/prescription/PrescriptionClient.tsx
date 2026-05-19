@@ -82,10 +82,10 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
 
         {/* ═══ رأس الوصفة ═══ */}
         <div className="border-b-2 border-slate-800 px-8 py-5">
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-3 items-center gap-4">
 
             {/* يمين — معلومات العيادة */}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="شعار" className="h-16 w-16 rounded-full object-cover border-2 border-slate-300 shrink-0" />
@@ -102,8 +102,8 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
               </div>
             </div>
 
-            {/* وسط — شعار وزارة الصحة */}
-            <div className="flex flex-col items-center text-center shrink-0">
+            {/* وسط — شعار وزارة الصحة (مركز تماماً) */}
+            <div className="flex flex-col items-center justify-center text-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/moh-iraq.webp" alt="وزارة الصحة العراقية" className="h-20 w-20 object-contain" />
               <p className="text-[10px] font-black text-slate-700 mt-1">جمهورية العراق</p>
@@ -111,12 +111,12 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
             </div>
 
             {/* يسار — التاريخ والوقت */}
-            <div className="text-left space-y-1 shrink-0">
-              <div className="rounded-lg bg-slate-100 px-3 py-1.5">
+            <div className="flex flex-col items-end gap-1">
+              <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-right">
                 <p className="text-[10px] text-slate-500">التاريخ</p>
                 <p className="text-sm font-black text-slate-900">{dateStr}</p>
               </div>
-              <div className="rounded-lg bg-slate-100 px-3 py-1.5">
+              <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-right">
                 <p className="text-[10px] text-slate-500">الوقت</p>
                 <p className="text-sm font-black text-slate-900">{timeStr}</p>
               </div>
@@ -158,13 +158,14 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
             <div className="flex-1">
               <textarea
                 ref={rxRef}
-                className="w-full text-base font-bold text-slate-900 outline-none bg-transparent resize-none leading-10"
+                className="w-full text-base font-bold text-slate-900 outline-none bg-transparent resize-none"
                 placeholder="اكتب الأدوية والجرعات هنا..."
                 rows={12}
                 style={{
-                  backgroundImage: "repeating-linear-gradient(transparent, transparent calc(2.5rem - 1px), #cbd5e1 calc(2.5rem - 1px), #cbd5e1 2.5rem)",
-                  backgroundSize: "100% 2.5rem",
-                  lineHeight: "2.5rem",
+                  backgroundImage: "repeating-linear-gradient(transparent, transparent calc(2.2rem - 1px), #94a3b8 calc(2.2rem - 1px), #94a3b8 2.2rem)",
+                  backgroundSize: "100% 2.2rem",
+                  lineHeight: "2.2rem",
+                  letterSpacing: "0.01em",
                 }}
               />
             </div>
