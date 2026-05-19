@@ -48,8 +48,8 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 32, x: 489, y: 278, w: 30, h: 120 },
   { num: 33, x: 524, y: 278, w: 44, h: 120 },
   { num: 34, x: 573, y: 278, w: 34, h: 120 },
-  { num: 35, x: 619, y: 278, w: 44, h: 120 },
-  { num: 36, x: 673, y: 278, w: 50, h: 120 },
+  { num: 35, x: 613, y: 278, w: 44, h: 120 },
+  { num: 36, x: 667, y: 278, w: 50, h: 120 },
   { num: 37, x: 727, y: 278, w: 50, h: 120 },
   { num: 38, x: 781, y: 278, w: 50, h: 120 },
 ];
