@@ -84,16 +84,12 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
         <div className="border-b-2 border-slate-800 px-8 py-4">
           <div className="grid grid-cols-3 items-center gap-4">
 
-            {/* يمين — التاريخ والوقت */}
-            <div className="flex flex-col gap-1">
-              <div className="rounded-lg bg-slate-100 px-3 py-1.5">
-                <p className="text-[9px] text-slate-500">التاريخ</p>
-                <p className="text-xs font-black text-slate-900">{dateStr}</p>
-              </div>
-              <div className="rounded-lg bg-slate-100 px-3 py-1.5">
-                <p className="text-[9px] text-slate-500">الوقت</p>
-                <p className="text-xs font-black text-slate-900">{timeStr}</p>
-              </div>
+            {/* يمين — معلومات العيادة */}
+            <div className="text-right">
+              <p className="text-base font-black text-slate-900">{clinicName}</p>
+              <p className="text-sm font-bold text-blue-700">اختصاص {specialty}</p>
+              {address && <p className="text-xs font-bold text-slate-500 mt-0.5">{address}</p>}
+              <p className="text-xs font-bold text-slate-500" dir="ltr">{phone}</p>
             </div>
 
             {/* وسط — شعار العيادة */}
@@ -108,12 +104,16 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
               )}
             </div>
 
-            {/* يسار — معلومات العيادة */}
-            <div className="text-left">
-              <p className="text-base font-black text-slate-900">{clinicName}</p>
-              <p className="text-sm font-bold text-blue-700">اختصاص {specialty}</p>
-              {address && <p className="text-xs font-bold text-slate-500 mt-0.5">{address}</p>}
-              <p className="text-xs font-bold text-slate-500" dir="ltr">{phone}</p>
+            {/* يسار — التاريخ والوقت */}
+            <div className="flex flex-col gap-1 items-end">
+              <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-right">
+                <p className="text-[9px] text-slate-500">التاريخ</p>
+                <p className="text-xs font-black text-slate-900">{dateStr}</p>
+              </div>
+              <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-right">
+                <p className="text-[9px] text-slate-500">الوقت</p>
+                <p className="text-xs font-black text-slate-900">{timeStr}</p>
+              </div>
             </div>
           </div>
         </div>
