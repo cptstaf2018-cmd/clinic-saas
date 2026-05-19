@@ -61,6 +61,16 @@ function randomFuture(daysAhead = 14) {
   d.setHours(9 + Math.floor(Math.random() * 8), pick([0, 15, 30, 45]), 0, 0);
   return d;
 }
+function todayAt(hour, minute = 0) {
+  const d = new Date();
+  d.setHours(hour, minute, 0, 0);
+  return d;
+}
+// مواعيد اليوم — 8 مرضى لكل عيادة لاختبار الطابور
+const TODAY_SLOTS = [
+  todayAt(9, 0), todayAt(9, 30), todayAt(10, 0), todayAt(10, 30),
+  todayAt(11, 0), todayAt(11, 30), todayAt(14, 0), todayAt(14, 30),
+];
 
 // ── العيادات ─────────────────────────────────────────────────
 const CLINICS = [
@@ -226,7 +236,24 @@ for (const [i, c] of CLINICS.entries()) {
     }
   }
 
-  console.log(`  ✅ 25 مريض + مواعيد + سجلات طبية${c.specialty === "dentistry" ? " + خريطة أسنان" : ""}\n`);
+  // ── مواعيد اليوم (8 مرضى) لاختبار الطابور ──────────────────
+  const todayPatients = await db.query(
+    `SELECT id FROM "Patient" WHERE "clinicId"=$1 ORDER BY "createdAt" LIMIT 8`,
+    [clinicId]
+  );
+  for (const [ti, row] of todayPatients.rows.entries()) {
+    const slot   = TODAY_SLOTS[ti];
+    const status = ti < 2 ? "completed" : ti === 2 ? "confirmed" : "confirmed";
+    const qStatus = ti < 2 ? "done" : ti === 2 ? "current" : "waiting";
+    await db.query(
+      `INSERT INTO "Appointment"(id,"clinicId","patientId",date,status,"queueNumber","queueStatus","createdAt")
+       VALUES($1,$2,$3,$4,$5,$6,$7,NOW())
+       ON CONFLICT DO NOTHING`,
+      [cuid(), clinicId, row.id, slot, status, ti + 1, qStatus]
+    );
+  }
+
+  console.log(`  ✅ 25 مريض + 8 حجوزات اليوم + سجلات طبية${c.specialty === "dentistry" ? " + خريطة أسنان" : ""}\n`);
 }
 
 await db.end();
@@ -254,3 +281,5 @@ console.log("");
 console.log("🔑 كلمة المرور لجميعهم: Demo1234!");
 console.log("──────────────────────────────────────────");
 console.log("📊 الإجمالي: 10 عيادات × 25 مريض = 250 مريض");
+console.log("📅 مواعيد اليوم: 8 لكل عيادة = 80 حجز جاهز للاختبار");
+console.log("   المريض 1-2: مكتمل ✅  |  المريض 3: حالي 🔵  |  4-8: انتظار ⏳");
