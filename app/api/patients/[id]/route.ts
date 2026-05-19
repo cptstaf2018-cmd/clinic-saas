@@ -25,7 +25,7 @@ export async function PATCH(
   if (Object.keys(data).length === 0)
     return NextResponse.json({ error: "لا توجد بيانات للتحديث" }, { status: 400 });
 
-  const updated = await db.patient.update({ where: { id }, data });
+  const updated = await db.patient.update({ where: { id, clinicId }, data });
   return NextResponse.json({ id: updated.id, name: updated.name, phone: updated.whatsappPhone });
 }
 

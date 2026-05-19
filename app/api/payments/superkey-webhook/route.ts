@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     clinicId: string;
     amount: number;
     plan: PlanId;
-    reference?: string;
+    reference: string;
   } = await req.json();
 
   if (!body.clinicId || typeof body.amount !== "number" || body.amount <= 0) {
@@ -31,6 +31,10 @@ export async function POST(req: Request) {
       { error: "clinicId و amount مطلوبان ويجب أن يكون المبلغ أكبر من صفر" },
       { status: 400 }
     );
+  }
+
+  if (!body.reference?.trim()) {
+    return NextResponse.json({ error: "reference مطلوب لمنع الدفع المكرر" }, { status: 400 });
   }
 
   if (!isPlanId(body.plan)) {

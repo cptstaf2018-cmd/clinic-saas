@@ -84,6 +84,14 @@ export async function POST(req: Request) {
     queueNumber = (last?.queueNumber ?? 0) + 1;
   }
 
+  // منع الحجز المزدوج
+  const conflict = await db.appointment.findFirst({
+    where: { clinicId, date: dateObj, status: { notIn: ["cancelled"] } },
+  });
+  if (conflict) {
+    return NextResponse.json({ error: "هذا الوقت محجوز مسبقاً" }, { status: 409 });
+  }
+
   const appointment = await db.appointment.create({
     data: {
       clinicId,
