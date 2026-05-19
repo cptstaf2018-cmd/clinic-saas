@@ -7,14 +7,18 @@ export const metadata = {
 
 // Unsplash 4K images
 const IMGS = {
-  hero:    "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=1400&q=80",
-  doctor1: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80",
-  doctor2: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=800&q=80",
-  doctor3: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&w=800&q=80",
+  // Hero: طبيبة محترفة في عيادة حديثة مضاءة جيداً
+  hero:    "https://images.unsplash.com/photo-1551601651-2a8555f1a136?auto=format&fit=crop&w=1400&q=90",
+  // Doctors grid: أطباء من مختلف التخصصات بجودة عالية
+  doctor1: "https://images.unsplash.com/photo-1591604021695-0c69b7c05981?auto=format&fit=crop&w=800&q=90",
+  doctor2: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=800&q=90",
+  doctor3: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=90",
+  // Dental: صورة خريطة الأسنان الخاصة
   dental:  "/T1.jpg",
-  tablet:  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=900&q=80",
-  clinic:  "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80",
-  team:    "https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=1000&q=80",
+  // CTA background: عيادة حديثة نظيفة
+  clinic:  "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1400&q=80",
+  // Company: فريق تقني في مكتب عصري
+  team:    "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=90",
 };
 
 export default function AboutPage() {
