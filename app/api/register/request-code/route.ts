@@ -43,18 +43,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Pick first available unused code
-  const code = await db.invitationCode.findFirst({
-    where: { used: false },
-    orderBy: { createdAt: "asc" },
-  });
-
-  if (!code) {
-    return NextResponse.json(
-      { error: "لا توجد كودات متاحة حالياً، تواصل مع الدعم" },
-      { status: 404 }
-    );
+  // Generate a unique code on-the-fly
+  const chars = "ABCDEFGHJKLMNPQRTUVWXYZ2346789";
+  let codeStr = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  for (let i = 0; i < 10; i++) {
+    const existing = await db.invitationCode.findUnique({ where: { code: codeStr } });
+    if (!existing) break;
+    codeStr = Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   }
+
+  const code = await db.invitationCode.create({
+    data: { code: codeStr, note: `تلقائي — ${phone.trim()}` },
+  });
 
   await sendWhatsApp(
     phone.trim(),
