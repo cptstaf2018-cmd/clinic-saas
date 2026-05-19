@@ -28,7 +28,7 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 11, x: 388, y: 140, w: W, h: 120 },
   // ── الصف العلوي — يسار (21 → 28) ──
   { num: 21, x: 455, y: 140, w: W, h: 120 },
-  { num: 22, x: 513, y: 140, w: 36, h: 120 },
+  { num: 22, x: 521, y: 140, w: 36, h: 120 },
   { num: 23, x: 563, y: 140, w: W, h: 120 },
   { num: 24, x: 617, y: 140, w: W, h: 120 },
   { num: 25, x: 671, y: 140, w: W, h: 120 },
@@ -46,7 +46,7 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 41, x: 388, y: 278, w: W, h: 120 },
   // ── الصف السفلي — يسار (31 → 38) ──
   { num: 31, x: 455, y: 278, w: W, h: 120 },
-  { num: 32, x: 513, y: 278, w: 36, h: 120 },
+  { num: 32, x: 521, y: 278, w: 36, h: 120 },
   { num: 33, x: 563, y: 278, w: W, h: 120 },
   { num: 34, x: 617, y: 278, w: W, h: 120 },
   { num: 35, x: 671, y: 278, w: W, h: 120 },
