@@ -135,14 +135,15 @@ export default function ToothChartClient({
                   style={{ cursor: "pointer" }}>
                   {/* منطقة النقر الشفافة */}
                   <rect x={x} y={y} width={w} height={h} rx={8} fill="transparent" />
-                  {/* اللون بـ multiply — يتبع شكل السن تلقائياً */}
+                  {/* لون العلاج — fill شفاف + stroke واضح يظهر على جميع الأسنان */}
                   {info && (
                     <rect
                       x={x} y={y} width={w} height={h}
                       rx={8}
                       fill={info.color}
-                      opacity={0.55}
-                      style={{ mixBlendMode: "multiply" } as React.CSSProperties}
+                      fillOpacity={0.35}
+                      stroke={info.color}
+                      strokeWidth={3}
                     />
                   )}
                   {/* إطار التحديد */}
