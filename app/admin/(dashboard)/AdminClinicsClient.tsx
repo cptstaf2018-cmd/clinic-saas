@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-
 import { useRouter } from "next/navigation";
+import AdminAnalyticsCharts from "./AdminAnalyticsCharts";
 
 type Subscription = {
   plan: string;
@@ -322,7 +322,7 @@ export default function AdminClinicsClient({
       {/* Analytics Charts */}
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <p className="mb-3 text-sm font-black text-slate-700">📊 التحليلات والإحصائيات</p>
-        
+        <AdminAnalyticsCharts />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
