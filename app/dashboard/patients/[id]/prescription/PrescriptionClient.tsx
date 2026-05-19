@@ -81,45 +81,39 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
       <div className="mx-auto max-w-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] print:max-w-none print:shadow-none print:overflow-hidden" style={{ minHeight: "29.7cm" }}>
 
         {/* ═══ رأس الوصفة ═══ */}
-        <div className="border-b-2 border-slate-800 px-8 py-5">
+        <div className="border-b-2 border-slate-800 px-8 py-4">
           <div className="grid grid-cols-3 items-center gap-4">
 
-            {/* يمين — معلومات العيادة */}
-            <div className="flex items-center gap-3">
+            {/* يمين — التاريخ والوقت */}
+            <div className="flex flex-col gap-1">
+              <div className="rounded-lg bg-slate-100 px-3 py-1.5">
+                <p className="text-[9px] text-slate-500">التاريخ</p>
+                <p className="text-xs font-black text-slate-900">{dateStr}</p>
+              </div>
+              <div className="rounded-lg bg-slate-100 px-3 py-1.5">
+                <p className="text-[9px] text-slate-500">الوقت</p>
+                <p className="text-xs font-black text-slate-900">{timeStr}</p>
+              </div>
+            </div>
+
+            {/* وسط — شعار العيادة */}
+            <div className="flex flex-col items-center text-center">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="شعار" className="h-16 w-16 rounded-full object-cover border-2 border-slate-300 shrink-0" />
+                <img src={logoUrl} alt="شعار العيادة" className="h-20 w-20 rounded-full object-cover border-2 border-slate-300" />
               ) : (
-                <div className="h-16 w-16 rounded-full bg-blue-700 flex items-center justify-center text-white text-2xl font-black border-2 border-blue-800 shrink-0">
+                <div className="h-20 w-20 rounded-full bg-blue-700 flex items-center justify-center text-white text-3xl font-black border-2 border-blue-800">
                   {clinicName.slice(0, 1)}
                 </div>
               )}
-              <div>
-                <p className="text-lg font-black text-slate-900">{clinicName}</p>
-                <p className="text-sm font-bold text-blue-700">اختصاص {specialty}</p>
-                {address && <p className="text-xs font-bold text-slate-500 mt-0.5">{address}</p>}
-                <p className="text-xs font-bold text-slate-500" dir="ltr">{phone}</p>
-              </div>
             </div>
 
-            {/* وسط — شعار وزارة الصحة (مركز تماماً) */}
-            <div className="flex flex-col items-center justify-center text-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/moh-iraq.webp" alt="وزارة الصحة العراقية" className="h-20 w-20 object-contain" />
-              <p className="text-[10px] font-black text-slate-700 mt-1">جمهورية العراق</p>
-              <p className="text-[10px] font-black text-red-700">وزارة الصحة</p>
-            </div>
-
-            {/* يسار — التاريخ والوقت */}
-            <div className="flex flex-col items-end gap-1">
-              <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-right">
-                <p className="text-[10px] text-slate-500">التاريخ</p>
-                <p className="text-sm font-black text-slate-900">{dateStr}</p>
-              </div>
-              <div className="rounded-lg bg-slate-100 px-3 py-1.5 text-right">
-                <p className="text-[10px] text-slate-500">الوقت</p>
-                <p className="text-sm font-black text-slate-900">{timeStr}</p>
-              </div>
+            {/* يسار — معلومات العيادة */}
+            <div className="text-left">
+              <p className="text-base font-black text-slate-900">{clinicName}</p>
+              <p className="text-sm font-bold text-blue-700">اختصاص {specialty}</p>
+              {address && <p className="text-xs font-bold text-slate-500 mt-0.5">{address}</p>}
+              <p className="text-xs font-bold text-slate-500" dir="ltr">{phone}</p>
             </div>
           </div>
         </div>
