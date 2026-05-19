@@ -18,7 +18,7 @@ const TREATMENTS = [
 const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[] = [
   // ── الصف العلوي — يمين (18 → 11) ──
   { num: 18, x: 30,  y: 140, w: 50, h: 120 }, // رحى
-  { num: 17, x: 64,  y: 140, w: 50, h: 120 }, // رحى
+  { num: 17, x: 84,  y: 140, w: 50, h: 120 }, // رحى
   { num: 16, x: 118, y: 140, w: 50, h: 120 }, // رحى
   { num: 15, x: 172, y: 140, w: 44, h: 120 }, // ضاحك
   { num: 14, x: 226, y: 140, w: 44, h: 120 }, // ضاحك
@@ -36,7 +36,7 @@ const TOOTH_COORDS: { num: number; x: number; y: number; w: number; h: number }[
   { num: 28, x: 833, y: 140, w: 50, h: 120 }, // رحى
   // ── الصف السفلي — يمين (48 → 41) ──
   { num: 48, x: 30,  y: 278, w: 50, h: 120 },
-  { num: 47, x: 64,  y: 278, w: 50, h: 120 },
+  { num: 47, x: 84,  y: 278, w: 50, h: 120 },
   { num: 46, x: 118, y: 278, w: 50, h: 120 },
   { num: 45, x: 172, y: 278, w: 44, h: 120 },
   { num: 44, x: 226, y: 278, w: 44, h: 120 },
