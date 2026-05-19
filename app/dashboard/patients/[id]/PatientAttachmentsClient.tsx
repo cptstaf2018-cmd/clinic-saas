@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 type Attachment = {
   id: string;
@@ -58,8 +58,8 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
     await loadTab(tabId);
   }
 
-  // load first tab on mount
-  useState(() => { loadTab("lab"); });
+  // load first tab on mount — useEffect runs client-side only
+  useEffect(() => { loadTab("lab"); }, []);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
