@@ -82,13 +82,17 @@ export default async function AdminMonitoringPage() {
     }),
   ]);
 
+  function statusValue(count: number, okText = "لا توجد ✓") {
+    return count > 0 ? arabicNumber(count) : okText;
+  }
+
   const healthCards = [
-    { label: "قاعدة البيانات", value: dbOk ? "تعمل" : "خطأ", detail: dbOk ? "الاتصال مستقر" : "فشل الاتصال", tone: dbOk ? "success" : "error" },
-    { label: "أخطاء مفتوحة", value: arabicNumber(todayErrors), detail: "أحداث بدرجة خطأ غير معالجة", tone: todayErrors > 0 ? "error" : "success" },
-    { label: "غير معالجة", value: arabicNumber(unresolvedErrors), detail: "أخطاء تحتاج مراجعة", tone: unresolvedErrors > 0 ? "warning" : "success" },
-    { label: "فشل واتساب", value: arabicNumber(whatsappFailures), detail: "أخطاء مفتوحة", tone: whatsappFailures > 0 ? "error" : "success" },
-    { label: "فشل التذكيرات", value: arabicNumber(reminderFailures), detail: "أخطاء مفتوحة", tone: reminderFailures > 0 ? "warning" : "success" },
-    { label: "عيادات نشطة", value: arabicNumber(activeClinics), detail: `${arabicNumber(expiringClinics)} تنتهي قريباً`, tone: expiringClinics > 0 ? "warning" : "info" },
+    { label: "قاعدة البيانات",  value: dbOk ? "تعمل ✓" : "خطأ ✗",          detail: dbOk ? "الاتصال مستقر"           : "فشل الاتصال",          tone: dbOk ? "success" : "error"                          },
+    { label: "أخطاء مفتوحة",   value: statusValue(todayErrors),              detail: "أحداث بدرجة خطأ غير معالجة",                               tone: todayErrors > 0 ? "error" : "success"               },
+    { label: "غير معالجة",      value: statusValue(unresolvedErrors),         detail: "أخطاء تحتاج مراجعة",                                       tone: unresolvedErrors > 0 ? "warning" : "success"        },
+    { label: "فشل واتساب",     value: statusValue(whatsappFailures),          detail: "أخطاء مفتوحة",                                              tone: whatsappFailures > 0 ? "error" : "success"          },
+    { label: "فشل التذكيرات",  value: statusValue(reminderFailures),          detail: "أخطاء مفتوحة",                                              tone: reminderFailures > 0 ? "warning" : "success"        },
+    { label: "عيادات نشطة",    value: arabicNumber(activeClinics),            detail: expiringClinics > 0 ? `${arabicNumber(expiringClinics)} تنتهي قريباً ⚠️` : "لا شيء ينتهي قريباً ✓", tone: expiringClinics > 0 ? "warning" : "info" },
   ];
 
   const serializedEvents = recentEvents.map((event) => ({
@@ -116,18 +120,21 @@ export default async function AdminMonitoringPage() {
         </div>
 
         <div className="grid gap-px bg-slate-200 sm:grid-cols-2 xl:grid-cols-6">
-          {healthCards.map((card) => (
-            <div key={card.label} className="bg-white p-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-black text-slate-400">{card.label}</p>
-                <span className={`h-2.5 w-2.5 rounded-full ${
-                  card.tone === "error" ? "bg-rose-500" : card.tone === "warning" ? "bg-amber-500" : card.tone === "success" ? "bg-emerald-500" : "bg-blue-500"
-                }`} />
+          {healthCards.map((card) => {
+            const dotColor = card.tone === "error" ? "bg-rose-500" : card.tone === "warning" ? "bg-amber-500" : card.tone === "success" ? "bg-emerald-500" : "bg-blue-500";
+            const valueColor = card.tone === "error" ? "text-rose-600" : card.tone === "warning" ? "text-amber-600" : card.tone === "success" ? "text-emerald-600" : "text-blue-600";
+            const bgColor = card.tone === "error" ? "bg-rose-50" : card.tone === "success" ? "bg-emerald-50/50" : "bg-white";
+            return (
+              <div key={card.label} className={`p-4 ${bgColor}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-black text-slate-500">{card.label}</p>
+                  <span className={`h-2.5 w-2.5 rounded-full ${dotColor}`} />
+                </div>
+                <p className={`mt-3 text-2xl font-black ${valueColor}`}>{card.value}</p>
+                <p className="mt-1 text-[11px] font-bold text-slate-400">{card.detail}</p>
               </div>
-              <p className="mt-3 text-2xl font-black text-slate-950">{card.value}</p>
-              <p className="mt-1 text-[11px] font-bold text-slate-400">{card.detail}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
