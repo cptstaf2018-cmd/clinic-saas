@@ -103,7 +103,7 @@ export default function MonitoringClient({
     return runAction("scan", () => fetch("/api/admin/maintenance/scan", { method: "POST" }));
   }
 
-  type FixAction = "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions" | "resolve-whatsapp-errors";
+  type FixAction = "clear-stuck-sessions" | "close-old-pending" | "reset-whatsapp-sessions" | "resolve-whatsapp-errors" | "resolve-old-errors";
 
   function fixAll(action: FixAction) {
     return runAction(action, () =>
@@ -171,25 +171,34 @@ export default function MonitoringClient({
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="mt-3 flex gap-2">
+          {/* Tabs + مسح */}
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setTab("alerts")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${tab === "alerts" ? "bg-rose-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              >
+                تحتاج انتباه
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${tab === "alerts" ? "bg-white/20" : "bg-rose-100 text-rose-700"}`}>
+                  {alertEvents.length}
+                </span>
+              </button>
+              <button
+                onClick={() => setTab("all")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${tab === "all" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              >
+                كل الأحداث
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${tab === "all" ? "bg-white/20" : "bg-slate-200 text-slate-600"}`}>
+                  {allEvents.length}
+                </span>
+              </button>
+            </div>
             <button
-              onClick={() => setTab("alerts")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${tab === "alerts" ? "bg-rose-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              onClick={() => fixAll("resolve-old-errors" as FixAction)}
+              disabled={busy === "resolve-old-errors"}
+              className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:opacity-50"
             >
-              تحتاج انتباه
-              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${tab === "alerts" ? "bg-white/20" : "bg-rose-100 text-rose-700"}`}>
-                {alertEvents.length}
-              </span>
-            </button>
-            <button
-              onClick={() => setTab("all")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black transition ${tab === "all" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              كل الأحداث
-              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${tab === "all" ? "bg-white/20" : "bg-slate-200 text-slate-600"}`}>
-                {allEvents.length}
-              </span>
+              {busy === "resolve-old-errors" ? "جاري المسح..." : "✅ مسح الأخطاء التاريخية"}
             </button>
           </div>
         </div>
@@ -209,30 +218,39 @@ export default function MonitoringClient({
             </div>
           ) : (
             displayed.map((event) => (
-              <article key={event.id} className={`px-5 py-4 transition hover:bg-slate-50 ${event.resolved ? "opacity-60" : ""}`}>
+              <article key={event.id} className={`px-5 py-4 transition ${
+                event.resolved
+                  ? "bg-emerald-50/60 hover:bg-emerald-50"
+                  : event.severity === "error"
+                  ? "bg-rose-50/40 hover:bg-rose-50"
+                  : event.severity === "warning"
+                  ? "bg-amber-50/40 hover:bg-amber-50"
+                  : "bg-white hover:bg-slate-50"
+              }`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    {/* نقطة الخطورة */}
                     <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                      event.resolved ? "bg-emerald-500" :
                       event.severity === "error" ? "bg-rose-500" :
                       event.severity === "warning" ? "bg-amber-500" :
                       event.severity === "success" ? "bg-emerald-500" : "bg-blue-500"
                     }`} />
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ring-1 ${SEVERITY_STYLES[event.severity] ?? SEVERITY_STYLES.info}`}>
-                          {SEVERITY_LABELS[event.severity] ?? event.severity}
+                        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ring-1 ${
+                          event.resolved
+                            ? "bg-emerald-100 text-emerald-700 ring-emerald-200"
+                            : SEVERITY_STYLES[event.severity] ?? SEVERITY_STYLES.info
+                        }`}>
+                          {event.resolved ? "✓ تمت المعالجة" : (SEVERITY_LABELS[event.severity] ?? event.severity)}
                         </span>
-                        <h3 className="text-sm font-black text-slate-950">{event.title}</h3>
+                        <h3 className={`text-sm font-black ${event.resolved ? "text-emerald-800" : "text-slate-950"}`}>{event.title}</h3>
                       </div>
                       {event.message && <p className="mt-1 text-xs font-bold text-slate-500 leading-5">{event.message}</p>}
                       <div className="mt-1 flex flex-wrap items-center gap-3">
                         <span className="text-[11px] font-bold text-slate-400">{formatDate(event.createdAt)}</span>
                         {event.clinic && (
                           <span className="text-[11px] font-bold text-blue-600">{event.clinic.name}</span>
-                        )}
-                        {event.resolved && (
-                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-600 ring-1 ring-emerald-100">✓ تمت المعالجة</span>
                         )}
                       </div>
                     </div>
