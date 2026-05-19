@@ -78,7 +78,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
       </div>
 
       {/* ورقة الوصفة */}
-      <div className="mx-auto max-w-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] print:max-w-none print:shadow-none" style={{ minHeight: "29.7cm" }}>
+      <div className="mx-auto max-w-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.12)] print:max-w-none print:shadow-none print:overflow-hidden" style={{ minHeight: "29.7cm" }}>
 
         {/* ═══ رأس الوصفة ═══ */}
         <div className="border-b-2 border-slate-800 px-8 py-5">
@@ -153,7 +153,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
         </div>
 
         {/* ═══ منطقة Rx ═══ */}
-        <div className="px-8 py-6" style={{ minHeight: "16cm" }}>
+        <div className="px-8 py-4" style={{ minHeight: "14cm" }}>
           <div className="flex items-start gap-4">
             <span className="text-5xl font-black text-slate-800 leading-none shrink-0" style={{ fontFamily: "serif" }}>℞</span>
             <div className="flex-1">
@@ -161,7 +161,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
                 ref={rxRef}
                 className="w-full text-base font-bold text-slate-900 outline-none bg-transparent resize-none leading-10"
                 placeholder="اكتب الأدوية والجرعات هنا..."
-                rows={14}
+                rows={12}
                 style={{
                   backgroundImage: "repeating-linear-gradient(transparent, transparent calc(2.5rem - 1px), #cbd5e1 calc(2.5rem - 1px), #cbd5e1 2.5rem)",
                   backgroundSize: "100% 2.5rem",
@@ -197,7 +197,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
       <style>{`
         @media print {
           @page { size: A4; margin: 0; }
-          body { margin: 0; }
+          html, body { margin: 0; height: 29.7cm; overflow: hidden; }
           input, textarea { border: none !important; background: transparent !important; }
           input::placeholder, textarea::placeholder { color: transparent !important; }
         }
