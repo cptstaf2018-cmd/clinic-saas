@@ -14,6 +14,7 @@ import BPTrackerClient from "./BPTrackerClient";
 import LabTrackerClient from "./LabTrackerClient";
 import InternalOrgansClient from "./InternalOrgansClient";
 import EyeMapClient from "./EyeMapClient";
+import HeartMapClient from "./HeartMapClient";
 import { getEntitlements, canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
@@ -301,7 +302,10 @@ export default async function PatientProfilePage({
                   </div>
                 )}
                 {specialtyConfig.code === "cardiology" && (
-                  <BPTrackerClient records={serializedRecords} />
+                  <div className="space-y-6">
+                    <HeartMapClient patientId={patient.id} />
+                    <BPTrackerClient records={serializedRecords} />
+                  </div>
                 )}
                 {specialtyConfig.code === "internal_medicine" && (
                   <div className="space-y-6">
