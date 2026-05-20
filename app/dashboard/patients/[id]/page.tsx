@@ -306,11 +306,11 @@ export default async function PatientProfilePage({
                       clinicId={session.user.clinicId!}
                       initialAnnotations={specialtyAnnotations
                         .filter((a: { specialtyCode: string }) => a.specialtyCode === "internal_medicine")
-                        .map((a: { regionId: string; label: string; color: string; notes?: string }) => ({
+                        .map((a: { regionId: string; label: string; color: string; notes?: string | null }) => ({
                           organId: a.regionId,
                           condition: a.label,
                           color: a.color,
-                          notes: a.notes,
+                          notes: a.notes ?? undefined,
                         }))}
                     />
                     <LabTrackerClient records={serializedRecords} />
