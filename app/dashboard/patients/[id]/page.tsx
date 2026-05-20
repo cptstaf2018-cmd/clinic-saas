@@ -13,6 +13,7 @@ import EyeChartClient from "./EyeChartClient";
 import BPTrackerClient from "./BPTrackerClient";
 import LabTrackerClient from "./LabTrackerClient";
 import InternalOrgansClient from "./InternalOrgansClient";
+import EyeMapClient from "./EyeMapClient";
 import { getEntitlements, canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
@@ -294,7 +295,10 @@ export default async function PatientProfilePage({
                   <PregnancyTrackerClient records={serializedRecords} />
                 )}
                 {specialtyConfig.code === "ophthalmology" && (
-                  <EyeChartClient records={serializedRecords} />
+                  <div className="space-y-6">
+                    <EyeMapClient patientId={patient.id} />
+                    <EyeChartClient records={serializedRecords} />
+                  </div>
                 )}
                 {specialtyConfig.code === "cardiology" && (
                   <BPTrackerClient records={serializedRecords} />
