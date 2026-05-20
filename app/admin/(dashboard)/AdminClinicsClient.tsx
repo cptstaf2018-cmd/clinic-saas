@@ -375,8 +375,8 @@ export default function AdminClinicsClient({
         </div>
       )}
 
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_12px_50px_rgba(15,23,42,0.05)]">
-        <div className="hidden overflow-x-auto lg:block">
+      <section className="rounded-xl border border-slate-200 bg-white shadow-[0_12px_50px_rgba(15,23,42,0.05)] overflow-hidden">
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full border-separate border-spacing-0 text-right">
             <thead className="border-b border-slate-200 bg-slate-100">
               <tr className="text-[11px] font-black text-slate-400">
@@ -429,7 +429,7 @@ export default function AdminClinicsClient({
           </table>
         </div>
 
-        <div className="grid gap-3 p-3 lg:hidden">
+        <div className="grid gap-3 p-3 md:hidden">
           {filteredClinics.map((clinic) => (
             <ClinicCard
               key={clinic.id}

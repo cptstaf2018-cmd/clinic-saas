@@ -265,7 +265,7 @@ export default function AdminClinicsClientPremium({
         </Panel>
       ) : (
         <Panel title="">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             <table className="min-w-full border-separate border-spacing-0">
               <thead>
                 <tr className="text-right text-[11px] font-black text-slate-400">
