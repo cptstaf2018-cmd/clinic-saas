@@ -44,10 +44,10 @@ const REGIONS: Region[] = [
   { id: "l_thigh_f",     labelAr: "الفخذ الأيسر",           shape: "rect",    x: 204,  y: 534,  w: 52,   h: 164, rx: 24 },
   { id: "r_knee_f",      labelAr: "الركبة اليمنى",          shape: "ellipse", cx: 174, cy: 708, rx: 44,  ry: 35  },
   { id: "l_knee_f",      labelAr: "الركبة اليسرى",          shape: "ellipse", cx: 230, cy: 708, rx: 44,  ry: 35  },
-  { id: "r_shin_f",      labelAr: "الساق اليمنى",           shape: "rect",    x: 152,  y: 742,  w: 42,   h: 172, rx: 18 },
-  { id: "l_shin_f",      labelAr: "الساق اليسرى",           shape: "rect",    x: 206,  y: 742,  w: 42,   h: 172, rx: 18 },
-  { id: "r_foot_f",      labelAr: "القدم اليمنى",           shape: "ellipse", cx: 162, cy: 942, rx: 48,  ry: 28  },
-  { id: "l_foot_f",      labelAr: "القدم اليسرى",           shape: "ellipse", cx: 228, cy: 942, rx: 48,  ry: 28  },
+  { id: "r_shin_f",      labelAr: "الساق اليمنى",           shape: "rect",    x: 152,  y: 742,  w: 42,   h: 240, rx: 18 },
+  { id: "l_shin_f",      labelAr: "الساق اليسرى",           shape: "rect",    x: 206,  y: 742,  w: 42,   h: 240, rx: 18 },
+  { id: "r_foot_f",      labelAr: "القدم اليمنى",           shape: "ellipse", cx: 162, cy: 1052, rx: 48, ry: 28  },
+  { id: "l_foot_f",      labelAr: "القدم اليسرى",           shape: "ellipse", cx: 228, cy: 1052, rx: 48, ry: 28  },
 
   // ── BACK BODY (right half, center ~X=695) ─────────────────────────────────
   { id: "head_b",        labelAr: "الرأس (خلفي)",           shape: "ellipse", cx: 695, cy: 78,  rx: 62,  ry: 68  },
@@ -66,10 +66,10 @@ const REGIONS: Region[] = [
   { id: "l_buttock",     labelAr: "الأرداف الأيسر",         shape: "ellipse", cx: 662, cy: 504, rx: 64,  ry: 52  },
   { id: "r_thigh_b",     labelAr: "الفخذ الأيمن (خلفي)",   shape: "rect",    x: 713,  y: 534,  w: 52,   h: 164, rx: 24 },
   { id: "l_thigh_b",     labelAr: "الفخذ الأيسر (خلفي)",   shape: "rect",    x: 633,  y: 534,  w: 52,   h: 164, rx: 24 },
-  { id: "r_calf",        labelAr: "بطة الساق اليمنى",       shape: "rect",    x: 714,  y: 742,  w: 42,   h: 172, rx: 18 },
-  { id: "l_calf",        labelAr: "بطة الساق اليسرى",       shape: "rect",    x: 634,  y: 742,  w: 42,   h: 172, rx: 18 },
-  { id: "r_heel",        labelAr: "الكعب الأيمن",           shape: "ellipse", cx: 728, cy: 942, rx: 48,  ry: 28  },
-  { id: "l_heel",        labelAr: "الكعب الأيسر",           shape: "ellipse", cx: 662, cy: 942, rx: 48,  ry: 28  },
+  { id: "r_calf",        labelAr: "بطة الساق اليمنى",       shape: "rect",    x: 714,  y: 742,  w: 42,   h: 240, rx: 18 },
+  { id: "l_calf",        labelAr: "بطة الساق اليسرى",       shape: "rect",    x: 634,  y: 742,  w: 42,   h: 240, rx: 18 },
+  { id: "r_heel",        labelAr: "الكعب الأيمن",           shape: "ellipse", cx: 726, cy: 1052, rx: 48, ry: 28  },
+  { id: "l_heel",        labelAr: "الكعب الأيسر",           shape: "ellipse", cx: 660, cy: 1052, rx: 48, ry: 28  },
 ];
 
 type Annotation = { id: string; regionId: string; label: string; color: string; notes: string | null };
