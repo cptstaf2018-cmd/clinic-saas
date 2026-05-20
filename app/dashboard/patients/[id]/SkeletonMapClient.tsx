@@ -82,42 +82,42 @@ const BACK_REGIONS: Region[] = [
   { id: "lumbar_b",         labelAr: "الفقرات القطنية",    shape: "rect",    x: 442,  y: 786,  w: 76,   h: 178, rx: 10 },
   { id: "sacrum",           labelAr: "العجز والعصعص",      shape: "ellipse", cx: 480, cy: 870,  rx: 76,  ry: 86  },
   // Scapulas (visible from back only)
-  { id: "left_scapula",     labelAr: "لوح الكتف الأيمن",  shape: "ellipse", cx: 220, cy: 450,  rx: 138, ry: 160 },
-  { id: "right_scapula",    labelAr: "لوح الكتف الأيسر",  shape: "ellipse", cx: 740, cy: 450,  rx: 138, ry: 160 },
+  { id: "left_scapula",     labelAr: "لوح الكتف الأيسر",  shape: "ellipse", cx: 220, cy: 450,  rx: 138, ry: 160 },
+  { id: "right_scapula",    labelAr: "لوح الكتف الأيمن",  shape: "ellipse", cx: 740, cy: 450,  rx: 138, ry: 160 },
   // Clavicles
-  { id: "left_clavicle_b",  labelAr: "الترقوة اليمنى",    shape: "rect",    x: 162,  y: 388,  w: 316,  h: 44,  rx: 20 },
-  { id: "right_clavicle_b", labelAr: "الترقوة اليسرى",    shape: "rect",    x: 482,  y: 388,  w: 316,  h: 44,  rx: 20 },
+  { id: "left_clavicle_b",  labelAr: "الترقوة اليسرى",    shape: "rect",    x: 162,  y: 388,  w: 316,  h: 44,  rx: 20 },
+  { id: "right_clavicle_b", labelAr: "الترقوة اليمنى",    shape: "rect",    x: 482,  y: 388,  w: 316,  h: 44,  rx: 20 },
   // Ribcage (from back)
   { id: "ribcage_b",        labelAr: "القفص الصدري",       shape: "ellipse", cx: 480, cy: 540,  rx: 318, ry: 210 },
   // Shoulders
-  { id: "left_shoulder_b",  labelAr: "مفصل الكتف الأيمن", shape: "ellipse", cx: 140, cy: 388,  rx: 92,  ry: 72  },
-  { id: "right_shoulder_b", labelAr: "مفصل الكتف الأيسر", shape: "ellipse", cx: 820, cy: 388,  rx: 92,  ry: 72  },
+  { id: "left_shoulder_b",  labelAr: "مفصل الكتف الأيسر", shape: "ellipse", cx: 140, cy: 388,  rx: 92,  ry: 72  },
+  { id: "right_shoulder_b", labelAr: "مفصل الكتف الأيمن", shape: "ellipse", cx: 820, cy: 388,  rx: 92,  ry: 72  },
   // Arms
-  { id: "left_humerus_b",   labelAr: "عظمة العضد الأيمن", shape: "rect",    x: 100,  y: 482,  w: 84,   h: 336, rx: 38 },
-  { id: "right_humerus_b",  labelAr: "عظمة العضد الأيسر", shape: "rect",    x: 776,  y: 482,  w: 84,   h: 336, rx: 38 },
-  { id: "left_elbow_b",     labelAr: "مفصل الكوع الأيمن", shape: "ellipse", cx: 142, cy: 778,  rx: 64,  ry: 48  },
-  { id: "right_elbow_b",    labelAr: "مفصل الكوع الأيسر", shape: "ellipse", cx: 818, cy: 778,  rx: 64,  ry: 48  },
+  { id: "left_humerus_b",   labelAr: "عظمة العضد الأيسر", shape: "rect",    x: 100,  y: 482,  w: 84,   h: 336, rx: 38 },
+  { id: "right_humerus_b",  labelAr: "عظمة العضد الأيمن", shape: "rect",    x: 776,  y: 482,  w: 84,   h: 336, rx: 38 },
+  { id: "left_elbow_b",     labelAr: "مفصل الكوع الأيسر", shape: "ellipse", cx: 142, cy: 778,  rx: 64,  ry: 48  },
+  { id: "right_elbow_b",    labelAr: "مفصل الكوع الأيمن", shape: "ellipse", cx: 818, cy: 778,  rx: 64,  ry: 48  },
   { id: "left_radius_b",    labelAr: "ساعد أيسر",          shape: "rect",    x: 96,   y: 876,  w: 74,   h: 258, rx: 34 },
   { id: "right_radius_b",   labelAr: "ساعد أيمن",          shape: "rect",    x: 790,  y: 876,  w: 74,   h: 258, rx: 34 },
   // Pelvis & hips
   { id: "pelvis_b",         labelAr: "الحوض",              shape: "ellipse", cx: 480, cy: 946,  rx: 232, ry: 80  },
-  { id: "left_buttock",     labelAr: "الأرداف الأيمن",    shape: "ellipse", cx: 340, cy: 950,  rx: 130, ry: 90  },
-  { id: "right_buttock",    labelAr: "الأرداف الأيسر",    shape: "ellipse", cx: 620, cy: 950,  rx: 130, ry: 90  },
+  { id: "left_buttock",     labelAr: "الأرداف الأيسر",    shape: "ellipse", cx: 340, cy: 950,  rx: 130, ry: 90  },
+  { id: "right_buttock",    labelAr: "الأرداف الأيمن",    shape: "ellipse", cx: 620, cy: 950,  rx: 130, ry: 90  },
   // Thighs
   { id: "left_femur_b",     labelAr: "فخذ أيسر (خلفي)",   shape: "rect",    x: 238,  y: 1164, w: 114,  h: 336, rx: 50 },
   { id: "right_femur_b",    labelAr: "فخذ أيمن (خلفي)",   shape: "rect",    x: 608,  y: 1164, w: 114,  h: 336, rx: 50 },
   // Knees
-  { id: "left_knee_b",      labelAr: "الركبة اليمنى",     shape: "ellipse", cx: 296, cy: 1414, rx: 70,  ry: 56  },
-  { id: "right_knee_b",     labelAr: "الركبة اليسرى",     shape: "ellipse", cx: 664, cy: 1414, rx: 70,  ry: 56  },
+  { id: "left_knee_b",      labelAr: "الركبة اليسرى",     shape: "ellipse", cx: 296, cy: 1414, rx: 70,  ry: 56  },
+  { id: "right_knee_b",     labelAr: "الركبة اليمنى",     shape: "ellipse", cx: 664, cy: 1414, rx: 70,  ry: 56  },
   // Lower legs (calves from back)
-  { id: "left_calf",        labelAr: "بطة الساق اليمنى",  shape: "rect",    x: 242,  y: 1564, w: 108,  h: 204, rx: 44 },
-  { id: "right_calf",       labelAr: "بطة الساق اليسرى",  shape: "rect",    x: 610,  y: 1564, w: 108,  h: 204, rx: 44 },
+  { id: "left_calf",        labelAr: "بطة الساق اليسرى",  shape: "rect",    x: 242,  y: 1564, w: 108,  h: 204, rx: 44 },
+  { id: "right_calf",       labelAr: "بطة الساق اليمنى",  shape: "rect",    x: 610,  y: 1564, w: 108,  h: 204, rx: 44 },
   // Heels/Calcaneus
-  { id: "left_heel",        labelAr: "الكعب الأيمن",      shape: "ellipse", cx: 286, cy: 1692, rx: 76,  ry: 46  },
-  { id: "right_heel",       labelAr: "الكعب الأيسر",      shape: "ellipse", cx: 674, cy: 1692, rx: 76,  ry: 46  },
+  { id: "left_heel",        labelAr: "الكعب الأيسر",      shape: "ellipse", cx: 286, cy: 1692, rx: 76,  ry: 46  },
+  { id: "right_heel",       labelAr: "الكعب الأيمن",      shape: "ellipse", cx: 674, cy: 1692, rx: 76,  ry: 46  },
   // Feet
-  { id: "left_foot_b",      labelAr: "عظام القدم اليمنى", shape: "ellipse", cx: 268, cy: 1720, rx: 108, ry: 44  },
-  { id: "right_foot_b",     labelAr: "عظام القدم اليسرى", shape: "ellipse", cx: 692, cy: 1720, rx: 108, ry: 44  },
+  { id: "left_foot_b",      labelAr: "عظام القدم اليسرى", shape: "ellipse", cx: 268, cy: 1720, rx: 108, ry: 44  },
+  { id: "right_foot_b",     labelAr: "عظام القدم اليمنى", shape: "ellipse", cx: 692, cy: 1720, rx: 108, ry: 44  },
 ];
 
 type Annotation = { id: string; regionId: string; label: string; color: string; notes: string | null };
