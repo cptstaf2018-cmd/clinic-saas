@@ -5,6 +5,13 @@ import Link from "next/link";
 import MedicalRecordsClient from "./MedicalRecordsClient";
 import PatientAttachmentsClient from "./PatientAttachmentsClient";
 import ToothChartClient from "./ToothChartClient";
+import BodyMapClient from "./BodyMapClient";
+import SkeletonMapClient from "./SkeletonMapClient";
+import GrowthChartClient from "./GrowthChartClient";
+import PregnancyTrackerClient from "./PregnancyTrackerClient";
+import EyeChartClient from "./EyeChartClient";
+import BPTrackerClient from "./BPTrackerClient";
+import LabTrackerClient from "./LabTrackerClient";
 import { getEntitlements, canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
@@ -70,10 +77,18 @@ export default async function PatientProfilePage({
 
   const isDental = specialtyConfig.code === "dentistry";
   const hasDentalChart = canUseFeature(subscription?.plan, "dentalChart");
+  const hasSpecialtyMap = canUseFeature(subscription?.plan, "specialtyMap");
 
-  const toothTreatments = isDental && hasDentalChart
-    ? await db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
-    : [];
+  const isAnnotationSpecialty = ["dermatology", "orthopedics"].includes(specialtyConfig.code);
+
+  const [toothTreatments, specialtyAnnotations] = await Promise.all([
+    isDental && hasDentalChart
+      ? db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
+      : Promise.resolve([]),
+    isAnnotationSpecialty && hasSpecialtyMap
+      ? db.specialtyAnnotation.findMany({ where: { patientId: id, clinicId, specialtyCode: specialtyConfig.code } })
+      : Promise.resolve([]),
+  ]);
 
   const now = new Date();
   const completedCount = patient.appointments.filter((appointment) => appointment.status === "completed").length;
@@ -208,6 +223,88 @@ export default async function PatientProfilePage({
             </div>
           </section>
         )}
+
+        {/* ═══ Specialty Chart (non-dental) ═══ */}
+        {specialtyConfig.code !== "dentistry" && (() => {
+          const SPECIALTY_META: Record<string, { icon: string; title: string; subtitle: string }> = {
+            dermatology:      { icon: "🩹", title: "خريطة الجسم التفاعلية",    subtitle: "انقر على أي منطقة لتأشير الإصابة الجلدية" },
+            orthopedics:      { icon: "🦴", title: "خريطة الهيكل العظمي",      subtitle: "انقر على أي عظمة أو مفصل لتحديد الحالة" },
+            pediatrics:       { icon: "👶", title: "متابعة النمو والتطعيمات",  subtitle: "منحنى الوزن والطول + جدول التطعيمات + حاسبة الجرعات" },
+            gynecology:       { icon: "🤰", title: "متابعة الحمل",             subtitle: "حاسبة الحمل وعمر الجنين وجدول الزيارات" },
+            ophthalmology:    { icon: "👁️", title: "فحص العيون",               subtitle: "حدة البصر + ضغط العين + وصفة النظارات" },
+            cardiology:       { icon: "❤️", title: "متابعة ضغط الدم",         subtitle: "سجل القياسات والمنحنى الزمني لضغط الدم والنبض" },
+            internal_medicine:{ icon: "🏥", title: "متابعة الباطنية",          subtitle: "التحاليل والأمراض المزمنة وخطة العلاج" },
+          };
+          const meta = SPECIALTY_META[specialtyConfig.code];
+          if (!meta) return null;
+
+          return (
+            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                <div>
+                  <h2 className="text-base font-black text-slate-950">{meta.icon} {meta.title}</h2>
+                  <p className="text-xs font-bold text-slate-400 mt-0.5">{meta.subtitle}</p>
+                </div>
+                {isAnnotationSpecialty && !hasSpecialtyMap && (
+                  <span className="rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-600 ring-1 ring-amber-200">
+                    يتطلب الخطة المميزة
+                  </span>
+                )}
+              </div>
+              <div className="p-5">
+                {specialtyConfig.code === "dermatology" && (
+                  hasSpecialtyMap ? (
+                    <BodyMapClient
+                      patientId={patient.id}
+                      specialtyCode="dermatology"
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        id: a.id, regionId: a.regionId, label: a.label,
+                        color: a.color, notes: a.notes,
+                      }))}
+                    />
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-2xl mb-2">🩹</p>
+                      <p className="text-sm font-black text-slate-500">خريطة الجسم التفاعلية متاحة في الخطة المميزة</p>
+                    </div>
+                  )
+                )}
+                {specialtyConfig.code === "orthopedics" && (
+                  hasSpecialtyMap ? (
+                    <SkeletonMapClient
+                      patientId={patient.id}
+                      specialtyCode="orthopedics"
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        id: a.id, regionId: a.regionId, label: a.label,
+                        color: a.color, notes: a.notes,
+                      }))}
+                    />
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-2xl mb-2">🦴</p>
+                      <p className="text-sm font-black text-slate-500">خريطة الهيكل العظمي متاحة في الخطة المميزة</p>
+                    </div>
+                  )
+                )}
+                {specialtyConfig.code === "pediatrics" && (
+                  <GrowthChartClient records={serializedRecords} />
+                )}
+                {specialtyConfig.code === "gynecology" && (
+                  <PregnancyTrackerClient records={serializedRecords} />
+                )}
+                {specialtyConfig.code === "ophthalmology" && (
+                  <EyeChartClient records={serializedRecords} />
+                )}
+                {specialtyConfig.code === "cardiology" && (
+                  <BPTrackerClient records={serializedRecords} />
+                )}
+                {specialtyConfig.code === "internal_medicine" && (
+                  <LabTrackerClient records={serializedRecords} />
+                )}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ═══ Attachments ═══ */}
         {entitlements.features.includes("fullMedicalFile") && (

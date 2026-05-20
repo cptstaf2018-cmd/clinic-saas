@@ -39,6 +39,7 @@ model Clinic {
   patientPayments        PatientPayment[]
   patients               Patient[]
   toothTreatments        ToothTreatment[]
+  specialtyAnnotations   SpecialtyAnnotation[]
   payments               Payment[]
   subscription           Subscription?
   settings               ClinicSettings?
@@ -113,6 +114,7 @@ model Patient {
   patientAttachments  PatientAttachment[]
   patientPayments     PatientPayment[]
   toothTreatments     ToothTreatment[]
+  specialtyAnnotations SpecialtyAnnotation[]
   clinic              Clinic              @relation(fields: [clinicId], references: [id])
 
   @@unique([clinicId, whatsappPhone])
@@ -286,6 +288,23 @@ model PatientAttachment {
   @@index([patientId])
   @@index([clinicId, patientId])
   @@index([type])
+}
+
+model SpecialtyAnnotation {
+  id            String   @id @default(cuid())
+  clinicId      String
+  patientId     String
+  specialtyCode String
+  regionId      String
+  label         String
+  color         String
+  notes         String?
+  createdAt     DateTime @default(now())
+  clinic        Clinic   @relation(fields: [clinicId], references: [id])
+  patient       Patient  @relation(fields: [patientId], references: [id])
+
+  @@unique([clinicId, patientId, specialtyCode, regionId])
+  @@index([clinicId, patientId])
 }
 
 model SystemEvent {

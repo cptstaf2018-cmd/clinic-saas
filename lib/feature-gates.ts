@@ -16,7 +16,8 @@ export type FeatureKey =
   | "backupRestore"
   | "cheerMessages"
   | "fullMedicalFile"
-  | "dentalChart";
+  | "dentalChart"
+  | "specialtyMap";
 
 type PlanWithTrial = PlanId | "trial";
 
@@ -45,6 +46,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   cheerMessages: "رسائل اطمئنان تلقائية للمرضى",
   fullMedicalFile: "الملف الطبي الكامل — تحاليل وأشعة ووصفات",
   dentalChart: "خريطة الأسنان التفاعلية — تأشير العلاجات لكل مريض",
+  specialtyMap: "الخرائط الطبية التفاعلية — جلدية وعظام والأعضاء",
 };
 
 const ALL_FEATURES: FeatureKey[] = [
@@ -66,7 +68,7 @@ const ALL_FEATURES: FeatureKey[] = [
 
 const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
   // Trial: full access to evaluate every feature
-  trial: [...ALL_FEATURES, "fullMedicalFile"],
+  trial: [...ALL_FEATURES, "fullMedicalFile", "specialtyMap"],
   // أساسية — المرضى والحجوزات + شاشة الانتظار + السجل الطبي + تقرير يومي
   basic: [
     "appointments",
@@ -99,9 +101,10 @@ const PLAN_FEATURES: Record<PlanWithTrial, FeatureKey[]> = {
     "auditLog",
     "clinicAssistant",
     "dentalChart",
+    "specialtyMap",
   ],
   // مميزة VIP — يضيف: تحاليل وأشعة + رفع ملفات + رسائل اطمئنان + الملف الطبي الكامل
-  vip: [...ALL_FEATURES, "fullMedicalFile", "dentalChart"],
+  vip: [...ALL_FEATURES, "fullMedicalFile", "dentalChart", "specialtyMap"],
 };
 
 export const PLAN_LIMITS: Record<PlanWithTrial, { users: number; whatsappMessages: number; storageGb: number }> = {
@@ -130,7 +133,7 @@ export function getUpgradePlanForFeature(feature: FeatureKey): PlanId {
   if (["patientImages", "cheerMessages", "fullMedicalFile"].includes(feature)) {
     return "vip";
   }
-  if (["advancedWhatsApp", "prioritySupport", "backupRestore", "auditLog", "clinicAssistant"].includes(feature)) {
+  if (["advancedWhatsApp", "prioritySupport", "backupRestore", "auditLog", "clinicAssistant", "dentalChart", "specialtyMap"].includes(feature)) {
     return "premium";
   }
   return "standard";
