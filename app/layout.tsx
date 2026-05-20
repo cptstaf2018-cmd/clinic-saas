@@ -22,6 +22,9 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "عيادتي",
   },
+  verification: {
+    google: "kaJq6Uri2UG16KiQPnlgnviCwnzz-8myJlKaXIdLMfE",
+  },
   other: {
     "mobile-web-app-capable": "yes",
   },
