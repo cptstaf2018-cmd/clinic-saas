@@ -12,6 +12,7 @@ import PregnancyTrackerClient from "./PregnancyTrackerClient";
 import EyeChartClient from "./EyeChartClient";
 import BPTrackerClient from "./BPTrackerClient";
 import LabTrackerClient from "./LabTrackerClient";
+import InternalOrgansClient from "./InternalOrgansClient";
 import { getEntitlements, canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 
@@ -299,7 +300,21 @@ export default async function PatientProfilePage({
                   <BPTrackerClient records={serializedRecords} />
                 )}
                 {specialtyConfig.code === "internal_medicine" && (
-                  <LabTrackerClient records={serializedRecords} />
+                  <div className="space-y-6">
+                    <InternalOrgansClient
+                      patientId={patient.id}
+                      clinicId={session.user.clinicId!}
+                      initialAnnotations={specialtyAnnotations
+                        .filter((a: { specialtyCode: string }) => a.specialtyCode === "internal_medicine")
+                        .map((a: { regionId: string; label: string; color: string; notes?: string }) => ({
+                          organId: a.regionId,
+                          condition: a.label,
+                          color: a.color,
+                          notes: a.notes,
+                        }))}
+                    />
+                    <LabTrackerClient records={serializedRecords} />
+                  </div>
                 )}
               </div>
             </section>
