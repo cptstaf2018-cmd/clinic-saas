@@ -38,7 +38,7 @@ const REGIONS: Region[] = [
   { id: "r_forearm_f",   labelAr: "الساعد الأيمن",          shape: "rect",    x: 62,   y: 368,  w: 42,   h: 152, rx: 18 },
   { id: "l_forearm_f",   labelAr: "الساعد الأيسر",          shape: "rect",    x: 256,  y: 368,  w: 42,   h: 152, rx: 18 },
   { id: "r_hand_f",      labelAr: "اليد اليمنى",            shape: "ellipse", cx: 76,  cy: 540, rx: 36,  ry: 46  },
-  { id: "l_hand_f",      labelAr: "اليد اليسرى",            shape: "ellipse", cx: 274, cy: 540, rx: 36,  ry: 46  },
+  { id: "l_hand_f",      labelAr: "اليد اليسرى",            shape: "ellipse", cx: 328, cy: 538, rx: 36,  ry: 46  },
   { id: "pelvis_f",      labelAr: "منطقة الحوض",            shape: "ellipse", cx: 210, cy: 500, rx: 66,  ry: 38  },
   { id: "r_thigh_f",     labelAr: "الفخذ الأيمن",           shape: "rect",    x: 148,  y: 534,  w: 52,   h: 164, rx: 24 },
   { id: "l_thigh_f",     labelAr: "الفخذ الأيسر",           shape: "rect",    x: 204,  y: 534,  w: 52,   h: 164, rx: 24 },
