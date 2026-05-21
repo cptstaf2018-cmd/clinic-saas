@@ -7,7 +7,7 @@ export async function sendOtpEmail(to: string, code: string) {
   }
   const resend = new Resend(process.env.RESEND_API_KEY);
   const result = await resend.emails.send({
-    from: "عيادتي <onboarding@resend.dev>",
+    from: "عيادتي <noreply@clinic-ai-pro.com>",
     to,
     subject: "كود تسجيل عيادتي",
     html: `
