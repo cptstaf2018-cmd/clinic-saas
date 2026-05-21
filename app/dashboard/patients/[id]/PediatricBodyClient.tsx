@@ -15,8 +15,15 @@ const CONDITION_TYPES = [
   { key: "other",      labelAr: "أخرى",             color: "#6b7280" },
 ];
 
-// Reuses body-map.png (960×1118) — front left, back right
-// Same layout as dermatology body map
+const AGE_STAGES = [
+  { key: "newborn",   labelAr: "حديث الولادة", ageRange: "0–3 شهر"  },
+  { key: "infant",    labelAr: "رضيع",         ageRange: "3–12 شهر" },
+  { key: "toddler",   labelAr: "طفل صغير",     ageRange: "1–3 سنة"  },
+  { key: "preschool", labelAr: "ما قبل المدرسة", ageRange: "3–6 سنة" },
+  { key: "school",    labelAr: "سن المدرسة",   ageRange: "6–12 سنة" },
+  { key: "teen",      labelAr: "مراهق",        ageRange: "12+ سنة"  },
+];
+
 type Region = {
   id: string;
   labelAr: string;
@@ -25,47 +32,85 @@ type Region = {
   | { shape: "rect";    x: number;  y: number;  w: number;  h: number; rx?: number }
 );
 
+// Single front-view child body (viewBox 0 0 250 570)
 const REGIONS: Region[] = [
-  // ── FRONT (viewBox 500×700, front centered at x=125) ──
-  { id: "head_f",       labelAr: "الرأس",          shape: "ellipse", cx: 125, cy: 72,  rx: 46, ry: 52 },
-  { id: "neck_f",       labelAr: "الرقبة",         shape: "rect",    x: 108,  y: 118,  w: 34,  h: 24, rx: 8 },
-  { id: "chest_f",      labelAr: "الصدر",          shape: "rect",    x: 65,   y: 138,  w: 120, h: 80, rx: 12 },
-  { id: "abdomen_f",    labelAr: "البطن",          shape: "rect",    x: 68,   y: 215,  w: 114, h: 60, rx: 12 },
-  { id: "pelvis_f",     labelAr: "الحوض",          shape: "ellipse", cx: 125, cy: 280, rx: 56, ry: 20 },
-  { id: "r_arm_f",      labelAr: "الذراع الأيمن",  shape: "rect",    x: 38,   y: 148,  w: 28,  h: 148, rx: 12 },
-  { id: "l_arm_f",      labelAr: "الذراع الأيسر",  shape: "rect",    x: 184,  y: 148,  w: 28,  h: 148, rx: 12 },
-  { id: "r_hand_f",     labelAr: "اليد اليمنى",    shape: "ellipse", cx: 56,  cy: 312, rx: 18, ry: 22 },
-  { id: "l_hand_f",     labelAr: "اليد اليسرى",    shape: "ellipse", cx: 194, cy: 312, rx: 18, ry: 22 },
-  { id: "r_thigh_f",    labelAr: "الفخذ الأيمن",   shape: "rect",    x: 72,   y: 288,  w: 40,  h: 140, rx: 14 },
-  { id: "l_thigh_f",    labelAr: "الفخذ الأيسر",   shape: "rect",    x: 138,  y: 288,  w: 40,  h: 140, rx: 14 },
-  { id: "r_knee_f",     labelAr: "الركبة اليمنى",  shape: "ellipse", cx: 91,  cy: 432, rx: 20, ry: 14 },
-  { id: "l_knee_f",     labelAr: "الركبة اليسرى",  shape: "ellipse", cx: 159, cy: 432, rx: 20, ry: 14 },
-  { id: "r_leg_f",      labelAr: "الساق اليمنى",   shape: "rect",    x: 72,   y: 444,  w: 38,  h: 128, rx: 12 },
-  { id: "l_leg_f",      labelAr: "الساق اليسرى",   shape: "rect",    x: 140,  y: 444,  w: 38,  h: 128, rx: 12 },
-  { id: "r_foot_f",     labelAr: "القدم اليمنى",   shape: "ellipse", cx: 91,  cy: 584, rx: 26, ry: 14 },
-  { id: "l_foot_f",     labelAr: "القدم اليسرى",   shape: "ellipse", cx: 159, cy: 584, rx: 26, ry: 14 },
-
-  // ── BACK (centered at x=375) ──
-  { id: "head_b",       labelAr: "الرأس (خلف)",    shape: "ellipse", cx: 375, cy: 72,  rx: 46, ry: 52 },
-  { id: "neck_b",       labelAr: "الرقبة (خلف)",   shape: "rect",    x: 358,  y: 118,  w: 34,  h: 24, rx: 8 },
-  { id: "upper_back",   labelAr: "أعلى الظهر",     shape: "rect",    x: 315,  y: 138,  w: 120, h: 80, rx: 12 },
-  { id: "lower_back",   labelAr: "أسفل الظهر",     shape: "rect",    x: 318,  y: 215,  w: 114, h: 60, rx: 12 },
-  { id: "buttocks",     labelAr: "المنطقة السفلية", shape: "ellipse", cx: 375, cy: 280, rx: 56, ry: 20 },
-  { id: "r_arm_b",      labelAr: "الذراع (خلف أيمن)", shape: "rect", x: 288,  y: 148,  w: 28,  h: 148, rx: 12 },
-  { id: "l_arm_b",      labelAr: "الذراع (خلف أيسر)", shape: "rect", x: 434,  y: 148,  w: 28,  h: 148, rx: 12 },
-  { id: "r_thigh_b",    labelAr: "الفخذ (خلف أيمن)", shape: "rect",  x: 322,  y: 288,  w: 40,  h: 140, rx: 14 },
-  { id: "l_thigh_b",    labelAr: "الفخذ (خلف أيسر)", shape: "rect",  x: 388,  y: 288,  w: 40,  h: 140, rx: 14 },
-  { id: "r_calf",       labelAr: "ربلة الساق (يمين)", shape: "rect", x: 322,  y: 444,  w: 38,  h: 128, rx: 12 },
-  { id: "l_calf",       labelAr: "ربلة الساق (يسار)", shape: "rect", x: 390,  y: 444,  w: 38,  h: 128, rx: 12 },
+  { id: "head",     labelAr: "الرأس",          shape: "ellipse", cx: 125, cy: 52,  rx: 43, ry: 47 },
+  { id: "neck",     labelAr: "الرقبة",         shape: "rect",    x: 112,  y: 97,   w: 26,  h: 20, rx: 7  },
+  { id: "chest",    labelAr: "الصدر",          shape: "rect",    x: 68,   y: 115,  w: 114, h: 68, rx: 12 },
+  { id: "abdomen",  labelAr: "البطن",          shape: "rect",    x: 71,   y: 181,  w: 108, h: 50, rx: 12 },
+  { id: "pelvis",   labelAr: "الحوض",          shape: "ellipse", cx: 125, cy: 240, rx: 52, ry: 16 },
+  { id: "r_arm",    labelAr: "الذراع الأيمن",  shape: "rect",    x: 42,   y: 124,  w: 24,  h: 130, rx: 11 },
+  { id: "l_arm",    labelAr: "الذراع الأيسر",  shape: "rect",    x: 184,  y: 124,  w: 24,  h: 130, rx: 11 },
+  { id: "r_hand",   labelAr: "اليد اليمنى",    shape: "ellipse", cx: 56,  cy: 272, rx: 16, ry: 19 },
+  { id: "l_hand",   labelAr: "اليد اليسرى",    shape: "ellipse", cx: 194, cy: 272, rx: 16, ry: 19 },
+  { id: "r_thigh",  labelAr: "الفخذ الأيمن",   shape: "rect",    x: 76,   y: 248,  w: 36,  h: 124, rx: 13 },
+  { id: "l_thigh",  labelAr: "الفخذ الأيسر",   shape: "rect",    x: 138,  y: 248,  w: 36,  h: 124, rx: 13 },
+  { id: "r_knee",   labelAr: "الركبة اليمنى",  shape: "ellipse", cx: 94,  cy: 378, rx: 18, ry: 12 },
+  { id: "l_knee",   labelAr: "الركبة اليسرى",  shape: "ellipse", cx: 156, cy: 378, rx: 18, ry: 12 },
+  { id: "r_leg",    labelAr: "الساق اليمنى",   shape: "rect",    x: 76,   y: 390,  w: 34,  h: 112, rx: 11 },
+  { id: "l_leg",    labelAr: "الساق اليسرى",   shape: "rect",    x: 140,  y: 390,  w: 34,  h: 112, rx: 11 },
+  { id: "r_foot",   labelAr: "القدم اليمنى",   shape: "ellipse", cx: 94,  cy: 516, rx: 24, ry: 12 },
+  { id: "l_foot",   labelAr: "القدم اليسرى",   shape: "ellipse", cx: 156, cy: 516, rx: 24, ry: 12 },
 ];
+
+// Growth stage silhouette data: [head_ry, torso_h, legs_h] relative to baseline
+const STAGE_SHAPES: Record<string, { headRx: number; headRy: number; torsoH: number; legsH: number }> = {
+  newborn:   { headRx: 11, headRy: 12, torsoH: 10, legsH:  5 },
+  infant:    { headRx: 11, headRy: 12, torsoH: 14, legsH: 10 },
+  toddler:   { headRx: 10, headRy: 11, torsoH: 18, legsH: 18 },
+  preschool: { headRx:  9, headRy: 10, torsoH: 22, legsH: 26 },
+  school:    { headRx:  9, headRy: 10, torsoH: 26, legsH: 34 },
+  teen:      { headRx:  8, headRy:  9, torsoH: 30, legsH: 42 },
+};
 
 type Annotation = { regionId: string; condition: string; color: string; notes?: string };
 type Props      = { patientId: string; initialAnnotations?: Annotation[] };
+
+function GrowthStageSilhouette({ stageKey, selected, onClick }: {
+  stageKey: string; selected: boolean; onClick: () => void;
+}) {
+  const s = STAGE_SHAPES[stageKey];
+  const stage = AGE_STAGES.find(a => a.key === stageKey)!;
+  const color = selected ? "#2563eb" : "#cbd5e1";
+  const totalH = s.headRy * 2 + s.torsoH + s.legsH + 2;
+  const baseline = totalH;
+  // head center y = baseline - legsH - torsoH - headRy
+  const headCy = baseline - s.legsH - s.torsoH - s.headRy;
+  // torso top = after head bottom
+  const torsoY = headCy + s.headRy;
+  // torso width at head = headRx*1.5, slightly wider than head
+  const torsoW = s.headRx * 2.6;
+  // legs start at torso bottom
+  const legsY = torsoY + s.torsoH;
+  const legW = torsoW * 0.38;
+
+  return (
+    <button onClick={onClick} className="flex flex-col items-center gap-1 group focus:outline-none">
+      <svg viewBox={`-18 -4 36 ${totalH + 8}`} className="w-10 h-16" style={{ overflow: "visible" }}>
+        {/* Head */}
+        <ellipse cx="0" cy={headCy} rx={s.headRx} ry={s.headRy} fill={color}/>
+        {/* Torso */}
+        <rect x={-torsoW/2} y={torsoY} width={torsoW} height={s.torsoH} rx="3" fill={color}/>
+        {/* Arms */}
+        <rect x={-torsoW/2 - legW - 2} y={torsoY + 2} width={legW} height={s.torsoH * 0.85} rx="2" fill={color}/>
+        <rect x={torsoW/2 + 2} y={torsoY + 2} width={legW} height={s.torsoH * 0.85} rx="2" fill={color}/>
+        {/* Legs */}
+        <rect x={-torsoW/2 + 1} y={legsY} width={torsoW * 0.44} height={s.legsH} rx="2.5" fill={color}/>
+        <rect x={torsoW * 0.06} y={legsY} width={torsoW * 0.44} height={s.legsH} rx="2.5" fill={color}/>
+      </svg>
+      <span className={`text-[10px] font-bold leading-tight text-center ${selected ? "text-blue-700" : "text-slate-400"}`}>
+        {stage.labelAr}
+      </span>
+      <span className="text-[9px] text-slate-300 leading-none">{stage.ageRange}</span>
+    </button>
+  );
+}
 
 export default function PediatricBodyClient({ patientId, initialAnnotations = [] }: Props) {
   const [annotations, setAnnotations]       = useState<Annotation[]>(initialAnnotations);
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [selectedCond, setSelectedCond]     = useState(CONDITION_TYPES[0].key);
+  const [selectedStage, setSelectedStage]   = useState("toddler");
   const [notes, setNotes]                   = useState("");
   const [saving, setSaving]                 = useState(false);
 
@@ -92,6 +137,7 @@ export default function PediatricBodyClient({ patientId, initialAnnotations = []
           label: cond.labelAr,
           color: cond.color,
           notes,
+          ageStage: selectedStage,
         }),
       });
       setAnnotations(prev => [
@@ -116,157 +162,140 @@ export default function PediatricBodyClient({ patientId, initialAnnotations = []
     } finally { setSaving(false); }
   };
 
-  const imgW = 500;
-  const imgH = 700;
+  const currentStage = AGE_STAGES.find(s => s.key === selectedStage)!;
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-semibold text-gray-700">خريطة الجسم — طب الأطفال</h3>
+      {/* ─── Growth stages selector ─── */}
+      <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 text-center">
+          مراحل نمو الطفل
+        </p>
+        <div className="flex justify-around items-end">
+          {AGE_STAGES.map(stage => (
+            <GrowthStageSilhouette
+              key={stage.key}
+              stageKey={stage.key}
+              selected={selectedStage === stage.key}
+              onClick={() => setSelectedStage(stage.key)}
+            />
+          ))}
+        </div>
+      </div>
 
+      <p className="text-xs font-bold text-slate-500 text-center">
+        المرحلة المحددة: <span className="text-blue-700">{currentStage.labelAr}</span>
+        <span className="text-slate-400 mr-1">({currentStage.ageRange})</span>
+        — انقر على منطقة من الجسم لتسجيل ملاحظة
+      </p>
+
+      {/* ─── Body map + annotation panel ─── */}
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 min-w-0 relative rounded-xl overflow-hidden border border-gray-200 bg-[#f8fafd]" style={{ aspectRatio: `${imgW}/${imgH}` }}>
 
-          <svg viewBox={`0 0 ${imgW} ${imgH}`} className="absolute inset-0 w-full h-full" style={{ cursor: "pointer" }}>
-            {/* ── Medical-standard child body outline (NHS style) ── */}
-            <rect width="500" height="700" fill="#ffffff"/>
+        {/* Single front-view child body */}
+        <div
+          className="flex-1 min-w-0 relative rounded-xl overflow-hidden border border-gray-100 bg-white"
+          style={{ aspectRatio: "250/570" }}
+        >
+          <svg
+            viewBox="0 0 250 570"
+            className="absolute inset-0 w-full h-full"
+            style={{ cursor: "pointer" }}
+          >
+            <rect width="250" height="570" fill="#ffffff"/>
 
-            {/* Labels */}
-            <text x="125" y="22" textAnchor="middle" fontSize="12" fontWeight="700" fill="#94a3b8" letterSpacing="2">FRONT</text>
-            <text x="375" y="22" textAnchor="middle" fontSize="12" fontWeight="700" fill="#94a3b8" letterSpacing="2">BACK</text>
-            <line x1="250" y1="8" x2="250" y2="692" stroke="#e2e8f0" strokeWidth="1"/>
-
-            {/* ══════ FRONT ══════ */}
+            {/* ── Child body outline (front, NHS-style) ── */}
             {/* Head */}
-            <ellipse cx="125" cy="72" rx="44" ry="50" fill="white" stroke="#374151" strokeWidth="2"/>
+            <ellipse cx="125" cy="52" rx="41" ry="46" fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Ears */}
-            <path d="M81 62 Q74 72 81 82" stroke="#374151" strokeWidth="2" fill="none"/>
-            <path d="M169 62 Q176 72 169 82" stroke="#374151" strokeWidth="2" fill="none"/>
+            <path d="M84 43 Q77 52 84 61" stroke="#374151" strokeWidth="1.5" fill="none"/>
+            <path d="M166 43 Q173 52 166 61" stroke="#374151" strokeWidth="1.5" fill="none"/>
             {/* Eyes */}
-            <ellipse cx="110" cy="70" rx="5" ry="5.5" fill="none" stroke="#374151" strokeWidth="1.5"/>
-            <ellipse cx="140" cy="70" rx="5" ry="5.5" fill="none" stroke="#374151" strokeWidth="1.5"/>
-            <circle cx="110" cy="71" r="2.5" fill="#374151"/>
-            <circle cx="140" cy="71" r="2.5" fill="#374151"/>
+            <ellipse cx="111" cy="50" rx="5" ry="5.5" fill="none" stroke="#374151" strokeWidth="1.5"/>
+            <ellipse cx="139" cy="50" rx="5" ry="5.5" fill="none" stroke="#374151" strokeWidth="1.5"/>
+            <circle cx="111" cy="51" r="2.5" fill="#374151"/>
+            <circle cx="139" cy="51" r="2.5" fill="#374151"/>
             {/* Nose */}
-            <path d="M121 78 Q125 84 129 78" stroke="#374151" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+            <path d="M121 58 Q125 64 129 58" stroke="#374151" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
             {/* Mouth */}
-            <path d="M113 88 Q125 95 137 88" stroke="#374151" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-            {/* Hair lines */}
-            <path d="M88 45 Q125 28 162 45" stroke="#374151" strokeWidth="1.5" fill="none"/>
+            <path d="M114 68 Q125 75 136 68" stroke="#374151" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+            {/* Hair */}
+            <path d="M90 28 Q125 12 160 28" stroke="#374151" strokeWidth="1.5" fill="none"/>
             {/* Neck */}
-            <path d="M108 120 L108 138 M142 120 L142 138" stroke="#374151" strokeWidth="2" fill="none"/>
-            {/* Torso — child has wider torso relative to body */}
-            <path d="M108 138 Q70 142 60 158 L56 260 Q56 276 72 278 L178 278 Q194 276 194 260 L190 158 Q180 142 142 138 Z"
+            <path d="M112 96 L112 113 M138 96 L138 113" stroke="#374151" strokeWidth="1.8" fill="none"/>
+            {/* Torso */}
+            <path d="M112 113 Q74 117 64 132 L60 232 Q60 248 76 250 L174 250 Q190 248 190 232 L186 132 Q176 117 138 113 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Belly button */}
-            <circle cx="125" cy="230" r="3" fill="none" stroke="#374151" strokeWidth="1.5"/>
+            <circle cx="125" cy="210" r="2.5" fill="none" stroke="#374151" strokeWidth="1.5"/>
             {/* Collar bones */}
-            <path d="M108 144 Q90 140 70 148" stroke="#374151" strokeWidth="1" fill="none"/>
-            <path d="M142 144 Q160 140 180 148" stroke="#374151" strokeWidth="1" fill="none"/>
+            <path d="M112 118 Q94 114 74 122" stroke="#374151" strokeWidth="1" fill="none"/>
+            <path d="M138 118 Q156 114 176 122" stroke="#374151" strokeWidth="1" fill="none"/>
             {/* Left arm (viewer's right) */}
-            <path d="M60 162 Q44 168 40 200 L38 280 Q38 294 50 296 L62 296 Q74 294 74 280 L72 200 Q68 168 60 162 Z"
+            <path d="M64 136 Q48 142 44 172 L42 252 Q42 266 54 268 L66 268 Q78 266 78 252 L76 172 Q72 142 64 136 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Left hand */}
-            <ellipse cx="56" cy="312" rx="16" ry="20" fill="white" stroke="#374151" strokeWidth="2"/>
+            <ellipse cx="55" cy="284" rx="14" ry="18" fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Right arm */}
-            <path d="M190 162 Q206 168 210 200 L212 280 Q212 294 200 296 L188 296 Q176 294 176 280 L178 200 Q182 168 190 162 Z"
+            <path d="M186 136 Q202 142 206 172 L208 252 Q208 266 196 268 L184 268 Q172 266 172 252 L174 172 Q178 142 186 136 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Right hand */}
-            <ellipse cx="194" cy="312" rx="16" ry="20" fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Groin/hips */}
-            <ellipse cx="125" cy="280" rx="54" ry="18" fill="white" stroke="#374151" strokeWidth="1.5"/>
+            <ellipse cx="195" cy="284" rx="14" ry="18" fill="white" stroke="#374151" strokeWidth="2"/>
+            {/* Hips */}
+            <ellipse cx="125" cy="252" rx="52" ry="16" fill="white" stroke="#374151" strokeWidth="1.5"/>
             {/* Left leg */}
-            <path d="M82 290 Q76 296 72 320 L68 430 Q68 446 80 448 L100 448 Q112 446 112 430 L110 320 Q108 296 102 290 Z"
+            <path d="M84 262 Q78 268 74 290 L70 396 Q70 411 82 413 L102 413 Q114 411 114 396 L112 290 Q110 268 104 262 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Left knee cap */}
-            <ellipse cx="91" cy="432" rx="14" ry="10" fill="white" stroke="#374151" strokeWidth="1.5"/>
+            {/* Left knee */}
+            <ellipse cx="93" cy="396" rx="13" ry="9" fill="white" stroke="#374151" strokeWidth="1.5"/>
             {/* Left lower leg */}
-            <path d="M78 448 Q74 452 72 470 L70 560 Q70 574 82 576 L100 576 Q112 574 112 560 L110 470 Q108 452 104 448 Z"
+            <path d="M80 413 Q76 418 74 434 L72 518 Q72 530 84 532 L102 532 Q114 530 114 518 L112 434 Q110 418 106 413 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Left foot */}
-            <path d="M70 572 Q68 588 72 596 L106 596 Q118 596 120 588 L112 572 Z"
+            <path d="M72 526 Q70 540 74 548 L108 548 Q118 548 120 540 L112 526 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Right leg */}
-            <path d="M148 290 Q154 296 158 320 L162 430 Q162 446 150 448 L130 448 Q118 446 118 430 L120 320 Q122 296 128 290 Z"
+            <path d="M146 262 Q152 268 156 290 L160 396 Q160 411 148 413 L128 413 Q116 411 116 396 L118 290 Q120 268 126 262 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Right knee cap */}
-            <ellipse cx="159" cy="432" rx="14" ry="10" fill="white" stroke="#374151" strokeWidth="1.5"/>
+            {/* Right knee */}
+            <ellipse cx="157" cy="396" rx="13" ry="9" fill="white" stroke="#374151" strokeWidth="1.5"/>
             {/* Right lower leg */}
-            <path d="M146 448 Q142 452 140 470 L138 560 Q138 574 150 576 L168 576 Q180 574 180 560 L178 470 Q176 452 172 448 Z"
+            <path d="M144 413 Q140 418 138 434 L136 518 Q136 530 148 532 L166 532 Q178 530 178 518 L176 434 Q174 418 170 413 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
             {/* Right foot */}
-            <path d="M138 572 Q130 588 132 596 L166 596 Q170 596 180 588 L180 572 Z"
+            <path d="M136 526 Q130 540 132 548 L166 548 Q170 548 178 540 L178 526 Z"
               fill="white" stroke="#374151" strokeWidth="2"/>
 
-            {/* ══════ BACK ══════ */}
-            {/* Head back */}
-            <ellipse cx="375" cy="72" rx="44" ry="50" fill="white" stroke="#374151" strokeWidth="2"/>
-            <path d="M331 62 Q324 72 331 82" stroke="#374151" strokeWidth="2" fill="none"/>
-            <path d="M419 62 Q426 72 419 82" stroke="#374151" strokeWidth="2" fill="none"/>
-            {/* Hair back */}
-            <path d="M338 45 Q375 28 412 45" stroke="#374151" strokeWidth="1.5" fill="none"/>
-            {/* Neck back */}
-            <path d="M358 120 L358 138 M392 120 L392 138" stroke="#374151" strokeWidth="2" fill="none"/>
-            {/* Torso back */}
-            <path d="M358 138 Q320 142 310 158 L306 260 Q306 276 322 278 L428 278 Q444 276 444 260 L440 158 Q430 142 392 138 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Spine */}
-            <path d="M375 145 L375 270" stroke="#9ca3af" strokeWidth="1" strokeDasharray="5 4"/>
-            {/* Shoulder blades */}
-            <ellipse cx="348" cy="180" rx="16" ry="22" fill="none" stroke="#9ca3af" strokeWidth="1" strokeDasharray="3 3"/>
-            <ellipse cx="402" cy="180" rx="16" ry="22" fill="none" stroke="#9ca3af" strokeWidth="1" strokeDasharray="3 3"/>
-            {/* Left arm back */}
-            <path d="M310 162 Q294 168 290 200 L288 280 Q288 294 300 296 L312 296 Q324 294 324 280 L322 200 Q318 168 310 162 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            <ellipse cx="306" cy="312" rx="16" ry="20" fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Right arm back */}
-            <path d="M440 162 Q456 168 460 200 L462 280 Q462 294 450 296 L438 296 Q426 294 426 280 L428 200 Q432 168 440 162 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            <ellipse cx="444" cy="312" rx="16" ry="20" fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Hips back */}
-            <ellipse cx="375" cy="280" rx="54" ry="18" fill="white" stroke="#374151" strokeWidth="1.5"/>
-            {/* Left leg back */}
-            <path d="M332 290 Q326 296 322 320 L318 430 Q318 446 330 448 L350 448 Q362 446 362 430 L360 320 Q358 296 352 290 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            <path d="M328 448 Q324 452 322 470 L320 560 Q320 574 332 576 L350 576 Q362 574 362 560 L360 470 Q358 452 354 448 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Left foot back */}
-            <path d="M320 572 Q318 588 322 596 L356 596 Q368 596 370 588 L362 572 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Right leg back */}
-            <path d="M398 290 Q404 296 408 320 L412 430 Q412 446 400 448 L380 448 Q368 446 368 430 L370 320 Q372 296 378 290 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            <path d="M396 448 Q400 452 402 470 L404 560 Q404 574 392 576 L374 576 Q362 574 362 560 L364 470 Q366 452 370 448 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Right foot back */}
-            <path d="M362 572 Q358 588 362 596 L396 596 Q400 596 406 588 L404 572 Z"
-              fill="white" stroke="#374151" strokeWidth="2"/>
-            {/* Gluteal line */}
-            <path d="M328 278 Q375 292 422 278" stroke="#9ca3af" strokeWidth="1" fill="none" strokeDasharray="4 3"/>
+            {/* ── Clickable region overlays ── */}
             {REGIONS.map(region => {
               const ann   = getAnn(region.id);
               const isSel = selectedRegion?.id === region.id;
-              const props = {
+              const sharedProps = {
                 fill:          ann ? ann.color : "transparent",
-                fillOpacity:   ann ? 0.4 : 0,
+                fillOpacity:   ann ? 0.35 : 0,
                 stroke:        isSel ? "#1d4ed8" : ann ? ann.color : "#64748b",
-                strokeOpacity: isSel ? 1 : ann ? 0.7 : 0,
-                strokeWidth:   isSel ? 4 : 2,
-                strokeDasharray: isSel ? "8 4" : undefined,
+                strokeOpacity: isSel ? 1 : ann ? 0.6 : 0,
+                strokeWidth:   isSel ? 3.5 : 2,
+                strokeDasharray: isSel ? "7 4" : undefined,
                 onClick: () => handleClick(region),
-                style: { cursor: "pointer", transition: "all 0.15s" },
+                style: { cursor: "pointer", transition: "all 0.12s" },
                 className: "hover:fill-blue-400 hover:fill-opacity-20",
               };
               return region.shape === "ellipse"
-                ? <ellipse key={region.id} cx={region.cx} cy={region.cy} rx={region.rx} ry={region.ry} {...props} />
-                : <rect key={region.id} x={region.x} y={region.y} width={region.w} height={region.h} rx={region.rx ?? 8} {...props} />;
+                ? <ellipse key={region.id} cx={region.cx} cy={region.cy} rx={region.rx} ry={region.ry} {...sharedProps}/>
+                : <rect    key={region.id} x={region.x}  y={region.y}  width={region.w} height={region.h} rx={region.rx ?? 7} {...sharedProps}/>;
             })}
+
+            {/* Selected region label */}
             {selectedRegion && (() => {
               const r  = selectedRegion;
               const lx = r.shape === "ellipse" ? r.cx : r.x + r.w / 2;
-              const ly = r.shape === "ellipse" ? r.cy - r.ry - 20 : r.y - 14;
+              const ly = r.shape === "ellipse" ? r.cy - r.ry - 14 : r.y - 12;
               return (
-                <text x={lx} y={Math.max(40, ly)} textAnchor="middle" fill="#1d4ed8" fontSize={32} fontWeight="bold"
-                  style={{ filter: "drop-shadow(0 1px 3px rgba(255,255,255,0.9))" }}>
+                <text
+                  x={lx} y={Math.max(38, Math.min(540, ly))}
+                  textAnchor="middle" fill="#1d4ed8" fontSize={26} fontWeight="bold"
+                  style={{ filter: "drop-shadow(0 1px 4px rgba(255,255,255,0.95))" }}>
                   {r.labelAr}
                 </text>
               );
@@ -274,6 +303,7 @@ export default function PediatricBodyClient({ patientId, initialAnnotations = []
           </svg>
         </div>
 
+        {/* ─── Annotation panel ─── */}
         <div className="w-full lg:w-60 space-y-3 shrink-0">
           {selectedRegion ? (
             <div className="bg-white border border-blue-200 rounded-xl p-4 space-y-3">
@@ -322,7 +352,7 @@ export default function PediatricBodyClient({ patientId, initialAnnotations = []
                 const cond   = CONDITION_TYPES.find(c => c.key === ann.condition);
                 return (
                   <div key={ann.regionId} className="flex items-center gap-2 text-xs">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ann.color }} />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ann.color }}/>
                     <span className="text-gray-700 font-medium">{region?.labelAr}</span>
                     <span className="text-gray-400">— {cond?.labelAr}</span>
                   </div>
@@ -335,7 +365,7 @@ export default function PediatricBodyClient({ patientId, initialAnnotations = []
             <p className="text-xs font-semibold text-gray-600 mb-2">دليل الألوان</p>
             {CONDITION_TYPES.map(c => (
               <div key={c.key} className="flex items-center gap-2 text-xs text-gray-600">
-                <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: c.color }} />
+                <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: c.color }}/>
                 {c.labelAr}
               </div>
             ))}
