@@ -92,7 +92,7 @@ export default function AdminClinicsClientPremium({
   function startEdit(clinic: Clinic) {
     setEditId(clinic.id);
     setEditName(clinic.name);
-    setEditWhatsapp(clinic.whatsappNumber);
+    setEditWhatsapp(clinic.whatsappNumber ?? "");
     setEditPlan(clinic.subscription?.plan ?? "basic");
     setEditStatus(clinic.subscription?.status ?? "active");
     setEditExpires(toDateInput(clinic.subscription?.expiresAt));
@@ -164,7 +164,7 @@ export default function AdminClinicsClientPremium({
 
   const filteredClinics = clinics.filter((clinic) => {
     const term = query.trim();
-    const matchesQuery = !term || clinic.name.includes(term) || clinic.whatsappNumber.includes(term);
+    const matchesQuery = !term || clinic.name.includes(term) || (clinic.whatsappNumber ?? "").includes(term);
     if (!matchesQuery) return false;
 
     const status = clinic.subscription?.status ?? "inactive";

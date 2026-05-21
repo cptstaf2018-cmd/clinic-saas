@@ -60,7 +60,7 @@ export async function PATCH(
       paymentId: payment.id,
       clinicId: payment.clinicId,
       clinicName: payment.clinic.name,
-      whatsappNumber: payment.clinic.whatsappNumber,
+      whatsappNumber: payment.clinic.whatsappNumber ?? "",
       plan,
       days,
     });
@@ -71,7 +71,7 @@ export async function PATCH(
   if (body.action === "reject") {
     await db.payment.update({ where: { id }, data: { status: "rejected" } });
     await sendWhatsApp(
-      payment.clinic.whatsappNumber,
+      payment.clinic.whatsappNumber ?? "",
       `السلام عليكم ${payment.clinic.name}\n\nنشكركم على تواصلكم مع منصة عيادتي.\n\nنُعلمكم بأنه تعذّر علينا تأكيد الدفعة المُرسلة، وذلك قد يكون بسبب عدم تطابق بيانات التحويل أو تأخر وصول الإشعار.\n\nنرجو منكم إعادة إرسال إيصال الدفع أو التواصل مع فريق الدعم لإتمام الاشتراك في أقرب وقت، ونحن بخدمتكم دائماً.\n\nفريق عيادتي 🏥`,
       undefined,
       { clinicId: payment.clinicId, source: "payment_rejected" }

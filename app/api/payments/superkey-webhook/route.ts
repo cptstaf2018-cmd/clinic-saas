@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     paymentId: payment.id,
     clinicId: body.clinicId,
     clinicName: clinic.name,
-    whatsappNumber: clinic.whatsappNumber,
+    whatsappNumber: clinic.whatsappNumber ?? "",
     plan: body.plan,
     days: PAID_SUBSCRIPTION_DAYS,
   });

@@ -285,7 +285,7 @@ export default function SettingsPage() {
               <div className="flex items-center gap-2">
                 <input
                   className={`${inputCls} bg-gray-50 text-gray-500 cursor-not-allowed`}
-                  value={settings.whatsappNumber}
+                  value={settings.whatsappNumber ?? ""}
                   readOnly
                   dir="ltr"
                 />

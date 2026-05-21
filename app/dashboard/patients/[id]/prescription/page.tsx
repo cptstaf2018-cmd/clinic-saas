@@ -35,7 +35,7 @@ export default async function PrescriptionPage({
       patientName={patient.name}
       clinicName={clinic.name}
       specialty={specialtyConfig.nameAr}
-      phone={clinic.whatsappNumber}
+      phone={clinic.whatsappNumber ?? ""}
       address={clinic.address ?? null}
       logoUrl={clinic.logoUrl ?? null}
       doctorDegree={clinic.doctorDegree ?? null}
