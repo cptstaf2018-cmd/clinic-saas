@@ -104,11 +104,17 @@ model ClinicSettings {
 }
 
 model Patient {
-  id            String        @id @default(cuid())
-  clinicId      String
-  name          String
-  whatsappPhone String
-  createdAt     DateTime      @default(now())
+  id                 String   @id @default(cuid())
+  clinicId           String
+  name               String
+  whatsappPhone      String
+  createdAt          DateTime @default(now())
+  bloodType          String?
+  allergies          String[]
+  chronicConditions  String[]
+  currentMedications String[]
+  surgicalHistory    String?
+  smokingStatus      String?
   appointments        Appointment[]
   medicalRecords      MedicalRecord[]
   patientAttachments  PatientAttachment[]

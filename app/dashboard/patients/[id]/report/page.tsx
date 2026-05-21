@@ -153,6 +153,53 @@ export default async function PatientReportPage({
           </div>
         </section>
 
+        {/* ═══ Permanent Medical Info ═══ */}
+        {(patient.bloodType || patient.allergies.length > 0 || patient.chronicConditions.length > 0 || patient.currentMedications.length > 0 || patient.surgicalHistory || patient.smokingStatus) && (
+          <section className="mt-6 rounded-3xl border-2 border-red-100 bg-red-50/30 p-5 break-inside-avoid">
+            <h2 className="mb-4 text-base font-black text-slate-950">🩺 الملف الطبي الدائم</h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              {patient.bloodType && (
+                <div><p className="text-[11px] font-black text-slate-400 uppercase mb-1">🩸 فصيلة الدم</p>
+                  <p className="font-black text-red-700 text-lg">{patient.bloodType}</p></div>
+              )}
+              {patient.smokingStatus && (
+                <div><p className="text-[11px] font-black text-slate-400 uppercase mb-1">🚬 التدخين</p>
+                  <p className="font-bold text-slate-700">{{ never: "لا يدخن", former: "مدخن سابق", current: "مدخن حالي" }[patient.smokingStatus] ?? patient.smokingStatus}</p></div>
+              )}
+              {patient.allergies.length > 0 && (
+                <div className="md:col-span-2">
+                  <p className="text-[11px] font-black text-red-600 uppercase mb-1.5">⚠️ الحساسية — يجب مراجعتها قبل أي وصفة</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {patient.allergies.map((a) => <span key={a} className="rounded-full bg-red-100 px-3 py-1 text-xs font-black text-red-700">{a}</span>)}
+                  </div>
+                </div>
+              )}
+              {patient.chronicConditions.length > 0 && (
+                <div className="md:col-span-2">
+                  <p className="text-[11px] font-black text-slate-400 uppercase mb-1.5">🏥 الأمراض المزمنة</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {patient.chronicConditions.map((c) => <span key={c} className="rounded-full bg-purple-100 px-3 py-1 text-xs font-black text-purple-700">{c}</span>)}
+                  </div>
+                </div>
+              )}
+              {patient.currentMedications.length > 0 && (
+                <div className="md:col-span-2">
+                  <p className="text-[11px] font-black text-slate-400 uppercase mb-1.5">💊 الأدوية الدائمة</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {patient.currentMedications.map((m) => <span key={m} className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700">{m}</span>)}
+                  </div>
+                </div>
+              )}
+              {patient.surgicalHistory && (
+                <div className="md:col-span-2">
+                  <p className="text-[11px] font-black text-slate-400 uppercase mb-1">🔪 العمليات الجراحية السابقة</p>
+                  <p className="text-sm font-bold text-slate-700 whitespace-pre-line">{patient.surgicalHistory}</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         <section className="mt-8">
           <h2 className="text-2xl font-black text-slate-950">السجل الطبي</h2>
           {patient.medicalRecords.length === 0 ? (
@@ -171,6 +218,23 @@ export default async function PatientReportPage({
                       </span>
                     ) : null}
                   </div>
+                  {/* Vitals */}
+                  {(() => {
+                    const c = record.contentJson as Record<string, string> | null ?? {};
+                    const hasVitals = c.bp_sys || c.pulse || c.temp || c.spo2 || c.weight || c.pain;
+                    if (!hasVitals) return null;
+                    return (
+                      <div className="mt-3 flex flex-wrap gap-3 rounded-2xl bg-blue-50/50 p-3">
+                        {c.bp_sys && c.bp_dia && <Vital label="ض.دم" value={`${c.bp_sys}/${c.bp_dia}`} unit="mmHg" />}
+                        {c.pulse   && <Vital label="نبض"    value={c.pulse}   unit="bpm" />}
+                        {c.temp    && <Vital label="حرارة"  value={c.temp}    unit="°C"  />}
+                        {c.spo2    && <Vital label="SpO2"   value={c.spo2}    unit="%"   />}
+                        {c.weight  && <Vital label="وزن"    value={c.weight}  unit="كغم" />}
+                        {c.height  && <Vital label="طول"    value={c.height}  unit="سم"  />}
+                        {c.pain    && <Vital label="ألم"    value={`${c.pain}/10`} unit="" />}
+                      </div>
+                    );
+                  })()}
                   <dl className="mt-4 grid gap-4 md:grid-cols-2">
                     <div>
                       <dt className="text-xs font-black text-slate-400">الشكوى</dt>
@@ -260,5 +324,15 @@ export default async function PatientReportPage({
         </footer>
       </div>
     </main>
+  );
+}
+
+function Vital({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-[10px] font-bold text-slate-400">{label}</p>
+      <p className="text-sm font-black text-slate-800">{value}</p>
+      {unit && <p className="text-[10px] text-slate-400">{unit}</p>}
+    </div>
   );
 }

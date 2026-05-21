@@ -18,6 +18,11 @@ type MedicalRecord = {
   contentJson: unknown;
 };
 
+type Vitals = {
+  bp_sys: string; bp_dia: string; pulse: string;
+  temp: string; spo2: string; weight: string; height: string; pain: string;
+};
+
 type FormState = {
   complaint: string;
   diagnosis: string;
@@ -26,6 +31,7 @@ type FormState = {
   date: string;
   followUpDate: string;
   specialtyFields: RecordContent;
+  vitals: Vitals;
 };
 
 function normalizeContent(value: unknown): RecordContent {
@@ -38,19 +44,16 @@ function normalizeContent(value: unknown): RecordContent {
   );
 }
 
+const emptyVitals: Vitals = { bp_sys: "", bp_dia: "", pulse: "", temp: "", spo2: "", weight: "", height: "", pain: "" };
+
 function emptyForm(specialtyConfig: SpecialtyConfig): FormState {
   const specialtyFields = Object.fromEntries(
     specialtyConfig.encounterSections.map((section) => [section.id, ""])
   );
-
   return {
-    complaint: "",
-    diagnosis: "",
-    prescription: "",
-    notes: "",
+    complaint: "", diagnosis: "", prescription: "", notes: "",
     date: new Date().toISOString().slice(0, 10),
-    followUpDate: "",
-    specialtyFields,
+    followUpDate: "", specialtyFields, vitals: { ...emptyVitals },
   };
 }
 
@@ -127,6 +130,16 @@ export default function MedicalRecordsClient({
         ...content,
         chief_complaint: r.complaint,
       },
+      vitals: {
+        bp_sys:  content.bp_sys  ?? "",
+        bp_dia:  content.bp_dia  ?? "",
+        pulse:   content.pulse   ?? "",
+        temp:    content.temp    ?? "",
+        spo2:    content.spo2    ?? "",
+        weight:  content.weight  ?? "",
+        height:  content.height  ?? "",
+        pain:    content.pain    ?? "",
+      },
     });
     setError("");
   }
@@ -144,6 +157,7 @@ export default function MedicalRecordsClient({
       specialtyCode: specialtyConfig.code,
       contentJson: {
         ...form.specialtyFields,
+        ...form.vitals,
         chief_complaint: form.complaint,
         diagnosis: form.diagnosis,
         prescription: form.prescription,
@@ -425,8 +439,8 @@ function RecordForm({
   canUseFollowUp: boolean;
   specialtyConfig: SpecialtyConfig;
 }) {
-  const field = (key: keyof Omit<FormState, "specialtyFields">) => ({
-    value: form[key],
+  const field = (key: keyof Omit<FormState, "specialtyFields" | "vitals">) => ({
+    value: form[key] as string,
     onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setForm({ ...form, [key]: e.target.value }),
   });
@@ -451,6 +465,8 @@ function RecordForm({
           {error}
         </p>
       )}
+
+      <VitalsBlock vitals={form.vitals} onChange={(v) => setForm({ ...form, vitals: v })} />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {specialtyConfig.encounterSections.map((section) => (
@@ -576,6 +592,62 @@ function RecordForm({
           إلغاء
         </button>
       </div>
+    </div>
+  );
+}
+
+function VitalsBlock({ vitals, onChange }: { vitals: Vitals; onChange: (v: Vitals) => void }) {
+  const bmi = vitals.weight && vitals.height
+    ? (parseFloat(vitals.weight) / Math.pow(parseFloat(vitals.height) / 100, 2)).toFixed(1)
+    : null;
+
+  const fields: { key: keyof Vitals; label: string; placeholder: string; unit: string }[] = [
+    { key: "bp_sys",  label: "ض.دم انقباضي", placeholder: "120", unit: "mmHg" },
+    { key: "bp_dia",  label: "ض.دم انبساطي",  placeholder: "80",  unit: "mmHg" },
+    { key: "pulse",   label: "النبض",          placeholder: "72",  unit: "bpm"  },
+    { key: "temp",    label: "الحرارة",        placeholder: "37",  unit: "°C"   },
+    { key: "spo2",    label: "SpO2",           placeholder: "98",  unit: "%"    },
+    { key: "weight",  label: "الوزن",          placeholder: "70",  unit: "كغم"  },
+    { key: "height",  label: "الطول",          placeholder: "170", unit: "سم"   },
+  ];
+
+  return (
+    <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3">
+      <p className="mb-2.5 text-xs font-black text-blue-700 uppercase tracking-wide">💉 العلامات الحيوية</p>
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+        {fields.map((f) => (
+          <div key={f.key}>
+            <p className="text-[10px] font-bold text-slate-400 mb-1">{f.label}</p>
+            <div className="relative">
+              <input type="number" value={vitals[f.key]}
+                onChange={(e) => onChange({ ...vitals, [f.key]: e.target.value })}
+                placeholder={f.placeholder}
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-300" />
+              <span className="absolute -bottom-4 left-0 right-0 text-center text-[9px] text-slate-400">{f.unit}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Pain scale */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-xs font-black text-slate-600">😣 مقياس الألم</p>
+          <span className={`text-sm font-black ${parseInt(vitals.pain) >= 7 ? "text-red-600" : parseInt(vitals.pain) >= 4 ? "text-amber-600" : "text-emerald-600"}`}>
+            {vitals.pain || "0"} / 10
+          </span>
+        </div>
+        <input type="range" min="0" max="10" value={vitals.pain || "0"}
+          onChange={(e) => onChange({ ...vitals, pain: e.target.value })}
+          className="w-full accent-blue-600" />
+        <div className="flex justify-between text-[10px] text-slate-400 mt-0.5">
+          <span>لا ألم</span><span>متوسط</span><span>شديد جداً</span>
+        </div>
+      </div>
+      {bmi && (
+        <p className="mt-2 text-xs font-bold text-slate-500">
+          BMI: <span className={`font-black ${parseFloat(bmi) > 30 ? "text-red-600" : parseFloat(bmi) > 25 ? "text-amber-600" : "text-emerald-600"}`}>{bmi}</span>
+        </p>
+      )}
     </div>
   );
 }

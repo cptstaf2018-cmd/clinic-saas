@@ -17,16 +17,28 @@ export async function PATCH(
   if (!patient)
     return NextResponse.json({ error: "المريض غير موجود" }, { status: 404 });
 
-  const { name, phone } = await req.json();
-  const data: Record<string, string> = {};
-  if (name?.trim()) data.name = name.trim();
-  if (phone?.trim()) data.whatsappPhone = phone.trim();
+  const body = await req.json();
+  const data: Record<string, unknown> = {};
+
+  if (body.name?.trim())        data.name = body.name.trim();
+  if (body.phone?.trim())       data.whatsappPhone = body.phone.trim();
+  if (body.bloodType !== undefined)         data.bloodType = body.bloodType || null;
+  if (body.allergies !== undefined)         data.allergies = Array.isArray(body.allergies) ? body.allergies : [];
+  if (body.chronicConditions !== undefined) data.chronicConditions = Array.isArray(body.chronicConditions) ? body.chronicConditions : [];
+  if (body.currentMedications !== undefined)data.currentMedications = Array.isArray(body.currentMedications) ? body.currentMedications : [];
+  if (body.surgicalHistory !== undefined)   data.surgicalHistory = body.surgicalHistory || null;
+  if (body.smokingStatus !== undefined)     data.smokingStatus = body.smokingStatus || null;
 
   if (Object.keys(data).length === 0)
     return NextResponse.json({ error: "لا توجد بيانات للتحديث" }, { status: 400 });
 
-  const updated = await db.patient.update({ where: { id, clinicId }, data });
-  return NextResponse.json({ id: updated.id, name: updated.name, phone: updated.whatsappPhone });
+  const updated = await db.patient.update({ where: { id }, data });
+  return NextResponse.json({
+    id: updated.id, name: updated.name, phone: updated.whatsappPhone,
+    bloodType: updated.bloodType, allergies: updated.allergies,
+    chronicConditions: updated.chronicConditions, currentMedications: updated.currentMedications,
+    surgicalHistory: updated.surgicalHistory, smokingStatus: updated.smokingStatus,
+  });
 }
 
 export async function DELETE(

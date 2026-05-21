@@ -19,6 +19,7 @@ import GynecologyMapClient from "./GynecologyMapClient";
 import PediatricBodyClient from "./PediatricBodyClient";
 import { getEntitlements, canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
+import PatientInfoCard from "./PatientInfoCard";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "معلق",
@@ -193,6 +194,19 @@ export default async function PatientProfilePage({
             </div>
           </div>
         </section>
+
+        {/* ═══ Patient Info Card ═══ */}
+        <PatientInfoCard
+          patientId={patient.id}
+          initialInfo={{
+            bloodType: patient.bloodType ?? null,
+            allergies: patient.allergies ?? [],
+            chronicConditions: patient.chronicConditions ?? [],
+            currentMedications: patient.currentMedications ?? [],
+            surgicalHistory: patient.surgicalHistory ?? null,
+            smokingStatus: patient.smokingStatus ?? null,
+          }}
+        />
 
         {/* ═══ Dental Chart ═══ */}
         {isDental && (
