@@ -220,12 +220,12 @@ function LoginForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
-                  رقم الواتساب
+                  رقم الواتساب أو الإيميل
                 </label>
                 <input
                   name="identifier" type="text" required
                   className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
-                  placeholder="07701234567" dir="ltr"
+                  placeholder="07701234567 أو email@example.com" dir="ltr"
                 />
               </div>
               <div>
@@ -252,9 +252,8 @@ function LoginForm() {
               </button>
             </form>
 
-            {/* Hint for superadmin */}
             <p className="text-center text-xs text-[#94A3B8] mt-4">
-              للإدارة: استخدم الإيميل بدلاً من الرقم
+              يمكنك الدخول برقم الواتساب أو الإيميل
             </p>
           </div>
 

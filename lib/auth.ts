@@ -50,8 +50,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (!clinic || clinic.users.length === 0) return null;
             user = clinic.users[0];
           } else {
-            // Email login — superadmin
+            // Email login — try superadmin first, then clinic backupEmail
             user = await db.user.findUnique({ where: { email: identifier } });
+
+            if (!user) {
+              // Clinic user logging in with their backupEmail
+              const clinic = await db.clinic.findFirst({
+                where: { backupEmail: identifier },
+                include: { users: { take: 1 } },
+              });
+              if (clinic?.users.length) user = clinic.users[0];
+            }
           }
 
           if (!user) return null;
