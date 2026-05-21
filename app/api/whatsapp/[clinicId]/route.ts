@@ -468,8 +468,81 @@ export async function POST(
     return NextResponse.json({ ok: true });
   }
 
-  // ── No active session → start conversation ────────────────────────────────
+  // ── No active session (or done) ──────────────────────────────────────────
   if (!session || session.step === "done") {
+    const patient = await db.patient.findUnique({
+      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
+      include: {
+        appointments: {
+          where: { date: { gte: new Date() }, status: { not: "cancelled" } },
+          orderBy: { date: "asc" },
+          take: 1,
+        },
+      },
+    });
+
+    // ── Returning patient (phone already registered) ──────────────────────
+    if (patient) {
+      // Explicit non-booking requests
+      if (intent === "handoff" || intent === "change_or_cancel") {
+        await transferToStaff();
+        return NextResponse.json({ ok: true });
+      }
+      if (intent === "working_hours") {
+        await reply(await workingHoursMessage(clinicId, clinic.name));
+        return NextResponse.json({ ok: true });
+      }
+      if (intent === "location") {
+        await reply(clinicLocationMessage(botClinic));
+        return NextResponse.json({ ok: true });
+      }
+      if (intent === "my_appointment") {
+        const upcoming = patient.appointments[0];
+        if (upcoming) {
+          await db.whatsappSession.upsert({
+            where: { clinicId_phone: { clinicId, phone } },
+            update: { step: "main_menu" },
+            create: { clinicId, phone, step: "main_menu" },
+          });
+          await reply(formatUpcomingAppointment(clinic.name, patient.name, upcoming.date));
+          return NextResponse.json({ ok: true });
+        }
+        // No upcoming appointment → fall through to show slots directly
+      }
+      // Everything else (book / menu / unknown / greeting / no appointment) → slots immediately
+      await startBooking(patient.id, patient.name);
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── New patient (first contact) ───────────────────────────────────────
+    if (intent === "handoff" || intent === "change_or_cancel") {
+      await transferToStaff();
+      return NextResponse.json({ ok: true });
+    }
+    if (intent === "working_hours") {
+      await reply(await workingHoursMessage(clinicId, clinic.name));
+      return NextResponse.json({ ok: true });
+    }
+    if (intent === "location") {
+      await reply(clinicLocationMessage(botClinic));
+      return NextResponse.json({ ok: true });
+    }
+
+    // Any other message from a new patient → ask for name once
+    await db.whatsappSession.upsert({
+      where: { clinicId_phone: { clinicId, phone } },
+      update: { step: "awaiting_name" },
+      create: { clinicId, phone, step: "awaiting_name" },
+    });
+    const customWelcome = clinic.whatsappWelcomeMessage?.trim();
+    const namePrompt = `أرسل اسمك الكريم لحجز موعد في ${clinic.name} 🙏`;
+    await reply(customWelcome ? `${customWelcome}\n\n${namePrompt}` : namePrompt);
+    return NextResponse.json({ ok: true });
+  }
+
+  const step = session.step;
+
+  if (step === "handoff" || step === "main_menu") {
     const patient = await db.patient.findUnique({
       where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
       include: {
@@ -485,157 +558,27 @@ export async function POST(
       await transferToStaff();
       return NextResponse.json({ ok: true });
     }
-
     if (intent === "working_hours") {
       await reply(await workingHoursMessage(clinicId, clinic.name));
       return NextResponse.json({ ok: true });
     }
-
     if (intent === "location") {
       await reply(clinicLocationMessage(botClinic));
       return NextResponse.json({ ok: true });
     }
+    if (intent === "my_appointment" && patient?.appointments[0]) {
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
+      await reply(formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date));
+      return NextResponse.json({ ok: true });
+    }
 
+    // Everything else: go straight to slots for known patient, or ask name for new one
     if (patient) {
-      if (intent === "book") {
-        await startBooking(patient.id, patient.name);
-      } else if (intent === "my_appointment") {
-        const upcoming = patient.appointments[0];
-        await db.whatsappSession.upsert({
-          where: { clinicId_phone: { clinicId, phone } },
-          update: { step: "main_menu" },
-          create: { clinicId, phone, step: "main_menu" },
-        });
-        await reply(upcoming ? formatUpcomingAppointment(clinic.name, patient.name, upcoming.date) : noUpcomingMessage(patient.name));
-      } else {
-        await db.whatsappSession.upsert({
-          where: { clinicId_phone: { clinicId, phone } },
-          update: { step: "main_menu" },
-          create: { clinicId, phone, step: "main_menu" },
-        });
-        await reply(mainMenuMessage(botClinic, patient.name));
-      }
+      await startBooking(patient.id, patient.name, session.id);
     } else {
-      if (intent === "book") {
-        await db.whatsappSession.upsert({
-          where: { clinicId_phone: { clinicId, phone } },
-          update: { step: "awaiting_name" },
-          create: { clinicId, phone, step: "awaiting_name" },
-        });
-        await reply(`لحجز موعد في ${clinic.name}، أرسل اسمك الكامل من فضلك.\nمثال: أحمد محمد`);
-        return NextResponse.json({ ok: true });
-      }
-
-      await db.whatsappSession.upsert({
-        where: { clinicId_phone: { clinicId, phone } },
-        update: { step: "main_menu" },
-        create: { clinicId, phone, step: "main_menu" },
-      });
-      const customWelcome = clinic.whatsappWelcomeMessage?.trim();
-      await reply(customWelcome ? `${customWelcome}\n\n${mainMenuMessage(botClinic)}` : mainMenuMessage(botClinic));
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "awaiting_name" } });
+      await reply(`أرسل اسمك الكريم لحجز موعد في ${clinic.name} 🙏`);
     }
-    return NextResponse.json({ ok: true });
-  }
-
-  const step = session.step;
-
-  if (step === "handoff") {
-    if (intent === "menu") {
-      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
-      const patient = await db.patient.findUnique({ where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } }, select: { name: true } });
-      await reply(mainMenuMessage(botClinic, patient?.name));
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "book") {
-      const patient = await db.patient.findUnique({ where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } } });
-      if (patient) {
-        await startBooking(patient.id, patient.name, session.id);
-      } else {
-        await db.whatsappSession.update({ where: { id: session.id }, data: { step: "awaiting_name" } });
-        await reply(`لحجز موعد في ${clinic.name}، أرسل اسمك الكامل من فضلك.\nمثال: أحمد محمد`);
-      }
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "my_appointment") {
-      const patient = await db.patient.findUnique({
-        where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
-        include: {
-          appointments: {
-            where: { date: { gte: new Date() }, status: { not: "cancelled" } },
-            orderBy: { date: "asc" },
-            take: 1,
-          },
-        },
-      });
-      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
-      await reply(patient?.appointments[0] ? formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date) : noUpcomingMessage(patient?.name));
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "working_hours") {
-      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
-      await reply(await workingHoursMessage(clinicId, clinic.name));
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "location") {
-      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
-      await reply(clinicLocationMessage(botClinic));
-      return NextResponse.json({ ok: true });
-    }
-    return NextResponse.json({ ok: true });
-  }
-
-  if (step === "main_menu") {
-    const patient = await db.patient.findUnique({
-      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
-      include: {
-        appointments: {
-          where: { date: { gte: new Date() }, status: { not: "cancelled" } },
-          orderBy: { date: "asc" },
-          take: 1,
-        },
-      },
-    });
-
-    if (intent === "menu") {
-      await reply(mainMenuMessage(botClinic, patient?.name));
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "book") {
-      if (!patient) {
-        await db.whatsappSession.update({ where: { id: session.id }, data: { step: "awaiting_name" } });
-        await reply(`لحجز موعد في ${clinic.name}، أرسل اسمك الكامل من فضلك.\nمثال: أحمد محمد`);
-      } else {
-        await startBooking(patient.id, patient.name, session.id);
-      }
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "my_appointment") {
-      await reply(patient?.appointments[0] ? formatUpcomingAppointment(clinic.name, patient.name, patient.appointments[0].date) : noUpcomingMessage(patient?.name));
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "change_or_cancel" || intent === "handoff") {
-      await transferToStaff();
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "working_hours") {
-      await reply(await workingHoursMessage(clinicId, clinic.name));
-      return NextResponse.json({ ok: true });
-    }
-
-    if (intent === "location") {
-      await reply(clinicLocationMessage(botClinic));
-      return NextResponse.json({ ok: true });
-    }
-
-    await reply(outOfScopeMessage(botClinic));
     return NextResponse.json({ ok: true });
   }
 
