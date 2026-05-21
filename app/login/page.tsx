@@ -195,16 +195,95 @@ function LoginForm() {
       </div>
 
       {/* Form panel */}
-      <div className="w-full lg:w-[42%] flex items-center justify-center p-6 bg-[#EEF2F9]">
-        <div className="w-full max-w-sm fade-in">
+      <div className="w-full lg:w-[42%] flex items-center justify-center lg:p-6 lg:bg-[#EEF2F9]">
 
-          <div className="flex lg:hidden items-center gap-2 justify-center mb-8">
-            <div className="w-9 h-9 bg-[#2563EB] rounded-lg flex items-center justify-center">
-              <HealthIcon />
+        {/* ── Mobile full-screen layout ── */}
+        <div className="w-full lg:hidden min-h-screen flex flex-col" style={{background: "linear-gradient(160deg,#0c1f3f 0%,#1a3a6b 40%,#1e4080 100%)"}}>
+
+          {/* Mobile hero */}
+          <div className="flex flex-col items-center pt-14 pb-8 px-6 text-center">
+            <div className="w-16 h-16 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <HealthIcon className="w-9 h-9" />
             </div>
-            <span className="text-[#0C1F3F] text-xl font-bold">عيادتي</span>
+            <h1 className="text-white text-3xl font-black tracking-tight">عيادتي</h1>
+            <p className="text-blue-200/80 text-sm mt-1.5 font-medium">نظام إدارة العيادات الذكي</p>
+
+            {/* trust badges */}
+            <div className="flex items-center gap-3 mt-4">
+              {[{icon:"🏥", text:"13+ عيادة"},{icon:"🤖", text:"بوت واتساب"},{icon:"🔒", text:"بيانات آمنة"}].map((b) => (
+                <div key={b.text} className="flex items-center gap-1 bg-white/8 border border-white/12 rounded-full px-2.5 py-1">
+                  <span className="text-xs">{b.icon}</span>
+                  <span className="text-[11px] text-blue-100 font-bold">{b.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
+          {/* Mobile form card */}
+          <div className="flex-1 bg-white rounded-t-[32px] px-6 pt-8 pb-10 shadow-[0_-8px_40px_rgba(0,0,0,0.25)]">
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-[#0C1F3F]">تسجيل الدخول</h2>
+              <p className="text-[#64748B] text-sm mt-1">برقم الواتساب أو الإيميل</p>
+            </div>
+
+            {params.get("registered") && (
+              <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm mb-5 flex items-center gap-2">
+                <span>✓</span> تم تسجيل العيادة بنجاح!
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
+                <input name="identifier" type="text" required
+                  className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
+                  placeholder="07701234567" dir="ltr" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#475569] mb-1.5">كلمة المرور</label>
+                <input name="password" type="password" required
+                  className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">
+                  {error}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading}
+                className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
+                style={{background: "linear-gradient(135deg,#2563eb,#1d4ed8)", boxShadow: "0 8px 24px rgba(37,99,235,0.4)"}}>
+                {loading ? "جاري الدخول..." : "دخول →"}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+              <p className="text-sm text-[#64748B]">
+                عيادة جديدة؟{" "}
+                <Link href="/register" className="text-[#2563EB] font-black hover:underline">سجّل مجاناً</Link>
+              </p>
+            </div>
+
+            {/* feature list */}
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              {[
+                {icon:"💬", text:"بوت واتساب تلقائي"},
+                {icon:"📋", text:"ملفات مرضى كاملة"},
+                {icon:"📺", text:"شاشة انتظار ذكية"},
+                {icon:"🔔", text:"تذكيرات تلقائية"},
+              ].map((f) => (
+                <div key={f.text} className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2.5">
+                  <span className="text-base">{f.icon}</span>
+                  <span className="text-xs font-bold text-slate-600">{f.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Desktop layout (unchanged) ── */}
+        <div className="hidden lg:block w-full max-w-sm fade-in">
           <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)] p-8">
             <div className="mb-7">
               <h2 className="text-2xl font-extrabold text-[#0C1F3F]">أهلاً بك</h2>
@@ -222,39 +301,29 @@ function LoginForm() {
                 <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
                   رقم الواتساب أو الإيميل
                 </label>
-                <input
-                  name="identifier" type="text" required
+                <input name="identifier" type="text" required
                   className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
-                  placeholder="07701234567 أو email@example.com" dir="ltr"
-                />
+                  placeholder="07701234567 أو email@example.com" dir="ltr" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
                   كلمة المرور
                 </label>
-                <input
-                  name="password" type="password" required
-                  className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all"
-                />
+                <input name="password" type="password" required
+                  className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">
-                  {error}
-                </div>
+                <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>
               )}
 
-              <button
-                type="submit" disabled={loading}
-                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-0.5"
-              >
+              <button type="submit" disabled={loading}
+                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
                 {loading ? "جاري الدخول..." : "تسجيل الدخول"}
               </button>
             </form>
 
-            <p className="text-center text-xs text-[#94A3B8] mt-4">
-              يمكنك الدخول برقم الواتساب أو الإيميل
-            </p>
+            <p className="text-center text-xs text-[#94A3B8] mt-4">يمكنك الدخول برقم الواتساب أو الإيميل</p>
           </div>
 
           <p className="text-center text-sm text-[#64748B] mt-5">
