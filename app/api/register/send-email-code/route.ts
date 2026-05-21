@@ -52,7 +52,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await sendOtpEmail(cleanEmail, code);
+  try {
+    await sendOtpEmail(cleanEmail, code);
+  } catch (err: any) {
+    console.error("[send-email-code] Resend error:", err?.message ?? err);
+    return NextResponse.json({ error: "فشل إرسال الإيميل: " + (err?.message ?? "خطأ غير معروف") }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }
