@@ -315,7 +315,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
   } else {
     // مريض جديد → اطلب التعريف
     await upsertStep("awaiting_identity");
-    await reply(`أهلاً بك في ${clinic.name}\nأرسل اسمك أو رقم هاتفك`);
+    const specialtyLine = clinic.specialty?.trim() ? `${clinic.specialty}\n` : "";
+    await reply(`مرحباً بك في ${clinic.name}\n${specialtyLine}أرسل اسمك أو رقم هاتفك`);
   }
 
   return NextResponse.json({ ok:true });
