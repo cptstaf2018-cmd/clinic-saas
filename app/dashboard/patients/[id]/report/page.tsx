@@ -7,6 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import PrintButton from "./PrintButton";
 import ToothChartReport from "./ToothChartReport";
 import PediatricBodyReport from "./PediatricBodyReport";
+import BodyAnnotationReport from "./BodyAnnotationReport";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "معلق",
@@ -72,13 +73,15 @@ export default async function PatientReportPage({
 
   const isDental     = specialtyConfig.code === "dentistry";
   const isPediatric  = specialtyConfig.code === "pediatrics";
+  const HAS_BODY_MAP = ["dermatology","orthopedics","gynecology","ophthalmology","cardiology","internal_medicine","pediatrics"];
+  const hasBodyMap   = HAS_BODY_MAP.includes(specialtyConfig.code);
 
-  const [toothTreatments, pediatricAnnotations] = await Promise.all([
+  const [toothTreatments, bodyAnnotations] = await Promise.all([
     isDental
       ? db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
       : Promise.resolve([]),
-    isPediatric
-      ? db.specialtyAnnotation.findMany({ where: { patientId: id, clinicId, specialtyCode: "pediatrics" } })
+    hasBodyMap
+      ? db.specialtyAnnotation.findMany({ where: { patientId: id, clinicId, specialtyCode: specialtyConfig.code } })
       : Promise.resolve([]),
   ]);
 
@@ -208,17 +211,29 @@ export default async function PatientReportPage({
           </section>
         )}
 
-        {isPediatric && pediatricAnnotations.length > 0 && (
+        {hasBodyMap && bodyAnnotations.length > 0 && (
           <section className="mt-6 rounded-3xl border border-slate-200 p-5 break-inside-avoid">
-            <h2 className="mb-4 text-base font-black text-slate-950">🧒 خريطة جسم الطفل — الملاحظات</h2>
-            <PediatricBodyReport
-              annotations={pediatricAnnotations.map(a => ({
-                regionId: a.regionId,
-                label: a.label,
-                color: a.color,
-                notes: a.notes,
-              }))}
-            />
+            <h2 className="mb-4 text-base font-black text-slate-950">🗺️ خريطة التشريح — الملاحظات</h2>
+            {isPediatric ? (
+              <PediatricBodyReport
+                annotations={bodyAnnotations.map(a => ({
+                  regionId: a.regionId,
+                  label: a.label,
+                  color: a.color,
+                  notes: a.notes,
+                }))}
+              />
+            ) : (
+              <BodyAnnotationReport
+                specialtyCode={specialtyConfig.code}
+                annotations={bodyAnnotations.map(a => ({
+                  regionId: a.regionId,
+                  label: a.label,
+                  color: a.color,
+                  notes: a.notes,
+                }))}
+              />
+            )}
           </section>
         )}
 
