@@ -292,6 +292,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
     return NextResponse.json({ ok:true });
   }
 
+  // ── طلب الموقع أو العنوان ──────────────────────────────────────────────────
+  const LOCATION_KW = ["موقع","عنوان","مكان","وين","اين","أين","خريطة","لوكيشن","maps","google","كوكل","قوقل"];
+  if (matches(msgBody, LOCATION_KW)) {
+    const addr = clinic.address?.trim();
+    const url  = clinic.locationUrl?.trim();
+    if (!addr && !url) {
+      await reply("لم يتم إضافة موقع العيادة بعد.");
+    } else {
+      const lines: string[] = [`موقع ${clinic.name}`];
+      if (addr) lines.push(`العنوان: ${addr}`);
+      if (url)  lines.push(/^https?:\/\//.test(url) ? `رابط الخريطة:\n${url}` : url);
+      await reply(lines.join("\n"));
+    }
+    return NextResponse.json({ ok:true });
+  }
+
   // ── بداية جديدة (لا يوجد session أو step = done) ───────────────────────────
   if (patient) {
     // مريض معروف → مواعيد مباشرة
