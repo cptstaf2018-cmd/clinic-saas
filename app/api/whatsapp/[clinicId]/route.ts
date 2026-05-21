@@ -679,6 +679,56 @@ export async function POST(
     const patientId = parts[3];
     const choice = parseArabicNumber(messageBody);
 
+    // ── Valid slot number takes priority over ALL global intents ──────────────
+    // Without this, "٤"→"4"→handoff and "2"→my_appointment would hijack slot picks
+    if (!isNaN(choice) && choice >= 1 && choice <= slots.length) {
+      const [year, month, day] = datePrefix.split("-").map(Number);
+      const [h, m] = slots[choice - 1].split(":").map(Number);
+      // datePrefix and slots are in Iraq time (UTC+3); convert to UTC for storage
+      const date = new Date(Date.UTC(year, month - 1, day, h - 3, m, 0, 0));
+
+      // Iraq day bounds in UTC (Iraq 00:00 = UTC 21:00 prev day)
+      const dayStart = new Date(Date.UTC(year, month - 1, day, -3, 0, 0, 0));
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+      const bookedPatient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
+
+      let slotTaken = false;
+      try {
+        await db.$transaction(async (tx) => {
+          const conflict = await tx.appointment.findFirst({
+            where: { clinicId, date, status: { not: "cancelled" } },
+          });
+          if (conflict) { slotTaken = true; return; }
+
+          const last = await tx.appointment.findFirst({
+            where: { clinicId, date: { gte: dayStart, lte: dayEnd }, queueNumber: { not: null } },
+            orderBy: { queueNumber: "desc" },
+          });
+          await tx.appointment.create({
+            data: { clinicId, patientId, date, queueNumber: (last?.queueNumber ?? 0) + 1 },
+          });
+        }, { isolationLevel: "Serializable" });
+      } catch {
+        slotTaken = true;
+      }
+
+      if (slotTaken) {
+        const { message: newMsg, slots: newSlots, datePrefix: newPrefix } = await getNextSlotsMessage(clinicId);
+        const nextStep = newSlots.length ? `awaiting_slot|${newPrefix}|${newSlots.join(",")}|${patientId}` : "done";
+        await db.whatsappSession.update({ where: { id: session.id }, data: { step: nextStep } });
+        await reply(`عذراً، هذا الوقت محجوز للتو. ${newMsg}`);
+        return NextResponse.json({ ok: true });
+      }
+
+      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
+      const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Baghdad" });
+      const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Baghdad" });
+      await reply(`✅ أهلاً ${bookedPatient?.name ?? ""}!\nتم تأكيد حجز موعدك في ${clinic.name}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nنراك قريباً، بالشفاء والعافية 🌟`);
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── Non-numeric / out-of-range → check global intents ────────────────────
     if (intent === "menu") {
       await db.whatsappSession.update({ where: { id: session.id }, data: { step: "main_menu" } });
       const patient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
@@ -716,10 +766,9 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
 
-    // Greeting/restart words → reset session and start fresh
+    // Greeting/restart words → refresh slot list
     const RESTART_WORDS = ["مرحبا", "مرحباً", "هلا", "السلام", "اهلا", "أهلا", "hi", "hello", "هاي", "ابدأ", "ابدا"];
     if (RESTART_WORDS.some(w => messageBody.trim().toLowerCase() === w)) {
-      await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
       const { message, slots: newSlots, datePrefix: newPrefix } = await getNextSlotsMessage(clinicId);
       const patient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
       const nextStep = newSlots.length ? `awaiting_slot|${newPrefix}|${newSlots.join(",")}|${patientId}` : "done";
@@ -728,58 +777,9 @@ export async function POST(
       return NextResponse.json({ ok: true });
     }
 
-    if (isNaN(choice) || choice < 1 || choice > slots.length) {
-      const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
-      await reply(`أرسل رقماً من 1 إلى ${slots.length} لاختيار الموعد:\n${lines.join("\n")}\n\nأو أرسل 0 للرجوع.`);
-      return NextResponse.json({ ok: true });
-    }
-
-    const [year, month, day] = datePrefix.split("-").map(Number);
-    const [h, m] = slots[choice - 1].split(":").map(Number);
-    // datePrefix and slots are in Iraq time (UTC+3); convert to UTC for storage
-    const date = new Date(Date.UTC(year, month - 1, day, h - 3, m, 0, 0));
-
-    // Iraq day bounds in UTC (Iraq 00:00 = UTC 21:00 prev day)
-    const dayStart = new Date(Date.UTC(year, month - 1, day, -3, 0, 0, 0));
-    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
-
-    const bookedPatient = await db.patient.findUnique({ where: { id: patientId }, select: { name: true } });
-
-    // Atomic check-and-book inside a serializable transaction to prevent double booking
-    let slotTaken = false;
-    try {
-      await db.$transaction(async (tx) => {
-        const conflict = await tx.appointment.findFirst({
-          where: { clinicId, date, status: { not: "cancelled" } },
-        });
-        if (conflict) { slotTaken = true; return; }
-
-        const last = await tx.appointment.findFirst({
-          where: { clinicId, date: { gte: dayStart, lte: dayEnd }, queueNumber: { not: null } },
-          orderBy: { queueNumber: "desc" },
-        });
-        await tx.appointment.create({
-          data: { clinicId, patientId, date, queueNumber: (last?.queueNumber ?? 0) + 1 },
-        });
-      }, { isolationLevel: "Serializable" });
-    } catch {
-      // Serialization failure = another transaction won — treat as slot taken
-      slotTaken = true;
-    }
-
-    if (slotTaken) {
-      const { message: newMsg, slots: newSlots, datePrefix: newPrefix } = await getNextSlotsMessage(clinicId);
-      const nextStep = newSlots.length ? `awaiting_slot|${newPrefix}|${newSlots.join(",")}|${patientId}` : "done";
-      await db.whatsappSession.update({ where: { id: session.id }, data: { step: nextStep } });
-      await reply(`عذراً، هذا الوقت محجوز للتو. ${newMsg}`);
-      return NextResponse.json({ ok: true });
-    }
-
-    await db.whatsappSession.update({ where: { id: session.id }, data: { step: "done" } });
-
-    const dateStr = date.toLocaleDateString("ar-IQ", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Baghdad" });
-    const timeStr = date.toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Baghdad" });
-    await reply(`✅ أهلاً ${bookedPatient?.name ?? ""}!\nتم تأكيد حجز موعدك في ${clinic.name}:\n\n📅 ${dateStr}\n⏰ ${timeStr}\n\nنراك قريباً، بالشفاء والعافية 🌟`);
+    // Unknown input → remind user to pick a slot number
+    const lines = slots.map((s, i) => `${EMOJI_NUMBERS[i]} ${formatSlot(s)}`);
+    await reply(`أرسل رقماً من 1 إلى ${slots.length} لاختيار الموعد:\n${lines.join("\n")}\n\nأو أرسل 0 للرجوع.`);
     return NextResponse.json({ ok: true });
   }
 
