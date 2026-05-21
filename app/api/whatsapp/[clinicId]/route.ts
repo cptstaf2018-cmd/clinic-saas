@@ -41,6 +41,12 @@ function normalizePhone(raw: string): string {
   return d;
 }
 
+/** Extracts an Iraqi phone number from free text, returns normalized or null */
+function detectPhone(text: string): string | null {
+  const m = text.match(/(\+?964|0)7[3-9]\d{8}/);
+  return m ? normalizePhone(m[0]) : null;
+}
+
 /** Converts Arabic/Farsi/Western digits and returns an integer */
 function parseNum(text: string): number {
   const s = text.trim()
@@ -267,6 +273,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
 
   const step = session?.step ?? "done";
 
+  // ── Auto-detect: if patient types their phone number → save it ───────────────
+  const typedPhone = detectPhone(msgBody);
+  if (typedPhone && typedPhone !== phone && patient) {
+    const conflict = await db.patient.findFirst({ where: { clinicId, whatsappPhone: typedPhone } });
+    if (!conflict) {
+      await db.patient.update({ where: { id: patient.id }, data: { whatsappPhone: typedPhone } });
+      await reply(`✅ تم حفظ رقمك: ${typedPhone}`);
+      return NextResponse.json({ ok: true });
+    }
+  }
+
   // ══════════════════════════════════════════════════════════════════════════════
   // STATE: awaiting_slot — patient is choosing a time slot
   // ══════════════════════════════════════════════════════════════════════════════
@@ -366,6 +383,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
       update: { name: msgBody.trim() },
       create: { clinicId, name: msgBody.trim(), whatsappPhone: phone },
     });
+    // Confirm registration with name + phone
+    await reply(`✅ تم تسجيلك في ${clinic.name}\nالاسم: ${newPatient.name}\nالرقم: ${phone}`);
     await showSlots(newPatient.id, newPatient.name);
     return NextResponse.json({ ok: true });
   }
