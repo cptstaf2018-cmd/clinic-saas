@@ -13,7 +13,7 @@ type EventItem = {
   message: string | null;
   resolved: boolean;
   createdAt: string;
-  clinic: { name: string; whatsappNumber: string } | null;
+  clinic: { name: string; whatsappNumber: string | null } | null;
 };
 
 type MaintenanceStats = {
