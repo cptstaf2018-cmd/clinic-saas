@@ -161,7 +161,7 @@ export default function AdminClinicsClient({
   function startEdit(clinic: Clinic) {
     setEditId(clinic.id);
     setEditName(clinic.name);
-    setEditWhatsapp(clinic.whatsappNumber);
+    setEditWhatsapp(clinic.whatsappNumber ?? "");
     setEditPlan(clinic.subscription?.plan ?? "basic");
     setEditStatus(clinic.subscription?.status ?? "active");
     setEditExpires(toDateInput(clinic.subscription?.expiresAt));
