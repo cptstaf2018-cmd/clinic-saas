@@ -1,5 +1,25 @@
 import { Resend } from "resend";
 
+export async function sendOtpEmail(to: string, code: string) {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: "عيادتي <noreply@clinic-ai-pro.com>",
+    to,
+    subject: "كود تسجيل عيادتي",
+    html: `
+      <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px;">
+        <h2 style="color: #1e293b; margin-bottom: 8px;">مرحباً بك في عيادتي 🏥</h2>
+        <p style="color: #475569;">كود تسجيلك:</p>
+        <div style="background: #f1f5f9; border-radius: 12px; padding: 24px; text-align: center; margin: 20px 0;">
+          <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #2563eb;">${code}</span>
+        </div>
+        <p style="color: #64748b; font-size: 14px;">أدخله في صفحة التسجيل. صالح لمدة 10 دقائق.</p>
+      </div>
+    `,
+  });
+}
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendBackupEmail({

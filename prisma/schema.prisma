@@ -10,7 +10,7 @@ datasource db {
 model Clinic {
   id                     String            @id @default(cuid())
   name                   String
-  whatsappNumber         String            @unique
+  whatsappNumber         String?           @unique
   createdAt              DateTime          @default(now())
   botEnabled             Boolean           @default(true)
   logoUrl                String?
