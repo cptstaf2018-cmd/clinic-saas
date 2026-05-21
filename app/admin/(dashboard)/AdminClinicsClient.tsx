@@ -106,7 +106,7 @@ export default function AdminClinicsClient({
 
   const filteredClinics = clinics.filter((clinic) => {
     const term = query.trim();
-    const matchesQuery = !term || clinic.name.includes(term) || clinic.whatsappNumber.includes(term);
+    const matchesQuery = !term || clinic.name.includes(term) || (clinic.whatsappNumber ?? "").includes(term);
     if (!matchesQuery) return false;
 
     const status = clinic.subscription?.status ?? "inactive";
