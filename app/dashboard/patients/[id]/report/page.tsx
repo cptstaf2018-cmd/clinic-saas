@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import PrintButton from "./PrintButton";
 import ToothChartReport from "./ToothChartReport";
+import PediatricBodyReport from "./PediatricBodyReport";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "معلق",
@@ -69,10 +70,17 @@ export default async function PatientReportPage({
 
   if (!clinic || !patient) notFound();
 
-  const isDental = specialtyConfig.code === "dentistry";
-  const toothTreatments = isDental
-    ? await db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
-    : [];
+  const isDental     = specialtyConfig.code === "dentistry";
+  const isPediatric  = specialtyConfig.code === "pediatrics";
+
+  const [toothTreatments, pediatricAnnotations] = await Promise.all([
+    isDental
+      ? db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
+      : Promise.resolve([]),
+    isPediatric
+      ? db.specialtyAnnotation.findMany({ where: { patientId: id, clinicId, specialtyCode: "pediatrics" } })
+      : Promise.resolve([]),
+  ]);
 
   const canExport = canUseFeature(clinic.subscription?.plan, "patientPdfExport");
   const planKey = clinic.subscription?.plan === "trial" || clinic.subscription?.plan === "basic" || clinic.subscription?.plan === "standard" || clinic.subscription?.plan === "premium"
@@ -197,6 +205,20 @@ export default async function PatientReportPage({
                 </div>
               )}
             </div>
+          </section>
+        )}
+
+        {isPediatric && pediatricAnnotations.length > 0 && (
+          <section className="mt-6 rounded-3xl border border-slate-200 p-5 break-inside-avoid">
+            <h2 className="mb-4 text-base font-black text-slate-950">🧒 خريطة جسم الطفل — الملاحظات</h2>
+            <PediatricBodyReport
+              annotations={pediatricAnnotations.map(a => ({
+                regionId: a.regionId,
+                label: a.label,
+                color: a.color,
+                notes: a.notes,
+              }))}
+            />
           </section>
         )}
 
