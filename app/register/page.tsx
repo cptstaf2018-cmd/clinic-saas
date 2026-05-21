@@ -55,6 +55,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           clinicName:     form.get("clinicName"),
           phone:          form.get("phone"),
+          email:          (form.get("email") as string)?.trim() || undefined,
           password:       form.get("password"),
           invitationCode: (form.get("invitationCode") as string)?.trim().toUpperCase(),
         }),
@@ -143,6 +144,16 @@ export default function RegisterPage() {
                   onChange={(e) => { setPhone(e.target.value); setCodeMsg(null); }}
                   className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
                   placeholder="07701234567" dir="ltr" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
+                  الإيميل <span className="normal-case font-normal text-[#94A3B8]">(اختياري)</span>
+                </label>
+                <input name="email" type="email"
+                  className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
+                  placeholder="clinic@example.com" dir="ltr" />
+                <p className="text-[11px] text-[#94A3B8] mt-1">يُستخدم لاستلام التقارير الشهرية وتسجيل الدخول</p>
               </div>
 
               <div>

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { clinicName, phone, password, invitationCode } = await req.json();
+  const { clinicName, phone, email, password, invitationCode } = await req.json();
 
   if (!clinicName || !phone || !password || !invitationCode) {
     return NextResponse.json({ error: "جميع الحقول مطلوبة" }, { status: 400 });
@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     data: {
       name: clinicName,
       whatsappNumber: phone.trim(),
+      backupEmail: email?.trim() || null,
       specialtyOnboardingRequired: true,
       users: {
         create: { passwordHash, role: "doctor" },
