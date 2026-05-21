@@ -76,7 +76,6 @@ export default function AdminClinicsClient({
 }) {
   const router = useRouter();
   const [clinics, setClinics] = useState<Clinic[]>(initialClinics);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -120,38 +119,12 @@ export default function AdminClinicsClient({
   });
 
   const filterTabs: { value: StatusFilter; label: string; count: number }[] = [
-    { value: "all", label: "الكل", count: clinics.length },
+    { value: "all", label: "الكل", count: totalClinics },
     { value: "active", label: "نشطة", count: activeCount },
     { value: "trial", label: "تجريبية", count: trialCount },
     { value: "inactive", label: "متوقفة", count: inactiveCount },
     { value: "expiring", label: "تنتهي قريباً", count: expiringCount },
   ];
-
-  async function loadMore() {
-    setLoadingMore(true);
-    try {
-      const page = Math.floor(clinics.length / 50);
-      const res  = await fetch(`/api/admin/clinics?page=${page}&limit=50`);
-      if (res.ok) {
-        const data = await res.json();
-        const incoming: Clinic[] = data.clinics.map((c: { id: string; name: string; whatsappNumber: string | null; patientCount?: number; appointmentCount?: number; subscription?: { plan: string; status: string; expiresAt: string } }) => ({
-          id: c.id,
-          name: c.name,
-          whatsappNumber: c.whatsappNumber,
-          patientCount: c.patientCount ?? 0,
-          appointmentCount: c.appointmentCount ?? 0,
-          subscription: c.subscription
-            ? { plan: c.subscription.plan, status: c.subscription.status, expiresAt: c.subscription.expiresAt }
-            : null,
-        }));
-        setClinics((prev) => {
-          const existingIds = new Set(prev.map((x) => x.id));
-          return [...prev, ...incoming.filter((x) => !existingIds.has(x.id))];
-        });
-      }
-    } catch {}
-    setLoadingMore(false);
-  }
 
   function enterClinic(clinicId: string) {
     const origin = publicBaseUrl || window.location.origin;
@@ -305,7 +278,7 @@ export default function AdminClinicsClient({
 
         <div className="grid grid-cols-2 gap-px bg-slate-200 lg:grid-cols-4">
           {[
-            { label: "إجمالي العيادات", value: clinics.length, accent: "text-slate-950", sub: "كل الحسابات" },
+            { label: "إجمالي العيادات", value: totalClinics, accent: "text-slate-950", sub: "كل الحسابات" },
             { label: "العيادات النشطة", value: activeCount, accent: "text-emerald-700", sub: "تعمل حالياً" },
             { label: "تنتهي قريباً", value: expiringCount, accent: "text-amber-700", sub: "خلال 7 أيام" },
             { label: "تحتاج متابعة", value: inactiveCount, accent: "text-rose-700", sub: "متوقفة أو معلقة" },
@@ -472,19 +445,6 @@ export default function AdminClinicsClient({
           </div>
         )}
 
-        {clinics.length < totalClinics && !query && statusFilter === "all" && (
-          <div className="border-t border-slate-100 px-5 py-4 text-center">
-            <button
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="rounded-lg bg-slate-50 px-6 py-2.5 text-sm font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-100 disabled:opacity-50"
-            >
-              {loadingMore
-                ? "جاري التحميل..."
-                : `تحميل المزيد (${clinics.length} من ${totalClinics})`}
-            </button>
-          </div>
-        )}
       </section>
 
       {clinics.length > 0 && (

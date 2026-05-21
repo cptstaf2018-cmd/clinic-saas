@@ -12,16 +12,11 @@ export default async function AdminClinicsPage() {
     process.env.NEXTAUTH_URL ??
     "";
 
-  const PAGE_SIZE = 50;
-
-  const [clinics, total] = await Promise.all([
-    db.clinic.findMany({
-      include: { subscription: true, _count: { select: { patients: true, appointments: true } } },
-      orderBy: { createdAt: "desc" },
-      take: PAGE_SIZE,
-    }),
-    db.clinic.count(),
-  ]);
+  const clinics = await db.clinic.findMany({
+    include: { subscription: true, _count: { select: { patients: true, appointments: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  const total = clinics.length;
 
   const serialized = clinics.map((c) => ({
     id: c.id,
