@@ -47,10 +47,15 @@ export async function DELETE() {
 
   if (ids.length === 0) return NextResponse.json({ deleted: 0 });
 
-  // Delete all data for all clinics in one transaction
+  // Delete all data for all clinics in correct dependency order
   await db.$transaction([
+    db.systemEvent.deleteMany({ where: { clinicId: { in: ids } } }),
+    db.clinicFeatureTrial.deleteMany({ where: { clinicId: { in: ids } } }),
     db.whatsappSession.deleteMany({ where: { clinicId: { in: ids } } }),
     db.incomingMessage.deleteMany({ where: { clinicId: { in: ids } } }),
+    db.specialtyAnnotation.deleteMany({ where: { clinicId: { in: ids } } }),
+    db.toothTreatment.deleteMany({ where: { clinicId: { in: ids } } }),
+    db.patientPayment.deleteMany({ where: { clinicId: { in: ids } } }),
     db.medicalRecord.deleteMany({ where: { clinicId: { in: ids } } }),
     db.patientAttachment.deleteMany({ where: { clinicId: { in: ids } } }),
     db.appointment.deleteMany({ where: { clinicId: { in: ids } } }),

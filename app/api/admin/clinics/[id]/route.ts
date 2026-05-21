@@ -133,12 +133,15 @@ export async function DELETE(
     message: `تم حذف العيادة: ${clinic.name}`,
   });
 
-  // Delete all related data in correct order
+  // Delete all related data in correct dependency order
   await db.$transaction([
     db.systemEvent.deleteMany({ where: { clinicId: id } }),
     db.clinicFeatureTrial.deleteMany({ where: { clinicId: id } }),
     db.whatsappSession.deleteMany({ where: { clinicId: id } }),
     db.incomingMessage.deleteMany({ where: { clinicId: id } }),
+    db.specialtyAnnotation.deleteMany({ where: { clinicId: id } }),
+    db.toothTreatment.deleteMany({ where: { clinicId: id } }),
+    db.patientPayment.deleteMany({ where: { clinicId: id } }),
     db.medicalRecord.deleteMany({ where: { clinicId: id } }),
     db.patientAttachment.deleteMany({ where: { clinicId: id } }),
     db.appointment.deleteMany({ where: { clinicId: id } }),
