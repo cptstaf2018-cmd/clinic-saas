@@ -1,10 +1,13 @@
 import { Resend } from "resend";
 
 export async function sendOtpEmail(to: string, code: string) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!process.env.RESEND_API_KEY) {
+    console.error("[sendOtpEmail] RESEND_API_KEY is not set");
+    throw new Error("RESEND_API_KEY غير مضبوط");
+  }
   const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
-    from: "عيادتي <noreply@clinic-ai-pro.com>",
+  const result = await resend.emails.send({
+    from: "عيادتي <onboarding@resend.dev>",
     to,
     subject: "كود تسجيل عيادتي",
     html: `
@@ -18,6 +21,7 @@ export async function sendOtpEmail(to: string, code: string) {
       </div>
     `,
   });
+  console.log("[sendOtpEmail] result:", JSON.stringify(result));
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY);
