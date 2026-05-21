@@ -198,6 +198,7 @@ export default async function PatientProfilePage({
         {/* ═══ Patient Info Card ═══ */}
         <PatientInfoCard
           patientId={patient.id}
+          specialtyCode={specialtyConfig.code}
           initialInfo={{
             bloodType: patient.bloodType ?? null,
             allergies: patient.allergies ?? [],

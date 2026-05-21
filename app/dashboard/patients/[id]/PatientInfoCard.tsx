@@ -55,9 +55,11 @@ function TagInput({
 
 export default function PatientInfoCard({
   patientId,
+  specialtyCode,
   initialInfo,
 }: {
   patientId: string;
+  specialtyCode?: string;
   initialInfo: PatientInfo;
 }) {
   const [info, setInfo] = useState<PatientInfo>(initialInfo);
@@ -84,8 +86,9 @@ export default function PatientInfoCard({
     setEditing(true);
   }
 
+  const isPediatric = specialtyCode === "pediatrics";
   const hasData = info.bloodType || info.allergies.length > 0 || info.chronicConditions.length > 0
-    || info.currentMedications.length > 0 || info.surgicalHistory || info.smokingStatus;
+    || info.currentMedications.length > 0 || info.surgicalHistory || (!isPediatric && info.smokingStatus);
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -118,7 +121,7 @@ export default function PatientInfoCard({
               {info.bloodType && (
                 <InfoItem icon="🩸" label="فصيلة الدم" value={info.bloodType} color="text-red-600 bg-red-50" />
               )}
-              {info.smokingStatus && (
+              {!isPediatric && info.smokingStatus && (
                 <InfoItem icon="🚬" label="التدخين"
                   value={SMOKING_OPTIONS.find((s) => s.value === info.smokingStatus)?.label ?? info.smokingStatus}
                   color="text-amber-600 bg-amber-50" />
@@ -175,17 +178,19 @@ export default function PatientInfoCard({
                   ))}
                 </div>
               </div>
-              <div>
-                <p className="mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wide">🚬 التدخين</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {SMOKING_OPTIONS.map((s) => (
-                    <button key={s.value} onClick={() => setDraft({ ...draft, smokingStatus: draft.smokingStatus === s.value ? null : s.value })}
-                      className={`rounded-full px-3 py-1 text-xs font-black transition ${draft.smokingStatus === s.value ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
-                      {s.label}
-                    </button>
-                  ))}
+              {!isPediatric && (
+                <div>
+                  <p className="mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wide">🚬 التدخين</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {SMOKING_OPTIONS.map((s) => (
+                      <button key={s.value} onClick={() => setDraft({ ...draft, smokingStatus: draft.smokingStatus === s.value ? null : s.value })}
+                        className={`rounded-full px-3 py-1 text-xs font-black transition ${draft.smokingStatus === s.value ? "bg-amber-500 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <TagInput label="⚠️ الحساسية (أدوية / طعام / بيئة)"
