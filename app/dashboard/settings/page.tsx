@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 interface Settings {
   id: string;
   name: string;
-  whatsappNumber: string;
+  whatsappNumber: string | null;
   logoUrl: string;
   address: string | null;
   locationUrl: string | null;

@@ -23,7 +23,7 @@ type Subscription = {
 type Clinic = {
   id: string;
   name: string;
-  whatsappNumber: string;
+  whatsappNumber: string | null;
   patientCount: number;
   appointmentCount: number;
   subscription: Subscription | null;

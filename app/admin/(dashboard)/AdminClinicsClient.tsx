@@ -13,7 +13,7 @@ type Subscription = {
 type Clinic = {
   id: string;
   name: string;
-  whatsappNumber: string;
+  whatsappNumber: string | null;
   patientCount: number;
   appointmentCount: number;
   subscription: Subscription | null;
@@ -134,7 +134,7 @@ export default function AdminClinicsClient({
       const res  = await fetch(`/api/admin/clinics?page=${page}&limit=50`);
       if (res.ok) {
         const data = await res.json();
-        const incoming: Clinic[] = data.clinics.map((c: { id: string; name: string; whatsappNumber: string; patientCount?: number; appointmentCount?: number; subscription?: { plan: string; status: string; expiresAt: string } }) => ({
+        const incoming: Clinic[] = data.clinics.map((c: { id: string; name: string; whatsappNumber: string | null; patientCount?: number; appointmentCount?: number; subscription?: { plan: string; status: string; expiresAt: string } }) => ({
           id: c.id,
           name: c.name,
           whatsappNumber: c.whatsappNumber,
