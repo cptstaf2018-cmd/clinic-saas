@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import AppointmentsCalendarPremium from "@/components/AppointmentsCalendarPremium";
 
 type Appt = {
   id: string;

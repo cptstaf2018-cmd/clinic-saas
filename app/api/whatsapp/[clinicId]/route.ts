@@ -5,7 +5,6 @@ import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { logSystemEvent } from "@/lib/system-events";
 
-const DAY_NAMES = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const IRAQ_OFFSET_MS = 3 * 60 * 60 * 1000;
 const EMOJI = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣"];
 
@@ -156,13 +155,6 @@ async function bookSlot(
   return taken ? "taken" : "ok";
 }
 
-async function workingHoursMsg(clinicId: string, name: string): Promise<string> {
-  const rows = await db.workingHours.findMany({ where: { clinicId }, orderBy: { dayOfWeek:"asc" } });
-  if (!rows.length) return `لم تُضبط أوقات دوام ${name} بعد.`;
-  return `أوقات دوام ${name}:\n` +
-    rows.map(r => r.isOpen ? `${DAY_NAMES[r.dayOfWeek]}: ${formatTime(r.startTime)} - ${formatTime(r.endTime)}` : `${DAY_NAMES[r.dayOfWeek]}: مغلق`).join("\n");
-}
-
 // ══════════════════════════════════════════════════════════════════════════════
 // WEBHOOK HANDLER
 // ══════════════════════════════════════════════════════════════════════════════
@@ -242,6 +234,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
   // BOT LOGIC
   // ════════════════════════════════════════════════════════════════════════════
 
+  // الاسم + رقم الهاتف يبدأ أو يعيد ضبط الحجز من أي مرحلة، حتى لو كانت هناك جلسة قديمة.
+  const typedPhone = extractIraqPhone(msgBody);
+  const typedName = extractPatientName(msgBody, typedPhone);
+  if (typedName && typedPhone) {
+    const resolvedPatient = await db.patient.upsert({
+      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: typedPhone } },
+      update: { name: typedName },
+      create: { clinicId, name: typedName, whatsappPhone: typedPhone },
+      include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
+    });
+
+    await showSlots(resolvedPatient.id, resolvedPatient.name);
+    return NextResponse.json({ ok:true });
+  }
+
   // ── حالة: اختيار موعد ──────────────────────────────────────────────────────
   if (step.startsWith("awaiting_slot|")) {
     const [, dateStr, slotsRaw, patientId] = step.split("|");
@@ -271,22 +278,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
 
   // ── حالة: انتظار الاسم أو رقم الهاتف (مريض جديد) ──────────────────────────
   if (step === "awaiting_identity") {
-    const typedPhone = extractIraqPhone(msgBody);
-    const typedName = extractPatientName(msgBody, typedPhone);
-
-    if (!typedName || !typedPhone) {
-      await reply("للحجز أرسل الاسم ورقم الهاتف في رسالة واحدة\nمثال:\nأحمد علي 07700000000");
-      return NextResponse.json({ ok:true });
-    }
-
-    const resolvedPatient = await db.patient.upsert({
-      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: typedPhone } },
-      update: { name: typedName },
-      create: { clinicId, name: typedName, whatsappPhone: typedPhone },
-      include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
-    });
-
-    await showSlots(resolvedPatient.id, resolvedPatient.name);
+    await reply("للحجز أرسل الاسم ورقم الهاتف في رسالة واحدة\nمثال:\nأحمد علي 07700000000");
     return NextResponse.json({ ok:true });
   }
 
