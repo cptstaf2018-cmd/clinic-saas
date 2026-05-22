@@ -152,7 +152,7 @@ export default function AppointmentsPage() {
           setBookingError("اختر المريض المناسب من القائمة أدناه");
           return;
         } else {
-          setBookingError("لم يتم العثور على مريض بهذا الاسم");
+          setBookingError("لم يتم العثور على مريض — ابحث بالاسم بالعربي أو رقم الهاتف");
           return;
         }
       }
@@ -371,8 +371,8 @@ export default function AppointmentsPage() {
                     <input
                       type="text"
                       value={patientSearch}
-                      onChange={(e) => setPatientSearch(e.target.value)}
-                      placeholder="اكتب اسم المريض أو رقم الهاتف"
+                      onChange={(e) => { setPatientSearch(e.target.value); setBookingError(""); }}
+                      placeholder="اكتب الاسم بالعربي أو رقم الهاتف"
                       className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                     />
                     {patientResults.length > 0 && (
