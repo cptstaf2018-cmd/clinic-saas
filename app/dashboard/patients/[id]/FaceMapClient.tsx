@@ -66,7 +66,7 @@ function ZoneEl({ z, fill, stroke, sw, dash }: {
 }
 
 function labelX(z: Zone) { return z.shape === "ellipse" ? z.cx : z.x + z.w / 2; }
-function labelY(z: Zone) { return z.shape === "ellipse" ? z.cy - z.ry - 14 : z.y - 14; }
+function labelY(z: Zone) { return z.shape === "ellipse" ? z.cy : z.y + z.h / 2; }
 
 export default function FaceMapClient({
   patientId,
@@ -155,7 +155,7 @@ export default function FaceMapClient({
           src="/face-map.jpg"
           alt="خريطة الوجه للتجميل"
           fill
-          style={{ objectFit: "cover", objectPosition: "center center" }}
+          style={{ objectFit: "contain", objectPosition: "center center" }}
           priority
         />
         <svg
@@ -184,13 +184,13 @@ export default function FaceMapClient({
                 {isSel && (
                   <>
                     <rect
-                      x={labelX(zone) - 110} y={labelY(zone) - 26}
-                      width={220} height={28} rx={7}
+                      x={labelX(zone) - 115} y={labelY(zone) - 14}
+                      width={230} height={28} rx={7}
                       fill="#1e3a8a" opacity={0.93}
                     />
                     <text
-                      x={labelX(zone)} y={labelY(zone) - 7}
-                      textAnchor="middle" fontSize={15} fontWeight={900} fill="white"
+                      x={labelX(zone)} y={labelY(zone) + 5}
+                      textAnchor="middle" fontSize={14} fontWeight={900} fill="white"
                     >
                       {zone.labelAr}
                     </text>
