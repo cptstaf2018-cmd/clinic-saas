@@ -284,6 +284,7 @@ export default function SubscriptionPage() {
                 const amount = getPlanDurationPrice(plan.id, selectedDuration);
                 const baseAmount = plan.price * selectedDurationMeta.months;
                 const saving = baseAmount - amount;
+                const monthlyEquivalent = Math.round(amount / selectedDurationMeta.months);
                 return (
                   <div
                     key={plan.id}
@@ -300,12 +301,17 @@ export default function SubscriptionPage() {
                     <p className="text-xs font-bold text-slate-400">{plan.title}</p>
                     <h2 className="mt-1 text-2xl font-black text-slate-950">{plan.name}</h2>
                     <p className="mt-3 text-3xl font-black text-slate-950">
-                      {formatMoney(amount)}
-                      <span className="text-sm font-bold text-slate-400 mr-1">د.ع / {selectedDurationMeta.shortLabel}</span>
+                      {formatMoney(monthlyEquivalent)}
+                      <span className="text-sm font-bold text-slate-400 mr-1">د.ع / شهر</span>
                     </p>
+                    {selectedDuration !== "monthly" && (
+                      <p className="mt-1 text-xs font-bold text-slate-400">
+                        الإجمالي {formatMoney(amount)} د.ع / {selectedDurationMeta.shortLabel}
+                      </p>
+                    )}
                     {saving > 0 && (
                       <p className="mt-1 text-xs font-black text-emerald-700">
-                        وفرت {formatMoney(saving)} د.ع مقارنة بالدفع الشهري
+                        وفرت {formatMoney(saving)} د.ع
                       </p>
                     )}
                     <ul className="mt-4 space-y-2">
