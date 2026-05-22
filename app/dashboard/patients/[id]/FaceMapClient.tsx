@@ -2,71 +2,24 @@
 
 import { useState } from "react";
 import Image from "next/image";
-
-// Photo credit: Aleksandar Andreev via Pexels (free to use)
-// Image: 600×800px bottom-cropped, face starts ~Y:50, chin ~Y:620
-
-const FACE_MARKERS = [
-  { key: "botox",    labelAr: "بوتوكس",           color: "#2563eb" },
-  { key: "filler",   labelAr: "فيلر",              color: "#7c3aed" },
-  { key: "prp",      labelAr: "PRP / ميزوثيرابي",  color: "#059669" },
-  { key: "laser",    labelAr: "ليزر",              color: "#dc2626" },
-  { key: "threads",  labelAr: "خيوط شد",           color: "#0891b2" },
-  { key: "peel",     labelAr: "تقشير / بيل",       color: "#d97706" },
-  { key: "fat",      labelAr: "إذابة دهون",         color: "#ea580c" },
-  { key: "other",    labelAr: "أخرى",              color: "#6b7280" },
-];
-
-// SVG viewBox: 0 0 600 800 — bottom crop, face center X=300
-// Patient right = screen LEFT (standard medical convention)
-type Zone = {
-  id: string;
-  labelAr: string;
-} & (
-  | { shape: "ellipse"; cx: number; cy: number; rx: number; ry: number }
-  | { shape: "rect";    x: number;  y: number;  w: number;  h: number; rx?: number }
-);
-
-const ZONES: Zone[] = [
-  // ── Upper face ──
-  { id: "forehead",       labelAr: "الجبهة",                      shape: "rect",    x: 148, y: 50,  w: 304, h: 110, rx: 18 },
-  { id: "glabella",       labelAr: "بين الحاجبين (خطوط الغضب)",   shape: "ellipse", cx: 300, cy: 200, rx: 48, ry: 26 },
-  // ── Eyes ──
-  { id: "r_crows_feet",   labelAr: "أرجل الغراب — يمين",          shape: "ellipse", cx: 148, cy: 235, rx: 46, ry: 26 },
-  { id: "l_crows_feet",   labelAr: "أرجل الغراب — يسار",          shape: "ellipse", cx: 452, cy: 235, rx: 46, ry: 26 },
-  { id: "r_under_eye",    labelAr: "تحت العين — يمين",             shape: "ellipse", cx: 198, cy: 268, rx: 52, ry: 20 },
-  { id: "l_under_eye",    labelAr: "تحت العين — يسار",             shape: "ellipse", cx: 402, cy: 268, rx: 52, ry: 20 },
-  // ── Mid face ──
-  { id: "r_cheek",        labelAr: "الخد الأيمن",                  shape: "ellipse", cx: 148, cy: 370, rx: 58, ry: 68 },
-  { id: "l_cheek",        labelAr: "الخد الأيسر",                  shape: "ellipse", cx: 452, cy: 370, rx: 58, ry: 68 },
-  { id: "nose",           labelAr: "الأنف / خطوط الأرنبة",        shape: "ellipse", cx: 300, cy: 345, rx: 36, ry: 52 },
-  { id: "r_nasolabial",   labelAr: "الطية الأنفية الشفوية — يمين", shape: "ellipse", cx: 214, cy: 398, rx: 26, ry: 52 },
-  { id: "l_nasolabial",   labelAr: "الطية الأنفية الشفوية — يسار", shape: "ellipse", cx: 386, cy: 398, rx: 26, ry: 52 },
-  // ── Mouth ──
-  { id: "upper_lip",      labelAr: "الشفة العليا",                 shape: "ellipse", cx: 300, cy: 475, rx: 65, ry: 22 },
-  { id: "lower_lip",      labelAr: "الشفة السفلى",                 shape: "ellipse", cx: 300, cy: 508, rx: 65, ry: 22 },
-  // ── Lower face ──
-  { id: "r_marionette",   labelAr: "خطوط الدمية — يمين",           shape: "ellipse", cx: 216, cy: 508, rx: 22, ry: 38 },
-  { id: "l_marionette",   labelAr: "خطوط الدمية — يسار",           shape: "ellipse", cx: 384, cy: 508, rx: 22, ry: 38 },
-  { id: "chin",           labelAr: "الذقن",                        shape: "ellipse", cx: 300, cy: 560, rx: 58, ry: 38 },
-  { id: "r_jaw",          labelAr: "الفك / الماستر — يمين",        shape: "ellipse", cx: 138, cy: 468, rx: 45, ry: 58 },
-  { id: "l_jaw",          labelAr: "الفك / الماستر — يسار",        shape: "ellipse", cx: 462, cy: 468, rx: 45, ry: 58 },
-  // ── Neck ──
-  { id: "neck",           labelAr: "الرقبة / الأشرطة الرقبية",    shape: "rect",    x: 218, y: 622, w: 164, h: 62, rx: 20 },
-];
+import {
+  AESTHETIC_FACE_MARKERS,
+  AESTHETIC_FACE_ZONES,
+  type AestheticFaceZone,
+} from "@/lib/aesthetic-face-map";
 
 type Annotation = { id: string; regionId: string; label: string; color: string; notes: string | null };
 
 function ZoneEl({ z, fill, stroke, sw, dash }: {
-  z: Zone; fill: string; stroke: string; sw: number; dash?: string;
+  z: AestheticFaceZone; fill: string; stroke: string; sw: number; dash?: string;
 }) {
   const p = { fill, stroke, strokeWidth: sw, strokeDasharray: dash };
   if (z.shape === "ellipse") return <ellipse cx={z.cx} cy={z.cy} rx={z.rx} ry={z.ry} {...p} />;
   return <rect x={z.x} y={z.y} width={z.w} height={z.h} rx={z.rx ?? 0} {...p} />;
 }
 
-function labelX(z: Zone) { return z.shape === "ellipse" ? z.cx : z.x + z.w / 2; }
-function labelY(z: Zone) { return z.shape === "ellipse" ? z.cy : z.y + z.h / 2; }
+function labelX(z: AestheticFaceZone) { return z.shape === "ellipse" ? z.cx : z.x + z.w / 2; }
+function labelY(z: AestheticFaceZone) { return z.shape === "ellipse" ? z.cy : z.y + z.h / 2; }
 
 export default function FaceMapClient({
   patientId,
@@ -81,7 +34,7 @@ export default function FaceMapClient({
   const [notes, setNotes]             = useState("");
   const [saving, setSaving]           = useState(false);
 
-  const selZone = ZONES.find((z) => z.id === selected);
+  const selZone = AESTHETIC_FACE_ZONES.find((z) => z.id === selected);
   const selAnn  = annotations.find((a) => a.regionId === selected) ?? null;
 
   function handleSelect(id: string) {
@@ -94,7 +47,7 @@ export default function FaceMapClient({
 
   async function saveAnnotation(markerKey: string) {
     if (!selected) return;
-    const marker = FACE_MARKERS.find((m) => m.key === markerKey)!;
+    const marker = AESTHETIC_FACE_MARKERS.find((m) => m.key === markerKey)!;
     setSaving(true);
     const notesVal = [quantity, notes].filter(Boolean).join(" · ") || null;
     const res = await fetch(`/api/patients/${patientId}/annotations`, {
@@ -136,7 +89,7 @@ export default function FaceMapClient({
   return (
     <div dir="rtl">
       <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 10, fontWeight: 700 }}>
-        انقر على منطقة الوجه لتأشير الإجراء — يمين الشاشة = يسار المريض
+        انقر على منطقة الوجه لتأشير الإجراء — اليمين واليسار حسب جهة المريض
       </p>
 
       {/* Image + SVG overlay */}
@@ -166,10 +119,10 @@ export default function FaceMapClient({
             cursor: "pointer",
           }}
         >
-          {ZONES.map((zone) => {
+          {AESTHETIC_FACE_ZONES.map((zone) => {
             const ann    = annotations.find((a) => a.regionId === zone.id) ?? null;
             const isSel  = selected === zone.id;
-            const marker = ann ? FACE_MARKERS.find((m) => m.key === ann.label) : null;
+            const marker = ann ? AESTHETIC_FACE_MARKERS.find((m) => m.key === ann.label) : null;
             return (
               <g key={zone.id} onClick={() => handleSelect(zone.id)} style={{ cursor: "pointer" }}>
                 <ZoneEl
@@ -184,8 +137,8 @@ export default function FaceMapClient({
                 {isSel && (
                   <>
                     <rect
-                      x={labelX(zone) - 115} y={labelY(zone) - 14}
-                      width={230} height={28} rx={7}
+                      x={labelX(zone) - 100} y={labelY(zone) - 14}
+                      width={200} height={28} rx={7}
                       fill="#1e3a8a" opacity={0.93}
                     />
                     <text
@@ -215,7 +168,7 @@ export default function FaceMapClient({
 
       {/* Legend */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-        {FACE_MARKERS.map((m) => (
+        {AESTHETIC_FACE_MARKERS.map((m) => (
           <span key={m.key} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "#475569" }}>
             <span style={{ width: 11, height: 11, borderRadius: 3, background: m.color, display: "inline-block" }} />
             {m.labelAr}
@@ -230,7 +183,7 @@ export default function FaceMapClient({
             {selZone.labelAr} — اختر الإجراء:
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
-            {FACE_MARKERS.map((m) => (
+            {AESTHETIC_FACE_MARKERS.map((m) => (
               <button key={m.key} onClick={() => saveAnnotation(m.key)} disabled={saving}
                 style={{
                   padding: "6px 14px", borderRadius: 20, background: m.color,
@@ -270,8 +223,8 @@ export default function FaceMapClient({
           <p style={{ fontSize: 12, fontWeight: 900, color: "#64748b", marginBottom: 8 }}>ملخص الإجراءات:</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {annotations.map((a) => {
-              const marker = FACE_MARKERS.find((m) => m.key === a.label);
-              const zone   = ZONES.find((z) => z.id === a.regionId);
+              const marker = AESTHETIC_FACE_MARKERS.find((m) => m.key === a.label);
+              const zone   = AESTHETIC_FACE_ZONES.find((z) => z.id === a.regionId);
               return (
                 <span key={a.id} style={{
                   padding: "3px 10px", borderRadius: 20,

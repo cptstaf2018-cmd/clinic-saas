@@ -1,3 +1,5 @@
+import { AESTHETIC_FACE_ZONES } from "@/lib/aesthetic-face-map";
+
 type Ann = { regionId: string; label: string; color: string; notes?: string | null };
 
 type Region =
@@ -272,33 +274,12 @@ export default function BodyAnnotationReport({
 }) {
   if (annotations.length === 0) return null;
 
-  // ── AESTHETIC — face-map.jpg 600×750 ──────────────────────────────────────
+  // ── AESTHETIC — face-map.jpg 600×800 ──────────────────────────────────────
   if (specialtyCode === "aesthetic") {
-    const FACE: Region[] = [
-      { id:"forehead",       labelAr:"الجبهة",                      shape:"rect",    x:148, y:55,  w:304, h:100, rx:18 },
-      { id:"glabella",       labelAr:"بين الحاجبين",                shape:"ellipse", cx:300, cy:195, rx:48, ry:26 },
-      { id:"r_crows_feet",   labelAr:"أرجل الغراب — يمين",          shape:"ellipse", cx:148, cy:225, rx:46, ry:26 },
-      { id:"l_crows_feet",   labelAr:"أرجل الغراب — يسار",          shape:"ellipse", cx:452, cy:225, rx:46, ry:26 },
-      { id:"r_under_eye",    labelAr:"تحت العين — يمين",             shape:"ellipse", cx:198, cy:258, rx:52, ry:20 },
-      { id:"l_under_eye",    labelAr:"تحت العين — يسار",             shape:"ellipse", cx:402, cy:258, rx:52, ry:20 },
-      { id:"r_cheek",        labelAr:"الخد الأيمن",                  shape:"ellipse", cx:150, cy:350, rx:58, ry:65 },
-      { id:"l_cheek",        labelAr:"الخد الأيسر",                  shape:"ellipse", cx:450, cy:350, rx:58, ry:65 },
-      { id:"nose",           labelAr:"الأنف",                        shape:"ellipse", cx:300, cy:330, rx:36, ry:48 },
-      { id:"r_nasolabial",   labelAr:"الطية الأنفية الشفوية — يمين", shape:"ellipse", cx:216, cy:378, rx:26, ry:50 },
-      { id:"l_nasolabial",   labelAr:"الطية الأنفية الشفوية — يسار", shape:"ellipse", cx:384, cy:378, rx:26, ry:50 },
-      { id:"upper_lip",      labelAr:"الشفة العليا",                 shape:"ellipse", cx:300, cy:510, rx:65, ry:22 },
-      { id:"lower_lip",      labelAr:"الشفة السفلى",                 shape:"ellipse", cx:300, cy:535, rx:65, ry:22 },
-      { id:"r_marionette",   labelAr:"خطوط الدمية — يمين",           shape:"ellipse", cx:218, cy:488, rx:22, ry:36 },
-      { id:"l_marionette",   labelAr:"خطوط الدمية — يسار",           shape:"ellipse", cx:382, cy:488, rx:22, ry:36 },
-      { id:"chin",           labelAr:"الذقن",                        shape:"ellipse", cx:300, cy:545, rx:58, ry:38 },
-      { id:"r_jaw",          labelAr:"الفك / الماستر — يمين",        shape:"ellipse", cx:140, cy:450, rx:45, ry:56 },
-      { id:"l_jaw",          labelAr:"الفك / الماستر — يسار",        shape:"ellipse", cx:460, cy:450, rx:45, ry:56 },
-      { id:"neck",           labelAr:"الرقبة",                       shape:"rect",    x:220, y:610, w:160, h:60, rx:20 },
-    ];
-    const labelMap = new Map(FACE.map(r => [r.id, r.labelAr]));
+    const labelMap = new Map(AESTHETIC_FACE_ZONES.map(r => [r.id, r.labelAr]));
     return (
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-        <ImageMap src="/face-map.jpg" vbW={600} vbH={800} regions={FACE} annotations={annotations} maxW={200} />
+        <ImageMap src="/face-map.jpg" vbW={600} vbH={800} regions={AESTHETIC_FACE_ZONES} annotations={annotations} maxW={200} />
         <AnnList annotations={annotations} labelMap={labelMap} />
       </div>
     );
