@@ -136,47 +136,15 @@ export default function AppointmentsPage() {
   }
 
   async function handleBooking() {
-    let patient = selectedPatient;
-
-    if (!patient) {
-      // 1. Use already-loaded results first
-      if (patientResults.length === 1) {
-        patient = patientResults[0];
-        setSelectedPatient(patient);
-        setPatientResults([]);
-      } else if (patientResults.length > 1) {
-        setBookingError("اختر المريض المناسب من القائمة أدناه");
-        return;
-      } else if (patientSearch.trim().length >= 2) {
-        // 2. No results loaded yet → fetch now
-        try {
-          const res = await fetch(`/api/patients?search=${encodeURIComponent(patientSearch.trim())}`);
-          const results: PatientOption[] = res.ok ? await res.json() : [];
-          if (results.length === 1) {
-            patient = results[0];
-            setSelectedPatient(patient);
-          } else if (results.length > 1) {
-            setPatientResults(results);
-            setBookingError("اختر المريض المناسب من القائمة أدناه");
-            return;
-          } else {
-            setBookingError("لم يتم العثور على مريض — ابحث بالاسم بالعربي أو رقم الهاتف");
-            return;
-          }
-        } catch {
-          setBookingError("تعذر البحث — تحقق من الاتصال");
-          return;
-        }
-      } else {
-        setBookingError("اكتب اسم المريض أو رقم هاتفه");
-        return;
-      }
-    }
-
-    if (!patient || !bookingDate || !bookingTime) {
-      setBookingError(!patient ? "اكتب اسم المريض" : "حدد التاريخ والوقت");
+    if (!selectedPatient) {
+      setBookingError("يجب اختيار مريض من القائمة أولاً");
       return;
     }
+    if (!bookingDate || !bookingTime) {
+      setBookingError("حدد التاريخ والوقت");
+      return;
+    }
+    const patient = selectedPatient;
     setBookingLoading(true);
     setBookingError("");
     const dateTime = new Date(`${bookingDate}T${bookingTime}`).toISOString();
@@ -387,7 +355,7 @@ export default function AppointmentsPage() {
                       className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                     />
                     {patientResults.length > 0 && (
-                      <div className="mt-2 max-h-48 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+                      <div className="mt-2 max-h-48 overflow-y-auto rounded-2xl border-2 border-blue-200 bg-white shadow-lg">
                         {patientResults.map((p) => (
                           <button
                             key={p.id}
@@ -459,7 +427,12 @@ export default function AppointmentsPage() {
                   </div>
                 )}
 
-                {bookingError && <p className="text-sm font-black text-red-600">{bookingError}</p>}
+                {bookingError && (
+                  <p className="text-sm font-black text-red-600">
+                    {bookingError}
+                    {!selectedPatient && patientResults.length > 0 && " ↑ اضغط على اسمه من القائمة"}
+                  </p>
+                )}
 
                 <div className="flex gap-3 pt-2">
                   <button
