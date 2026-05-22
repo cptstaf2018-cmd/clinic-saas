@@ -5,6 +5,8 @@ import DashboardNav from "./DashboardNav";
 import { getAssistantAccess } from "@/lib/assistant-access";
 import DashboardAssistantFloating from "./DashboardAssistantFloating";
 import MobileDrawer from "./MobileDrawer";
+import SubscriptionNotice from "./SubscriptionNotice";
+import { getSubscriptionNotice, isSubscriptionHardLocked } from "@/lib/subscription-status";
 
 async function getClinicData(clinicId: string) {
   return db.clinic.findUnique({
@@ -32,7 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding/specialty");
   }
 
-  if (clinic?.subscription?.status === "inactive") {
+  if (isSubscriptionHardLocked(clinic?.subscription ?? null)) {
     redirect("/subscription-expired");
   }
 
@@ -40,6 +42,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const subStatus = clinic?.subscription?.status ?? "trial";
   const badge = STATUS_BADGE[subStatus] ?? STATUS_BADGE.inactive;
   const assistantAccess = await getAssistantAccess(clinicId, clinic?.subscription ?? null, false);
+  const subscriptionNotice = getSubscriptionNotice(clinic?.subscription ?? null);
 
   const signOutForm = (
     <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
@@ -124,6 +127,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
         {/* Main */}
         <main className="flex-1 overflow-y-auto pb-6">
+          <SubscriptionNotice notice={subscriptionNotice} />
           {children}
         </main>
         <DashboardAssistantFloating initialAccess={assistantAccess} />

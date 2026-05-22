@@ -16,16 +16,16 @@ export default function SubscriptionExpiredPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-xl font-extrabold text-[#0C1F3F]">انتهى اشتراكك</h1>
+          <h1 className="text-xl font-extrabold text-[#0C1F3F]">انتهت مدة تشغيل العيادة</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
-            تم إيقاف حسابك مؤقتاً بسبب انتهاء الاشتراك.
-            بياناتك محفوظة بالكامل.
+            تم إيقاف الإضافات مؤقتاً بعد انتهاء مهلة التجديد.
+            بيانات العيادة والمرضى محفوظة بالكامل.
           </p>
         </div>
 
         <div className="bg-blue-50 rounded-xl p-4 space-y-1">
-          <p className="text-sm font-semibold text-[#0C1F3F]">لتجديد اشتراكك</p>
-          <p className="text-xs text-gray-500">تواصل معنا عبر واتساب وسنفعّل حسابك فوراً</p>
+          <p className="text-sm font-semibold text-[#0C1F3F]">لإعادة تشغيل العيادة</p>
+          <p className="text-xs text-gray-500">جدّد الاشتراك وسنفعّل المواعيد والواتساب والإضافات فوراً.</p>
           <a
             href="https://wa.me/9647806688044"
             target="_blank"
