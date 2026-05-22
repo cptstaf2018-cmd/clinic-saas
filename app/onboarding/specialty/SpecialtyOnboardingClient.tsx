@@ -16,8 +16,8 @@ const PREVIEW_POINTS: Record<string, string[]> = {
   ophthalmology: ["حدة البصر", "ضغط العين", "وصفة نظارات"],
   orthopedics: ["خريطة هيكل", "ألم وحركة", "أشعة وتأهيل"],
   internal_medicine: ["تحاليل", "أمراض مزمنة", "خطة علاج"],
-  general_medicine: ["فحص عام", "وصفات", "تحويلات"],
-  surgery: ["إجراءات", "فحص جروح", "ملاحظات عملية"],
+  general_medicine: ["فحص عام", "وصفات طبية", "تحويلات لأخصائي"],
+  surgery: ["ملاحظة العملية", "فحص الجرح", "خطة ما بعد العملية"],
 };
 
 export default function SpecialtyOnboardingClient() {
@@ -26,13 +26,24 @@ export default function SpecialtyOnboardingClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const selectedSpecialty =
-    MEDICAL_SPECIALTIES.find((specialty) => specialty.key === selected) ?? MEDICAL_SPECIALTIES[0];
-
   const filteredSpecialties = useMemo(() => {
     if (filter === "الكل") return MEDICAL_SPECIALTIES;
     return MEDICAL_SPECIALTIES.filter((specialty) => specialty.category === filter);
   }, [filter]);
+
+  function changeFilter(newFilter: (typeof FILTERS)[number]) {
+    setFilter(newFilter);
+    // Auto-select first specialty in new filter if current selection won't be visible
+    const filtered = newFilter === "الكل"
+      ? MEDICAL_SPECIALTIES
+      : MEDICAL_SPECIALTIES.filter((s) => s.category === newFilter);
+    if (!filtered.some((s) => s.key === selected) && filtered.length > 0) {
+      setSelected(filtered[0].key);
+    }
+  }
+
+  const selectedSpecialty =
+    MEDICAL_SPECIALTIES.find((specialty) => specialty.key === selected) ?? MEDICAL_SPECIALTIES[0];
 
   async function submit() {
     if (!selected || loading) return;
@@ -83,7 +94,7 @@ export default function SpecialtyOnboardingClient() {
                 <button
                   key={item}
                   type="button"
-                  onClick={() => setFilter(item)}
+                  onClick={() => changeFilter(item)}
                   className={`h-10 rounded-lg border px-4 text-sm font-black transition ${
                     filter === item
                       ? "border-blue-600 bg-blue-600 text-white"
