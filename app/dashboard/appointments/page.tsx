@@ -70,8 +70,6 @@ function toIraqIso(date: string, time: string) {
   return new Date(Date.UTC(year, month - 1, day, hour - 3, minute, 0, 0)).toISOString();
 }
 
-type PatientOption = { id: string; name: string; whatsappPhone: string };
-
 export default function AppointmentsPage() {
   const [range, setRange] = useState("today");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -82,9 +80,8 @@ export default function AppointmentsPage() {
   const [reminded, setReminded] = useState<Set<string>>(new Set());
 
   const [showBooking, setShowBooking] = useState(false);
-  const [patientSearch, setPatientSearch] = useState("");
-  const [patientResults, setPatientResults] = useState<PatientOption[]>([]);
-  const [selectedPatient, setSelectedPatient] = useState<PatientOption | null>(null);
+  const [patientName, setPatientName] = useState("");
+  const [patientPhone, setPatientPhone] = useState("");
   const [bookingDate, setBookingDate] = useState("");
   const [bookingTime, setBookingTime] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -130,27 +127,6 @@ export default function AppointmentsPage() {
     setActionLoading(null);
   }
 
-  // Load all patients when booking dialog opens
-  useEffect(() => {
-    if (!showBooking) return;
-    fetch(`/api/patients?search=`)
-      .then(r => r.ok ? r.json() : [])
-      .then(setPatientResults)
-      .catch(() => {});
-  }, [showBooking]);
-
-  // Filter as user types
-  useEffect(() => {
-    if (!showBooking) return;
-    const t = setTimeout(() => {
-      fetch(`/api/patients?search=${encodeURIComponent(patientSearch)}`)
-        .then(r => r.ok ? r.json() : [])
-        .then(setPatientResults)
-        .catch(() => {});
-    }, 250);
-    return () => clearTimeout(t);
-  }, [patientSearch, showBooking]);
-
   async function fetchSlots(date: string) {
     if (!date) { setAvailableSlots([]); return; }
     setSlotsLoading(true);
@@ -167,11 +143,15 @@ export default function AppointmentsPage() {
   }
 
   async function handleBooking(slotValue?: string) {
-    if (!selectedPatient || !bookingDate) return;
+    const name = patientName.trim();
+    const phone = patientPhone.trim();
+    if (!name || !phone || !bookingDate) {
+      setBookingError("اكتب اسم المريض ورقم الهاتف واختر التاريخ");
+      return;
+    }
     const time = slotValue ?? bookingTime;
     if (!time) return;
     setBookingTime(time);
-    const patient = selectedPatient;
     setBookingLoading(true);
     setBookingError("");
     const dateTime = toIraqIso(bookingDate, time);
@@ -180,6 +160,20 @@ export default function AppointmentsPage() {
       setBookingLoading(false);
       return;
     }
+
+    const patientRes = await fetch("/api/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, whatsappPhone: phone }),
+    });
+    if (!patientRes.ok) {
+      const data = await patientRes.json().catch(() => null);
+      setBookingError(data?.error || "تعذر حفظ بيانات المريض");
+      setBookingLoading(false);
+      return;
+    }
+    const patient = await patientRes.json();
+
     const res = await fetch("/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -190,8 +184,8 @@ export default function AppointmentsPage() {
       setBookingError(data?.error || "حدث خطأ");
     } else {
       setShowBooking(false);
-      setSelectedPatient(null);
-      setPatientSearch("");
+      setPatientName("");
+      setPatientPhone("");
       setBookingDate("");
       setBookingTime("");
       setAvailableSlots([]);
@@ -373,68 +367,44 @@ export default function AppointmentsPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowBooking(false)}>
             <div className="mx-4 w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" dir="rtl" onClick={(e) => e.stopPropagation()}>
               <h2 className="text-xl font-black text-slate-950">حجز جديد</h2>
-              <p className="mt-1 text-sm font-bold text-slate-400">اختر المريض وحدد الموعد</p>
+              <p className="mt-1 text-sm font-bold text-slate-400">اكتب بيانات المريض ثم اضغط وقت الحجز</p>
 
               <div className="mt-5 space-y-4">
-                {!selectedPatient ? (
-                  <div>
-                    <label className="text-sm font-black text-slate-700">البحث عن مريض</label>
-                    <input
-                      type="text"
-                      value={patientSearch}
-                      onChange={(e) => { setPatientSearch(e.target.value); setBookingError(""); }}
-                      placeholder="اكتب الاسم بالعربي أو رقم الهاتف"
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                    />
-                    <div className="mt-2 max-h-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
-                      {patientResults.length === 0 ? (
-                        <p className="px-4 py-3 text-sm text-slate-400">لا توجد نتائج</p>
-                      ) : patientResults.map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => { setSelectedPatient(p); setPatientSearch(""); setPatientResults([]); }}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-right transition hover:bg-blue-50 border-b border-slate-50 last:border-0"
-                        >
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white">
-                            {p.name[0]}
-                          </div>
-                          <div>
-                            <p className="text-sm font-black text-slate-900">{p.name}</p>
-                            <p className="text-xs font-bold text-slate-400" dir="ltr">{p.whatsappPhone}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  /* ── المريض محدد ── */
-                  <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 ring-1 ring-emerald-200">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-sm font-black text-white">
-                      {selectedPatient.name[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-slate-900 truncate">{selectedPatient.name}</p>
-                      <p className="text-xs font-bold text-slate-400" dir="ltr">{selectedPatient.whatsappPhone}</p>
-                    </div>
-                    <button onClick={() => { setSelectedPatient(null); setBookingDate(""); setAvailableSlots([]); setBookingTime(""); }} className="text-xs font-black text-slate-400 hover:text-red-500">✕</button>
-                  </div>
-                )}
+                <div>
+                  <label className="text-sm font-black text-slate-700">اسم المريض</label>
+                  <input
+                    type="text"
+                    value={patientName}
+                    onChange={(e) => { setPatientName(e.target.value); setBookingError(""); }}
+                    placeholder="مثال: هدى طارق وليد"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
 
-                {/* ── التاريخ — يظهر فقط بعد اختيار المريض ── */}
-                {selectedPatient && (
-                  <div>
-                    <label className="text-sm font-black text-slate-700">التاريخ</label>
-                    <input
-                      type="date"
-                      value={bookingDate}
-                      onChange={(e) => { setBookingDate(e.target.value); fetchSlots(e.target.value); }}
-                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                    />
-                  </div>
-                )}
+                <div>
+                  <label className="text-sm font-black text-slate-700">رقم الهاتف</label>
+                  <input
+                    type="tel"
+                    value={patientPhone}
+                    onChange={(e) => { setPatientPhone(e.target.value); setBookingError(""); }}
+                    placeholder="07700000000"
+                    dir="ltr"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-black text-slate-700">التاريخ</label>
+                  <input
+                    type="date"
+                    value={bookingDate}
+                    onChange={(e) => { setBookingDate(e.target.value); fetchSlots(e.target.value); }}
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
 
                 {/* ── الأوقات — اضغط على وقت يحجز مباشرة ── */}
-                {selectedPatient && bookingDate && (
+                {bookingDate && (
                   <div>
                     <label className="text-sm font-black text-slate-700">
                       {slotsLoading ? "جاري التحميل..." : "اضغط على الوقت للحجز"}
