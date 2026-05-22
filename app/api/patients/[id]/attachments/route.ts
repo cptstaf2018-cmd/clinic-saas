@@ -1,9 +1,24 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature } from "@/lib/feature-gates";
+import { getStoragePath } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
+
+function serializeAttachment(attachment: {
+  id: string;
+  patientId: string;
+  fileUrl: string | null;
+  [key: string]: unknown;
+}) {
+  return {
+    ...attachment,
+    fileUrl: attachment.fileUrl
+      ? `/api/patients/${attachment.patientId}/attachments/${attachment.id}/file`
+      : null,
+  };
+}
 
 export async function GET(req: NextRequest, { params }: Params) {
   const session = await auth();
@@ -21,7 +36,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     orderBy: { date: "desc" },
   });
 
-  return NextResponse.json(attachments);
+  return NextResponse.json(attachments.map(serializeAttachment));
 }
 
 export async function POST(req: NextRequest, { params }: Params) {
@@ -41,6 +56,7 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const body = await req.json();
   const { type, title, notes, fileUrl, fileName, fileType, date } = body;
+  const storagePath = fileUrl ? getStoragePath(String(fileUrl)) : null;
 
   if (!type || !title?.trim()) {
     return NextResponse.json({ error: "النوع والعنوان مطلوبان" }, { status: 400 });
@@ -51,6 +67,10 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "نوع غير صالح" }, { status: 400 });
   }
 
+  if (fileUrl && (!storagePath || !storagePath.startsWith(`${clinicId}/`))) {
+    return NextResponse.json({ error: "مسار الملف غير صالح" }, { status: 400 });
+  }
+
   const attachment = await db.patientAttachment.create({
     data: {
       clinicId,
@@ -58,12 +78,12 @@ export async function POST(req: NextRequest, { params }: Params) {
       type,
       title: title.trim(),
       notes: notes?.trim() || null,
-      fileUrl: fileUrl || null,
+      fileUrl: storagePath,
       fileName: fileName || null,
       fileType: fileType || null,
       date: date ? new Date(date) : new Date(),
     },
   });
 
-  return NextResponse.json(attachment, { status: 201 });
+  return NextResponse.json(serializeAttachment(attachment), { status: 201 });
 }

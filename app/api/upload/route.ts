@@ -47,12 +47,12 @@ export async function POST(req: Request) {
 
   const safeName = path.basename(file.name).replace(/[^a-zA-Z0-9._-]/g, "_");
   const folder = session.user.clinicId;
-  const url = await uploadFile(buffer, safeName, detectedType, folder);
+  const storagePath = await uploadFile(buffer, safeName, detectedType, folder);
 
-  if (!url) {
+  if (!storagePath) {
     return NextResponse.json({ error: "فشل رفع الملف" }, { status: 500 });
   }
 
   const fileType = detectedType.startsWith("image/") ? "image" : "pdf";
-  return NextResponse.json({ url, fileType, fileName: file.name });
+  return NextResponse.json({ url: storagePath, fileType, fileName: file.name });
 }
