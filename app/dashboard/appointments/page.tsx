@@ -133,15 +133,34 @@ export default function AppointmentsPage() {
   }
 
   async function handleBooking() {
-    // Auto-select if only one search result exists and no patient selected yet
     let patient = selectedPatient;
-    if (!patient && patientResults.length === 1) {
+
+    // If no patient selected but search text exists → re-search automatically
+    if (!patient && patientSearch.trim().length >= 2) {
+      const res = await fetch(`/api/patients?search=${encodeURIComponent(patientSearch.trim())}`);
+      if (res.ok) {
+        const results: PatientOption[] = await res.json();
+        if (results.length === 1) {
+          patient = results[0];
+          setSelectedPatient(patient);
+          setPatientResults([]);
+        } else if (results.length > 1) {
+          setPatientResults(results);
+          setBookingError("اختر المريض المناسب من القائمة أدناه");
+          return;
+        } else {
+          setBookingError("لم يتم العثور على مريض بهذا الاسم");
+          return;
+        }
+      }
+    } else if (!patient && patientResults.length === 1) {
       patient = patientResults[0];
       setSelectedPatient(patient);
       setPatientResults([]);
     }
+
     if (!patient || !bookingDate || !bookingTime) {
-      setBookingError(!patient ? "اختر المريض من القائمة" : "حدد التاريخ والوقت");
+      setBookingError(!patient ? "اكتب اسم المريض للبحث" : "حدد التاريخ والوقت");
       return;
     }
     setBookingLoading(true);
