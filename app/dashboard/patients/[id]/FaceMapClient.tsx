@@ -44,7 +44,7 @@ const ZONES: Zone[] = [
   { id: "l_nasolabial",   labelAr: "الطية الأنفية الشفوية — يسار", shape: "ellipse", cx: 384, cy: 378, rx: 26, ry: 50 },
   // ── Mouth ──
   { id: "upper_lip",      labelAr: "الشفة العليا",                 shape: "ellipse", cx: 300, cy: 510, rx: 65, ry: 22 },
-  { id: "lower_lip",      labelAr: "الشفة السفلى",                 shape: "ellipse", cx: 300, cy: 545, rx: 65, ry: 24 },
+  { id: "lower_lip",      labelAr: "الشفة السفلى",                 shape: "ellipse", cx: 300, cy: 535, rx: 65, ry: 22 },
   // ── Lower face ──
   { id: "r_marionette",   labelAr: "خطوط الدمية — يمين",           shape: "ellipse", cx: 218, cy: 488, rx: 22, ry: 36 },
   { id: "l_marionette",   labelAr: "خطوط الدمية — يسار",           shape: "ellipse", cx: 382, cy: 488, rx: 22, ry: 36 },
