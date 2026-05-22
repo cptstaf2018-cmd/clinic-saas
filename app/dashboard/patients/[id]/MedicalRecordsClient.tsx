@@ -439,6 +439,7 @@ function RecordForm({
   canUseFollowUp: boolean;
   specialtyConfig: SpecialtyConfig;
 }) {
+  const isAesthetic = specialtyConfig.code === "aesthetic";
   const field = (key: keyof Omit<FormState, "specialtyFields" | "vitals">) => ({
     value: form[key] as string,
     onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -466,7 +467,16 @@ function RecordForm({
         </p>
       )}
 
-      <VitalsBlock vitals={form.vitals} onChange={(v) => setForm({ ...form, vitals: v })} />
+      {isAesthetic && (
+        <div className="rounded-xl border border-violet-100 bg-white p-3">
+          <p className="text-sm font-black text-slate-950">توثيق إجراء تجميلي</p>
+          <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
+            سجّل الخدمة، المنطقة، المنتج، الجرعة، Batch/Lot، الموافقة، الصور، التعليمات، وخطة المراجعة.
+          </p>
+        </div>
+      )}
+
+      {!isAesthetic && <VitalsBlock vitals={form.vitals} onChange={(v) => setForm({ ...form, vitals: v })} />}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {specialtyConfig.encounterSections.map((section) => (
@@ -508,6 +518,12 @@ function RecordForm({
             dir="ltr"
           />
         </div>
+
+        {isAesthetic && (
+          <div className="sm:col-span-2">
+            <VitalsBlock vitals={form.vitals} onChange={(v) => setForm({ ...form, vitals: v })} compact />
+          </div>
+        )}
 
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium text-gray-500">الوصفة الطبية</label>
@@ -585,7 +601,7 @@ function RecordForm({
   );
 }
 
-function VitalsBlock({ vitals, onChange }: { vitals: Vitals; onChange: (v: Vitals) => void }) {
+function VitalsBlock({ vitals, onChange, compact = false }: { vitals: Vitals; onChange: (v: Vitals) => void; compact?: boolean }) {
   const bmi = vitals.weight && vitals.height
     ? (parseFloat(vitals.weight) / Math.pow(parseFloat(vitals.height) / 100, 2)).toFixed(1)
     : null;
@@ -602,7 +618,9 @@ function VitalsBlock({ vitals, onChange }: { vitals: Vitals; onChange: (v: Vital
 
   return (
     <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3">
-      <p className="mb-2.5 text-xs font-black text-blue-700 uppercase tracking-wide">💉 العلامات الحيوية</p>
+      <p className="mb-2.5 text-xs font-black text-blue-700 uppercase tracking-wide">
+        {compact ? "العلامات الحيوية عند الحاجة" : "💉 العلامات الحيوية"}
+      </p>
       <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
         {fields.map((f) => (
           <div key={f.key}>
@@ -617,8 +635,7 @@ function VitalsBlock({ vitals, onChange }: { vitals: Vitals; onChange: (v: Vital
           </div>
         ))}
       </div>
-      {/* Pain scale */}
-      <div className="mt-6">
+      <div className={compact ? "mt-6 hidden" : "mt-6"}>
         <div className="flex items-center justify-between mb-1.5">
           <p className="text-xs font-black text-slate-600">😣 مقياس الألم</p>
           <span className={`text-sm font-black ${parseInt(vitals.pain) >= 7 ? "text-red-600" : parseInt(vitals.pain) >= 4 ? "text-amber-600" : "text-emerald-600"}`}>
