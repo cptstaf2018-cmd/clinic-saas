@@ -143,9 +143,9 @@ export default function FaceMapClient({
       <div style={{
         position: "relative",
         width: "100%",
-        maxWidth: 420,
+        maxWidth: 680,
         margin: "0 auto",
-        paddingBottom: "125%", // 600×750 ratio
+        paddingBottom: "125%",
         borderRadius: 16,
         overflow: "hidden",
         border: "1px solid #e2e8f0",
