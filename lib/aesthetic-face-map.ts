@@ -45,5 +45,5 @@ export const AESTHETIC_FACE_ZONES: AestheticFaceZone[] = [
   { id: "chin", labelAr: "الذقن", shape: "ellipse", cx: 241, cy: 340, rx: 46, ry: 28 },
   { id: "r_jaw", labelAr: "زاوية الفك اليمنى", shape: "ellipse", cx: 178, cy: 330, rx: 34, ry: 42 },
   { id: "l_jaw", labelAr: "زاوية الفك اليسرى", shape: "ellipse", cx: 304, cy: 330, rx: 34, ry: 42 },
-  { id: "neck", labelAr: "منطقة الرقبة", shape: "ellipse", cx: 195, cy: 344, rx: 38, ry: 26 },
+  { id: "neck", labelAr: "منطقة الرقبة", shape: "ellipse", cx: 241, cy: 357, rx: 40, ry: 24 },
 ];
