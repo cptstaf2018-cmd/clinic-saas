@@ -298,7 +298,7 @@ export default function BodyAnnotationReport({
     const labelMap = new Map(FACE.map(r => [r.id, r.labelAr]));
     return (
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-        <ImageMap src="/face-map.jpg" vbW={600} vbH={750} regions={FACE} annotations={annotations} maxW={200} />
+        <ImageMap src="/face-map.jpg" vbW={600} vbH={800} regions={FACE} annotations={annotations} maxW={200} />
         <AnnList annotations={annotations} labelMap={labelMap} />
       </div>
     );
