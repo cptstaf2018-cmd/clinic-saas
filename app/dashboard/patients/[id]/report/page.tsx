@@ -16,6 +16,19 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "ملغي",
 };
 
+const MAP_REPORT_TITLE: Record<string, string> = {
+  aesthetic: "خريطة التجميل — الملاحظات",
+  dermatology: "خريطة الجلدية — الملاحظات",
+  orthopedics: "خريطة العظام — الملاحظات",
+  gynecology: "خريطة النسائية — الملاحظات",
+  ophthalmology: "خريطة العيون — الملاحظات",
+  cardiology: "خريطة القلب — الملاحظات",
+  internal_medicine: "خريطة الباطنية — الملاحظات",
+  pediatrics: "خريطة الأطفال — الملاحظات",
+  general_medicine: "خريطة الفحص — الملاحظات",
+  surgery: "خريطة الجراحة — الملاحظات",
+};
+
 function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
@@ -213,7 +226,9 @@ export default async function PatientReportPage({
 
         {hasBodyMap && bodyAnnotations.length > 0 && (
           <section className="mt-6 rounded-3xl border border-slate-200 p-5 break-inside-avoid">
-            <h2 className="mb-4 text-base font-black text-slate-950">🗺️ خريطة التشريح — الملاحظات</h2>
+            <h2 className="mb-4 text-base font-black text-slate-950">
+              {MAP_REPORT_TITLE[specialtyConfig.code] ?? `خريطة ${specialtyConfig.nameAr} — الملاحظات`}
+            </h2>
             {isPediatric ? (
               <PediatricBodyReport
                 annotations={bodyAnnotations.map(a => ({
