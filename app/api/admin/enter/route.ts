@@ -9,7 +9,7 @@ function appUrl(path: string) {
     process.env.NEXT_PUBLIC_APP_URL ??
     process.env.AUTH_URL ??
     process.env.NEXTAUTH_URL ??
-    "http://localhost:3000";
+    "https://www.clinic-ai-pro.com";
   return new URL(path, base);
 }
 
