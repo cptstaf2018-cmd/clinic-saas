@@ -70,7 +70,9 @@ export default function AppointmentsPage() {
   const [bookingTime, setBookingTime] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState("");
-  const [slotWarning, setSlotWarning] = useState("");
+  const [availableSlots, setAvailableSlots] = useState<{ value: string; label: string }[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [dayClosed, setDayClosed] = useState(false);
 
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
@@ -118,18 +120,19 @@ export default function AppointmentsPage() {
     return () => clearTimeout(t);
   }, [patientSearch]);
 
-  async function checkSlot(date: string, time: string) {
-    if (!date || !time) { setSlotWarning(""); return; }
+  async function fetchSlots(date: string) {
+    if (!date) { setAvailableSlots([]); return; }
+    setSlotsLoading(true);
+    setDayClosed(false);
+    setBookingTime("");
     try {
-      const dateTime = new Date(`${date}T${time}`).toISOString();
-      const res = await fetch(`/api/appointments/check-slot?date=${encodeURIComponent(dateTime)}`);
-      if (res.status === 409) {
+      const res = await fetch(`/api/appointments/available-slots?date=${date}`);
+      if (res.ok) {
         const data = await res.json();
-        setSlotWarning(data.error ?? "هذا الوقت محجوز");
-      } else {
-        setSlotWarning("");
+        setAvailableSlots(data.slots ?? []);
+        setDayClosed(!!data.closed);
       }
-    } catch { setSlotWarning(""); }
+    } finally { setSlotsLoading(false); }
   }
 
   async function handleBooking() {
@@ -180,7 +183,8 @@ export default function AppointmentsPage() {
       setPatientSearch("");
       setBookingDate("");
       setBookingTime("");
-      setSlotWarning("");
+      setAvailableSlots([]);
+      setDayClosed(false);
       fetchAppointments();
     }
     setBookingLoading(false);
@@ -409,25 +413,40 @@ export default function AppointmentsPage() {
                   <input
                     type="date"
                     value={bookingDate}
-                    onChange={(e) => { setBookingDate(e.target.value); checkSlot(e.target.value, bookingTime); }}
+                    onChange={(e) => { setBookingDate(e.target.value); fetchSlots(e.target.value); }}
                     className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                   />
                 </div>
 
-                <div>
-                  <label className="text-sm font-black text-slate-700">الوقت</label>
-                  <input
-                    type="time"
-                    value={bookingTime}
-                    onChange={(e) => { setBookingTime(e.target.value); checkSlot(bookingDate, e.target.value); }}
-                    className={`mt-1 w-full rounded-2xl border px-4 py-3 text-sm font-bold outline-none focus:ring-4 ${slotWarning ? "border-amber-400 bg-amber-50 focus:ring-amber-100" : "border-slate-200 bg-slate-50 focus:border-blue-300 focus:ring-blue-100"}`}
-                  />
-                  {slotWarning && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-black text-amber-700">
-                      ⚠️ {slotWarning}
-                    </p>
-                  )}
-                </div>
+                {bookingDate && (
+                  <div>
+                    <label className="text-sm font-black text-slate-700">الأوقات المتاحة</label>
+                    {slotsLoading ? (
+                      <p className="mt-2 text-xs font-bold text-slate-400">جاري التحميل...</p>
+                    ) : dayClosed ? (
+                      <p className="mt-2 text-xs font-black text-red-500">العيادة مغلقة في هذا اليوم</p>
+                    ) : availableSlots.length === 0 ? (
+                      <p className="mt-2 text-xs font-black text-amber-600">لا تتوفر أوقات في هذا اليوم</p>
+                    ) : (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {availableSlots.map(slot => (
+                          <button
+                            key={slot.value}
+                            type="button"
+                            onClick={() => setBookingTime(slot.value)}
+                            className={`rounded-xl px-4 py-2 text-sm font-black transition ${
+                              bookingTime === slot.value
+                                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                                : "bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+                            }`}
+                          >
+                            {slot.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {bookingError && <p className="text-sm font-black text-red-600">{bookingError}</p>}
 
