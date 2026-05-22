@@ -1,3 +1,4 @@
+import { aestheticConfig } from "./aesthetic";
 import { cardiologyConfig } from "./cardiology";
 import { dentalConfig } from "./dental";
 import { dermatologyConfig } from "./dermatology";
@@ -12,6 +13,7 @@ import type { SpecialtyConfig } from "./types";
 export type { DashboardWidget, DocumentType, EncounterSection, SpecialtyConfig } from "./types";
 
 export const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
+  [aestheticConfig.code]: aestheticConfig,
   [dentalConfig.code]: dentalConfig,
   [pediatricsConfig.code]: pediatricsConfig,
   [obgynConfig.code]: obgynConfig,
@@ -24,8 +26,13 @@ export const SPECIALTY_CONFIGS: Record<string, SpecialtyConfig> = {
 };
 
 const SPECIALTY_ALIASES: Record<string, string> = {
+  aesthetic: "aesthetic",
+  aesthetics: "aesthetic",
+  cosmetic: "aesthetic",
   dental: "dentistry",
   dentistry: "dentistry",
+  general: "internal_medicine",
+  general_medicine: "internal_medicine",
   obgyn: "gynecology",
   gynecology: "gynecology",
   internalMedicine: "internal_medicine",

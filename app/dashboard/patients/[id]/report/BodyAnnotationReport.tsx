@@ -272,8 +272,8 @@ export default function BodyAnnotationReport({
 }) {
   if (annotations.length === 0) return null;
 
-  // ── DERMATOLOGY ────────────────────────────────────────────────────────────
-  if (specialtyCode === "dermatology") {
+  // ── DERMATOLOGY / AESTHETIC ────────────────────────────────────────────────
+  if (specialtyCode === "dermatology" || specialtyCode === "aesthetic") {
     const labelMap = new Map(DERM.map(r => [r.id, r.labelAr]));
     return (
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>

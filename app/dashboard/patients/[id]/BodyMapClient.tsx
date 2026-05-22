@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
-const LESION_TYPES = [
+const DERMATOLOGY_MARKERS = [
   { key: "rash",      labelAr: "طفح جلدي",   color: "#f59e0b" },
   { key: "acne",      labelAr: "حبوب أكني",   color: "#ef4444" },
   { key: "eczema",    labelAr: "إكزيما",       color: "#8b5cf6" },
@@ -13,6 +13,17 @@ const LESION_TYPES = [
   { key: "pigment",   labelAr: "تصبغ",         color: "#92400e" },
   { key: "allergy",   labelAr: "حساسية",       color: "#10b981" },
   { key: "other",     labelAr: "أخرى",         color: "#6b7280" },
+];
+
+const AESTHETIC_MARKERS = [
+  { key: "botox",       labelAr: "بوتوكس",        color: "#2563eb" },
+  { key: "filler",      labelAr: "فيلر",          color: "#7c3aed" },
+  { key: "laser",       labelAr: "ليزر",          color: "#dc2626" },
+  { key: "prp",         labelAr: "PRP",           color: "#059669" },
+  { key: "peel",        labelAr: "تقشير",         color: "#ea580c" },
+  { key: "mesotherapy", labelAr: "ميزوثيرابي",    color: "#0891b2" },
+  { key: "scar",        labelAr: "ندبة",          color: "#475569" },
+  { key: "other",       labelAr: "أخرى",          color: "#6b7280" },
 ];
 
 // Image: 960×1118 — front body on LEFT (X 0-480), back body on RIGHT (X 480-960)
@@ -98,6 +109,11 @@ export default function BodyMapClient({
 
   const selRegion = REGIONS.find((r) => r.id === selected);
   const selAnn    = annotations.find((a) => a.regionId === selected) ?? null;
+  const markerTypes = specialtyCode === "aesthetic" ? AESTHETIC_MARKERS : DERMATOLOGY_MARKERS;
+  const introText =
+    specialtyCode === "aesthetic"
+      ? "حدد منطقة الإجراء التجميلي أو الجلسة — الأمامي على اليسار، الخلفي على اليمين"
+      : "انقر على أي منطقة من الجسم لتأشير الإصابة الجلدية — الأمامي على اليسار، الخلفي على اليمين";
 
   function labelX(r: Region) { return r.shape === "ellipse" ? r.cx : r.x + r.w / 2; }
   function labelY(r: Region) { return r.shape === "ellipse" ? r.cy - r.ry - 14 : r.y - 14; }
@@ -110,7 +126,7 @@ export default function BodyMapClient({
 
   async function saveAnnotation(key: string) {
     if (!selected) return;
-    const lesion = LESION_TYPES.find((l) => l.key === key)!;
+    const lesion = markerTypes.find((l) => l.key === key)!;
     setSaving(true);
     const res = await fetch(`/api/patients/${patientId}/annotations`, {
       method: "POST",
@@ -143,7 +159,7 @@ export default function BodyMapClient({
   return (
     <div dir="rtl">
       <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 10, fontWeight: 700 }}>
-        🩹 انقر على أي منطقة من الجسم لتأشير الإصابة الجلدية — الأمامي على اليسار، الخلفي على اليمين
+        {introText}
       </p>
 
       {/* Image + SVG overlay */}
@@ -199,7 +215,7 @@ export default function BodyMapClient({
 
       {/* Legend */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-        {LESION_TYPES.map((t) => (
+        {markerTypes.map((t) => (
           <span key={t.key} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "#475569" }}>
             <span style={{ width: 11, height: 11, borderRadius: 3, background: t.color, display: "inline-block" }} />
             {t.labelAr}
@@ -211,10 +227,10 @@ export default function BodyMapClient({
       {selected && selRegion && (
         <div style={{ marginTop: 14, background: "white", borderRadius: 14, border: "1.5px solid #dbeafe", padding: 16 }}>
           <p style={{ fontSize: 13, fontWeight: 900, color: "#1e3a8a", marginBottom: 10 }}>
-            {selRegion.labelAr} — اختر نوع الإصابة:
+            {selRegion.labelAr} — اختر نوع العلامة:
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
-            {LESION_TYPES.map((t) => (
+            {markerTypes.map((t) => (
               <button key={t.key} onClick={() => saveAnnotation(t.key)} disabled={saving}
                 style={{
                   padding: "6px 14px", borderRadius: 20, background: t.color,
@@ -246,7 +262,7 @@ export default function BodyMapClient({
           <p style={{ fontSize: 12, fontWeight: 900, color: "#64748b", marginBottom: 8 }}>ملخص الإصابات:</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {annotations.map((a) => {
-              const lesion = LESION_TYPES.find((l) => l.key === a.label);
+              const lesion = markerTypes.find((l) => l.key === a.label);
               const region = REGIONS.find((r) => r.id === a.regionId);
               return (
                 <span key={a.id} style={{

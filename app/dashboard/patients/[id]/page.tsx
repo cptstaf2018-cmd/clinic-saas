@@ -85,7 +85,7 @@ export default async function PatientProfilePage({
   const hasDentalChart = canUseFeature(subscription?.plan, "dentalChart");
   const hasSpecialtyMap = canUseFeature(subscription?.plan, "specialtyMap");
 
-  const isAnnotationSpecialty = ["dermatology", "orthopedics"].includes(specialtyConfig.code);
+  const isAnnotationSpecialty = ["dermatology", "orthopedics", "aesthetic"].includes(specialtyConfig.code);
 
   const [toothTreatments, specialtyAnnotations] = await Promise.all([
     isDental && hasDentalChart
@@ -248,6 +248,7 @@ export default async function PatientProfilePage({
         {specialtyConfig.code !== "dentistry" && (() => {
           const SPECIALTY_META: Record<string, { icon: string; title: string; subtitle: string }> = {
             dermatology:      { icon: "🩹", title: "خريطة الجسم التفاعلية",    subtitle: "انقر على أي منطقة لتأشير الإصابة الجلدية" },
+            aesthetic:        { icon: "✨", title: "خريطة التجميل",             subtitle: "حدد مناطق الحقن أو الليزر أو الجلسات التجميلية" },
             orthopedics:      { icon: "🦴", title: "خريطة الهيكل العظمي",      subtitle: "انقر على أي عظمة أو مفصل لتحديد الحالة" },
             pediatrics:       { icon: "👶", title: "متابعة النمو والتطعيمات",  subtitle: "منحنى الوزن والطول + جدول التطعيمات + حاسبة الجرعات" },
             gynecology:       { icon: "🤰", title: "متابعة الحمل",             subtitle: "حاسبة الحمل وعمر الجنين وجدول الزيارات" },
@@ -286,6 +287,23 @@ export default async function PatientProfilePage({
                     <div className="py-8 text-center">
                       <p className="text-2xl mb-2">🩹</p>
                       <p className="text-sm font-black text-slate-500">خريطة الجسم التفاعلية متاحة في الخطة المميزة</p>
+                    </div>
+                  )
+                )}
+                {specialtyConfig.code === "aesthetic" && (
+                  hasSpecialtyMap ? (
+                    <BodyMapClient
+                      patientId={patient.id}
+                      specialtyCode="aesthetic"
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        id: a.id, regionId: a.regionId, label: a.label,
+                        color: a.color, notes: a.notes,
+                      }))}
+                    />
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-2xl mb-2">✨</p>
+                      <p className="text-sm font-black text-slate-500">خريطة التجميل التفاعلية متاحة في الخطة المميزة</p>
                     </div>
                   )
                 )}

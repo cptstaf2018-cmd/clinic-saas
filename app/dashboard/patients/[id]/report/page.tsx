@@ -73,7 +73,7 @@ export default async function PatientReportPage({
 
   const isDental     = specialtyConfig.code === "dentistry";
   const isPediatric  = specialtyConfig.code === "pediatrics";
-  const HAS_BODY_MAP = ["dermatology","orthopedics","gynecology","ophthalmology","cardiology","internal_medicine","pediatrics"];
+  const HAS_BODY_MAP = ["dermatology","aesthetic","orthopedics","gynecology","ophthalmology","cardiology","internal_medicine","pediatrics"];
   const hasBodyMap   = HAS_BODY_MAP.includes(specialtyConfig.code);
 
   const [toothTreatments, bodyAnnotations] = await Promise.all([
