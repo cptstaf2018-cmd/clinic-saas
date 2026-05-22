@@ -109,24 +109,6 @@ export default function ToothChartClient({
 
   return (
     <div dir="rtl">
-      {/* زر طباعة مع ملف المريض */}
-      <div style={{ marginBottom: 12 }}>
-        <a
-          href={`/dashboard/patients/${patientId}/report`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "8px 18px", borderRadius: 20,
-            background: "#1e293b", color: "white",
-            fontSize: 12, fontWeight: 800,
-            textDecoration: "none",
-          }}
-        >
-          📄 طباعة مع ملف المريض
-        </a>
-      </div>
-
       {/* الخريطة التفاعلية */}
       <div style={{ position: "relative", width: "100%", borderRadius: 12, overflow: "hidden", border: "1px solid #e2e8f0" }}>
         {/* صورة T1 — نعرض 75% من الصورة (الأسنان فقط بدون التشريح) */}
