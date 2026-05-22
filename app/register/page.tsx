@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   CalendarCheck,
   Check,
-  CheckCircle2,
   Clock3,
   KeyRound,
   LockKeyhole,
@@ -16,7 +15,6 @@ import {
   Phone,
   Plus,
   Send,
-  ShieldCheck,
   Sparkles,
   Stethoscope,
   UsersRound,
@@ -200,15 +198,6 @@ function ProductPreview() {
   );
 }
 
-function TrustBadge({ icon: Icon, text }: { icon: typeof ShieldCheck; text: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-lg border border-[#d8e4f3] bg-white/70 px-3 py-2 text-xs font-extrabold text-[#415673]">
-      <Icon className="h-4 w-4 text-[#2f80ed]" />
-      {text}
-    </span>
-  );
-}
-
 type RegisterFormProps = {
   regType: VerificationType;
   setRegType: (v: VerificationType) => void;
@@ -255,7 +244,7 @@ function RegisterForm({
       </div>
 
       <div>
-        <label className={labelClass}>طريقة التحقق</label>
+        <label className={labelClass}>اختر طريقة التحقق</label>
         <div className="grid grid-cols-2 gap-1 rounded-lg border border-[#dbe6f3] bg-[#edf3fb] p-1">
           <button
             type="button"
@@ -286,7 +275,7 @@ function RegisterForm({
 
       {regType === "phone" && (
         <div>
-          <label className={labelClass}>رقم واتساب العيادة</label>
+          <label className={labelClass}>رقم الهاتف</label>
           <div className="relative">
             <MessageCircle className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
             <input
@@ -307,7 +296,7 @@ function RegisterForm({
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#10b981] py-2.5 text-sm font-black text-white shadow-[0_12px_26px_rgba(16,185,129,0.24)] transition hover:bg-[#0ea371] disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
-            {sendingCode ? "جاري الإرسال..." : "أرسل الكود على واتساب"}
+            {sendingCode ? "جاري الإرسال..." : "إرسال الكود"}
           </button>
           {codeMsg && <p className={`mt-2 text-xs font-bold ${codeMsg.ok ? "text-emerald-600" : "text-red-500"}`}>{codeMsg.text}</p>}
         </div>
@@ -315,7 +304,7 @@ function RegisterForm({
 
       {regType === "email" && (
         <div>
-          <label className={labelClass}>إيميل العيادة</label>
+          <label className={labelClass}>البريد الإلكتروني</label>
           <div className="relative">
             <Mail className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
             <input
@@ -329,7 +318,6 @@ function RegisterForm({
               dir="ltr"
             />
           </div>
-          <p className="mt-1.5 text-xs font-bold text-[#7c91ad]">سيستخدم للدخول واستلام التنبيهات المهمة.</p>
           <button
             type="button"
             onClick={handleRequestEmailCode}
@@ -337,7 +325,7 @@ function RegisterForm({
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#2f80ed] py-2.5 text-sm font-black text-white shadow-[0_12px_26px_rgba(47,128,237,0.28)] transition hover:bg-[#256bd0] disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
-            {sendingEmail ? "جاري الإرسال..." : "أرسل الكود على الإيميل"}
+            {sendingEmail ? "جاري الإرسال..." : "إرسال الكود"}
           </button>
           {emailMsg && <p className={`mt-2 text-xs font-bold ${emailMsg.ok ? "text-emerald-600" : "text-red-500"}`}>{emailMsg.text}</p>}
         </div>
@@ -345,7 +333,7 @@ function RegisterForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={labelClass}>{regType === "phone" ? "كود التحقق من واتساب" : "كود التحقق من الإيميل"}</label>
+          <label className={labelClass}>كود التحقق</label>
           <div className="relative">
             <KeyRound className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
             <input
@@ -484,7 +472,7 @@ export default function RegisterPage() {
       <div className="flex min-h-screen w-full overflow-x-hidden">
         <ProductPreview />
 
-        <section className="relative flex w-full min-w-0 items-start justify-center overflow-hidden bg-[#eaf1f9] px-4 py-8 lg:w-[44%] lg:px-8">
+        <section className="relative flex w-full min-w-0 items-center justify-center overflow-hidden bg-[#eaf1f9] px-4 py-8 lg:w-[44%] lg:px-8">
           <div
             className="absolute inset-0 opacity-60 lg:hidden"
             style={{
@@ -508,31 +496,16 @@ export default function RegisterPage() {
               </span>
             </div>
 
-            <div className="rounded-lg border border-white/70 bg-white/75 p-5 shadow-[0_26px_90px_rgba(28,52,92,0.18)] backdrop-blur-2xl sm:p-6">
+            <div className="rounded-lg border border-white/80 bg-white p-5 shadow-[0_22px_70px_rgba(28,52,92,0.14)] sm:p-6">
               <div className="text-center">
-                <div className="mb-4 flex justify-center">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#0f1f3d] text-white shadow-[0_16px_34px_rgba(15,31,61,0.18)]">
-                    <Stethoscope className="h-6 w-6" />
-                  </span>
-                </div>
                 <div className="min-w-0">
-                  <p className="mb-3 inline-flex items-center gap-2 rounded-lg bg-[#e8f2ff] px-3 py-1.5 text-xs font-black text-[#2f6fe4]">
-                    <CheckCircle2 className="h-4 w-4" />
-                    التسجيل الرسمي للعيادات
-                  </p>
                   <h1 className="max-w-full text-2xl font-black leading-tight text-[#0f1f3d] sm:text-3xl">
-                    ابدأ تجربتك المجانية
+                    تسجيل عيادة جديدة
                   </h1>
-                  <p className="mt-2 max-w-sm text-sm font-bold leading-6 text-[#61728a]">
-                    أنشئ حساب عيادتك الآن وشاهد نظام المواعيد والواتساب من الداخل خلال دقيقة.
+                  <p className="mx-auto mt-2 max-w-sm text-sm font-bold leading-6 text-[#61728a]">
+                    اختر رقم الهاتف أو البريد الإلكتروني، أرسل الكود، ثم فعّل حسابك.
                   </p>
                 </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <TrustBadge icon={ShieldCheck} text="بدون بطاقة ائتمان" />
-                <TrustBadge icon={Clock3} text="إعداد خلال دقيقة" />
-                <TrustBadge icon={CheckCircle2} text="14 يوم تجربة" />
               </div>
 
               <RegisterForm
