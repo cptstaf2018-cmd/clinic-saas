@@ -94,7 +94,7 @@ export default function PatientInfoCard({
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <div>
-          <h2 className="text-base font-black text-slate-950">🩺 الملف الطبي الدائم</h2>
+          <h2 className="text-base font-black text-slate-950">🩺 الملف الدائم</h2>
           <p className="text-xs font-bold text-slate-400 mt-0.5">معلومات ثابتة — فصيلة الدم، الحساسية، الأمراض المزمنة</p>
         </div>
         {!editing && (
@@ -110,7 +110,7 @@ export default function PatientInfoCard({
           !hasData ? (
             <div className="py-6 text-center">
               <p className="text-2xl mb-2">📋</p>
-              <p className="text-sm font-black text-slate-400">لم تُضف بيانات الملف الطبي الدائم بعد</p>
+              <p className="text-sm font-black text-slate-400">لم تُضف بيانات الملف الدائم بعد</p>
               <button onClick={startEdit}
                 className="mt-3 rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700">
                 إضافة الآن

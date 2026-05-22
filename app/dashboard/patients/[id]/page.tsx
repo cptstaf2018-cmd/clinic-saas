@@ -371,7 +371,7 @@ export default async function PatientProfilePage({
           {/* Visits */}
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <h2 className="text-base font-black text-slate-950">تاريخ الزيارات</h2>
+              <h2 className="text-base font-black text-slate-950">سجل الزيارات</h2>
               <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-black text-slate-500">
                 {arabicNumber(patient.appointments.length)}
               </span>
