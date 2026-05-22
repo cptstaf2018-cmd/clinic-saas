@@ -26,7 +26,7 @@ export const AESTHETIC_FACE_IMAGE = {
 // face-map.png is 490x477. Coordinates are aligned to the labeled cosmetic
 // landmarks in the image.
 export const AESTHETIC_FACE_ZONES: AestheticFaceZone[] = [
-  { id: "forehead", labelAr: "منطقة الجبهة", shape: "ellipse", cx: 210, cy: 130, rx: 58, ry: 32 },
+  { id: "forehead", labelAr: "منطقة الجبهة", shape: "ellipse", cx: 235, cy: 138, rx: 45, ry: 24 },
   { id: "brow_lift", labelAr: "رفع الحاجب", shape: "ellipse", cx: 316, cy: 156, rx: 42, ry: 22 },
   { id: "glabella", labelAr: "بين الحاجبين", shape: "ellipse", cx: 241, cy: 184, rx: 34, ry: 18 },
   { id: "r_crow", labelAr: "حول العين اليمنى", shape: "ellipse", cx: 158, cy: 190, rx: 44, ry: 26 },
@@ -38,12 +38,12 @@ export const AESTHETIC_FACE_ZONES: AestheticFaceZone[] = [
   { id: "nose", labelAr: "الأنف", shape: "ellipse", cx: 241, cy: 260, rx: 28, ry: 42 },
   { id: "r_nasolabial", labelAr: "خطوط الابتسامة اليمنى", shape: "ellipse", cx: 202, cy: 287, rx: 20, ry: 34 },
   { id: "l_nasolabial", labelAr: "خطوط الابتسامة اليسرى", shape: "ellipse", cx: 280, cy: 287, rx: 20, ry: 34 },
-  { id: "upper_lip", labelAr: "الشفة العليا", shape: "ellipse", cx: 241, cy: 297, rx: 45, ry: 10 },
-  { id: "lower_lip", labelAr: "الشفة السفلى", shape: "ellipse", cx: 241, cy: 315, rx: 44, ry: 12 },
+  { id: "upper_lip", labelAr: "الشفة العليا", shape: "ellipse", cx: 241, cy: 296, rx: 42, ry: 8 },
+  { id: "lower_lip", labelAr: "الشفة السفلى", shape: "ellipse", cx: 241, cy: 310, rx: 42, ry: 10 },
   { id: "r_marionette", labelAr: "خط الماريونيت الأيمن", shape: "ellipse", cx: 206, cy: 324, rx: 18, ry: 28 },
   { id: "l_marionette", labelAr: "خط الماريونيت الأيسر", shape: "ellipse", cx: 276, cy: 324, rx: 18, ry: 28 },
   { id: "chin", labelAr: "الذقن", shape: "ellipse", cx: 241, cy: 340, rx: 46, ry: 28 },
   { id: "r_jaw", labelAr: "زاوية الفك اليمنى", shape: "ellipse", cx: 178, cy: 330, rx: 34, ry: 42 },
   { id: "l_jaw", labelAr: "زاوية الفك اليسرى", shape: "ellipse", cx: 304, cy: 330, rx: 34, ry: 42 },
-  { id: "neck", labelAr: "منطقة الرقبة", shape: "ellipse", cx: 195, cy: 365, rx: 46, ry: 34 },
+  { id: "neck", labelAr: "منطقة الرقبة", shape: "ellipse", cx: 195, cy: 344, rx: 38, ry: 26 },
 ];
