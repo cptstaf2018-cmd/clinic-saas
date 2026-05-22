@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 
 // Photo credit: Aleksandar Andreev via Pexels (free to use)
-// Image: 800×1068px portrait, face centered ~X:240-560, hairline ~Y:340, chin ~Y:850
+// Image: 600×750px face-cropped, face centered X:100-500, forehead ~Y:60, chin ~Y:560
 
 const FACE_MARKERS = [
   { key: "botox",    labelAr: "بوتوكس",           color: "#2563eb" },
@@ -17,8 +17,7 @@ const FACE_MARKERS = [
   { key: "other",    labelAr: "أخرى",              color: "#6b7280" },
 ];
 
-// SVG viewBox matches image aspect ratio 800×1068
-// Face occupies roughly: X 220-580, Y 330-900
+// SVG viewBox: 0 0 600 750 — face crop, center X=300
 // Patient right = screen LEFT (standard medical convention)
 type Zone = {
   id: string;
@@ -30,30 +29,30 @@ type Zone = {
 
 const ZONES: Zone[] = [
   // ── Upper face ──
-  { id: "forehead",       labelAr: "الجبهة",                     shape: "rect",    x: 250, y: 330, w: 300, h: 90,  rx: 20 },
-  { id: "glabella",       labelAr: "بين الحاجبين (خطوط الغضب)",  shape: "ellipse", cx: 400, cy: 450, rx: 50, ry: 28 },
+  { id: "forehead",       labelAr: "الجبهة",                      shape: "rect",    x: 148, y: 55,  w: 304, h: 100, rx: 18 },
+  { id: "glabella",       labelAr: "بين الحاجبين (خطوط الغضب)",   shape: "ellipse", cx: 300, cy: 195, rx: 48, ry: 26 },
   // ── Eyes ──
-  { id: "r_crows_feet",   labelAr: "أرجل الغراب — يمين",         shape: "ellipse", cx: 248, cy: 480, rx: 48, ry: 28 },
-  { id: "l_crows_feet",   labelAr: "أرجل الغراب — يسار",         shape: "ellipse", cx: 552, cy: 480, rx: 48, ry: 28 },
-  { id: "r_under_eye",    labelAr: "تحت العين — يمين",            shape: "ellipse", cx: 295, cy: 518, rx: 52, ry: 22 },
-  { id: "l_under_eye",    labelAr: "تحت العين — يسار",            shape: "ellipse", cx: 505, cy: 518, rx: 52, ry: 22 },
+  { id: "r_crows_feet",   labelAr: "أرجل الغراب — يمين",          shape: "ellipse", cx: 148, cy: 225, rx: 46, ry: 26 },
+  { id: "l_crows_feet",   labelAr: "أرجل الغراب — يسار",          shape: "ellipse", cx: 452, cy: 225, rx: 46, ry: 26 },
+  { id: "r_under_eye",    labelAr: "تحت العين — يمين",             shape: "ellipse", cx: 198, cy: 258, rx: 52, ry: 20 },
+  { id: "l_under_eye",    labelAr: "تحت العين — يسار",             shape: "ellipse", cx: 402, cy: 258, rx: 52, ry: 20 },
   // ── Mid face ──
-  { id: "r_cheek",        labelAr: "الخد الأيمن",                 shape: "ellipse", cx: 240, cy: 610, rx: 62, ry: 65 },
-  { id: "l_cheek",        labelAr: "الخد الأيسر",                 shape: "ellipse", cx: 560, cy: 610, rx: 62, ry: 65 },
-  { id: "nose",           labelAr: "الأنف / خطوط الأرنبة",       shape: "ellipse", cx: 400, cy: 590, rx: 38, ry: 50 },
-  { id: "r_nasolabial",   labelAr: "الطية الأنفية الشفوية — يمين", shape: "ellipse", cx: 308, cy: 648, rx: 28, ry: 52 },
-  { id: "l_nasolabial",   labelAr: "الطية الأنفية الشفوية — يسار", shape: "ellipse", cx: 492, cy: 648, rx: 28, ry: 52 },
+  { id: "r_cheek",        labelAr: "الخد الأيمن",                  shape: "ellipse", cx: 150, cy: 350, rx: 58, ry: 65 },
+  { id: "l_cheek",        labelAr: "الخد الأيسر",                  shape: "ellipse", cx: 450, cy: 350, rx: 58, ry: 65 },
+  { id: "nose",           labelAr: "الأنف / خطوط الأرنبة",        shape: "ellipse", cx: 300, cy: 330, rx: 36, ry: 48 },
+  { id: "r_nasolabial",   labelAr: "الطية الأنفية الشفوية — يمين", shape: "ellipse", cx: 216, cy: 378, rx: 26, ry: 50 },
+  { id: "l_nasolabial",   labelAr: "الطية الأنفية الشفوية — يسار", shape: "ellipse", cx: 384, cy: 378, rx: 26, ry: 50 },
   // ── Mouth ──
-  { id: "upper_lip",      labelAr: "الشفة العليا",                shape: "ellipse", cx: 400, cy: 710, rx: 68, ry: 24 },
-  { id: "lower_lip",      labelAr: "الشفة السفلى",                shape: "ellipse", cx: 400, cy: 748, rx: 68, ry: 26 },
+  { id: "upper_lip",      labelAr: "الشفة العليا",                 shape: "ellipse", cx: 300, cy: 445, rx: 65, ry: 22 },
+  { id: "lower_lip",      labelAr: "الشفة السفلى",                 shape: "ellipse", cx: 300, cy: 478, rx: 65, ry: 24 },
   // ── Lower face ──
-  { id: "r_marionette",   labelAr: "خطوط الدمية — يمين",          shape: "ellipse", cx: 318, cy: 760, rx: 24, ry: 38 },
-  { id: "l_marionette",   labelAr: "خطوط الدمية — يسار",          shape: "ellipse", cx: 482, cy: 760, rx: 24, ry: 38 },
-  { id: "chin",           labelAr: "الذقن",                       shape: "ellipse", cx: 400, cy: 820, rx: 62, ry: 40 },
-  { id: "r_jaw",          labelAr: "الفك / الماستر — يمين",       shape: "ellipse", cx: 228, cy: 730, rx: 48, ry: 58 },
-  { id: "l_jaw",          labelAr: "الفك / الماستر — يسار",       shape: "ellipse", cx: 572, cy: 730, rx: 48, ry: 58 },
+  { id: "r_marionette",   labelAr: "خطوط الدمية — يمين",           shape: "ellipse", cx: 218, cy: 488, rx: 22, ry: 36 },
+  { id: "l_marionette",   labelAr: "خطوط الدمية — يسار",           shape: "ellipse", cx: 382, cy: 488, rx: 22, ry: 36 },
+  { id: "chin",           labelAr: "الذقن",                        shape: "ellipse", cx: 300, cy: 545, rx: 58, ry: 38 },
+  { id: "r_jaw",          labelAr: "الفك / الماستر — يمين",        shape: "ellipse", cx: 140, cy: 450, rx: 45, ry: 56 },
+  { id: "l_jaw",          labelAr: "الفك / الماستر — يسار",        shape: "ellipse", cx: 460, cy: 450, rx: 45, ry: 56 },
   // ── Neck ──
-  { id: "neck",           labelAr: "الرقبة / الأشرطة الرقبية",   shape: "rect",    x: 318, y: 890, w: 164, h: 65, rx: 22 },
+  { id: "neck",           labelAr: "الرقبة / الأشرطة الرقبية",    shape: "rect",    x: 220, y: 610, w: 160, h: 60, rx: 20 },
 ];
 
 type Annotation = { id: string; regionId: string; label: string; color: string; notes: string | null };
@@ -146,7 +145,7 @@ export default function FaceMapClient({
         width: "100%",
         maxWidth: 420,
         margin: "0 auto",
-        paddingBottom: "133.5%", // 800×1068 ratio
+        paddingBottom: "125%", // 600×750 ratio
         borderRadius: 16,
         overflow: "hidden",
         border: "1px solid #e2e8f0",
@@ -156,11 +155,11 @@ export default function FaceMapClient({
           src="/face-map.jpg"
           alt="خريطة الوجه للتجميل"
           fill
-          style={{ objectFit: "cover", objectPosition: "center top" }}
+          style={{ objectFit: "cover", objectPosition: "center center" }}
           priority
         />
         <svg
-          viewBox="0 0 800 1068"
+          viewBox="0 0 600 750"
           style={{
             position: "absolute", inset: 0,
             width: "100%", height: "100%",
