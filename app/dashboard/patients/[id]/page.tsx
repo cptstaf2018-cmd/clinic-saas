@@ -6,6 +6,7 @@ import MedicalRecordsClient from "./MedicalRecordsClient";
 import PatientAttachmentsClient from "./PatientAttachmentsClient";
 import ToothChartClient from "./ToothChartClient";
 import BodyMapClient from "./BodyMapClient";
+import FaceMapClient from "./FaceMapClient";
 import SkeletonMapClient from "./SkeletonMapClient";
 import GrowthChartClient from "./GrowthChartClient";
 import PregnancyTrackerClient from "./PregnancyTrackerClient";
@@ -294,9 +295,8 @@ export default async function PatientProfilePage({
                 )}
                 {specialtyConfig.code === "aesthetic" && (
                   hasSpecialtyMap ? (
-                    <BodyMapClient
+                    <FaceMapClient
                       patientId={patient.id}
-                      specialtyCode="aesthetic"
                       initialAnnotations={specialtyAnnotations.map((a) => ({
                         id: a.id, regionId: a.regionId, label: a.label,
                         color: a.color, notes: a.notes,
@@ -305,7 +305,7 @@ export default async function PatientProfilePage({
                   ) : (
                     <div className="py-8 text-center">
                       <p className="text-2xl mb-2">✨</p>
-                      <p className="text-sm font-black text-slate-500">خريطة التجميل التفاعلية متاحة في الخطة المميزة</p>
+                      <p className="text-sm font-black text-slate-500">خريطة الوجه التفاعلية متاحة في الخطة المميزة</p>
                     </div>
                   )
                 )}
