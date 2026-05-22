@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import {
   AESTHETIC_FACE_MARKERS,
+  AESTHETIC_FACE_IMAGE,
   AESTHETIC_FACE_ZONES,
   type AestheticFaceZone,
 } from "@/lib/aesthetic-face-map";
@@ -98,21 +99,21 @@ export default function FaceMapClient({
         width: "100%",
         maxWidth: 680,
         margin: "0 auto",
-        paddingBottom: "133.33%",
+        paddingBottom: `${(AESTHETIC_FACE_IMAGE.height / AESTHETIC_FACE_IMAGE.width) * 100}%`,
         borderRadius: 16,
         overflow: "hidden",
         border: "1px solid #e2e8f0",
         background: "#fff",
       }}>
         <Image
-          src="/face-map.jpg"
+          src={AESTHETIC_FACE_IMAGE.src}
           alt="خريطة الوجه للتجميل"
           fill
           style={{ objectFit: "contain", objectPosition: "center center" }}
           priority
         />
         <svg
-          viewBox="0 0 600 800"
+          viewBox={`0 0 ${AESTHETIC_FACE_IMAGE.width} ${AESTHETIC_FACE_IMAGE.height}`}
           style={{
             position: "absolute", inset: 0,
             width: "100%", height: "100%",

@@ -1,4 +1,4 @@
-import { AESTHETIC_FACE_ZONES } from "@/lib/aesthetic-face-map";
+import { AESTHETIC_FACE_IMAGE, AESTHETIC_FACE_ZONES } from "@/lib/aesthetic-face-map";
 
 type Ann = { regionId: string; label: string; color: string; notes?: string | null };
 
@@ -274,12 +274,19 @@ export default function BodyAnnotationReport({
 }) {
   if (annotations.length === 0) return null;
 
-  // ── AESTHETIC — face-map.jpg 600×800 ──────────────────────────────────────
+  // ── AESTHETIC — face-map.png ──────────────────────────────────────────────
   if (specialtyCode === "aesthetic") {
     const labelMap = new Map(AESTHETIC_FACE_ZONES.map(r => [r.id, r.labelAr]));
     return (
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-        <ImageMap src="/face-map.jpg" vbW={600} vbH={800} regions={AESTHETIC_FACE_ZONES} annotations={annotations} maxW={200} />
+        <ImageMap
+          src={AESTHETIC_FACE_IMAGE.src}
+          vbW={AESTHETIC_FACE_IMAGE.width}
+          vbH={AESTHETIC_FACE_IMAGE.height}
+          regions={AESTHETIC_FACE_ZONES}
+          annotations={annotations}
+          maxW={240}
+        />
         <AnnList annotations={annotations} labelMap={labelMap} />
       </div>
     );
