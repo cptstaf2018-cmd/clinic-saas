@@ -133,18 +133,60 @@ const SPECIALTY_CONFIG: Record<
       { label: LABELS.waitingScreen, href: "#display", variant: "success" },
     ],
   },
+  aesthetic: {
+    headline: "تشغيل عيادة التجميل",
+    description: "تنظيم جلسات البوتوكس، الفيلر، الليزر، وصور قبل وبعد من مكان واحد.",
+    focusMetrics: [
+      { label: "جلسات اليوم", value: 0, hint: "كل مواعيد التجميل" },
+      { label: "بانتظار الدخول", value: 0, hint: "في العيادة" },
+      { label: "جلسات منتهية", value: 0, hint: "تمت اليوم" },
+    ],
+    actions: [
+      { label: "سجل المراجعين", href: "/dashboard/patients", variant: "primary" },
+      { label: "الحجوزات", href: "/dashboard/appointments", variant: "secondary" },
+      { label: LABELS.waitingScreen, href: "#display", variant: "success" },
+    ],
+  },
+  surgery: {
+    headline: "تشغيل عيادة الجراحة",
+    description: "متابعة الإجراءات الجراحية، فحص الجروح، وخطط ما بعد العملية.",
+    focusMetrics: [
+      { label: "مواعيد اليوم", value: 0, hint: "كل الإجراءات" },
+      { label: "في الانتظار", value: 0, hint: "بانتظار الدخول" },
+      { label: "زيارات مكتملة", value: 0, hint: "أنجزت اليوم" },
+    ],
+    actions: [
+      { label: "سجل المراجعين", href: "/dashboard/patients", variant: "primary" },
+      { label: "الحجوزات", href: "/dashboard/appointments", variant: "secondary" },
+      { label: LABELS.waitingScreen, href: "#display", variant: "success" },
+    ],
+  },
+  general_medicine: {
+    headline: "تشغيل عيادة الطب العام",
+    description: "متابعة المراجعات اليومية، الوصفات، والتحويلات من لوحة بسيطة.",
+    focusMetrics: [
+      { label: "حجوزات اليوم", value: 0, hint: "كل المراجعات" },
+      { label: "ينتظرون الدور", value: 0, hint: "داخل الانتظار" },
+      { label: "زيارات مكتملة", value: 0, hint: "تم إنهاؤها اليوم" },
+    ],
+    actions: [
+      { label: "سجل المراجعين", href: "/dashboard/patients", variant: "primary" },
+      { label: "الحجوزات", href: "/dashboard/appointments", variant: "secondary" },
+      { label: LABELS.waitingScreen, href: "#display", variant: "success" },
+    ],
+  },
 };
 
 export default function ClinicDashboardPremium({
-  specialty = "dentistry",
-  stats = { appointmentsToday: 0, waitingCount: 0, completedCount: 0, specialty: "dentistry" },
+  specialty = "internal_medicine",
+  stats = { appointmentsToday: 0, waitingCount: 0, completedCount: 0, specialty: "internal_medicine" },
   clinicId = "",
 }: {
   specialty?: string;
   stats?: DashboardStats;
   clinicId?: string;
 }) {
-  const config = SPECIALTY_CONFIG[specialty] || SPECIALTY_CONFIG.dentistry;
+  const config = SPECIALTY_CONFIG[specialty] || SPECIALTY_CONFIG.internal_medicine;
   // استبدال #display بالرابط الحقيقي لشاشة الانتظار
   const resolvedActions = config.actions.map((action) => ({
     ...action,
