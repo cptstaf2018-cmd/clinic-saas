@@ -36,11 +36,20 @@ const STATUS_FILTERS = [
 ];
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("ar-IQ", { weekday: "short", day: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString("ar-IQ", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "Asia/Baghdad",
+  });
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("ar-IQ", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("ar-IQ", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Baghdad",
+  });
 }
 
 function arabicNumber(value: number) {
@@ -49,6 +58,17 @@ function arabicNumber(value: number) {
 
 function initials(name: string) {
   return name.trim().split(" ").slice(0, 2).map((word) => word[0]).join("") || "م";
+}
+
+function iraqDateKey(date: Date) {
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Baghdad" });
+}
+
+function toIraqIso(date: string, time: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  if (![year, month, day, hour, minute].every(Number.isFinite)) return null;
+  return new Date(Date.UTC(year, month - 1, day, hour - 3, minute, 0, 0)).toISOString();
 }
 
 type PatientOption = { id: string; name: string; whatsappPhone: string };
@@ -155,7 +175,12 @@ export default function AppointmentsPage() {
     const patient = selectedPatient;
     setBookingLoading(true);
     setBookingError("");
-    const dateTime = new Date(`${bookingDate}T${bookingTime}`).toISOString();
+    const dateTime = toIraqIso(bookingDate, time);
+    if (!dateTime) {
+      setBookingError("وقت الحجز غير صحيح");
+      setBookingLoading(false);
+      return;
+    }
     const res = await fetch("/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -288,7 +313,7 @@ export default function AppointmentsPage() {
             <div className="grid gap-3">
               {appointments.map((appointment) => {
                 const status = STATUS_MAP[appointment.status] ?? STATUS_MAP.pending;
-                const isToday = new Date(appointment.date).toDateString() === new Date().toDateString();
+                const isToday = iraqDateKey(new Date(appointment.date)) === iraqDateKey(new Date());
 
                 return (
                   <div

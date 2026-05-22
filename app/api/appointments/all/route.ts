@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+const IRAQ_OFFSET_MS = 3 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function getIraqParts(date: Date) {
+  const iraqDate = new Date(date.getTime() + IRAQ_OFFSET_MS);
+  return {
+    year: iraqDate.getUTCFullYear(),
+    month: iraqDate.getUTCMonth() + 1,
+    day: iraqDate.getUTCDate(),
+    dayOfWeek: iraqDate.getUTCDay(),
+  };
+}
+
+function iraqDayStartUtc(year: number, month: number, day: number) {
+  return new Date(Date.UTC(year, month - 1, day, -3, 0, 0, 0));
+}
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
@@ -14,10 +31,11 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search") ?? "";
 
   const now = new Date();
-  const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
-  const endOfToday = new Date(now); endOfToday.setHours(23, 59, 59, 999);
-  const startOfWeek = new Date(startOfToday); startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
-  const endOfWeek = new Date(startOfWeek); endOfWeek.setDate(startOfWeek.getDate() + 6); endOfWeek.setHours(23, 59, 59, 999);
+  const today = getIraqParts(now);
+  const startOfToday = iraqDayStartUtc(today.year, today.month, today.day);
+  const endOfToday = new Date(startOfToday.getTime() + DAY_MS - 1);
+  const startOfWeek = new Date(startOfToday.getTime() - today.dayOfWeek * DAY_MS);
+  const endOfWeek = new Date(startOfWeek.getTime() + 7 * DAY_MS - 1);
 
   let dateFilter: Record<string, unknown> = {};
   if (range === "today")    dateFilter = { gte: startOfToday, lte: endOfToday };

@@ -2,6 +2,23 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+const IRAQ_OFFSET_MS = 3 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function getIraqParts(date: Date) {
+  const iraqDate = new Date(date.getTime() + IRAQ_OFFSET_MS);
+  return {
+    year: iraqDate.getUTCFullYear(),
+    month: iraqDate.getUTCMonth() + 1,
+    day: iraqDate.getUTCDate(),
+  };
+}
+
+function iraqDayStartUtc(date: Date) {
+  const parts = getIraqParts(date);
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, -3, 0, 0, 0));
+}
+
 export async function GET() {
   const session = await auth();
   if (!session?.user?.clinicId) {
@@ -10,11 +27,8 @@ export async function GET() {
 
   const clinicId = session.user.clinicId;
 
-  const today = new Date();
-  const startOfDay = new Date(today);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(today);
-  endOfDay.setHours(23, 59, 59, 999);
+  const startOfDay = iraqDayStartUtc(new Date());
+  const endOfDay = new Date(startOfDay.getTime() + DAY_MS - 1);
 
   const appointments = await db.appointment.findMany({
     where: {
@@ -61,22 +75,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "المريض غير موجود" }, { status: 404 });
   }
 
-  // Determine next queue number for today
-  const today = new Date();
-  const startOfDay = new Date(today);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(today);
-  endOfDay.setHours(23, 59, 59, 999);
-
   const dateObj = new Date(body.date);
-  const isToday = dateObj >= startOfDay && dateObj <= endOfDay;
+  if (Number.isNaN(dateObj.getTime())) {
+    return NextResponse.json({ error: "تاريخ الموعد غير صحيح" }, { status: 400 });
+  }
+
+  // Determine next queue number for the selected Iraq day.
+  const todayStart = iraqDayStartUtc(new Date());
+  const selectedDayStart = iraqDayStartUtc(dateObj);
+  const selectedDayEnd = new Date(selectedDayStart.getTime() + DAY_MS - 1);
+  const isToday = selectedDayStart.getTime() === todayStart.getTime();
 
   let queueNumber: number | undefined;
   if (isToday) {
     const last = await db.appointment.findFirst({
       where: {
         clinicId,
-        date: { gte: startOfDay, lte: endOfDay },
+        date: { gte: selectedDayStart, lte: selectedDayEnd },
         queueNumber: { not: null },
       },
       orderBy: { queueNumber: "desc" },
