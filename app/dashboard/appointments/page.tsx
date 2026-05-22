@@ -70,6 +70,7 @@ export default function AppointmentsPage() {
   const [bookingTime, setBookingTime] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const [slotWarning, setSlotWarning] = useState("");
 
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
@@ -117,6 +118,20 @@ export default function AppointmentsPage() {
     return () => clearTimeout(t);
   }, [patientSearch]);
 
+  async function checkSlot(date: string, time: string) {
+    if (!date || !time) { setSlotWarning(""); return; }
+    try {
+      const dateTime = new Date(`${date}T${time}`).toISOString();
+      const res = await fetch(`/api/appointments/check-slot?date=${encodeURIComponent(dateTime)}`);
+      if (res.status === 409) {
+        const data = await res.json();
+        setSlotWarning(data.error ?? "هذا الوقت محجوز");
+      } else {
+        setSlotWarning("");
+      }
+    } catch { setSlotWarning(""); }
+  }
+
   async function handleBooking() {
     // Auto-select if only one search result exists and no patient selected yet
     let patient = selectedPatient;
@@ -146,6 +161,7 @@ export default function AppointmentsPage() {
       setPatientSearch("");
       setBookingDate("");
       setBookingTime("");
+      setSlotWarning("");
       fetchAppointments();
     }
     setBookingLoading(false);
@@ -374,7 +390,7 @@ export default function AppointmentsPage() {
                   <input
                     type="date"
                     value={bookingDate}
-                    onChange={(e) => setBookingDate(e.target.value)}
+                    onChange={(e) => { setBookingDate(e.target.value); checkSlot(e.target.value, bookingTime); }}
                     className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                   />
                 </div>
@@ -384,9 +400,14 @@ export default function AppointmentsPage() {
                   <input
                     type="time"
                     value={bookingTime}
-                    onChange={(e) => setBookingTime(e.target.value)}
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                    onChange={(e) => { setBookingTime(e.target.value); checkSlot(bookingDate, e.target.value); }}
+                    className={`mt-1 w-full rounded-2xl border px-4 py-3 text-sm font-bold outline-none focus:ring-4 ${slotWarning ? "border-amber-400 bg-amber-50 focus:ring-amber-100" : "border-slate-200 bg-slate-50 focus:border-blue-300 focus:ring-blue-100"}`}
                   />
+                  {slotWarning && (
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-black text-amber-700">
+                      ⚠️ {slotWarning}
+                    </p>
+                  )}
                 </div>
 
                 {bookingError && <p className="text-sm font-black text-red-600">{bookingError}</p>}
