@@ -26,6 +26,29 @@ const AESTHETIC_MARKERS = [
   { key: "other",       labelAr: "أخرى",          color: "#6b7280" },
 ];
 
+// General medicine: body complaint locator (CHOIR/Stanford standard)
+const GENERAL_MEDICINE_MARKERS = [
+  { key: "pain",        labelAr: "ألم",            color: "#ef4444" },
+  { key: "swelling",    labelAr: "تورم",           color: "#3b82f6" },
+  { key: "numbness",    labelAr: "خدر / تنميل",    color: "#8b5cf6" },
+  { key: "tension",     labelAr: "توتر عضلي",      color: "#f97316" },
+  { key: "heat",        labelAr: "حرارة موضعية",   color: "#f59e0b" },
+  { key: "weakness",    labelAr: "ضعف / إرهاق",    color: "#64748b" },
+  { key: "other",       labelAr: "أخرى",           color: "#6b7280" },
+];
+
+// Surgery: surgical site marking (WHO surgical safety standard)
+const SURGERY_MARKERS = [
+  { key: "op_site",     labelAr: "موقع العملية",   color: "#2563eb" },
+  { key: "wound",       labelAr: "جرح",            color: "#ef4444" },
+  { key: "scar",        labelAr: "ندبة",           color: "#475569" },
+  { key: "hernia",      labelAr: "فتق",            color: "#f97316" },
+  { key: "tumor",       labelAr: "ورم",            color: "#7c3aed" },
+  { key: "drain",       labelAr: "موضع الصرف",     color: "#0891b2" },
+  { key: "pain",        labelAr: "ألم",            color: "#dc2626" },
+  { key: "other",       labelAr: "أخرى",           color: "#6b7280" },
+];
+
 // Image: 960×1118 — front body on LEFT (X 0-480), back body on RIGHT (X 480-960)
 // Patient anatomy convention: front view → patient right = screen left; back view → patient right = screen right
 type Region = {
@@ -109,10 +132,19 @@ export default function BodyMapClient({
 
   const selRegion = REGIONS.find((r) => r.id === selected);
   const selAnn    = annotations.find((a) => a.regionId === selected) ?? null;
-  const markerTypes = specialtyCode === "aesthetic" ? AESTHETIC_MARKERS : DERMATOLOGY_MARKERS;
+  const markerTypes =
+    specialtyCode === "aesthetic"      ? AESTHETIC_MARKERS :
+    specialtyCode === "general_medicine" ? GENERAL_MEDICINE_MARKERS :
+    specialtyCode === "surgery"        ? SURGERY_MARKERS :
+    DERMATOLOGY_MARKERS;
+
   const introText =
     specialtyCode === "aesthetic"
       ? "حدد منطقة الإجراء التجميلي أو الجلسة — الأمامي على اليسار، الخلفي على اليمين"
+      : specialtyCode === "general_medicine"
+      ? "انقر على منطقة الشكوى أو الإصابة — الأمامي على اليسار، الخلفي على اليمين"
+      : specialtyCode === "surgery"
+      ? "انقر على موقع العملية أو الجرح — الأمامي على اليسار، الخلفي على اليمين"
       : "انقر على أي منطقة من الجسم لتأشير الإصابة الجلدية — الأمامي على اليسار، الخلفي على اليمين";
 
   function labelX(r: Region) { return r.shape === "ellipse" ? r.cx : r.x + r.w / 2; }

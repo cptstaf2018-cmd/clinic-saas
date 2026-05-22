@@ -85,7 +85,7 @@ export default async function PatientProfilePage({
   const hasDentalChart = canUseFeature(subscription?.plan, "dentalChart");
   const hasSpecialtyMap = canUseFeature(subscription?.plan, "specialtyMap");
 
-  const isAnnotationSpecialty = ["dermatology", "orthopedics", "aesthetic"].includes(specialtyConfig.code);
+  const isAnnotationSpecialty = ["dermatology", "orthopedics", "aesthetic", "general_medicine", "surgery"].includes(specialtyConfig.code);
 
   const [toothTreatments, specialtyAnnotations] = await Promise.all([
     isDental && hasDentalChart
@@ -255,6 +255,8 @@ export default async function PatientProfilePage({
             ophthalmology:    { icon: "👁️", title: "فحص العيون",               subtitle: "حدة البصر + ضغط العين + وصفة النظارات" },
             cardiology:       { icon: "❤️", title: "متابعة ضغط الدم",         subtitle: "سجل القياسات والمنحنى الزمني لضغط الدم والنبض" },
             internal_medicine:{ icon: "🏥", title: "متابعة الباطنية",          subtitle: "التحاليل والأمراض المزمنة وخطة العلاج" },
+            general_medicine: { icon: "⚕️", title: "خريطة مواضع الشكوى",      subtitle: "انقر على منطقة الألم أو الشكوى — معيار CHOIR العالمي" },
+            surgery:          { icon: "🔪", title: "خريطة المواقع الجراحية",   subtitle: "أشّر مواقع العمليات والجروح — معيار WHO للسلامة الجراحية" },
           };
           const meta = SPECIALTY_META[specialtyConfig.code];
           if (!meta) return null;
@@ -364,6 +366,40 @@ export default async function PatientProfilePage({
                     />
                     <LabTrackerClient records={serializedRecords} />
                   </div>
+                )}
+                {specialtyConfig.code === "general_medicine" && (
+                  hasSpecialtyMap ? (
+                    <BodyMapClient
+                      patientId={patient.id}
+                      specialtyCode="general_medicine"
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        id: a.id, regionId: a.regionId, label: a.label,
+                        color: a.color, notes: a.notes,
+                      }))}
+                    />
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-2xl mb-2">⚕️</p>
+                      <p className="text-sm font-black text-slate-500">خريطة مواضع الشكوى متاحة في الخطة المميزة</p>
+                    </div>
+                  )
+                )}
+                {specialtyConfig.code === "surgery" && (
+                  hasSpecialtyMap ? (
+                    <BodyMapClient
+                      patientId={patient.id}
+                      specialtyCode="surgery"
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        id: a.id, regionId: a.regionId, label: a.label,
+                        color: a.color, notes: a.notes,
+                      }))}
+                    />
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-2xl mb-2">🔪</p>
+                      <p className="text-sm font-black text-slate-500">خريطة المواقع الجراحية متاحة في الخطة المميزة</p>
+                    </div>
+                  )
                 )}
               </div>
             </section>
