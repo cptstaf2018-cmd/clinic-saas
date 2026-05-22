@@ -23,7 +23,15 @@ function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
 
-export default function PatientListPremium({ patients: initial, initialQuery = "" }: { patients: Patient[]; initialQuery?: string }) {
+export default function PatientListPremium({
+  patients: initial,
+  initialQuery = "",
+  canDelete = true,
+}: {
+  patients: Patient[];
+  initialQuery?: string;
+  canDelete?: boolean;
+}) {
   const [patients, setPatients] = useState(initial);
   const [query, setQuery] = useState(initialQuery);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -178,12 +186,14 @@ export default function PatientListPremium({ patients: initial, initialQuery = "
                         >
                           {LABELS.edit}
                         </button>
-                        <button
-                          onClick={() => setConfirmDeleteId(patient.id)}
-                          className="flex-1 rounded-lg bg-rose-50 px-2 py-2.5 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
-                        >
-                          {LABELS.delete}
-                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={() => setConfirmDeleteId(patient.id)}
+                            className="flex-1 rounded-lg bg-rose-50 px-2 py-2.5 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+                          >
+                            {LABELS.delete}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

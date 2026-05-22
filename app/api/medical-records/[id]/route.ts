@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature, upgradeMessage } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
+import { canAccessMedicalData } from "@/lib/clinic-roles";
 
 function cleanContentJson(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -21,6 +22,8 @@ export async function PATCH(
   const session = await auth();
   if (!session?.user?.clinicId)
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!canAccessMedicalData(session.user.role))
+    return NextResponse.json({ error: "تعديل السجل الطبي غير متاح لحساب السكرتير" }, { status: 403 });
 
   const { id } = await params;
   const clinicId = session.user.clinicId as string;
@@ -89,6 +92,8 @@ export async function DELETE(
   const session = await auth();
   if (!session?.user?.clinicId)
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!canAccessMedicalData(session.user.role))
+    return NextResponse.json({ error: "حذف السجل الطبي غير متاح لحساب السكرتير" }, { status: 403 });
 
   const { id } = await params;
   const clinicId = session.user.clinicId as string;

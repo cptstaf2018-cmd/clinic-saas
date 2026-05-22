@@ -27,12 +27,14 @@ interface Settings {
   doctorBoard: string | null;
 }
 
-type Tab = "profile" | "whatsapp" | "reminders" | "security";
+type TeamUser = { id: string; email: string | null; active: boolean; createdAt: string };
+type Tab = "profile" | "whatsapp" | "reminders" | "team" | "security";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "profile",   label: "ملف العيادة",     icon: "ع" },
   { id: "whatsapp",  label: "واتساب بزنس",     icon: "و" },
   { id: "reminders", label: "التذكيرات",        icon: "ت" },
+  { id: "team",      label: "الفريق",           icon: "ف" },
   { id: "security",  label: "الأمان",           icon: "أ" },
 ];
 
@@ -93,6 +95,12 @@ export default function SettingsPage() {
   const [origin, setOrigin] = useState("");
   const displayUrl = settings && origin ? `${origin}/display/${settings.id}` : "";
 
+  // Team
+  const [team, setTeam] = useState<TeamUser[]>([]);
+  const [teamEmail, setTeamEmail] = useState("");
+  const [teamPassword, setTeamPassword] = useState("");
+  const [teamLoading, setTeamLoading] = useState(false);
+
   useEffect(() => {
     fetch("/api/clinic/settings")
       .then((r) => r.json())
@@ -108,7 +116,48 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((d) => setSlides(d.images ?? []))
       .catch(() => {});
+
+    fetch("/api/clinic/team")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setTeam(d?.users ?? []))
+      .catch(() => {});
   }, []);
+
+  async function addSecretary() {
+    setTeamLoading(true); setError(""); setSaved("");
+    const res = await fetch("/api/clinic/team", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: teamEmail, password: teamPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setTeam((prev) => [data.user, ...prev]);
+      setTeamEmail("");
+      setTeamPassword("");
+      setSaved("تم إضافة حساب السكرتير");
+    } else {
+      setError(data.error ?? "تعذر إضافة السكرتير");
+    }
+    setTeamLoading(false);
+  }
+
+  async function toggleSecretary(user: TeamUser) {
+    setTeamLoading(true); setError(""); setSaved("");
+    const res = await fetch("/api/clinic/team", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: user.id, active: !user.active }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setTeam((prev) => prev.map((item) => item.id === user.id ? data.user : item));
+      setSaved(data.user.active ? "تم تفعيل حساب السكرتير" : "تم إيقاف حساب السكرتير");
+    } else {
+      setError(data.error ?? "تعذر تحديث الحساب");
+    }
+    setTeamLoading(false);
+  }
 
   async function handleSlideUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -639,6 +688,74 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
+          </Section>
+        </>
+      )}
+
+      {/* ── TEAM TAB ── */}
+      {tab === "team" && (
+        <>
+          <Section title="حساب السكرتير" description="السكرتير يدخل بحسابه الخاص ويرى المواعيد وبيانات المراجعين الأساسية فقط.">
+            <div className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
+              <input
+                className={inputCls}
+                type="email"
+                value={teamEmail}
+                onChange={(e) => setTeamEmail(e.target.value)}
+                placeholder="بريد السكرتير"
+                dir="ltr"
+              />
+              <input
+                className={inputCls}
+                type="text"
+                value={teamPassword}
+                onChange={(e) => setTeamPassword(e.target.value)}
+                placeholder="كلمة مرور مؤقتة"
+                dir="ltr"
+              />
+              <button
+                onClick={addSecretary}
+                disabled={teamLoading}
+                className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                إضافة سكرتير
+              </button>
+            </div>
+            <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm font-bold leading-7 text-slate-600 ring-1 ring-slate-100">
+              يستطيع السكرتير إدارة المواعيد ورؤية أسماء المراجعين وأرقامهم وسجل الزيارات فقط. لا يستطيع رؤية التشخيص، الوصفة، السجل الطبي، التقارير، الاشتراك، أو إعدادات العيادة.
+            </div>
+          </Section>
+
+          <Section title="الموظفون">
+            {team.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-black text-slate-400">
+                لم تتم إضافة سكرتير بعد.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {team.map((user) => (
+                  <div key={user.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-sm font-black text-slate-950" dir="ltr">{user.email}</p>
+                      <p className={`mt-1 text-xs font-black ${user.active ? "text-emerald-600" : "text-rose-600"}`}>
+                        {user.active ? "فعال" : "موقوف"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => toggleSecretary(user)}
+                      disabled={teamLoading}
+                      className={`rounded-xl px-4 py-2 text-xs font-black disabled:opacity-50 ${
+                        user.active
+                          ? "bg-rose-50 text-rose-700 ring-1 ring-rose-100 hover:bg-rose-100"
+                          : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100"
+                      }`}
+                    >
+                      {user.active ? "إيقاف الوصول" : "تفعيل الوصول"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </Section>
         </>
       )}

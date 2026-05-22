@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { isSecretaryRole } from "@/lib/clinic-roles";
 
 function requestIsSecure(req: NextRequest) {
   const forwardedProto = req.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
@@ -74,7 +75,7 @@ export async function proxy(req: NextRequest) {
   }
 
   // CLINIC STAFF checks
-  if (userRole === "doctor" || userRole === "staff") {
+  if (userRole === "doctor" || userRole === "staff" || isSecretaryRole(userRole)) {
     // ✅ MUST have clinicId
     if (!clinicId) {
       console.warn(`[SECURITY] Clinic staff missing clinicId: ${token.email}`);
@@ -86,6 +87,35 @@ export async function proxy(req: NextRequest) {
         `[SECURITY] Clinic staff tried to access /admin: ${token.email}`
       );
       return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+    if (isSecretaryRole(userRole)) {
+      const allowedDashboardPaths = [
+        "/dashboard",
+        "/dashboard/appointments",
+        "/dashboard/patients",
+        "/dashboard/support",
+      ];
+      const allowedApiPaths = [
+        "/api/appointments",
+        "/api/patients",
+        "/api/support/health",
+      ];
+      const canUseDashboard = allowedDashboardPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+      const canUseApi = allowedApiPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+      const isSensitivePatientPage =
+        pathname.startsWith("/dashboard/patients/") &&
+        (pathname.endsWith("/report") || pathname.endsWith("/prescription"));
+
+      if (pathname.startsWith("/api/")) {
+        if (!canUseApi) {
+          return NextResponse.json({ error: "غير مصرح لحساب السكرتير" }, { status: 403 });
+        }
+        return NextResponse.next();
+      }
+
+      if (!canUseDashboard || isSensitivePatientPage) {
+        return NextResponse.redirect(new URL("/dashboard/appointments", req.url));
+      }
     }
     // ✅ Clinic staff can use dashboard, onboarding, and clinic APIs
     if (!pathname.startsWith("/dashboard") && !pathname.startsWith("/onboarding") && !pathname.startsWith("/api/")) {

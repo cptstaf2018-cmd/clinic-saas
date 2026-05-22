@@ -87,7 +87,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
 
           {/* Nav */}
-          <DashboardNav />
+          <DashboardNav role={session.user.role} />
 
           {/* Logout */}
           <div className="px-3 py-4 border-t border-white/10">
@@ -104,7 +104,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <div className="flex items-center gap-2">
 
             {/* زر ☰ + الدرج */}
-            <MobileDrawer signOutForm={signOutForm} />
+            <MobileDrawer signOutForm={signOutForm} role={session.user.role} />
 
             {clinic?.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element

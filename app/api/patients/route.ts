@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
+import { isSecretaryRole } from "@/lib/clinic-roles";
 
 export async function GET(req: NextRequest) {
   const token = await getToken({
@@ -39,6 +40,17 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
     take: 200,
   });
+
+  if (isSecretaryRole(token.role as string | null | undefined)) {
+    return NextResponse.json(patients.map((patient) => ({
+      id: patient.id,
+      name: patient.name,
+      whatsappPhone: patient.whatsappPhone,
+      createdAt: patient.createdAt,
+      appointments: patient.appointments,
+      _count: patient._count,
+    })));
+  }
 
   return NextResponse.json(patients);
 }

@@ -53,10 +53,13 @@ const NAV = [
   },
 ];
 
+const SECRETARY_ALLOWED_NAV = new Set(["/dashboard", "/dashboard/appointments", "/dashboard/patients", "/dashboard/support"]);
+
 export const MOBILE_NAV = NAV.slice(0, 5);
 
-export default function DashboardNav() {
+export default function DashboardNav({ role }: { role?: string | null }) {
   const pathname = usePathname();
+  const navItems = role === "secretary" ? NAV.filter((item) => SECRETARY_ALLOWED_NAV.has(item.href)) : NAV;
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
@@ -65,7 +68,7 @@ export default function DashboardNav() {
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-0.5">
-      {NAV.map((item) => {
+      {navItems.map((item) => {
         const active = isActive(item.href, item.exact);
         return (
           <Link

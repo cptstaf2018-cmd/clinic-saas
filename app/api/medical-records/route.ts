@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature, upgradeMessage } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
+import { canAccessMedicalData } from "@/lib/clinic-roles";
 
 function cleanContentJson(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -18,6 +19,8 @@ export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.clinicId)
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!canAccessMedicalData(session.user.role))
+    return NextResponse.json({ error: "السجل الطبي غير متاح لحساب السكرتير" }, { status: 403 });
 
   const clinicId = session.user.clinicId as string;
   const { searchParams } = new URL(req.url);
@@ -42,6 +45,8 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.clinicId)
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (!canAccessMedicalData(session.user.role))
+    return NextResponse.json({ error: "إضافة السجلات الطبية غير متاحة لحساب السكرتير" }, { status: 403 });
 
   const clinicId = session.user.clinicId as string;
   const { patientId, complaint, diagnosis, prescription, notes, date, followUpDate, specialtyCode, contentJson } =

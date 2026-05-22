@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -17,20 +16,21 @@ const NAV = [
   { href: "/dashboard/support", label: "الدعم", icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> },
 ];
 
+const SECRETARY_ALLOWED_NAV = new Set(["/dashboard", "/dashboard/appointments", "/dashboard/patients", "/dashboard/support"]);
+
 export function HamburgerButton() {
   return null; // placeholder — state managed in MobileDrawer
 }
 
-export default function MobileDrawer({ signOutForm }: { signOutForm: React.ReactNode }) {
+export default function MobileDrawer({ signOutForm, role }: { signOutForm: React.ReactNode; role?: string | null }) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-
-  useEffect(() => { setMounted(true); }, []);
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
   }
+
+  const navItems = role === "secretary" ? NAV.filter((item) => SECRETARY_ALLOWED_NAV.has(item.href)) : NAV;
 
   const drawer = (
     <>
@@ -60,7 +60,7 @@ export default function MobileDrawer({ signOutForm }: { signOutForm: React.React
 
         {/* القائمة */}
         <nav className="flex-1 px-3 pt-14 pb-4 space-y-0.5 overflow-y-auto">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
             return (
               <Link
@@ -102,7 +102,7 @@ export default function MobileDrawer({ signOutForm }: { signOutForm: React.React
         </svg>
       </button>
 
-      {mounted && createPortal(drawer, document.body)}
+      {drawer}
     </>
   );
 }

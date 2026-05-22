@@ -21,6 +21,7 @@ import PediatricBodyClient from "./PediatricBodyClient";
 import { getEntitlements, canUseFeature } from "@/lib/feature-gates";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import PatientInfoCard from "./PatientInfoCard";
+import { isSecretaryRole } from "@/lib/clinic-roles";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "معلق",
@@ -67,14 +68,19 @@ export default async function PatientProfilePage({
 
   const { id } = await params;
   const clinicId = session.user.clinicId as string;
+  const isSecretary = isSecretaryRole(session.user.role);
 
-  const patient = await db.patient.findFirst({
-    where: { id, clinicId },
-    include: {
-      appointments: { orderBy: { date: "desc" }, take: 30 },
-      medicalRecords: { orderBy: { date: "desc" } },
-    },
-  });
+  const [patient, medicalRecords] = await Promise.all([
+    db.patient.findFirst({
+      where: { id, clinicId },
+      include: {
+        appointments: { orderBy: { date: "desc" }, take: 30 },
+      },
+    }),
+    isSecretary
+      ? Promise.resolve([])
+      : db.medicalRecord.findMany({ where: { patientId: id, clinicId }, orderBy: { date: "desc" } }),
+  ]);
 
   if (!patient) notFound();
 
@@ -83,10 +89,10 @@ export default async function PatientProfilePage({
   const specialtyConfig = await getClinicSpecialtyConfig(clinicId);
 
   const isDental = specialtyConfig.code === "dentistry";
-  const hasDentalChart = canUseFeature(subscription?.plan, "dentalChart");
-  const hasSpecialtyMap = canUseFeature(subscription?.plan, "specialtyMap");
+  const hasDentalChart = !isSecretary && canUseFeature(subscription?.plan, "dentalChart");
+  const hasSpecialtyMap = !isSecretary && canUseFeature(subscription?.plan, "specialtyMap");
 
-  const isAnnotationSpecialty = ["dermatology", "orthopedics", "aesthetic", "general_medicine", "surgery"].includes(specialtyConfig.code);
+  const isAnnotationSpecialty = !isSecretary && ["dermatology", "orthopedics", "aesthetic", "general_medicine", "surgery"].includes(specialtyConfig.code);
 
   const [toothTreatments, specialtyAnnotations] = await Promise.all([
     isDental && hasDentalChart
@@ -104,7 +110,7 @@ export default async function PatientProfilePage({
     .sort((a, b) => a.date.getTime() - b.date.getTime())[0];
   const lastVisit = patient.appointments.find((appointment) => appointment.status === "completed") ?? patient.appointments[0];
 
-  const serializedRecords = patient.medicalRecords.map((record) => ({
+  const serializedRecords = medicalRecords.map((record) => ({
     id: record.id,
     date: record.date.toISOString(),
     complaint: record.complaint,
@@ -138,19 +144,23 @@ export default async function PatientProfilePage({
               >
                 💬 واتساب
               </a>
-              <Link
-                href={`/dashboard/patients/${patient.id}/prescription`}
-                target="_blank"
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white transition hover:bg-blue-700"
-              >
-                🖊️ وصفة طبية
-              </Link>
-              <Link
-                href={`/dashboard/patients/${patient.id}/report`}
-                className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white transition hover:bg-slate-700"
-              >
-                📄 تقرير PDF
-              </Link>
+              {!isSecretary && (
+                <>
+                  <Link
+                    href={`/dashboard/patients/${patient.id}/prescription`}
+                    target="_blank"
+                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white transition hover:bg-blue-700"
+                  >
+                    🖊️ وصفة طبية
+                  </Link>
+                  <Link
+                    href={`/dashboard/patients/${patient.id}/report`}
+                    className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-black text-white transition hover:bg-slate-700"
+                  >
+                    📄 تقرير PDF
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -167,7 +177,7 @@ export default async function PatientProfilePage({
               {[
                 { label: "مواعيد", value: patient.appointments.length, color: "text-blue-600" },
                 { label: "زيارات مكتملة", value: completedCount, color: "text-emerald-600" },
-                { label: "سجلات طبية", value: patient.medicalRecords.length, color: "text-purple-600" },
+                ...(isSecretary ? [] : [{ label: "سجلات طبية", value: medicalRecords.length, color: "text-purple-600" }]),
               ].map((s) => (
                 <div key={s.label} className="min-w-[64px]">
                   <p className={`text-2xl font-black ${s.color}`}>{arabicNumber(s.value)}</p>
@@ -197,21 +207,23 @@ export default async function PatientProfilePage({
         </section>
 
         {/* ═══ Patient Info Card ═══ */}
-        <PatientInfoCard
-          patientId={patient.id}
-          specialtyCode={specialtyConfig.code}
-          initialInfo={{
-            bloodType: patient.bloodType ?? null,
-            allergies: patient.allergies ?? [],
-            chronicConditions: patient.chronicConditions ?? [],
-            currentMedications: patient.currentMedications ?? [],
-            surgicalHistory: patient.surgicalHistory ?? null,
-            smokingStatus: patient.smokingStatus ?? null,
-          }}
-        />
+        {!isSecretary && (
+          <PatientInfoCard
+            patientId={patient.id}
+            specialtyCode={specialtyConfig.code}
+            initialInfo={{
+              bloodType: patient.bloodType ?? null,
+              allergies: patient.allergies ?? [],
+              chronicConditions: patient.chronicConditions ?? [],
+              currentMedications: patient.currentMedications ?? [],
+              surgicalHistory: patient.surgicalHistory ?? null,
+              smokingStatus: patient.smokingStatus ?? null,
+            }}
+          />
+        )}
 
         {/* ═══ Dental Chart ═══ */}
-        {isDental && (
+        {!isSecretary && isDental && (
           <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
               <div>
@@ -246,7 +258,7 @@ export default async function PatientProfilePage({
         )}
 
         {/* ═══ Specialty Chart (non-dental) ═══ */}
-        {specialtyConfig.code !== "dentistry" && (() => {
+        {!isSecretary && specialtyConfig.code !== "dentistry" && (() => {
           const SPECIALTY_META: Record<string, { icon: string; title: string; subtitle: string }> = {
             dermatology:      { icon: "🩹", title: "خريطة الجسم التفاعلية",    subtitle: "انقر على أي منطقة لتأشير الإصابة الجلدية" },
             aesthetic:        { icon: "✨", title: "خريطة التجميل",             subtitle: "حدد مناطق الحقن أو الليزر أو الجلسات التجميلية" },
@@ -407,20 +419,22 @@ export default async function PatientProfilePage({
         })()}
 
         {/* ═══ Attachments ═══ */}
-        {entitlements.features.includes("fullMedicalFile") && (
+        {!isSecretary && entitlements.features.includes("fullMedicalFile") && (
           <section>
             <PatientAttachmentsClient patientId={patient.id} />
           </section>
         )}
 
         {/* ═══ Medical Records + Visits ═══ */}
-        <section className="grid gap-5 xl:grid-cols-[1fr_360px]">
-          <MedicalRecordsClient
-            patientId={patient.id}
-            initialRecords={serializedRecords}
-            canUseFollowUp={entitlements.features.includes("followUpTracking")}
-            specialtyConfig={specialtyConfig}
-          />
+        <section className={`grid gap-5 ${isSecretary ? "" : "xl:grid-cols-[1fr_360px]"}`}>
+          {!isSecretary && (
+            <MedicalRecordsClient
+              patientId={patient.id}
+              initialRecords={serializedRecords}
+              canUseFollowUp={entitlements.features.includes("followUpTracking")}
+              specialtyConfig={specialtyConfig}
+            />
+          )}
 
           {/* Visits */}
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
