@@ -54,6 +54,23 @@ function matches(text: string, words: string[]): boolean {
   return words.some(w => t === norm(w) || t.includes(norm(w)));
 }
 
+function extractIraqPhone(text: string): string | null {
+  const compact = text.replace(/\s/g, "");
+  const match = compact.match(/(?:\+?964|0)7[3-9]\d{8}/);
+  return match ? normalizePhone(match[0]) : null;
+}
+
+function extractPatientName(text: string, phone: string | null): string {
+  const withoutPhone = phone
+    ? text.replace(phone, "").replace(phone.replace(/^0/, "964"), "").replace(`+${phone.replace(/^0/, "964")}`, "")
+    : text;
+  return withoutPhone
+    .replace(/(?:\+?964|0)7[3-9]\d{8}/g, "")
+    .replace(/[0-9٠-٩۰-۹+]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // ── Find patient by phone (tries 07... and 964... formats) ────────────────────
 
 async function findPatient(clinicId: string, phone: string) {
@@ -218,7 +235,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
     }
     await upsertStep(`awaiting_slot|${r.date}|${r.slots.join(",")}|${patientId}`);
     const list = r.slots.map((s, i) => `${i + 1}- ${formatTime(s)}`).join("\n");
-    await reply(`أهلاً ${patientName}، هذه المواعيد المتاحة:\n${list}\n\nأرسل رقم الوقت للحجز`);
+    await reply(`أهلاً ${patientName}\nهذه الأوقات المتاحة:\n${list}\n\nأرسل رقم الوقت للحجز`);
   }
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -254,39 +271,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
 
   // ── حالة: انتظار الاسم أو رقم الهاتف (مريض جديد) ──────────────────────────
   if (step === "awaiting_identity") {
-    const isPhone = /^(\+?964|0)7[3-9]\d{8}$/.test(msgBody.replace(/\s/g,""));
+    const typedPhone = extractIraqPhone(msgBody);
+    const typedName = extractPatientName(msgBody, typedPhone);
 
-    let resolvedPatient = patient; // قد يكون موجوداً بالفعل
-
-    if (isPhone) {
-      // أرسل رقم هاتف → ابحث به أو أنشئ مريضاً
-      const typedPhone = normalizePhone(msgBody.replace(/\s/g,""));
-      resolvedPatient = await findPatient(clinicId, typedPhone);
-      if (!resolvedPatient) {
-        resolvedPatient = await db.patient.create({
-          data: { clinicId, name: typedPhone, whatsappPhone: typedPhone },
-          include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
-        });
-      }
-    } else {
-      // أرسل اسماً → ابحث بالاسم أو أنشئ مريضاً جديداً
-      const byName = await db.patient.findFirst({
-        where: { clinicId, name: { contains: msgBody.trim(), mode:"insensitive" } },
-        include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
-      });
-      if (byName) {
-        // ربط رقم واتساب الحالي بالمريض إن اختلف
-        if (byName.whatsappPhone !== phone) {
-          await db.patient.update({ where: { id: byName.id }, data: { whatsappPhone: phone } });
-        }
-        resolvedPatient = byName;
-      } else {
-        resolvedPatient = await db.patient.create({
-          data: { clinicId, name: msgBody.trim(), whatsappPhone: phone },
-          include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
-        });
-      }
+    if (!typedName || !typedPhone) {
+      await reply("للحجز أرسل الاسم ورقم الهاتف في رسالة واحدة\nمثال:\nأحمد علي 07700000000");
+      return NextResponse.json({ ok:true });
     }
+
+    const resolvedPatient = await db.patient.upsert({
+      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: typedPhone } },
+      update: { name: typedName },
+      create: { clinicId, name: typedName, whatsappPhone: typedPhone },
+      include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
+    });
 
     await showSlots(resolvedPatient.id, resolvedPatient.name);
     return NextResponse.json({ ok:true });
@@ -315,8 +313,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
   } else {
     // مريض جديد → اطلب التعريف
     await upsertStep("awaiting_identity");
-    const specialtyLine = clinic.specialty?.trim() ? `${clinic.specialty}\n` : "";
-    await reply(`مرحباً بك في ${clinic.name}\n${specialtyLine}أرسل اسمك أو رقم هاتفك`);
+    await reply(`مرحباً بك في ${clinic.name}\nللحجز أرسل الاسم ورقم الهاتف في رسالة واحدة\nمثال:\nأحمد علي 07700000000`);
   }
 
   return NextResponse.json({ ok:true });
