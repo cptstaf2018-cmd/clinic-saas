@@ -118,8 +118,15 @@ export default function AppointmentsPage() {
   }, [patientSearch]);
 
   async function handleBooking() {
-    if (!selectedPatient || !bookingDate || !bookingTime) {
-      setBookingError("اختر المريض والتاريخ والوقت");
+    // Auto-select if only one search result exists and no patient selected yet
+    let patient = selectedPatient;
+    if (!patient && patientResults.length === 1) {
+      patient = patientResults[0];
+      setSelectedPatient(patient);
+      setPatientResults([]);
+    }
+    if (!patient || !bookingDate || !bookingTime) {
+      setBookingError(!patient ? "اختر المريض من القائمة" : "حدد التاريخ والوقت");
       return;
     }
     setBookingLoading(true);
@@ -128,7 +135,7 @@ export default function AppointmentsPage() {
     const res = await fetch("/api/appointments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ patientId: selectedPatient.id, date: dateTime }),
+      body: JSON.stringify({ patientId: patient.id, date: dateTime }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => null);
