@@ -135,15 +135,11 @@ export default function AppointmentsPage() {
     } finally { setSlotsLoading(false); }
   }
 
-  async function handleBooking() {
-    if (!selectedPatient) {
-      setBookingError("يجب اختيار مريض من القائمة أولاً");
-      return;
-    }
-    if (!bookingDate || !bookingTime) {
-      setBookingError("حدد التاريخ والوقت");
-      return;
-    }
+  async function handleBooking(slotValue?: string) {
+    if (!selectedPatient || !bookingDate) return;
+    const time = slotValue ?? bookingTime;
+    if (!time) return;
+    setBookingTime(time);
     const patient = selectedPatient;
     setBookingLoading(true);
     setBookingError("");
@@ -375,34 +371,39 @@ export default function AppointmentsPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 ring-1 ring-blue-100">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white">
+                  /* ── المريض محدد ── */
+                  <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3 ring-1 ring-emerald-200">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-sm font-black text-white">
                       {selectedPatient.name[0]}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-black text-slate-900">{selectedPatient.name}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-slate-900 truncate">{selectedPatient.name}</p>
                       <p className="text-xs font-bold text-slate-400" dir="ltr">{selectedPatient.whatsappPhone}</p>
                     </div>
-                    <button onClick={() => setSelectedPatient(null)} className="text-xs font-black text-red-500 hover:text-red-700">تغيير</button>
+                    <button onClick={() => { setSelectedPatient(null); setBookingDate(""); setAvailableSlots([]); setBookingTime(""); }} className="text-xs font-black text-slate-400 hover:text-red-500">✕</button>
                   </div>
                 )}
 
-                <div>
-                  <label className="text-sm font-black text-slate-700">التاريخ</label>
-                  <input
-                    type="date"
-                    value={bookingDate}
-                    onChange={(e) => { setBookingDate(e.target.value); fetchSlots(e.target.value); }}
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
-
-                {bookingDate && (
+                {/* ── التاريخ — يظهر فقط بعد اختيار المريض ── */}
+                {selectedPatient && (
                   <div>
-                    <label className="text-sm font-black text-slate-700">الأوقات المتاحة</label>
-                    {slotsLoading ? (
-                      <p className="mt-2 text-xs font-bold text-slate-400">جاري التحميل...</p>
-                    ) : dayClosed ? (
+                    <label className="text-sm font-black text-slate-700">التاريخ</label>
+                    <input
+                      type="date"
+                      value={bookingDate}
+                      onChange={(e) => { setBookingDate(e.target.value); fetchSlots(e.target.value); }}
+                      className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                    />
+                  </div>
+                )}
+
+                {/* ── الأوقات — اضغط على وقت يحجز مباشرة ── */}
+                {selectedPatient && bookingDate && (
+                  <div>
+                    <label className="text-sm font-black text-slate-700">
+                      {slotsLoading ? "جاري التحميل..." : "اضغط على الوقت للحجز"}
+                    </label>
+                    {!slotsLoading && (dayClosed ? (
                       <p className="mt-2 text-xs font-black text-red-500">العيادة مغلقة في هذا اليوم</p>
                     ) : availableSlots.length === 0 ? (
                       <p className="mt-2 text-xs font-black text-amber-600">لا تتوفر أوقات في هذا اليوم</p>
@@ -412,36 +413,22 @@ export default function AppointmentsPage() {
                           <button
                             key={slot.value}
                             type="button"
-                            onClick={() => setBookingTime(slot.value)}
-                            className={`rounded-xl px-4 py-2 text-sm font-black transition ${
-                              bookingTime === slot.value
-                                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                                : "bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700"
-                            }`}
+                            disabled={bookingLoading}
+                            onClick={() => handleBooking(slot.value)}
+                            className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-blue-600 hover:text-white disabled:opacity-50"
                           >
                             {slot.label}
                           </button>
                         ))}
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
 
-                {bookingError && (
-                  <p className="text-sm font-black text-red-600">
-                    {bookingError}
-                    {!selectedPatient && patientResults.length > 0 && " ↑ اضغط على اسمه من القائمة"}
-                  </p>
-                )}
+                {bookingError && <p className="text-sm font-black text-red-600">{bookingError}</p>}
+                {bookingLoading && <p className="text-center text-sm font-black text-blue-600">جاري الحجز...</p>}
 
-                <div className="flex gap-3 pt-2">
-                  <button
-                    onClick={handleBooking}
-                    disabled={bookingLoading}
-                    className="flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-black text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {bookingLoading ? "جاري الحجز..." : "تأكيد الحجز"}
-                  </button>
+                <div className="flex justify-end pt-1">
                   <button
                     onClick={() => setShowBooking(false)}
                     className="rounded-2xl px-5 py-3 text-sm font-black text-slate-500 ring-1 ring-slate-200 transition hover:bg-slate-50"
