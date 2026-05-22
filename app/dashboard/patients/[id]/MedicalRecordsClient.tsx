@@ -221,7 +221,7 @@ export default function MedicalRecordsClient({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black text-blue-700">قالب {specialtyConfig.nameAr}</p>
-          <h2 className="mt-1 text-2xl font-black text-slate-950">السجل الطبي</h2>
+          <h2 className="mt-1 text-2xl font-black text-slate-950">تسجيل الزيارة</h2>
           <p className="mt-1 text-sm font-bold text-slate-400">{arabicNumber(records.length)} سجل محفوظ</p>
         </div>
         {!showForm && !editingId && (
@@ -271,7 +271,7 @@ export default function MedicalRecordsClient({
                     onCancel={cancelForm}
                     loading={loading}
                     error={error}
-                    title="تعديل السجل الطبي"
+                    title="تعديل تسجيل الزيارة"
                     canUseFollowUp={canUseFollowUp}
                     specialtyConfig={specialtyConfig}
                   />
@@ -539,17 +539,6 @@ function RecordForm({
             rows={2}
             className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-        </div>
-
-        <div className="sm:col-span-2">
-          <p className="mb-2 text-xs font-black text-slate-500">المستندات المتاحة لهذا الاختصاص</p>
-          <div className="flex flex-wrap gap-2">
-            {specialtyConfig.documentTypes.map((documentType) => (
-              <span key={documentType.id} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600">
-                {documentType.labelAr}
-              </span>
-            ))}
-          </div>
         </div>
 
         <div className="sm:col-span-2">

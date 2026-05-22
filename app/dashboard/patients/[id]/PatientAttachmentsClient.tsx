@@ -126,7 +126,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
         <div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-black text-violet-700">مميزة VIP</span>
-            <h2 className="text-2xl font-black text-slate-950">الملف الطبي الكامل</h2>
+            <h2 className="text-2xl font-black text-slate-950">الفحوصات والمستندات</h2>
           </div>
           <p className="mt-1 text-sm font-bold text-slate-400">تحاليل، أشعة، وصفات، ومستندات المريض</p>
         </div>
