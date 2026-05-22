@@ -53,7 +53,7 @@ const NAV = [
   },
 ];
 
-const SECRETARY_ALLOWED_NAV = new Set(["/dashboard", "/dashboard/appointments", "/dashboard/patients", "/dashboard/support"]);
+const SECRETARY_ALLOWED_NAV = new Set(["/dashboard", "/dashboard/appointments", "/dashboard/patients", "/dashboard/messages", "/dashboard/support"]);
 
 export const MOBILE_NAV = NAV.slice(0, 5);
 

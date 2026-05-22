@@ -93,11 +93,13 @@ export async function proxy(req: NextRequest) {
         "/dashboard",
         "/dashboard/appointments",
         "/dashboard/patients",
+        "/dashboard/messages",
         "/dashboard/support",
       ];
       const allowedApiPaths = [
         "/api/appointments",
         "/api/patients",
+        "/api/messages",
         "/api/support/health",
       ];
       const canUseDashboard = allowedDashboardPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
