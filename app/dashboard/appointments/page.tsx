@@ -111,14 +111,26 @@ export default function AppointmentsPage() {
     setActionLoading(null);
   }
 
+  // Load all patients when booking dialog opens
   useEffect(() => {
-    if (patientSearch.length < 2) { setPatientResults([]); return; }
-    const t = setTimeout(async () => {
-      const res = await fetch(`/api/patients?search=${encodeURIComponent(patientSearch)}`);
-      if (res.ok) setPatientResults(await res.json());
-    }, 300);
+    if (!showBooking) return;
+    fetch(`/api/patients?search=`)
+      .then(r => r.ok ? r.json() : [])
+      .then(setPatientResults)
+      .catch(() => {});
+  }, [showBooking]);
+
+  // Filter as user types
+  useEffect(() => {
+    if (!showBooking) return;
+    const t = setTimeout(() => {
+      fetch(`/api/patients?search=${encodeURIComponent(patientSearch)}`)
+        .then(r => r.ok ? r.json() : [])
+        .then(setPatientResults)
+        .catch(() => {});
+    }, 250);
     return () => clearTimeout(t);
-  }, [patientSearch]);
+  }, [patientSearch, showBooking]);
 
   async function fetchSlots(date: string) {
     if (!date) { setAvailableSlots([]); return; }
@@ -350,25 +362,25 @@ export default function AppointmentsPage() {
                       placeholder="اكتب الاسم بالعربي أو رقم الهاتف"
                       className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                     />
-                    {patientResults.length > 0 && (
-                      <div className="mt-2 max-h-48 overflow-y-auto rounded-2xl border-2 border-blue-200 bg-white shadow-lg">
-                        {patientResults.map((p) => (
-                          <button
-                            key={p.id}
-                            onClick={() => { setSelectedPatient(p); setPatientSearch(""); setPatientResults([]); }}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-right transition hover:bg-slate-50"
-                          >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white">
-                              {p.name[0]}
-                            </div>
-                            <div>
-                              <p className="text-sm font-black text-slate-900">{p.name}</p>
-                              <p className="text-xs font-bold text-slate-400" dir="ltr">{p.whatsappPhone}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <div className="mt-2 max-h-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+                      {patientResults.length === 0 ? (
+                        <p className="px-4 py-3 text-sm text-slate-400">لا توجد نتائج</p>
+                      ) : patientResults.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => { setSelectedPatient(p); setPatientSearch(""); setPatientResults([]); }}
+                          className="flex w-full items-center gap-3 px-4 py-3 text-right transition hover:bg-blue-50 border-b border-slate-50 last:border-0"
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white">
+                            {p.name[0]}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-900">{p.name}</p>
+                            <p className="text-xs font-bold text-slate-400" dir="ltr">{p.whatsappPhone}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   /* ── المريض محدد ── */
