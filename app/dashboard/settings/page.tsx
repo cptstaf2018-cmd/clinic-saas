@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MEDICAL_SPECIALTIES } from "@/lib/medical-specialties";
 
 interface Settings {
   id: string;
@@ -298,6 +299,38 @@ export default function SettingsPage() {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ المعلومات"}
+            </button>
+          </Section>
+
+          <Section title="اختصاص العيادة" description="يحدد القوالب والخرائط الظاهرة في ملف المريض">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {MEDICAL_SPECIALTIES.map((sp) => {
+                const active = settings.specialty === sp.key;
+                return (
+                  <button
+                    key={sp.key}
+                    type="button"
+                    onClick={() => setSettings({ ...settings, specialty: sp.key })}
+                    className={`rounded-2xl border p-3 text-right transition ${
+                      active
+                        ? "border-blue-600 bg-blue-50"
+                        : "border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black ${active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"}`}>
+                      {sp.icon}
+                    </span>
+                    <p className="mt-2 text-sm font-black text-slate-900">{sp.name}</p>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => saveSettings({ specialty: settings.specialty })}
+              disabled={saving}
+              className="mt-3 w-full rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "جاري الحفظ..." : "حفظ الاختصاص"}
             </button>
           </Section>
 
