@@ -93,7 +93,7 @@ function AppointmentRow({
 
 function ProductPreview() {
   return (
-    <div className="relative hidden min-h-screen flex-1 overflow-hidden bg-[#071a34] px-12 py-10 lg:flex">
+    <div dir="ltr" className="relative hidden min-h-screen flex-1 overflow-hidden bg-[#071a34] px-10 py-10 lg:flex">
       <div
         className="absolute inset-0 opacity-70"
         style={{
@@ -104,11 +104,15 @@ function ProductPreview() {
       />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_24%,rgba(47,128,237,0.26),transparent_34%),linear-gradient(135deg,rgba(12,31,63,0.98),rgba(7,26,52,0.94)_44%,rgba(5,18,39,1))]" />
 
-      <div className="relative z-10 flex w-full flex-col">
-        <BrandMark />
+      <div className="relative z-10 mx-auto flex w-full max-w-[1060px] flex-col">
+        <div className="flex justify-end">
+          <div dir="rtl">
+            <BrandMark />
+          </div>
+        </div>
 
-        <div className="mt-16 grid flex-1 grid-cols-[0.95fr_1.05fr] items-center gap-10">
-          <section className="max-w-xl">
+        <div className="grid flex-1 grid-cols-[440px_1fr] items-center gap-12">
+          <section dir="rtl" className="order-2 max-w-[430px] justify-self-end text-right">
             <div className="mb-5 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.08] px-3 py-2 text-xs font-extrabold text-[#b9d8ff] backdrop-blur">
               <Sparkles className="h-4 w-4" />
               تجربة مجانية 14 يوم بدون بطاقة ائتمان
@@ -119,28 +123,28 @@ function ProductPreview() {
               <span className="mt-2 block text-[#9dccff]">تعمل قبل وصولك</span>
             </h1>
 
-            <p className="mt-5 max-w-md text-base font-semibold leading-8 text-slate-300">
+            <p className="mt-5 text-base font-semibold leading-8 text-slate-300">
               إدارة المواعيد، غرفة الانتظار، التذكيرات، وبوت واتساب ذكي في تجربة واحدة تبدو جاهزة للتوسع من أول يوم.
             </p>
 
-            <div className="mt-8 grid max-w-md gap-3">
+            <div className="mt-8 grid gap-3">
               {[
                 "حجز تلقائي عبر واتساب",
                 "تذكيرات تقلل غياب المرضى",
                 "متابعة يومية للمواعيد والمدفوعات",
                 "إدارة كاملة من الجوال والكمبيوتر",
               ].map((item) => (
-                <div key={item} className="flex items-center gap-3 text-sm font-bold text-slate-200">
+                <div key={item} className="flex items-center justify-end gap-3 text-sm font-bold text-slate-200">
+                  {item}
                   <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#2f80ed]/20 text-[#9dccff]">
                     <Check className="h-4 w-4" />
                   </span>
-                  {item}
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="relative">
+          <section dir="rtl" className="order-1 relative w-[440px] justify-self-start">
             <div className="rounded-lg border border-white/10 bg-white/[0.08] p-4 shadow-[0_36px_110px_rgba(0,0,0,0.34)] backdrop-blur-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -190,7 +194,7 @@ function ProductPreview() {
           </section>
         </div>
 
-        <p className="text-xs font-bold text-slate-500">© 2026 عيادتي، تكريت، العراق</p>
+        <p className="text-left text-xs font-bold text-slate-500">© 2026 عيادتي، تكريت، العراق</p>
       </div>
     </div>
   );
@@ -505,7 +509,12 @@ export default function RegisterPage() {
             </div>
 
             <div className="rounded-lg border border-white/70 bg-white/75 p-5 shadow-[0_26px_90px_rgba(28,52,92,0.18)] backdrop-blur-2xl sm:p-6">
-              <div className="flex min-w-0 items-start justify-between gap-4">
+              <div className="text-center">
+                <div className="mb-4 flex justify-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#0f1f3d] text-white shadow-[0_16px_34px_rgba(15,31,61,0.18)]">
+                    <Stethoscope className="h-6 w-6" />
+                  </span>
+                </div>
                 <div className="min-w-0">
                   <p className="mb-3 inline-flex items-center gap-2 rounded-lg bg-[#e8f2ff] px-3 py-1.5 text-xs font-black text-[#2f6fe4]">
                     <CheckCircle2 className="h-4 w-4" />
@@ -518,12 +527,9 @@ export default function RegisterPage() {
                     أنشئ حساب عيادتك الآن وشاهد نظام المواعيد والواتساب من الداخل خلال دقيقة.
                   </p>
                 </div>
-                <div className="hidden h-14 w-14 items-center justify-center rounded-lg bg-[#0f1f3d] text-white shadow-[0_16px_34px_rgba(15,31,61,0.18)] sm:flex">
-                  <Stethoscope className="h-7 w-7" />
-                </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <TrustBadge icon={ShieldCheck} text="بدون بطاقة ائتمان" />
                 <TrustBadge icon={Clock3} text="إعداد خلال دقيقة" />
                 <TrustBadge icon={CheckCircle2} text="14 يوم تجربة" />
