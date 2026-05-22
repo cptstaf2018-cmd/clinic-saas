@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
+import { isSecretaryRole } from "@/lib/clinic-roles";
 
 export async function GET() {
   const session = await auth();
@@ -36,7 +37,16 @@ export async function PATCH(req: Request) {
   if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
   const clinicId = session.user.clinicId as string;
 
-  const { id, phone } = await req.json();
+  const { id, phone, action } = await req.json();
+
+  if (action === "archive" || action === "unarchive") {
+    if (!phone) return NextResponse.json({ error: "رقم المحادثة مطلوب" }, { status: 400 });
+    await db.incomingMessage.updateMany({
+      where: { phone, clinicId },
+      data: { archived: action === "archive", read: true },
+    });
+    return NextResponse.json({ ok: true });
+  }
 
   if (phone) {
     await db.incomingMessage.updateMany({
@@ -50,6 +60,21 @@ export async function PATCH(req: Request) {
     where: { id, clinicId },
     data: { read: true },
   });
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(req: Request) {
+  const session = await auth();
+  if (!session?.user?.clinicId) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  if (isSecretaryRole(session.user.role)) {
+    return NextResponse.json({ error: "الحذف النهائي متاح لحساب الدكتور فقط" }, { status: 403 });
+  }
+
+  const clinicId = session.user.clinicId as string;
+  const { phone } = await req.json().catch(() => ({}));
+  if (!phone) return NextResponse.json({ error: "رقم المحادثة مطلوب" }, { status: 400 });
+
+  await db.incomingMessage.deleteMany({ where: { clinicId, phone } });
   return NextResponse.json({ ok: true });
 }
 

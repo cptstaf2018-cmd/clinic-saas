@@ -212,10 +212,12 @@ model IncomingMessage {
   direction String   @default("inbound")
   status    String   @default("received")
   error     String?
+  archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   clinic    Clinic   @relation(fields: [clinicId], references: [id])
 
   @@index([clinicId])
+  @@index([clinicId, archived])
   @@index([clinicId, read])
   @@index([clinicId, phone])
   @@index([clinicId, direction])
