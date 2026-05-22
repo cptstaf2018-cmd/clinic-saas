@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { encodePaymentReference, isPlanId, PLAN_PRICES } from "@/lib/plans";
+import { encodePaymentReference, getPlanDurationPrice, isPlanId, isSubscriptionDurationId } from "@/lib/plans";
 import { PaymentMethodId, validatePaymentReference } from "@/lib/payment-reference";
 import { logSystemEvent } from "@/lib/system-events";
 
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   }
 
   const clinicId = session.user.clinicId;
-  const body: { amount: number; method: PaymentMethodId; plan?: string; reference?: string } =
+  const body: { amount: number; method: PaymentMethodId; plan?: string; duration?: string; reference?: string } =
     await req.json();
 
   if (!body.amount || !body.method || !body.plan || !body.reference?.trim()) {
@@ -30,9 +30,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "الباقة غير صحيحة" }, { status: 400 });
   }
 
-  if (body.amount !== PLAN_PRICES[body.plan]) {
+  const duration = isSubscriptionDurationId(body.duration) ? body.duration : "monthly";
+  const expectedAmount = getPlanDurationPrice(body.plan, duration);
+  if (body.amount !== expectedAmount) {
     return NextResponse.json(
-      { error: "المبلغ لا يطابق الباقة المختارة" },
+      { error: "المبلغ لا يطابق الباقة والمدة المختارة" },
       { status: 400 }
     );
   }
@@ -46,7 +48,7 @@ export async function POST(req: Request) {
     where: {
       clinicId,
       status: "pending",
-      reference: { contains: `[plan:${body.plan}]` },
+      reference: { contains: `[plan:${body.plan}] [duration:${duration}]` },
     },
   });
 
@@ -78,7 +80,7 @@ export async function POST(req: Request) {
       amount: body.amount,
       method: body.method,
       status: "pending",
-      reference: encodePaymentReference(body.plan, referenceCheck.reference),
+      reference: encodePaymentReference(body.plan, referenceCheck.reference, duration),
     },
   });
 
@@ -89,7 +91,7 @@ export async function POST(req: Request) {
     source: "billing",
     title: "طلب دفع جديد",
     message: `تم إرسال طلب دفع بقيمة ${body.amount}.`,
-    metadata: { method: body.method, plan: body.plan, paymentId: payment.id },
+    metadata: { method: body.method, plan: body.plan, duration, paymentId: payment.id },
   });
 
   return NextResponse.json(payment, { status: 201 });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { extractPlanFromReference, isPlanId, planFromAmount } from "@/lib/plans";
+import { extractDurationFromReference, extractPlanFromReference, isPlanId, planFromAmount, SUBSCRIPTION_DURATIONS } from "@/lib/plans";
 import { createPaymentActivationCode } from "@/lib/activation-codes";
 import { dateAfterDays, PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
 import { sendWhatsApp } from "@/lib/whatsapp";
@@ -39,7 +39,8 @@ export async function PATCH(
   if (body.action === "approve") {
     const inferredPlan = extractPlanFromReference(payment.reference) ?? planFromAmount(payment.amount) ?? "basic";
     const plan = isPlanId(body.plan) ? body.plan : inferredPlan;
-    const days = PAID_SUBSCRIPTION_DAYS;
+    const duration = extractDurationFromReference(payment.reference);
+    const days = SUBSCRIPTION_DURATIONS[duration]?.days ?? PAID_SUBSCRIPTION_DAYS;
     const expiresAt = dateAfterDays(days);
 
     await db.$transaction([

@@ -1,7 +1,14 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { encodePaymentReference, isPlanId, PLAN_PRICES, PlanId } from "@/lib/plans";
+import {
+  encodePaymentReference,
+  getPlanDurationPrice,
+  isPlanId,
+  isSubscriptionDurationId,
+  PlanId,
+  SUBSCRIPTION_DURATIONS,
+} from "@/lib/plans";
 import { createPaymentActivationCode } from "@/lib/activation-codes";
 import { validatePaymentReference } from "@/lib/payment-reference";
 import { dateAfterDays, PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
@@ -23,6 +30,7 @@ export async function POST(req: Request) {
     clinicId: string;
     amount: number;
     plan: PlanId;
+    duration?: string;
     reference: string;
   } = await req.json();
 
@@ -44,9 +52,10 @@ export async function POST(req: Request) {
     );
   }
 
-  if (body.amount !== PLAN_PRICES[body.plan]) {
+  const duration = isSubscriptionDurationId(body.duration) ? body.duration : "monthly";
+  if (body.amount !== getPlanDurationPrice(body.plan, duration)) {
     return NextResponse.json(
-      { error: "المبلغ لا يطابق الباقة المختارة" },
+      { error: "المبلغ لا يطابق الباقة والمدة المختارة" },
       { status: 400 }
     );
   }
@@ -60,7 +69,7 @@ export async function POST(req: Request) {
   }
 
   const storedReference = referenceCheck
-    ? encodePaymentReference(body.plan, referenceCheck.reference)
+    ? encodePaymentReference(body.plan, referenceCheck.reference, duration)
     : null;
 
   if (storedReference) {
@@ -80,7 +89,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "العيادة غير موجودة" }, { status: 404 });
   }
 
-  const expiresAt = dateAfterDays(PAID_SUBSCRIPTION_DAYS);
+  const days = SUBSCRIPTION_DURATIONS[duration]?.days ?? PAID_SUBSCRIPTION_DAYS;
+  const expiresAt = dateAfterDays(days);
 
   const [payment] = await db.$transaction([
     db.payment.create({
@@ -110,7 +120,7 @@ export async function POST(req: Request) {
     clinicName: clinic.name,
     whatsappNumber: clinic.whatsappNumber ?? "",
     plan: body.plan,
-    days: PAID_SUBSCRIPTION_DAYS,
+    days,
   });
 
   return NextResponse.json({ success: true, activationCode: activation.code });

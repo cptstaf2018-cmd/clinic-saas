@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
+import { SUBSCRIPTION_DURATIONS } from "@/lib/plans";
+import type { SubscriptionDurationId } from "@/lib/plans";
 
 interface Payment {
   id: string;
@@ -12,6 +13,7 @@ interface Payment {
   reference: string | null;
   activationCode: string | null;
   requestedPlan: string | null;
+  requestedDuration: SubscriptionDurationId;
   createdAt: string;
   clinic: { name: string };
 }
@@ -47,6 +49,13 @@ const PLAN_NAMES: Record<string, string> = {
   standard: "متوسطة",
   premium: "مميزة",
   vip: "مميزة VIP",
+};
+
+const DURATION_NAMES: Record<SubscriptionDurationId, string> = {
+  monthly: "شهر",
+  quarterly: "3 أشهر",
+  semiannual: "6 أشهر",
+  annual: "سنة",
 };
 
 export default function PaymentsClient({
@@ -109,6 +118,7 @@ export default function PaymentsClient({
               <th className="px-4 py-3 text-right">المبلغ</th>
               <th className="px-4 py-3 text-right">الطريقة</th>
               <th className="px-4 py-3 text-right">الباقة</th>
+              <th className="px-4 py-3 text-right">المدة</th>
               <th className="px-4 py-3 text-right">الحالة</th>
               <th className="px-4 py-3 text-right">التاريخ</th>
               <th className="px-4 py-3 text-right">المرجع</th>
@@ -126,6 +136,9 @@ export default function PaymentsClient({
                 </td>
                 <td className="px-4 py-3 font-semibold text-gray-700">
                   {payment.requestedPlan ? PLAN_NAMES[payment.requestedPlan] : "—"}
+                </td>
+                <td className="px-4 py-3 font-semibold text-blue-700">
+                  {DURATION_NAMES[payment.requestedDuration] ?? "شهر"}
                 </td>
                 <td className="px-4 py-3">
                   <span
@@ -168,7 +181,7 @@ export default function PaymentsClient({
                         ))}
                       </select>
                       <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
-                        مدة التفعيل: {PAID_SUBSCRIPTION_DAYS} يوم
+                        مدة التفعيل: {SUBSCRIPTION_DURATIONS[payment.requestedDuration]?.days ?? 30} يوم
                       </div>
                       <div className="flex gap-1">
                         <button

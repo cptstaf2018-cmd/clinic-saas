@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isPlanId, PLAN_LABELS, PLAN_PRICES, PlanId } from "@/lib/plans";
+import {
+  getPlanDurationPrice,
+  isPlanId,
+  PLAN_LABELS,
+  PLAN_PRICES,
+  PlanId,
+  SUBSCRIPTION_DURATIONS,
+} from "@/lib/plans";
+import type { SubscriptionDurationId } from "@/lib/plans";
 import { validatePaymentReference } from "@/lib/payment-reference";
 
 type PaymentMethodId = "superkey" | "zaincash" | "crypto";
@@ -97,6 +105,7 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }>
 };
 
 const PLAN_RANK: Record<PlanId, number> = { basic: 1, standard: 2, premium: 3, vip: 4 };
+const DURATION_OPTIONS = Object.entries(SUBSCRIPTION_DURATIONS) as Array<[SubscriptionDurationId, typeof SUBSCRIPTION_DURATIONS[SubscriptionDurationId]]>;
 
 interface Subscription { plan: string; status: string; startDate: string; expiresAt: string; }
 
@@ -110,6 +119,7 @@ export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null | "loading">("loading");
   const [step, setStep] = useState<"plans" | "payment">("plans");
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("standard");
+  const [selectedDuration, setSelectedDuration] = useState<SubscriptionDurationId>("monthly");
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodId>("superkey");
   const [purchaseMode, setPurchaseMode] = useState<PurchaseMode | null>(null);
   const [reference, setReference] = useState("");
@@ -148,10 +158,11 @@ export default function SubscriptionPage() {
     if (!check.ok) { setError(check.error); return; }
     setSubmitting(true); setError("");
     const plan = PLANS.find((p) => p.id === selectedPlan)!;
+    const amount = getPlanDurationPrice(plan.id, selectedDuration);
     const res = await fetch("/api/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: plan.price, method: method.id, plan: plan.id, reference: check.reference }),
+      body: JSON.stringify({ amount, method: method.id, plan: plan.id, duration: selectedDuration, reference: check.reference }),
     });
     if (res.ok) { setSubmitted(true); }
     else { const d = await res.json(); setError(d.error ?? "تعذر إرسال طلب الدفع"); }
@@ -168,6 +179,10 @@ export default function SubscriptionPage() {
   const isActive = subscription?.status === "active" && daysLeft > 0;
   const selectedPaymentMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
   const selected = PLANS.find((p) => p.id === selectedPlan)!;
+  const selectedDurationMeta = SUBSCRIPTION_DURATIONS[selectedDuration];
+  const selectedAmount = getPlanDurationPrice(selected.id, selectedDuration);
+  const selectedBaseAmount = selected.price * selectedDurationMeta.months;
+  const selectedSaving = selectedBaseAmount - selectedAmount;
   const selectablePlans = isActive
     ? purchaseMode === "renew" ? PLANS.filter((p) => p.id === activePlan)
     : purchaseMode === "upgrade" ? PLANS.filter((p) => PLAN_RANK[p.id] > PLAN_RANK[activePlan])
@@ -234,9 +249,41 @@ export default function SubscriptionPage() {
         {(!isActive || purchaseMode) && step === "plans" && !submitted && (
           <section>
             <p className="mb-4 text-sm font-black text-slate-500">اختر الباقة المناسبة لعيادتك</p>
+            <div className="mb-5 rounded-[26px] bg-white p-2 shadow-sm ring-1 ring-slate-200">
+              <div className="grid gap-2 sm:grid-cols-4">
+                {DURATION_OPTIONS.map(([id, duration]) => {
+                  const isSelected = selectedDuration === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSelectedDuration(id)}
+                      className={`relative rounded-2xl px-4 py-3 text-center transition ${
+                        isSelected ? "bg-blue-600 text-white shadow" : "bg-slate-50 text-slate-600 hover:bg-blue-50"
+                      }`}
+                    >
+                      {duration.badge && (
+                        <span className={`absolute -top-2 right-3 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                          isSelected ? "bg-white text-blue-700" : "bg-emerald-100 text-emerald-700"
+                        }`}>
+                          {duration.badge}
+                        </span>
+                      )}
+                      <p className="text-sm font-black">{duration.label}</p>
+                      <p className={`mt-0.5 text-xs font-bold ${isSelected ? "text-blue-100" : "text-slate-400"}`}>
+                        {duration.discountPercent ? `وفر ${duration.discountPercent}%` : "بدون التزام"}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {selectablePlans.map((plan) => {
                 const isSelected = selectedPlan === plan.id;
+                const amount = getPlanDurationPrice(plan.id, selectedDuration);
+                const baseAmount = plan.price * selectedDurationMeta.months;
+                const saving = baseAmount - amount;
                 return (
                   <div
                     key={plan.id}
@@ -253,9 +300,14 @@ export default function SubscriptionPage() {
                     <p className="text-xs font-bold text-slate-400">{plan.title}</p>
                     <h2 className="mt-1 text-2xl font-black text-slate-950">{plan.name}</h2>
                     <p className="mt-3 text-3xl font-black text-slate-950">
-                      {formatMoney(plan.price)}
-                      <span className="text-sm font-bold text-slate-400 mr-1">د.ع / شهر</span>
+                      {formatMoney(amount)}
+                      <span className="text-sm font-bold text-slate-400 mr-1">د.ع / {selectedDurationMeta.shortLabel}</span>
                     </p>
+                    {saving > 0 && (
+                      <p className="mt-1 text-xs font-black text-emerald-700">
+                        وفرت {formatMoney(saving)} د.ع مقارنة بالدفع الشهري
+                      </p>
+                    )}
                     <ul className="mt-4 space-y-2">
                       {plan.features.map((f) => (
                         <li key={f} className="flex items-center gap-2 text-sm font-bold text-slate-700">
@@ -277,7 +329,7 @@ export default function SubscriptionPage() {
                 onClick={() => { setStep("payment"); setError(""); }}
                 className="rounded-2xl bg-blue-600 px-10 py-3.5 text-base font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5 hover:bg-blue-700"
               >
-                متابعة الدفع ← {selected.name} · {formatMoney(selected.price)} د.ع
+                متابعة الدفع ← {selected.name} · {selectedDurationMeta.shortLabel} · {formatMoney(selectedAmount)} د.ع
               </button>
             </div>
           </section>
@@ -293,7 +345,14 @@ export default function SubscriptionPage() {
               </button>
               <div className="rounded-2xl bg-slate-50 px-4 py-2 ring-1 ring-slate-200">
                 <span className="text-sm font-black text-slate-950">{selected.name}</span>
-                <span className="mr-2 text-sm font-bold text-emerald-700">{formatMoney(selected.price)} د.ع / شهر</span>
+                <span className="mr-2 text-sm font-bold text-emerald-700">
+                  {selectedDurationMeta.shortLabel} · {formatMoney(selectedAmount)} د.ع
+                </span>
+                {selectedSaving > 0 && (
+                  <span className="mr-2 text-xs font-black text-blue-700">
+                    توفير {formatMoney(selectedSaving)} د.ع
+                  </span>
+                )}
               </div>
             </div>
 

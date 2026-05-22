@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import PaymentsClient from "./PaymentsClient";
-import { cleanPaymentReference, extractPlanFromReference, planFromAmount } from "@/lib/plans";
+import { cleanPaymentReference, extractDurationFromReference, extractPlanFromReference, planFromAmount } from "@/lib/plans";
 
 export default async function AdminPaymentsPage() {
   const session = await auth();
@@ -32,6 +32,7 @@ export default async function AdminPaymentsPage() {
     reference: cleanPaymentReference(p.reference),
     activationCode: activationByPayment.get(p.id) ?? null,
     requestedPlan: extractPlanFromReference(p.reference) ?? planFromAmount(p.amount),
+    requestedDuration: extractDurationFromReference(p.reference),
     createdAt: p.createdAt.toISOString(),
     clinic: { name: p.clinic.name },
   }));
