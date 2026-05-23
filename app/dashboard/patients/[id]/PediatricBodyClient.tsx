@@ -271,8 +271,8 @@ export default function PediatricBodyClient({ patientId, initialAnnotations = []
               const ann   = getAnn(region.id);
               const isSel = selectedRegion?.id === region.id;
               const sharedProps = {
-                fill:          ann ? ann.color : "transparent",
-                fillOpacity:   ann ? 0.35 : 0,
+                fill:          "transparent",
+                fillOpacity:   0,
                 stroke:        isSel ? "#1d4ed8" : ann ? ann.color : "#64748b",
                 strokeOpacity: isSel ? 1 : ann ? 0.6 : 0,
                 strokeWidth:   isSel ? 3.5 : 2,
@@ -284,6 +284,21 @@ export default function PediatricBodyClient({ patientId, initialAnnotations = []
               return region.shape === "ellipse"
                 ? <ellipse key={region.id} cx={region.cx} cy={region.cy} rx={region.rx} ry={region.ry} {...sharedProps}/>
                 : <rect    key={region.id} x={region.x}  y={region.y}  width={region.w} height={region.h} rx={region.rx ?? 7} {...sharedProps}/>;
+            })}
+
+            {REGIONS.map(region => {
+              const ann = getAnn(region.id);
+              const isSel = selectedRegion?.id === region.id;
+              if (!ann && !isSel) return null;
+              const x = region.shape === "ellipse" ? region.cx : region.x + region.w / 2;
+              const y = region.shape === "ellipse" ? region.cy : region.y + region.h / 2;
+              const color = ann?.color ?? "#1d4ed8";
+              return (
+                <g key={`${region.id}-marker`}>
+                  <circle cx={x} cy={y} r={isSel ? 13 : 10} fill={color} fillOpacity={0.32} stroke={color} strokeWidth={isSel ? 3 : 2} strokeDasharray={isSel ? "5 3" : undefined} />
+                  <circle cx={x} cy={y} r={2.5} fill={color} />
+                </g>
+              );
             })}
 
             {/* Selected region label */}

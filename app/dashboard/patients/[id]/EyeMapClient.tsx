@@ -71,6 +71,20 @@ function buildZones(eye: EyeKey): Zone[] {
   ];
 }
 
+function zonePoint(id: string) {
+  const eye = id.startsWith("OD") ? "OD" : "OS";
+  const eyeInfo = EYES[eye];
+  const { cx, cy, discDx, discDy, macDx, macDy } = eyeInfo;
+  if (id.endsWith("_disc")) return { x: cx + discDx, y: cy + discDy };
+  if (id.endsWith("_macula")) return { x: cx + macDx, y: cy + macDy };
+
+  const radius = id.includes("_per_") ? (R_MID + R_OUT) / 2 : R_MID / 2;
+  const suffix = id.slice(-2);
+  const angles: Record<string, number> = { tr: -45, br: 45, bl: 135, tl: 225 };
+  const angle = (angles[suffix] ?? 0) * Math.PI / 180;
+  return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+}
+
 type Annotation = { zoneId: string; condition: string; color: string; notes?: string };
 type Props = { patientId: string; initialAnnotations?: Annotation[] };
 
@@ -130,12 +144,11 @@ export default function EyeMapClient({ patientId, initialAnnotations = [] }: Pro
 
         {/* Zones */}
         {zones.map(z => {
-          const ann = getAnn(z.id);
           const sel = selectedId === z.id;
           return (
             <path key={z.id} d={z.path}
-              fill={ann ? ann.color : "transparent"}
-              fillOpacity={ann ? 0.38 : 0}
+              fill="transparent"
+              fillOpacity={0}
               stroke={sel ? "#2563eb" : "#cbd5e1"}
               strokeWidth={sel ? 2 : 1}
               strokeDasharray={sel ? "5 3" : undefined}
@@ -154,14 +167,13 @@ export default function EyeMapClient({ patientId, initialAnnotations = [] }: Pro
 
         {/* Optic disc */}
         {(() => {
-          const ann = getAnn(discId);
           const sel = selectedId === discId;
           const dx = cx + discDx, dy = cy + discDy;
           return (
             <g onClick={() => pick(discId, `القرص البصري (${label})`)} className="cursor-pointer">
               <circle cx={dx} cy={dy} r={R_DISC}
-                fill={ann ? ann.color : "#fef3c7"}
-                fillOpacity={ann ? 0.8 : 1}
+                fill="#fef3c7"
+                fillOpacity={1}
                 stroke={sel ? "#2563eb" : "#d97706"}
                 strokeWidth={sel ? 3 : 2} />
               <circle cx={dx} cy={dy} r={R_DISC * 0.5} fill={ann ? "none" : "#fde68a"} stroke={ann ? "none" : "#d97706"} strokeWidth={1} />
@@ -172,14 +184,13 @@ export default function EyeMapClient({ patientId, initialAnnotations = [] }: Pro
 
         {/* Macula */}
         {(() => {
-          const ann = getAnn(macId);
           const sel = selectedId === macId;
           const mx = cx + macDx, my = cy + macDy;
           return (
             <g onClick={() => pick(macId, `البقعة الصفراء (${label})`)} className="cursor-pointer">
               <circle cx={mx} cy={my} r={R_MAC}
-                fill={ann ? ann.color : "#fdf2f8"}
-                fillOpacity={ann ? 0.8 : 1}
+                fill="#fdf2f8"
+                fillOpacity={1}
                 stroke={sel ? "#2563eb" : "#db2777"}
                 strokeWidth={sel ? 3 : 2} />
               <circle cx={mx} cy={my} r={5} fill="#db2777" style={{ pointerEvents: "none" }} />
@@ -196,6 +207,16 @@ export default function EyeMapClient({ patientId, initialAnnotations = [] }: Pro
         <text x={cx + (eye === "OD" ? R_OUT - 6 : -R_OUT + 6)} y={cy + 3} textAnchor="middle" fontSize={8} fill="#94a3b8">T</text>
 
         {/* Annotations count badge */}
+        {annotations.filter(a => a.zoneId.startsWith(eye)).map((ann) => {
+          const point = zonePoint(ann.zoneId);
+          const sel = selectedId === ann.zoneId;
+          return (
+            <g key={`${ann.zoneId}-marker`} onClick={() => pick(ann.zoneId, allAnnotated.find(a => a.zoneId === ann.zoneId)?.label ?? ann.zoneId)} className="cursor-pointer">
+              <circle cx={point.x} cy={point.y} r={sel ? 17 : 12} fill={ann.color} fillOpacity={0.32} stroke={ann.color} strokeWidth={sel ? 5 : 3} strokeDasharray={sel ? "5 3" : undefined} />
+              <circle cx={point.x} cy={point.y} r={3.5} fill={ann.color} />
+            </g>
+          );
+        })}
         {(() => {
           const count = annotations.filter(a => a.zoneId.startsWith(eye)).length;
           return count > 0 ? (

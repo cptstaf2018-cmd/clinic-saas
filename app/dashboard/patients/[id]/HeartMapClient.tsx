@@ -172,8 +172,8 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
               const ann   = getAnn(region.id);
               const isSel = selectedRegion?.id === region.id;
               const props = {
-                fill:          ann ? ann.color : "transparent",
-                fillOpacity:   ann ? 0.4 : 0,
+                fill:          "transparent",
+                fillOpacity:   0,
                 stroke:        isSel ? "#facc15" : ann ? ann.color : "rgba(0,0,0,0.3)",
                 strokeOpacity: isSel ? 1 : ann ? 0.8 : 0,
                 strokeWidth:   isSel ? 5 : 3,
@@ -185,6 +185,20 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
               return region.shape === "ellipse"
                 ? <ellipse key={region.id} cx={region.cx} cy={region.cy} rx={region.rx} ry={region.ry} {...props} />
                 : <rect key={region.id} x={region.x} y={region.y} width={region.w} height={region.h} rx={region.rx ?? 10} {...props} />;
+            })}
+            {REGIONS.map(region => {
+              const ann = getAnn(region.id);
+              const isSel = selectedRegion?.id === region.id;
+              if (!ann && !isSel) return null;
+              const x = region.shape === "ellipse" ? region.cx : region.x + region.w / 2;
+              const y = region.shape === "ellipse" ? region.cy : region.y + region.h / 2;
+              const color = ann?.color ?? "#dc2626";
+              return (
+                <g key={`${region.id}-marker`}>
+                  <circle cx={x} cy={y} r={isSel ? 30 : 22} fill={color} fillOpacity={0.32} stroke={color} strokeWidth={isSel ? 7 : 5} strokeDasharray={isSel ? "10 5" : undefined} />
+                  <circle cx={x} cy={y} r={6} fill={color} />
+                </g>
+              );
             })}
 
             {pointAnnotations.map(({ annotation, point }) => {

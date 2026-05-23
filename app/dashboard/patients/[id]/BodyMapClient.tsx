@@ -123,14 +123,6 @@ function parsePointId(id: string): PointSelection | null {
   return { id, x: px, y: py, saved: true };
 }
 
-function RegionEl({ r, fill, stroke, sw, dash }: {
-  r: Region; fill: string; stroke: string; sw: number; dash?: string;
-}) {
-  const p = { fill, stroke, strokeWidth: sw, strokeDasharray: dash };
-  if (r.shape === "ellipse") return <ellipse cx={r.cx} cy={r.cy} rx={r.rx} ry={r.ry} {...p} />;
-  return <rect x={r.x} y={r.y} width={r.w} height={r.h} rx={r.rx ?? 0} {...p} />;
-}
-
 export default function BodyMapClient({
   patientId,
   specialtyCode,
@@ -262,9 +254,17 @@ export default function BodyMapClient({
             const isSel = selected === region.id;
             return (
               <g key={region.id} onClick={(event) => { event.stopPropagation(); handleSelect(region.id); }} style={{ cursor: "pointer" }}>
-                <RegionEl r={region} fill={ann ? ann.color + "44" : "transparent"} stroke="transparent" sw={0} />
+                {ann && (
+                  <>
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={18} fill={ann.color} fillOpacity={0.32} stroke={ann.color} strokeWidth={4} />
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={5} fill={ann.color} />
+                  </>
+                )}
                 {isSel && (
-                  <RegionEl r={region} fill={ann ? ann.color + "44" : "#1e3a8a18"} stroke="#1e3a8a" sw={3} dash="8 4" />
+                  <>
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={24} fill="#1e3a8a" fillOpacity={0.18} stroke="#1e3a8a" strokeWidth={5} strokeDasharray="8 4" />
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={5} fill="#1e3a8a" />
+                  </>
                 )}
                 {isSel && (
                   <>

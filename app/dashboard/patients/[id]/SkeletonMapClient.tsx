@@ -137,15 +137,6 @@ function parsePointId(id: string): PointSelection | null {
   return { id, view, x: px, y: py, saved: true };
 }
 
-function RegionEl({ region, fill, stroke, sw, dash }: {
-  region: Region; fill: string; stroke: string; sw: number; dash?: string;
-}) {
-  const p = { fill, stroke, strokeWidth: sw, strokeDasharray: dash };
-  if (region.shape === "ellipse")
-    return <ellipse cx={region.cx} cy={region.cy} rx={region.rx} ry={region.ry} {...p} />;
-  return <rect x={region.x} y={region.y} width={region.w} height={region.h} rx={region.rx ?? 0} {...p} />;
-}
-
 export default function SkeletonMapClient({
   patientId,
   specialtyCode,
@@ -276,10 +267,18 @@ export default function SkeletonMapClient({
               return (
               <g key={region.id} onClick={(event) => { event.stopPropagation(); handleSelect(region.id); }} style={{ cursor: "pointer" }}>
                 {/* colour overlay when annotated */}
-                <RegionEl region={region} fill={ann ? ann.color + "40" : "transparent"} stroke="transparent" sw={0} />
+                {ann && (
+                  <>
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={24} fill={ann.color} fillOpacity={0.32} stroke={ann.color} strokeWidth={5} />
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={6} fill={ann.color} />
+                  </>
+                )}
                 {/* selection border */}
                 {isSel && (
-                  <RegionEl region={region} fill={ann ? ann.color + "40" : "#1e3a8a18"} stroke="#1e3a8a" sw={4} dash="10 5" />
+                  <>
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={30} fill="#1e3a8a" fillOpacity={0.18} stroke="#1e3a8a" strokeWidth={6} strokeDasharray="10 5" />
+                    <circle cx={labelX(region)} cy={region.shape === "ellipse" ? region.cy : region.y + region.h / 2} r={6} fill="#1e3a8a" />
+                  </>
                 )}
                 {/* label above selected region */}
                 {isSel && (

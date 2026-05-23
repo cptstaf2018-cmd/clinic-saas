@@ -161,8 +161,8 @@ export default function InternalOrgansClient({ patientId, clinicId, initialAnnot
             {ORGANS.map(organ => {
               const ann = getAnnotation(organ.id);
               const isSelected = selectedOrgan?.id === organ.id;
-              const fillColor = ann ? ann.color : "transparent";
-              const fillOpacity = ann ? 0.35 : 0;
+              const fillColor = "transparent";
+              const fillOpacity = 0;
               const stroke = isSelected ? "#1d4ed8" : ann ? ann.color : "#64748b";
               const strokeOpacity = isSelected ? 1 : ann ? 0.7 : 0;
               const strokeWidth = isSelected ? 3 : 2;
@@ -186,6 +186,20 @@ export default function InternalOrgansClient({ patientId, clinicId, initialAnnot
               }
               return (
                 <rect key={organ.id} x={organ.x} y={organ.y} width={organ.w} height={organ.h} rx={organ.rx ?? 8} {...commonProps} />
+              );
+            })}
+            {ORGANS.map(organ => {
+              const ann = getAnnotation(organ.id);
+              const isSelected = selectedOrgan?.id === organ.id;
+              if (!ann && !isSelected) return null;
+              const x = organ.shape === "ellipse" ? organ.cx : organ.x + organ.w / 2;
+              const y = organ.shape === "ellipse" ? organ.cy : organ.y + organ.h / 2;
+              const color = ann?.color ?? "#1d4ed8";
+              return (
+                <g key={`${organ.id}-marker`}>
+                  <circle cx={x} cy={y} r={isSelected ? 26 : 20} fill={color} fillOpacity={0.32} stroke={color} strokeWidth={isSelected ? 6 : 4} strokeDasharray={isSelected ? "8 4" : undefined} />
+                  <circle cx={x} cy={y} r={5} fill={color} />
+                </g>
               );
             })}
           </svg>

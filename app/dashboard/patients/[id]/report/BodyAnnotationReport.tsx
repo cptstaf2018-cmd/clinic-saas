@@ -214,10 +214,14 @@ const EYE_ZONES: Record<string, { path: string; labelAr: string }> = {
 
 // ── Helper: render SVG shape ──────────────────────────────────────────────────
 function RegionOverlay({ region, color }: { region: Region; color: string }) {
-  const p = { fill: color, fillOpacity: 0.45, stroke: color, strokeOpacity: 0.75, strokeWidth: 2 };
-  if (region.shape === "ellipse")
-    return <ellipse cx={region.cx} cy={region.cy} rx={region.rx} ry={region.ry} {...p} />;
-  return <rect x={region.x} y={region.y} width={region.w} height={region.h} rx={region.rx ?? 6} {...p} />;
+  const x = region.shape === "ellipse" ? region.cx : region.x + region.w / 2;
+  const y = region.shape === "ellipse" ? region.cy : region.y + region.h / 2;
+  return (
+    <g>
+      <circle cx={x} cy={y} r={18} fill={color} fillOpacity={0.32} stroke={color} strokeWidth={4} />
+      <circle cx={x} cy={y} r={5} fill={color} />
+    </g>
+  );
 }
 
 function parsePoint(id: string) {
