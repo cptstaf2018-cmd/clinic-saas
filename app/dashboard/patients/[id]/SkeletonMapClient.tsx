@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { MouseEvent } from "react";
 import Image from "next/image";
 
 const CONDITION_TYPES = [
@@ -121,6 +122,20 @@ const BACK_REGIONS: Region[] = [
 ];
 
 type Annotation = { id: string; regionId: string; label: string; color: string; notes: string | null };
+type PointSelection = { id: string; view: "front" | "back"; x: number; y: number; saved: boolean };
+
+function makePointId(view: "front" | "back", x: number, y: number) {
+  return `point:${view}:${x.toFixed(1)}:${y.toFixed(1)}:${Date.now()}`;
+}
+
+function parsePointId(id: string): PointSelection | null {
+  const [prefix, view, x, y] = id.split(":");
+  if (prefix !== "point" || (view !== "front" && view !== "back")) return null;
+  const px = Number(x);
+  const py = Number(y);
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  return { id, view, x: px, y: py, saved: true };
+}
 
 function RegionEl({ region, fill, stroke, sw, dash }: {
   region: Region; fill: string; stroke: string; sw: number; dash?: string;
@@ -143,12 +158,17 @@ export default function SkeletonMapClient({
   const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations);
   const [view, setView]               = useState<"front" | "back">("front");
   const [selected, setSelected]       = useState<string | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<PointSelection | null>(null);
   const [notes, setNotes]             = useState("");
   const [saving, setSaving]           = useState(false);
 
   const regions     = view === "front" ? FRONT_REGIONS : BACK_REGIONS;
   const selRegion   = regions.find((r) => r.id === selected);
-  const selAnn      = annotations.find((a) => a.regionId === selected) ?? null;
+  const activeId    = selectedPoint?.id ?? selected;
+  const selAnn      = annotations.find((a) => a.regionId === activeId) ?? null;
+  const pointAnnotations = annotations
+    .map((annotation) => ({ annotation, point: parsePointId(annotation.regionId) }))
+    .filter((item): item is { annotation: Annotation; point: PointSelection } => !!item.point && item.point.view === view);
 
   function labelX(r: Region) { return r.shape === "ellipse" ? r.cx : r.x + r.w / 2; }
   function labelY(r: Region) { return r.shape === "ellipse" ? r.cy - r.ry - 18 : r.y - 18; }
@@ -156,38 +176,57 @@ export default function SkeletonMapClient({
   function handleSelect(id: string) {
     const same = selected === id;
     setSelected(same ? null : id);
+    setSelectedPoint(null);
     setNotes(same ? "" : (annotations.find((a) => a.regionId === id)?.notes ?? ""));
   }
 
+  function handlePointSelect(point: PointSelection) {
+    setSelected(null);
+    setSelectedPoint(point);
+    setNotes(point.saved ? (annotations.find((a) => a.regionId === point.id)?.notes ?? "") : "");
+  }
+
+  function handleMapClick(event: MouseEvent<SVGSVGElement>) {
+    if (event.target !== event.currentTarget) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 960;
+    const y = ((event.clientY - rect.top) / rect.height) * 1856;
+    handlePointSelect({ id: makePointId(view, x, y), view, x, y, saved: false });
+  }
+
   async function saveAnnotation(key: string) {
-    if (!selected) return;
+    const regionId = selectedPoint?.id ?? selected;
+    if (!regionId) return;
     const cond = CONDITION_TYPES.find((c) => c.key === key)!;
     setSaving(true);
     const res = await fetch(`/api/patients/${patientId}/annotations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ specialtyCode, regionId: selected, label: key, color: cond.color, notes: notes || null }),
+      body: JSON.stringify({ specialtyCode, regionId, label: key, color: cond.color, notes: notes || null }),
     });
     if (res.ok) {
       const { annotation } = await res.json();
-      setAnnotations((prev) => [...prev.filter((a) => a.regionId !== selected), annotation]);
+      setAnnotations((prev) => [...prev.filter((a) => a.regionId !== regionId), annotation]);
     }
     setSaving(false);
     setSelected(null);
+    setSelectedPoint(null);
     setNotes("");
   }
 
   async function clearAnnotation() {
-    if (!selected) return;
+    const regionId = selectedPoint?.id ?? selected;
+    if (!regionId) return;
     setSaving(true);
     await fetch(`/api/patients/${patientId}/annotations`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ specialtyCode, regionId: selected }),
+      body: JSON.stringify({ specialtyCode, regionId }),
     });
-    setAnnotations((prev) => prev.filter((a) => a.regionId !== selected));
+    setAnnotations((prev) => prev.filter((a) => a.regionId !== regionId));
     setSaving(false);
     setSelected(null);
+    setSelectedPoint(null);
     setNotes("");
   }
 
@@ -197,7 +236,7 @@ export default function SkeletonMapClient({
       <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
         {(["front", "back"] as const).map((v) => (
           <button key={v}
-            onClick={() => { setView(v); setSelected(null); setNotes(""); }}
+            onClick={() => { setView(v); setSelected(null); setSelectedPoint(null); setNotes(""); }}
             style={{
               padding: "6px 18px", borderRadius: 20, fontSize: 13, fontWeight: 800,
               background: view === v ? "#1e3a8a" : "#f1f5f9",
@@ -208,7 +247,7 @@ export default function SkeletonMapClient({
           </button>
         ))}
         <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 700, marginRight: "auto" }}>
-          انقر على أي منطقة لتأشير الحالة
+          انقر على المكان نفسه لتأشير العملية أو العلاج بدقة
         </span>
       </div>
 
@@ -228,13 +267,14 @@ export default function SkeletonMapClient({
 
         <svg
           viewBox="0 0 960 1856"
+          onClick={handleMapClick}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", cursor: "pointer" }}
         >
           {regions.map((region) => {
             const ann  = annotations.find((a) => a.regionId === region.id) ?? null;
-            const isSel = selected === region.id;
-            return (
-              <g key={region.id} onClick={() => handleSelect(region.id)} style={{ cursor: "pointer" }}>
+              const isSel = selected === region.id;
+              return (
+              <g key={region.id} onClick={(event) => { event.stopPropagation(); handleSelect(region.id); }} style={{ cursor: "pointer" }}>
                 {/* colour overlay when annotated */}
                 <RegionEl region={region} fill={ann ? ann.color + "40" : "transparent"} stroke="transparent" sw={0} />
                 {/* selection border */}
@@ -260,6 +300,27 @@ export default function SkeletonMapClient({
               </g>
             );
           })}
+
+          {pointAnnotations.map(({ annotation, point }) => {
+            const isSel = selectedPoint?.id === point.id;
+            return (
+              <g
+                key={point.id}
+                onClick={(event) => { event.stopPropagation(); handlePointSelect(point); }}
+                style={{ cursor: "pointer" }}
+              >
+                <circle cx={point.x} cy={point.y} r={isSel ? 34 : 26} fill={annotation.color} fillOpacity={0.32} stroke={annotation.color} strokeWidth={isSel ? 7 : 5} />
+                <circle cx={point.x} cy={point.y} r={6} fill={annotation.color} />
+              </g>
+            );
+          })}
+
+          {selectedPoint && !selectedPoint.saved && (
+            <g>
+              <circle cx={selectedPoint.x} cy={selectedPoint.y} r={34} fill="#1e3a8a" fillOpacity={0.18} stroke="#1e3a8a" strokeWidth={6} strokeDasharray="10 5" />
+              <circle cx={selectedPoint.x} cy={selectedPoint.y} r={6} fill="#1e3a8a" />
+            </g>
+          )}
         </svg>
       </div>
 
@@ -274,10 +335,10 @@ export default function SkeletonMapClient({
       </div>
 
       {/* Edit panel */}
-      {selected && selRegion && (
+      {(selectedPoint || (selected && selRegion)) && (
         <div style={{ marginTop: 14, background: "white", borderRadius: 14, border: "1.5px solid #dbeafe", padding: 16 }}>
           <p style={{ fontSize: 13, fontWeight: 900, color: "#1e3a8a", marginBottom: 10 }}>
-            {selRegion.labelAr} — اختر نوع الحالة:
+            {selectedPoint ? "نقطة محددة على الخريطة" : `${selRegion?.labelAr} — اختر نوع الحالة:`}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
             {CONDITION_TYPES.map((t) => (

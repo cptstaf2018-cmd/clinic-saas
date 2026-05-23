@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { MouseEvent } from "react";
 import Image from "next/image";
 
 const DERMATOLOGY_MARKERS = [
@@ -107,6 +108,20 @@ const REGIONS: Region[] = [
 ];
 
 type Annotation = { id: string; regionId: string; label: string; color: string; notes: string | null };
+type PointSelection = { id: string; x: number; y: number; saved: boolean };
+
+function makePointId(x: number, y: number) {
+  return `point:body:${x.toFixed(1)}:${y.toFixed(1)}:${Date.now()}`;
+}
+
+function parsePointId(id: string): PointSelection | null {
+  const [prefix, map, x, y] = id.split(":");
+  if (prefix !== "point" || map !== "body") return null;
+  const px = Number(x);
+  const py = Number(y);
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  return { id, x: px, y: py, saved: true };
+}
 
 function RegionEl({ r, fill, stroke, sw, dash }: {
   r: Region; fill: string; stroke: string; sw: number; dash?: string;
@@ -127,11 +142,16 @@ export default function BodyMapClient({
 }) {
   const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations);
   const [selected, setSelected]       = useState<string | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<PointSelection | null>(null);
   const [notes, setNotes]             = useState("");
   const [saving, setSaving]           = useState(false);
 
   const selRegion = REGIONS.find((r) => r.id === selected);
-  const selAnn    = annotations.find((a) => a.regionId === selected) ?? null;
+  const activeId  = selectedPoint?.id ?? selected;
+  const selAnn    = annotations.find((a) => a.regionId === activeId) ?? null;
+  const pointAnnotations = annotations
+    .map((annotation) => ({ annotation, point: parsePointId(annotation.regionId) }))
+    .filter((item): item is { annotation: Annotation; point: PointSelection } => !!item.point);
   const markerTypes =
     specialtyCode === "aesthetic"      ? AESTHETIC_MARKERS :
     specialtyCode === "general_medicine" ? GENERAL_MEDICINE_MARKERS :
@@ -153,45 +173,64 @@ export default function BodyMapClient({
   function handleSelect(id: string) {
     const same = selected === id;
     setSelected(same ? null : id);
+    setSelectedPoint(null);
     setNotes(same ? "" : (annotations.find((a) => a.regionId === id)?.notes ?? ""));
   }
 
+  function handlePointSelect(point: PointSelection) {
+    setSelected(null);
+    setSelectedPoint(point);
+    setNotes(point.saved ? (annotations.find((a) => a.regionId === point.id)?.notes ?? "") : "");
+  }
+
+  function handleMapClick(event: MouseEvent<SVGSVGElement>) {
+    if (event.target !== event.currentTarget) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 960;
+    const y = ((event.clientY - rect.top) / rect.height) * 1118;
+    handlePointSelect({ id: makePointId(x, y), x, y, saved: false });
+  }
+
   async function saveAnnotation(key: string) {
-    if (!selected) return;
+    const regionId = selectedPoint?.id ?? selected;
+    if (!regionId) return;
     const lesion = markerTypes.find((l) => l.key === key)!;
     setSaving(true);
     const res = await fetch(`/api/patients/${patientId}/annotations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ specialtyCode, regionId: selected, label: key, color: lesion.color, notes: notes || null }),
+      body: JSON.stringify({ specialtyCode, regionId, label: key, color: lesion.color, notes: notes || null }),
     });
     if (res.ok) {
       const { annotation } = await res.json();
-      setAnnotations((prev) => [...prev.filter((a) => a.regionId !== selected), annotation]);
+      setAnnotations((prev) => [...prev.filter((a) => a.regionId !== regionId), annotation]);
     }
     setSaving(false);
     setSelected(null);
+    setSelectedPoint(null);
     setNotes("");
   }
 
   async function clearAnnotation() {
-    if (!selected) return;
+    const regionId = selectedPoint?.id ?? selected;
+    if (!regionId) return;
     setSaving(true);
     await fetch(`/api/patients/${patientId}/annotations`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ specialtyCode, regionId: selected }),
+      body: JSON.stringify({ specialtyCode, regionId }),
     });
-    setAnnotations((prev) => prev.filter((a) => a.regionId !== selected));
+    setAnnotations((prev) => prev.filter((a) => a.regionId !== regionId));
     setSaving(false);
     setSelected(null);
+    setSelectedPoint(null);
     setNotes("");
   }
 
   return (
     <div dir="rtl">
       <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 10, fontWeight: 700 }}>
-        {introText}
+        {introText}. يمكنك الضغط على المكان نفسه بدقة لو كان موقع العملية أو العلاج لا يقع داخل منطقة جاهزة.
       </p>
 
       {/* Image + SVG overlay */}
@@ -210,6 +249,7 @@ export default function BodyMapClient({
 
         <svg
           viewBox="0 0 960 1118"
+          onClick={handleMapClick}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", cursor: "pointer" }}
         >
           {/* Divider label */}
@@ -221,7 +261,7 @@ export default function BodyMapClient({
             const ann  = annotations.find((a) => a.regionId === region.id) ?? null;
             const isSel = selected === region.id;
             return (
-              <g key={region.id} onClick={() => handleSelect(region.id)} style={{ cursor: "pointer" }}>
+              <g key={region.id} onClick={(event) => { event.stopPropagation(); handleSelect(region.id); }} style={{ cursor: "pointer" }}>
                 <RegionEl r={region} fill={ann ? ann.color + "44" : "transparent"} stroke="transparent" sw={0} />
                 {isSel && (
                   <RegionEl r={region} fill={ann ? ann.color + "44" : "#1e3a8a18"} stroke="#1e3a8a" sw={3} dash="8 4" />
@@ -242,6 +282,27 @@ export default function BodyMapClient({
               </g>
             );
           })}
+
+          {pointAnnotations.map(({ annotation, point }) => {
+            const isSel = selectedPoint?.id === point.id;
+            return (
+              <g
+                key={point.id}
+                onClick={(event) => { event.stopPropagation(); handlePointSelect(point); }}
+                style={{ cursor: "pointer" }}
+              >
+                <circle cx={point.x} cy={point.y} r={isSel ? 24 : 18} fill={annotation.color} fillOpacity={0.32} stroke={annotation.color} strokeWidth={isSel ? 6 : 4} />
+                <circle cx={point.x} cy={point.y} r={5} fill={annotation.color} />
+              </g>
+            );
+          })}
+
+          {selectedPoint && !selectedPoint.saved && (
+            <g>
+              <circle cx={selectedPoint.x} cy={selectedPoint.y} r={24} fill="#1e3a8a" fillOpacity={0.18} stroke="#1e3a8a" strokeWidth={5} strokeDasharray="8 4" />
+              <circle cx={selectedPoint.x} cy={selectedPoint.y} r={5} fill="#1e3a8a" />
+            </g>
+          )}
         </svg>
       </div>
 
@@ -256,10 +317,10 @@ export default function BodyMapClient({
       </div>
 
       {/* Edit panel */}
-      {selected && selRegion && (
+      {(selectedPoint || (selected && selRegion)) && (
         <div style={{ marginTop: 14, background: "white", borderRadius: 14, border: "1.5px solid #dbeafe", padding: 16 }}>
           <p style={{ fontSize: 13, fontWeight: 900, color: "#1e3a8a", marginBottom: 10 }}>
-            {selRegion.labelAr} — اختر نوع العلامة:
+            {selectedPoint ? "نقطة محددة على الخريطة" : `${selRegion?.labelAr} — اختر نوع العلامة:`}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
             {markerTypes.map((t) => (
@@ -296,6 +357,7 @@ export default function BodyMapClient({
             {annotations.map((a) => {
               const lesion = markerTypes.find((l) => l.key === a.label);
               const region = REGIONS.find((r) => r.id === a.regionId);
+              const point = parsePointId(a.regionId);
               return (
                 <span key={a.id} style={{
                   padding: "3px 10px", borderRadius: 20,
@@ -304,7 +366,7 @@ export default function BodyMapClient({
                   fontSize: 11, fontWeight: 800,
                   border: `1px solid ${(lesion?.color ?? "#6b7280")}40`,
                 }}>
-                  {region?.labelAr ?? a.regionId} — {lesion?.labelAr ?? a.label}
+                  {region?.labelAr ?? (point ? "نقطة محددة" : a.regionId)} — {lesion?.labelAr ?? a.label}
                   {a.notes && <span style={{ opacity: 0.7 }}> · {a.notes}</span>}
                 </span>
               );

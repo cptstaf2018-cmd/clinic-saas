@@ -220,6 +220,15 @@ function RegionOverlay({ region, color }: { region: Region; color: string }) {
   return <rect x={region.x} y={region.y} width={region.w} height={region.h} rx={region.rx ?? 6} {...p} />;
 }
 
+function parsePoint(id: string) {
+  const [prefix, map, x, y] = id.split(":");
+  if (prefix !== "point") return null;
+  const px = Number(x);
+  const py = Number(y);
+  if (!map || !Number.isFinite(px) || !Number.isFinite(py)) return null;
+  return { map, x: px, y: py };
+}
+
 // ── Image-based map ───────────────────────────────────────────────────────────
 function ImageMap({ src, vbW, vbH, regions, annotations, maxW = 300 }: {
   src: string; vbW: number; vbH: number;
@@ -227,6 +236,9 @@ function ImageMap({ src, vbW, vbH, regions, annotations, maxW = 300 }: {
 }) {
   const annMap = new Map(annotations.map(a => [a.regionId, a]));
   const activeRegions = regions.filter(r => annMap.has(r.id));
+  const pointAnnotations = annotations
+    .map((annotation) => ({ annotation, point: parsePoint(annotation.regionId) }))
+    .filter((item): item is { annotation: Ann; point: { map: string; x: number; y: number } } => !!item.point);
   const h = Math.round(maxW * vbH / vbW);
   return (
     <div style={{ position: "relative", width: maxW, height: h, flexShrink: 0 }}>
@@ -234,6 +246,12 @@ function ImageMap({ src, vbW, vbH, regions, annotations, maxW = 300 }: {
       <img src={src} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "fill" }} />
       <svg viewBox={`0 0 ${vbW} ${vbH}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
         {activeRegions.map(r => <RegionOverlay key={r.id} region={r} color={annMap.get(r.id)!.color} />)}
+        {pointAnnotations.map(({ annotation, point }) => (
+          <g key={annotation.regionId}>
+            <circle cx={point.x} cy={point.y} r={Math.max(vbW, vbH) * 0.015} fill={annotation.color} fillOpacity={0.32} stroke={annotation.color} strokeWidth={Math.max(vbW, vbH) * 0.004} />
+            <circle cx={point.x} cy={point.y} r={Math.max(vbW, vbH) * 0.004} fill={annotation.color} />
+          </g>
+        ))}
       </svg>
     </div>
   );
@@ -256,7 +274,7 @@ function AnnList({ annotations, labelMap }: { annotations: Ann[]; labelMap: Map<
           <span style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: a.color, flexShrink: 0, marginTop: 2 }} />
           <div>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#1e293b" }}>
-              {labelMap.get(a.regionId) ?? a.regionId}
+              {labelMap.get(a.regionId) ?? (parsePoint(a.regionId) ? "نقطة محددة" : a.regionId)}
             </span>
             <span style={{ fontSize: 12, color: "#64748b", margin: "0 4px" }}>—</span>
             <span style={{ fontSize: 12, color: "#475569", fontWeight: 600 }}>{a.label}</span>
@@ -308,8 +326,8 @@ export default function BodyAnnotationReport({
   // ── ORTHOPEDICS (skeleton, front + back) ───────────────────────────────────
   if (specialtyCode === "orthopedics") {
     const frontIds = new Set(SKEL_FRONT.map(r => r.id));
-    const frontAnns = annotations.filter(a => frontIds.has(a.regionId));
-    const backAnns  = annotations.filter(a => !frontIds.has(a.regionId));
+    const frontAnns = annotations.filter(a => frontIds.has(a.regionId) || parsePoint(a.regionId)?.map === "front");
+    const backAnns  = annotations.filter(a => !frontIds.has(a.regionId) && parsePoint(a.regionId)?.map !== "front");
     const allRegions = [...SKEL_FRONT, ...SKEL_BACK];
     const labelMap = new Map(allRegions.map(r => [r.id, r.labelAr]));
     return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { MouseEvent } from "react";
 
 const CONDITION_TYPES = [
   { key: "blockage",     labelAr: "انسداد",           color: "#dc2626" },
@@ -56,25 +57,64 @@ const REGIONS: Region[] = [
 
 type Annotation = { regionId: string; condition: string; color: string; notes?: string };
 type Props      = { patientId: string; initialAnnotations?: Annotation[] };
+type PointSelection = { id: string; x: number; y: number; saved: boolean };
+
+function makePointId(x: number, y: number) {
+  return `point:heart:${x.toFixed(1)}:${y.toFixed(1)}:${Date.now()}`;
+}
+
+function parsePointId(id: string): PointSelection | null {
+  const [prefix, map, x, y] = id.split(":");
+  if (prefix !== "point" || map !== "heart") return null;
+  const px = Number(x);
+  const py = Number(y);
+  if (!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  return { id, x: px, y: py, saved: true };
+}
 
 export default function HeartMapClient({ patientId, initialAnnotations = [] }: Props) {
   const [annotations, setAnnotations]       = useState<Annotation[]>(initialAnnotations);
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [selectedPoint, setSelectedPoint]   = useState<PointSelection | null>(null);
   const [selectedCond, setSelectedCond]     = useState(CONDITION_TYPES[0].key);
   const [notes, setNotes]                   = useState("");
   const [saving, setSaving]                 = useState(false);
 
   const getAnn = (id: string) => annotations.find(a => a.regionId === id);
+  const pointAnnotations = annotations
+    .map((annotation) => ({ annotation, point: parsePointId(annotation.regionId) }))
+    .filter((item): item is { annotation: Annotation; point: PointSelection } => !!item.point);
 
   const handleClick = (region: Region) => {
     const existing = getAnn(region.id);
     setSelectedRegion(region);
+    setSelectedPoint(null);
+    setSelectedCond(existing?.condition ?? CONDITION_TYPES[0].key);
+    setNotes(existing?.notes ?? "");
+  };
+
+  const handlePointClick = (event: MouseEvent<SVGSVGElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * imgW;
+    const y = ((event.clientY - rect.top) / rect.height) * imgH;
+    setSelectedRegion(null);
+    setSelectedPoint({ id: makePointId(x, y), x, y, saved: false });
+    setSelectedCond(CONDITION_TYPES[0].key);
+    setNotes("");
+  };
+
+  const handleSavedPointClick = (event: MouseEvent<SVGGElement>, point: PointSelection) => {
+    event.stopPropagation();
+    const existing = getAnn(point.id);
+    setSelectedRegion(null);
+    setSelectedPoint(point);
     setSelectedCond(existing?.condition ?? CONDITION_TYPES[0].key);
     setNotes(existing?.notes ?? "");
   };
 
   const handleSave = async () => {
-    if (!selectedRegion) return;
+    const regionId = selectedPoint?.id ?? selectedRegion?.id;
+    if (!regionId) return;
     setSaving(true);
     const cond = CONDITION_TYPES.find(c => c.key === selectedCond)!;
     try {
@@ -83,31 +123,34 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           specialtyCode: "cardiology",
-          regionId: selectedRegion.id,
+          regionId,
           label: cond.labelAr,
           color: cond.color,
           notes,
         }),
       });
       setAnnotations(prev => [
-        ...prev.filter(a => a.regionId !== selectedRegion.id),
-        { regionId: selectedRegion.id, condition: selectedCond, color: cond.color, notes },
+        ...prev.filter(a => a.regionId !== regionId),
+        { regionId, condition: selectedCond, color: cond.color, notes },
       ]);
       setSelectedRegion(null);
+      setSelectedPoint(null);
     } finally { setSaving(false); }
   };
 
   const handleRemove = async () => {
-    if (!selectedRegion) return;
+    const regionId = selectedPoint?.id ?? selectedRegion?.id;
+    if (!regionId) return;
     setSaving(true);
     try {
       await fetch(`/api/patients/${patientId}/annotations`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ specialtyCode: "cardiology", regionId: selectedRegion.id }),
+        body: JSON.stringify({ specialtyCode: "cardiology", regionId }),
       });
-      setAnnotations(prev => prev.filter(a => a.regionId !== selectedRegion.id));
+      setAnnotations(prev => prev.filter(a => a.regionId !== regionId));
       setSelectedRegion(null);
+      setSelectedPoint(null);
     } finally { setSaving(false); }
   };
 
@@ -124,7 +167,7 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/heart-map.jpg" alt="خريطة القلب" className="absolute inset-0 w-full h-full object-contain" />
 
-          <svg viewBox={`0 0 ${imgW} ${imgH}`} className="absolute inset-0 w-full h-full" style={{ cursor: "pointer" }}>
+          <svg viewBox={`0 0 ${imgW} ${imgH}`} onClick={handlePointClick} className="absolute inset-0 w-full h-full" style={{ cursor: "pointer" }}>
             {REGIONS.map(region => {
               const ann   = getAnn(region.id);
               const isSel = selectedRegion?.id === region.id;
@@ -144,6 +187,22 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
                 : <rect key={region.id} x={region.x} y={region.y} width={region.w} height={region.h} rx={region.rx ?? 10} {...props} />;
             })}
 
+            {pointAnnotations.map(({ annotation, point }) => {
+              const isSel = selectedPoint?.id === point.id;
+              return (
+                <g key={point.id} onClick={(event) => handleSavedPointClick(event, point)} style={{ cursor: "pointer" }}>
+                  <circle cx={point.x} cy={point.y} r={isSel ? 30 : 22} fill={annotation.color} fillOpacity={0.32} stroke={annotation.color} strokeWidth={isSel ? 7 : 5} />
+                  <circle cx={point.x} cy={point.y} r={6} fill={annotation.color} />
+                </g>
+              );
+            })}
+            {selectedPoint && !selectedPoint.saved && (
+              <g>
+                <circle cx={selectedPoint.x} cy={selectedPoint.y} r={30} fill="#dc2626" fillOpacity={0.18} stroke="#dc2626" strokeWidth={6} strokeDasharray="10 5" />
+                <circle cx={selectedPoint.x} cy={selectedPoint.y} r={6} fill="#dc2626" />
+              </g>
+            )}
+
             {/* Selected label */}
             {selectedRegion && (() => {
               const r  = selectedRegion;
@@ -161,9 +220,9 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
 
         {/* ── Panel ── */}
         <div className="w-full xl:w-60 space-y-3 shrink-0">
-          {selectedRegion ? (
+          {selectedRegion || selectedPoint ? (
             <div className="bg-white border border-red-200 rounded-xl p-4 space-y-3">
-              <p className="font-semibold text-red-800 text-sm">{selectedRegion.labelAr}</p>
+              <p className="font-semibold text-red-800 text-sm">{selectedPoint ? "نقطة محددة على القلب" : selectedRegion?.labelAr}</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {CONDITION_TYPES.map(c => (
                   <button key={c.key} onClick={() => setSelectedCond(c.key)}
@@ -186,11 +245,11 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
                   className="flex-1 bg-red-600 text-white text-xs py-2 rounded-lg hover:bg-red-700 disabled:opacity-50">
                   {saving ? "..." : "حفظ"}
                 </button>
-                {getAnn(selectedRegion.id) && (
+                {getAnn(selectedPoint?.id ?? selectedRegion?.id ?? "") && (
                   <button onClick={handleRemove} disabled={saving}
                     className="px-3 bg-red-50 text-red-600 text-xs py-2 rounded-lg hover:bg-red-100">حذف</button>
                 )}
-                <button onClick={() => setSelectedRegion(null)}
+                <button onClick={() => { setSelectedRegion(null); setSelectedPoint(null); }}
                   className="px-3 bg-gray-50 text-gray-600 text-xs py-2 rounded-lg hover:bg-gray-100">إغلاق</button>
               </div>
             </div>
@@ -205,11 +264,12 @@ export default function HeartMapClient({ patientId, initialAnnotations = [] }: P
               <p className="text-xs font-semibold text-gray-600">المناطق المُحددة</p>
               {annotations.map(ann => {
                 const region = REGIONS.find(r => r.id === ann.regionId);
+                const point = parsePointId(ann.regionId);
                 const cond   = CONDITION_TYPES.find(c => c.key === ann.condition);
                 return (
                   <div key={ann.regionId} className="flex items-center gap-2 text-xs">
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ann.color }} />
-                    <span className="text-gray-700 font-medium">{region?.labelAr}</span>
+                    <span className="text-gray-700 font-medium">{region?.labelAr ?? (point ? "نقطة محددة" : ann.regionId)}</span>
                     <span className="text-gray-400">— {cond?.labelAr}</span>
                   </div>
                 );
