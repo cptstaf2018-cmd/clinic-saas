@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
 import {
   isPlanId,
   PLAN_LABELS,
@@ -120,12 +119,6 @@ function formatDate(iso: string) {
 }
 function formatMoney(v: number) { return v.toLocaleString("ar-IQ"); }
 function arabicNumber(v: number) { return String(v).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]); }
-
-function qrValueForPayment(method: PaymentMethodId, destination: string) {
-  if (method === "zaincash") return `ZAINCASH:${destination}`;
-  if (method === "crypto") return destination;
-  return destination;
-}
 
 export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null | "loading">("loading");
@@ -417,39 +410,36 @@ export default function SubscriptionPage() {
               })}
             </div>
 
-            {selectedMethod === "superkey" || selectedMethod === "zaincash" ? (
-              <div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-center ring-1 ring-emerald-100">
-                <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
-                <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={selectedMethod === "superkey" ? "/payments/superkey-qr.jpeg" : "/payments/zaincash-qr.jpeg"}
-                    alt={selectedMethod === "superkey" ? "باركود SuperKey للدفع" : "باركود Zain Cash للدفع"}
-                    className="h-auto w-[190px] rounded-xl"
-                  />
-                </div>
-                <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
-                  {selectedMethod === "superkey"
-                    ? "افتح تطبيق SuperKey ثم امسح الباركود لإكمال الدفع."
-                    : "افتح تطبيق Zain Cash ثم امسح الباركود لإكمال الدفع."}
-                </p>
+            <div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-center ring-1 ring-emerald-100">
+              <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
+              <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={
+                    selectedMethod === "superkey"
+                      ? "/payments/superkey-qr.jpeg"
+                      : selectedMethod === "zaincash"
+                        ? "/payments/zaincash-qr.jpeg"
+                        : "/payments/binance-usdt-qr.jpeg"
+                  }
+                  alt={
+                    selectedMethod === "superkey"
+                      ? "باركود SuperKey للدفع"
+                      : selectedMethod === "zaincash"
+                        ? "باركود Zain Cash للدفع"
+                        : "باركود Binance USDT للدفع"
+                  }
+                  className="h-auto w-[190px] rounded-xl"
+                />
               </div>
-            ) : (
-              <div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-center ring-1 ring-emerald-100">
-                <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
-                <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-100">
-                  <QRCodeSVG
-                    value={qrValueForPayment(selectedMethod, selectedPaymentMethod.destination)}
-                    size={190}
-                    level="M"
-                    includeMargin
-                  />
-                </div>
-                <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
-                  امسح الباركود من تطبيق المحفظة أو Binance لإكمال التحويل.
-                </p>
-              </div>
-            )}
+              <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
+                {selectedMethod === "superkey"
+                  ? "افتح تطبيق SuperKey ثم امسح الباركود لإكمال الدفع."
+                  : selectedMethod === "zaincash"
+                    ? "افتح تطبيق Zain Cash ثم امسح الباركود لإكمال الدفع."
+                    : "افتح تطبيق Binance ثم امسح الباركود لإكمال الدفع."}
+              </p>
+            </div>
 
             <div className="mt-4 space-y-2">
               {[
