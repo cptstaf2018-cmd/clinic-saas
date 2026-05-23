@@ -92,13 +92,26 @@ export default async function PatientProfilePage({
   const hasDentalChart = !isSecretary && canUseFeature(subscription?.plan, "dentalChart");
   const hasSpecialtyMap = !isSecretary && canUseFeature(subscription?.plan, "specialtyMap");
 
-  const isAnnotationSpecialty = !isSecretary && ["dermatology", "orthopedics", "aesthetic", "general_medicine", "surgery"].includes(specialtyConfig.code);
+  const gatedAnnotationSpecialty = ["dermatology", "orthopedics", "aesthetic", "general_medicine", "surgery"];
+  const persistentAnnotationSpecialty = [
+    ...gatedAnnotationSpecialty,
+    "pediatrics",
+    "gynecology",
+    "ophthalmology",
+    "cardiology",
+    "internal_medicine",
+  ];
+  const isAnnotationSpecialty = !isSecretary && gatedAnnotationSpecialty.includes(specialtyConfig.code);
+  const shouldLoadSpecialtyAnnotations =
+    !isSecretary &&
+    persistentAnnotationSpecialty.includes(specialtyConfig.code) &&
+    (!isAnnotationSpecialty || hasSpecialtyMap);
 
   const [toothTreatments, specialtyAnnotations] = await Promise.all([
     isDental && hasDentalChart
       ? db.toothTreatment.findMany({ where: { patientId: id, clinicId }, orderBy: { createdAt: "asc" } })
       : Promise.resolve([]),
-    isAnnotationSpecialty && hasSpecialtyMap
+    shouldLoadSpecialtyAnnotations
       ? db.specialtyAnnotation.findMany({ where: { patientId: id, clinicId, specialtyCode: specialtyConfig.code } })
       : Promise.resolve([]),
   ]);
@@ -340,25 +353,57 @@ export default async function PatientProfilePage({
                 )}
                 {specialtyConfig.code === "pediatrics" && (
                   <div className="space-y-6">
-                    <PediatricBodyClient patientId={patient.id} />
+                    <PediatricBodyClient
+                      patientId={patient.id}
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        regionId: a.regionId,
+                        condition: a.label,
+                        color: a.color,
+                        notes: a.notes ?? undefined,
+                      }))}
+                    />
                     <GrowthChartClient records={serializedRecords} />
                   </div>
                 )}
                 {specialtyConfig.code === "gynecology" && (
                   <div className="space-y-6">
-                    <GynecologyMapClient patientId={patient.id} />
+                    <GynecologyMapClient
+                      patientId={patient.id}
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        regionId: a.regionId,
+                        condition: a.label,
+                        color: a.color,
+                        notes: a.notes ?? undefined,
+                      }))}
+                    />
                     <PregnancyTrackerClient records={serializedRecords} />
                   </div>
                 )}
                 {specialtyConfig.code === "ophthalmology" && (
                   <div className="space-y-6">
-                    <EyeMapClient patientId={patient.id} />
+                    <EyeMapClient
+                      patientId={patient.id}
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        zoneId: a.regionId,
+                        condition: a.label,
+                        color: a.color,
+                        notes: a.notes ?? undefined,
+                      }))}
+                    />
                     <EyeChartClient records={serializedRecords} />
                   </div>
                 )}
                 {specialtyConfig.code === "cardiology" && (
                   <div className="space-y-6">
-                    <HeartMapClient patientId={patient.id} />
+                    <HeartMapClient
+                      patientId={patient.id}
+                      initialAnnotations={specialtyAnnotations.map((a) => ({
+                        regionId: a.regionId,
+                        condition: a.label,
+                        color: a.color,
+                        notes: a.notes ?? undefined,
+                      }))}
+                    />
                     <BPTrackerClient records={serializedRecords} />
                   </div>
                 )}

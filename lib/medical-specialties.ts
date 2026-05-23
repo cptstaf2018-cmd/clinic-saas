@@ -6,7 +6,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "طع",
     category: "عام",
     map: "قالب زيارة",
-    modules: ["فحص عام", "وصفات", "تحويلات"],
+    modules: ["فحص عام", "خطة علاج", "وصفة طبية", "تحويل أخصائي"],
   },
   {
     key: "dentistry",
@@ -15,7 +15,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "سن",
     category: "الأكثر استخداماً",
     map: "مخطط الأسنان",
-    modules: ["خريطة الأسنان", "خطة علاج", "أشعة"],
+    modules: ["خريطة الأسنان", "خطة علاج", "أشعة وملاحظات", "وصفة طبية"],
   },
   {
     key: "gynecology",
@@ -24,7 +24,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ن",
     category: "الأكثر استخداماً",
     map: "خريطة نسائية",
-    modules: ["متابعة حمل", "سونار", "زيارات"],
+    modules: ["خريطة نسائية", "متابعة حمل", "سونار", "وصفة طبية"],
   },
   {
     key: "pediatrics",
@@ -33,7 +33,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ط",
     category: "الأكثر استخداماً",
     map: "خريطة طفل",
-    modules: ["نمو", "تطعيمات", "جرعات"],
+    modules: ["خريطة طفل", "نمو وتطعيمات", "حاسبة جرعات", "وصفة طبية"],
   },
   {
     key: "dermatology",
@@ -42,7 +42,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ج",
     category: "الأكثر استخداماً",
     map: "خريطة الجسم",
-    modules: ["آفات جلدية", "صور", "خزعات"],
+    modules: ["خريطة الجسم", "آفات جلدية", "صور وملاحظات", "خزعات ومتابعة"],
   },
   {
     key: "aesthetic",
@@ -51,7 +51,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ت",
     category: "الأكثر استخداماً",
     map: "خريطة وجه وجسم",
-    modules: ["قبل/بعد", "موافقات", "جلسات"],
+    modules: ["خريطة وجه وجسم", "صور قبل/بعد", "موافقات الإجراء", "جلسات ومتابعات"],
   },
   {
     key: "cardiology",
@@ -60,7 +60,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ق",
     category: "اختصاصات سريرية",
     map: "خريطة قلب",
-    modules: ["ضغط", "ECG", "إيكو"],
+    modules: ["خريطة قلب", "ضغط ونبض", "ECG", "إيكو"],
   },
   {
     key: "ophthalmology",
@@ -69,7 +69,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ع",
     category: "اختصاصات سريرية",
     map: "خريطة العين",
-    modules: ["نظر", "ضغط عين", "نظارات"],
+    modules: ["خريطة العين", "حدة البصر", "ضغط العين", "وصفة نظارات"],
   },
   {
     key: "orthopedics",
@@ -78,7 +78,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ظم",
     category: "اختصاصات سريرية",
     map: "هيكل عظمي",
-    modules: ["ألم", "أشعة", "تأهيل"],
+    modules: ["هيكل عظمي", "ألم وحركة", "أشعة", "خطة تأهيل"],
   },
   {
     key: "internal_medicine",
@@ -87,7 +87,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "+",
     category: "الأكثر استخداماً",
     map: "خريطة أعضاء",
-    modules: ["تحاليل", "أمراض مزمنة", "متابعة"],
+    modules: ["خريطة أعضاء", "تحاليل", "أمراض مزمنة", "خطة علاج"],
   },
   {
     key: "surgery",
@@ -96,7 +96,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "جر",
     category: "إجراءات ومراكز",
     map: "قالب إجراءات",
-    modules: ["عملية", "جرح", "متابعة"],
+    modules: ["قالب إجراءات", "ملاحظة العملية", "فحص الجرح", "خطة ما بعد العملية"],
   },
 ] as const;
 

@@ -6,20 +6,6 @@ import type { MedicalSpecialtyKey } from "@/lib/medical-specialties";
 
 const FILTERS = ["الكل", "الأكثر استخداماً", "اختصاصات سريرية", "إجراءات ومراكز", "عام"] as const;
 
-const PREVIEW_POINTS: Record<string, string[]> = {
-  aesthetic: ["صور قبل/بعد", "موافقات الإجراء", "خطة جلسات ومتابعات"],
-  dermatology: ["آفات جلدية", "صور وملاحظات", "خزعات ومتابعة"],
-  dentistry: ["مخطط الأسنان", "خطة علاج", "أشعة وملاحظات"],
-  gynecology: ["متابعة حمل", "سونار", "جدول زيارات"],
-  pediatrics: ["نمو وتطعيمات", "جرعات", "متابعة حرارة ووزن"],
-  cardiology: ["ضغط ونبض", "ECG", "متابعة زمنية"],
-  ophthalmology: ["حدة البصر", "ضغط العين", "وصفة نظارات"],
-  orthopedics: ["خريطة هيكل", "ألم وحركة", "أشعة وتأهيل"],
-  internal_medicine: ["تحاليل", "أمراض مزمنة", "خطة علاج"],
-  general_medicine: ["فحص عام", "وصفات طبية", "تحويلات لأخصائي"],
-  surgery: ["ملاحظة العملية", "فحص الجرح", "خطة ما بعد العملية"],
-};
-
 export default function SpecialtyOnboardingClient() {
   const [selected, setSelected] = useState<MedicalSpecialtyKey>(MEDICAL_SPECIALTIES[0].key);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("الكل");
@@ -162,7 +148,7 @@ export default function SpecialtyOnboardingClient() {
                   </div>
 
                   <div className="mt-5 grid gap-2">
-                    {(PREVIEW_POINTS[selectedSpecialty.key] ?? selectedSpecialty.modules).map((point) => (
+                    {selectedSpecialty.modules.map((point) => (
                       <div key={point} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-slate-200">
                         <span className="text-sm font-black text-slate-700">{point}</span>
                         <span className="h-2 w-2 rounded-full bg-blue-600" />
