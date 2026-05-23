@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { addOfflineAction } from "@/lib/offline-queue";
 
 type Appt = {
   id: string;
@@ -86,6 +87,7 @@ export default function AppointmentsPage() {
   const [bookingTime, setBookingTime] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const [bookingNotice, setBookingNotice] = useState("");
   const [availableSlots, setAvailableSlots] = useState<{ value: string; label: string }[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [dayClosed, setDayClosed] = useState(false);
@@ -154,6 +156,7 @@ export default function AppointmentsPage() {
     setBookingTime(time);
     setBookingLoading(true);
     setBookingError("");
+    setBookingNotice("");
     const dateTime = toIraqIso(bookingDate, time);
     if (!dateTime) {
       setBookingError("وقت الحجز غير صحيح");
@@ -161,36 +164,68 @@ export default function AppointmentsPage() {
       return;
     }
 
-    const patientRes = await fetch("/api/patients", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, whatsappPhone: phone }),
-    });
-    if (!patientRes.ok) {
-      const data = await patientRes.json().catch(() => null);
-      setBookingError(data?.error || "تعذر حفظ بيانات المريض");
-      setBookingLoading(false);
-      return;
-    }
-    const patient = await patientRes.json();
-
-    const res = await fetch("/api/appointments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ patientId: patient.id, date: dateTime }),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setBookingError(data?.error || "حدث خطأ");
-    } else {
-      setShowBooking(false);
+    if (!navigator.onLine) {
+      addOfflineAction({
+        type: "appointment.createWithPatient",
+        label: `حجز ${name}`,
+        payload: { patientName: name, patientPhone: phone, date: dateTime },
+      });
+      setBookingNotice("تم حفظ الحجز على هذا الجهاز، وسيرتفع عند رجوع الإنترنت");
       setPatientName("");
       setPatientPhone("");
       setBookingDate("");
       setBookingTime("");
       setAvailableSlots([]);
       setDayClosed(false);
-      fetchAppointments();
+      setBookingLoading(false);
+      return;
+    }
+
+    try {
+      const patientRes = await fetch("/api/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, whatsappPhone: phone }),
+      });
+      if (!patientRes.ok) {
+        const data = await patientRes.json().catch(() => null);
+        setBookingError(data?.error || "تعذر حفظ بيانات المريض");
+        setBookingLoading(false);
+        return;
+      }
+      const patient = await patientRes.json();
+
+      const res = await fetch("/api/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patientId: patient.id, date: dateTime }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setBookingError(data?.error || "حدث خطأ");
+      } else {
+        setShowBooking(false);
+        setPatientName("");
+        setPatientPhone("");
+        setBookingDate("");
+        setBookingTime("");
+        setAvailableSlots([]);
+        setDayClosed(false);
+        fetchAppointments();
+      }
+    } catch {
+      addOfflineAction({
+        type: "appointment.createWithPatient",
+        label: `حجز ${name}`,
+        payload: { patientName: name, patientPhone: phone, date: dateTime },
+      });
+      setBookingNotice("انقطع الاتصال، تم حفظ الحجز محليًا بانتظار الرفع");
+      setPatientName("");
+      setPatientPhone("");
+      setBookingDate("");
+      setBookingTime("");
+      setAvailableSlots([]);
+      setDayClosed(false);
     }
     setBookingLoading(false);
   }
@@ -432,6 +467,7 @@ export default function AppointmentsPage() {
                 )}
 
                 {bookingError && <p className="text-sm font-black text-red-600">{bookingError}</p>}
+                {bookingNotice && <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 ring-1 ring-emerald-100">{bookingNotice}</p>}
                 {bookingLoading && <p className="text-center text-sm font-black text-blue-600">جاري الحجز...</p>}
 
                 <div className="flex justify-end pt-1">

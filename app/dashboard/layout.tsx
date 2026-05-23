@@ -7,6 +7,7 @@ import DashboardAssistantFloating from "./DashboardAssistantFloating";
 import MobileDrawer from "./MobileDrawer";
 import SubscriptionNotice from "./SubscriptionNotice";
 import { getSubscriptionNotice, isSubscriptionHardLocked } from "@/lib/subscription-status";
+import OfflineStatus from "./OfflineStatus";
 
 async function getClinicData(clinicId: string) {
   return db.clinic.findUnique({
@@ -130,6 +131,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <SubscriptionNotice notice={subscriptionNotice} />
           {children}
         </main>
+        <OfflineStatus />
         <DashboardAssistantFloating initialAccess={assistantAccess} />
       </div>
     </div>

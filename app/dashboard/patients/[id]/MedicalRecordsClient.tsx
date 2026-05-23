@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ChangeEvent } from "react";
 import type { EncounterSection, SpecialtyConfig } from "@/src/config/specialties";
+import { addOfflineAction } from "@/lib/offline-queue";
 
 type RecordContent = Record<string, string>;
 
@@ -236,12 +237,14 @@ export default function MedicalRecordsClient({
   const [loading, setLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   function startAdd() {
     setShowForm(true);
     setEditingId(null);
     setForm(emptyForm(specialtyConfig));
     setError("");
+    setNotice("");
   }
 
   function startEdit(r: MedicalRecord) {
@@ -300,18 +303,42 @@ export default function MedicalRecordsClient({
     if (!form.complaint.trim()) { setError("الشكوى الرئيسية مطلوبة"); return; }
     setLoading(true);
     setError("");
-    const res = await fetch("/api/medical-records", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ patientId, ...payload() }),
-    });
-    if (res.ok) {
-      const created = await res.json();
-      setRecords((prev) => [created, ...prev]);
+    const recordPayload = { patientId, ...payload() };
+
+    if (!navigator.onLine) {
+      addOfflineAction({
+        type: "medicalRecord.create",
+        label: `سجل طبي: ${form.complaint.trim()}`,
+        payload: recordPayload,
+      });
+      setNotice("تم حفظ السجل على هذا الجهاز، وسيرتفع عند رجوع الإنترنت");
       cancelForm();
-    } else {
-      const d = await res.json();
-      setError(d.error ?? "حدث خطأ");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/medical-records", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(recordPayload),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setRecords((prev) => [created, ...prev]);
+        cancelForm();
+      } else {
+        const d = await res.json();
+        setError(d.error ?? "حدث خطأ");
+      }
+    } catch {
+      addOfflineAction({
+        type: "medicalRecord.create",
+        label: `سجل طبي: ${form.complaint.trim()}`,
+        payload: recordPayload,
+      });
+      setNotice("انقطع الاتصال، تم حفظ السجل محليًا بانتظار الرفع");
+      cancelForm();
     }
     setLoading(false);
   }
@@ -365,6 +392,12 @@ export default function MedicalRecordsClient({
           </button>
         )}
       </div>
+
+      {notice && (
+        <p className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 ring-1 ring-emerald-100">
+          {notice}
+        </p>
+      )}
 
       {showForm && (
         <RecordForm
