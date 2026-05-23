@@ -227,7 +227,6 @@ function ImageMap({ src, vbW, vbH, regions, annotations, maxW = 300 }: {
 }) {
   const annMap = new Map(annotations.map(a => [a.regionId, a]));
   const activeRegions = regions.filter(r => annMap.has(r.id));
-  if (activeRegions.length === 0) return null;
   const h = Math.round(maxW * vbH / vbW);
   return (
     <div style={{ position: "relative", width: maxW, height: h, flexShrink: 0 }}>
@@ -247,6 +246,11 @@ function AnnList({ annotations, labelMap }: { annotations: Ann[]; labelMap: Map<
       <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>
         الملاحظات على الخريطة
       </p>
+      {annotations.length === 0 && (
+        <p style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8" }}>
+          لا توجد ملاحظات محفوظة على الخريطة.
+        </p>
+      )}
       {annotations.map(a => (
         <div key={a.regionId} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
           <span style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: a.color, flexShrink: 0, marginTop: 2 }} />
@@ -272,8 +276,6 @@ export default function BodyAnnotationReport({
   specialtyCode: string;
   annotations: Ann[];
 }) {
-  if (annotations.length === 0) return null;
-
   // ── AESTHETIC — face-map.png ──────────────────────────────────────────────
   if (specialtyCode === "aesthetic") {
     const labelMap = new Map(AESTHETIC_FACE_ZONES.map(r => [r.id, r.labelAr]));
@@ -313,18 +315,14 @@ export default function BodyAnnotationReport({
     return (
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          {frontAnns.length > 0 && (
-            <div>
-              <p style={{ fontSize: 10, textAlign: "center", color: "#94a3b8", marginBottom: 4 }}>أمامي</p>
-              <ImageMap src="/skeleton-front.png" vbW={960} vbH={1856} regions={SKEL_FRONT} annotations={frontAnns} maxW={120} />
-            </div>
-          )}
-          {backAnns.length > 0 && (
-            <div>
-              <p style={{ fontSize: 10, textAlign: "center", color: "#94a3b8", marginBottom: 4 }}>خلفي</p>
-              <ImageMap src="/skeleton-back.png" vbW={960} vbH={1856} regions={SKEL_BACK} annotations={backAnns} maxW={120} />
-            </div>
-          )}
+          <div>
+            <p style={{ fontSize: 10, textAlign: "center", color: "#94a3b8", marginBottom: 4 }}>أمامي</p>
+            <ImageMap src="/skeleton-front.png" vbW={960} vbH={1856} regions={SKEL_FRONT} annotations={frontAnns} maxW={120} />
+          </div>
+          <div>
+            <p style={{ fontSize: 10, textAlign: "center", color: "#94a3b8", marginBottom: 4 }}>خلفي</p>
+            <ImageMap src="/skeleton-back.png" vbW={960} vbH={1856} regions={SKEL_BACK} annotations={backAnns} maxW={120} />
+          </div>
         </div>
         <AnnList annotations={annotations} labelMap={labelMap} />
       </div>
@@ -358,7 +356,7 @@ export default function BodyAnnotationReport({
     const labelMap = new Map(INTERNAL.map(r => [r.id, r.labelAr]));
     return (
       <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
-        <ImageMap src="/organs-map.png" vbW={1363} vbH={1211} regions={INTERNAL} annotations={annotations} maxW={220} />
+        <ImageMap src="/organs-map.svg" vbW={1363} vbH={1211} regions={INTERNAL} annotations={annotations} maxW={220} />
         <AnnList annotations={annotations} labelMap={labelMap} />
       </div>
     );
@@ -388,6 +386,17 @@ export default function BodyAnnotationReport({
             return <path key={id} d={zone.path} fill={ann.color} fillOpacity={0.45} stroke={ann.color} strokeOpacity={0.75} strokeWidth={2}/>;
           })}
         </svg>
+        <AnnList annotations={annotations} labelMap={labelMap} />
+      </div>
+    );
+  }
+
+  // ── GENERAL MEDICINE / SURGERY — body map ─────────────────────────────────
+  if (specialtyCode === "general_medicine" || specialtyCode === "surgery") {
+    const labelMap = new Map(DERM.map(r => [r.id, r.labelAr]));
+    return (
+      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        <ImageMap src="/body-map.png" vbW={960} vbH={1118} regions={DERM} annotations={annotations} maxW={200} />
         <AnnList annotations={annotations} labelMap={labelMap} />
       </div>
     );

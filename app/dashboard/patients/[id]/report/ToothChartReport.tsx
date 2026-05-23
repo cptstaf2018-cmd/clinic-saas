@@ -53,14 +53,6 @@ export default function ToothChartReport({ treatments }: { treatments: Treatment
     return TREATMENTS.find((t) => t.key === key);
   }
 
-  if (treatments.length === 0) {
-    return (
-      <div style={{ padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: 13, fontWeight: 700 }}>
-        لا توجد علاجات مسجلة في خريطة الأسنان
-      </div>
-    );
-  }
-
   return (
     <div dir="rtl">
       {/* خريطة الأسنان الثابتة */}
@@ -104,27 +96,33 @@ export default function ToothChartReport({ treatments }: { treatments: Treatment
       </div>
 
       {/* جدول العلاجات */}
-      <table style={{ width: "100%", marginTop: 14, borderCollapse: "collapse", fontSize: 12 }}>
-        <thead>
-          <tr style={{ background: "#f8fafc" }}>
-            <th style={{ padding: "7px 10px", textAlign: "right", fontWeight: 900, color: "#64748b", borderBottom: "1.5px solid #e2e8f0" }}>رقم السن</th>
-            <th style={{ padding: "7px 10px", textAlign: "right", fontWeight: 900, color: "#64748b", borderBottom: "1.5px solid #e2e8f0" }}>نوع العلاج</th>
-            <th style={{ padding: "7px 10px", textAlign: "right", fontWeight: 900, color: "#64748b", borderBottom: "1.5px solid #e2e8f0" }}>ملاحظة</th>
-          </tr>
-        </thead>
-        <tbody>
-          {treatments.map((t) => {
-            const info = getInfo(t.treatment);
-            return (
-              <tr key={t.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                <td style={{ padding: "6px 10px", fontWeight: 800, color: "#1e3a8a" }}>{t.toothNumber}</td>
-                <td style={{ padding: "6px 10px", fontWeight: 700, color: info?.color ?? "#6b7280" }}>{info?.label ?? t.treatment}</td>
-                <td style={{ padding: "6px 10px", fontWeight: 600, color: "#64748b" }}>{t.notes ?? "—"}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {treatments.length === 0 ? (
+        <div style={{ marginTop: 14, padding: "12px", textAlign: "center", color: "#94a3b8", fontSize: 12, fontWeight: 700, border: "1px dashed #e2e8f0", borderRadius: 10 }}>
+          لا توجد علاجات مسجلة على خريطة الأسنان.
+        </div>
+      ) : (
+        <table style={{ width: "100%", marginTop: 14, borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ background: "#f8fafc" }}>
+              <th style={{ padding: "7px 10px", textAlign: "right", fontWeight: 900, color: "#64748b", borderBottom: "1.5px solid #e2e8f0" }}>رقم السن</th>
+              <th style={{ padding: "7px 10px", textAlign: "right", fontWeight: 900, color: "#64748b", borderBottom: "1.5px solid #e2e8f0" }}>نوع العلاج</th>
+              <th style={{ padding: "7px 10px", textAlign: "right", fontWeight: 900, color: "#64748b", borderBottom: "1.5px solid #e2e8f0" }}>ملاحظة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {treatments.map((t) => {
+              const info = getInfo(t.treatment);
+              return (
+                <tr key={t.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: "6px 10px", fontWeight: 800, color: "#1e3a8a" }}>{t.toothNumber}</td>
+                  <td style={{ padding: "6px 10px", fontWeight: 700, color: info?.color ?? "#6b7280" }}>{info?.label ?? t.treatment}</td>
+                  <td style={{ padding: "6px 10px", fontWeight: 600, color: "#64748b" }}>{t.notes ?? "—"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

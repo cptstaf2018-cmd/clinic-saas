@@ -224,7 +224,7 @@ export default async function PatientReportPage({
           </section>
         )}
 
-        {hasBodyMap && bodyAnnotations.length > 0 && (
+        {hasBodyMap && (
           <section className="mt-6 rounded-3xl border border-slate-200 p-5 break-inside-avoid">
             <h2 className="mb-4 text-base font-black text-slate-950">
               {MAP_REPORT_TITLE[specialtyConfig.code] ?? `خريطة ${specialtyConfig.nameAr} — الملاحظات`}

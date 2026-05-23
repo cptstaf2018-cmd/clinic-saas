@@ -29,8 +29,6 @@ const REGIONS: Region[] = [
 ];
 
 export default function PediatricBodyReport({ annotations }: { annotations: Annotation[] }) {
-  if (annotations.length === 0) return null;
-
   const getAnn = (id: string) => annotations.find(a => a.regionId === id);
 
   return (
@@ -104,6 +102,9 @@ export default function PediatricBodyReport({ annotations }: { annotations: Anno
       {/* Annotations list */}
       <div className="flex-1 space-y-2 pt-2">
         <p className="text-xs font-black text-slate-400 uppercase tracking-wide mb-3">الملاحظات على الجسم</p>
+        {annotations.length === 0 && (
+          <p className="text-xs font-bold text-slate-400">لا توجد ملاحظات محفوظة على خريطة الطفل.</p>
+        )}
         {annotations.map(ann => {
           const region = REGIONS.find(r => r.id === ann.regionId);
           return (
