@@ -69,6 +69,32 @@ function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
 
+function recordCopy(specialtyConfig: SpecialtyConfig) {
+  if (specialtyConfig.code === "dentistry") {
+    return {
+      kicker: "ملف الأسنان",
+      title: "خطة علاج الأسنان",
+      countUnit: "خطة محفوظة",
+      addButton: "خطة علاج جديدة",
+      addTitle: "إضافة خطة علاج جديدة",
+      editTitle: "تعديل خطة العلاج",
+      emptyTitle: "لا توجد خطط علاج",
+      emptyDescription: "أضف أول خطة علاج أسنان، وتشمل الأشعة والملاحظات والوصفة عند الحاجة.",
+    };
+  }
+
+  return {
+    kicker: `قالب ${specialtyConfig.nameAr}`,
+    title: "تسجيل الزيارة",
+    countUnit: "سجل محفوظ",
+    addButton: "سجل جديد",
+    addTitle: "إضافة سجل طبي جديد",
+    editTitle: "تعديل تسجيل الزيارة",
+    emptyTitle: "لا توجد سجلات طبية",
+    emptyDescription: `أضف أول سجل من قالب ${specialtyConfig.nameAr}.`,
+  };
+}
+
 function sectionValue(section: EncounterSection, form: FormState) {
   return section.id === "chief_complaint" ? form.complaint : form.specialtyFields[section.id] ?? "";
 }
@@ -216,20 +242,22 @@ export default function MedicalRecordsClient({
     setLoading(false);
   }
 
+  const copy = recordCopy(specialtyConfig);
+
   return (
     <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black text-blue-700">قالب {specialtyConfig.nameAr}</p>
-          <h2 className="mt-1 text-2xl font-black text-slate-950">تسجيل الزيارة</h2>
-          <p className="mt-1 text-sm font-bold text-slate-400">{arabicNumber(records.length)} سجل محفوظ</p>
+          <p className="text-xs font-black text-blue-700">{copy.kicker}</p>
+          <h2 className="mt-1 text-2xl font-black text-slate-950">{copy.title}</h2>
+          <p className="mt-1 text-sm font-bold text-slate-400">{arabicNumber(records.length)} {copy.countUnit}</p>
         </div>
         {!showForm && !editingId && (
           <button
             onClick={startAdd}
             className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
           >
-            سجل جديد
+            {copy.addButton}
           </button>
         )}
       </div>
@@ -242,7 +270,7 @@ export default function MedicalRecordsClient({
           onCancel={cancelForm}
           loading={loading}
           error={error}
-          title="إضافة سجل طبي جديد"
+          title={copy.addTitle}
           canUseFollowUp={canUseFollowUp}
           specialtyConfig={specialtyConfig}
         />
@@ -250,8 +278,8 @@ export default function MedicalRecordsClient({
 
       {records.length === 0 && !showForm ? (
         <div className="rounded-[26px] border border-dashed border-slate-200 bg-slate-50 py-14 text-center">
-          <p className="text-lg font-black text-slate-400">لا توجد سجلات طبية</p>
-          <p className="mt-1 text-sm font-bold text-slate-300">أضف أول سجل من قالب {specialtyConfig.nameAr}.</p>
+          <p className="text-lg font-black text-slate-400">{copy.emptyTitle}</p>
+          <p className="mt-1 text-sm font-bold text-slate-300">{copy.emptyDescription}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -271,7 +299,7 @@ export default function MedicalRecordsClient({
                     onCancel={cancelForm}
                     loading={loading}
                     error={error}
-                    title="تعديل تسجيل الزيارة"
+                    title={copy.editTitle}
                     canUseFollowUp={canUseFollowUp}
                     specialtyConfig={specialtyConfig}
                   />
