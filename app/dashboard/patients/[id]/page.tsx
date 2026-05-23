@@ -464,7 +464,7 @@ export default async function PatientProfilePage({
         })()}
 
         {/* ═══ Attachments ═══ */}
-        {!isSecretary && entitlements.features.includes("fullMedicalFile") && (
+        {!isSecretary && (
           <section>
             <PatientAttachmentsClient patientId={patient.id} />
           </section>

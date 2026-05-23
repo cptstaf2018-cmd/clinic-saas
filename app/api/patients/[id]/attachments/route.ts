@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { canUseFeature } from "@/lib/feature-gates";
 import { getStoragePath } from "@/lib/storage";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -45,11 +44,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const clinicId = session.user.clinicId;
   const { id: patientId } = await params;
-
-  const subscription = await db.subscription.findUnique({ where: { clinicId } });
-  if (!canUseFeature(subscription?.plan, "fullMedicalFile")) {
-    return NextResponse.json({ error: "هذه الميزة متاحة في خطة مميزة VIP فقط" }, { status: 403 });
-  }
 
   const patient = await db.patient.findFirst({ where: { id: patientId, clinicId } });
   if (!patient) return NextResponse.json({ error: "المريض غير موجود" }, { status: 404 });
