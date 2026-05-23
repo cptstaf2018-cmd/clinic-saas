@@ -176,7 +176,7 @@ export default function EyeMapClient({ patientId, initialAnnotations = [] }: Pro
                 fillOpacity={1}
                 stroke={sel ? "#2563eb" : "#d97706"}
                 strokeWidth={sel ? 3 : 2} />
-              <circle cx={dx} cy={dy} r={R_DISC * 0.5} fill={ann ? "none" : "#fde68a"} stroke={ann ? "none" : "#d97706"} strokeWidth={1} />
+              <circle cx={dx} cy={dy} r={R_DISC * 0.5} fill="#fde68a" stroke="#d97706" strokeWidth={1} />
               <text x={dx} y={dy + 1} textAnchor="middle" dominantBaseline="middle" fontSize={7} fill="#78350f" fontWeight="bold" style={{ pointerEvents: "none" }}>Disc</text>
             </g>
           );
