@@ -204,15 +204,18 @@ export default function ClinicDashboardPremium({
 
         {/* Stats Cards Grid */}
         <div className="grid gap-px bg-slate-200 sm:grid-cols-3">
-          {config.focusMetrics.map((metric) => (
+          {config.focusMetrics.map((metric, index) => {
+            const value = index === 0 ? stats.appointmentsToday : index === 1 ? stats.waitingCount : stats.completedCount;
+            return (
             <div key={metric.label} className="bg-white px-5 py-4 transition hover:bg-slate-50">
               <p className="text-xs font-black text-slate-400">{metric.label}</p>
               <div className="mt-2 flex items-end justify-between gap-3">
-                <p className="text-3xl font-black text-blue-600">{metric.value}</p>
+                <p className="text-3xl font-black text-blue-600">{value}</p>
                 <p className="pb-1 text-[11px] font-bold text-slate-400">{metric.hint}</p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
