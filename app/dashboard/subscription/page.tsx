@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import {
   isPlanId,
   PLAN_LABELS,
@@ -20,6 +21,8 @@ import {
 type PaymentMethodId = "superkey" | "zaincash" | "crypto";
 type PurchaseMode = "renew" | "upgrade";
 
+const SUPERKEY_QR_VALUE = process.env.NEXT_PUBLIC_SUPERKEY_QR_VALUE ?? "SUPERKEY:07706688044";
+
 const PAYMENT_METHODS: Array<{
   id: PaymentMethodId;
   label: string;
@@ -33,7 +36,7 @@ const PAYMENT_METHODS: Array<{
     id: "superkey",
     label: "SuperKey",
     scope: "داخل العراق",
-    destinationLabel: "رقم المحفظة",
+    destinationLabel: "باركود الدفع",
     destination: "07706688044",
     referenceLabel: "رقم العملية",
     referencePlaceholder: "مثال: SK-123456",
@@ -410,13 +413,26 @@ export default function SubscriptionPage() {
               })}
             </div>
 
-            <div className="mt-5 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
-              <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
-              <p className="mt-1 text-xl font-black tracking-wide text-emerald-950" dir="ltr">{selectedPaymentMethod.destination}</p>
-            </div>
+            {selectedMethod === "superkey" ? (
+              <div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-center ring-1 ring-emerald-100">
+                <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
+                <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-100">
+                  <QRCodeSVG value={SUPERKEY_QR_VALUE} size={190} level="M" includeMargin />
+                </div>
+                <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
+                  افتح تطبيق SuperKey ثم امسح الباركود لإكمال الدفع.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+                <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
+                <p className="mt-1 text-xl font-black tracking-wide text-emerald-950" dir="ltr">{selectedPaymentMethod.destination}</p>
+              </div>
+            )}
 
             <div className="mt-4 space-y-2">
-              {[`أكمل الدفع عبر ${selectedPaymentMethod.label}.`,
+              {[
+                selectedMethod === "superkey" ? "امسح باركود SuperKey الظاهر أعلاه." : `أكمل الدفع عبر ${selectedPaymentMethod.label}.`,
                 selectedMethod === "crypto" ? "انسخ Hash أو TXID من منصة التحويل." : "انسخ رقم العملية من تطبيق الدفع.",
                 "أدخل رقم العملية هنا للتحقق والتفعيل.",
               ].map((step, i) => (
