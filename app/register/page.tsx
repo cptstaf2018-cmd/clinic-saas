@@ -23,9 +23,29 @@ import {
 type VerificationType = "phone" | "email";
 
 const inputClass =
-  "w-full rounded-lg border border-white/10 bg-white/80 px-4 py-2.5 text-sm font-semibold text-[#0f1f3d] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] outline-none transition focus:border-[#2f80ed] focus:bg-white focus:ring-4 focus:ring-[#2f80ed]/15 placeholder:text-[#8da0ba]";
+  "w-full rounded-2xl border-2 border-[#E2E8F0] bg-[#F8FAFD] px-4 py-3.5 text-sm font-semibold text-[#0f1f3d] outline-none transition focus:border-[#2563EB] focus:bg-white placeholder:text-[#94A3B8]";
 
-const labelClass = "mb-1.5 block text-xs font-extrabold text-[#334763]";
+const labelClass = "mb-1.5 block text-xs font-extrabold text-[#475569]";
+
+function HealthIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 40 40" fill="none" className={className}>
+      <path
+        d="M20 34s-14-9-14-19a8 8 0 0 1 14-5.3A8 8 0 0 1 34 15c0 10-14 19-14 19z"
+        fill="white"
+        fillOpacity="0.9"
+      />
+      <path
+        d="M8 20h4l2-5 3 10 3-8 2 3h10"
+        stroke="#3b82f6"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
 
 function BrandMark() {
   return (
@@ -467,82 +487,104 @@ export default function RegisterPage() {
     }
   }
 
+  const formProps = {
+    regType,
+    setRegType: (value: VerificationType) => {
+      setRegType(value);
+      setCodeMsg(null);
+      setEmailMsg(null);
+    },
+    phone,
+    setPhone: (value: string) => {
+      setPhone(value);
+      setCodeMsg(null);
+    },
+    email,
+    setEmail: (value: string) => {
+      setEmail(value);
+      setEmailMsg(null);
+    },
+    sendingCode,
+    codeMsg,
+    sendingEmail,
+    emailMsg,
+    handleRequestPhoneCode,
+    handleRequestEmailCode,
+    handleSubmit,
+    loading,
+    error,
+  };
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#071a34]" dir="rtl">
       <div className="flex min-h-screen w-full overflow-x-hidden">
         <ProductPreview />
 
-        <section className="relative flex w-full min-w-0 items-center justify-center overflow-hidden bg-[#eaf1f9] px-4 py-8 lg:w-[44%] lg:px-8">
+        <section className="w-full min-w-0 lg:w-[44%] lg:bg-[#EEF2F9] lg:px-8 lg:py-8">
           <div
-            className="absolute inset-0 opacity-60 lg:hidden"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(47,128,237,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(47,128,237,0.08) 1px, transparent 1px)",
-              backgroundSize: "34px 34px",
-            }}
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(234,241,249,0.94))]" />
-
-          <div className="relative z-10 w-full max-w-[calc(100vw-32px)] min-w-0 sm:max-w-[520px]">
-            <div className="mb-6 flex items-center justify-between lg:hidden">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2f80ed] text-white">
-                  <Plus className="h-6 w-6 stroke-[3]" />
-                </div>
-                <span className="text-xl font-black text-[#0f1f3d]">عيادتي</span>
+            className="flex min-h-screen w-full flex-col lg:hidden"
+            style={{ background: "linear-gradient(160deg,#0c1f3f 0%,#1a3a6b 40%,#1e4080 100%)" }}
+          >
+            <div className="flex flex-col items-center px-6 pb-8 pt-14 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-lg">
+                <HealthIcon className="h-9 w-9" />
               </div>
-              <span className="rounded-lg bg-white/80 px-3 py-2 text-xs font-black text-[#2f6fe4] shadow-sm">
-                14 يوم مجاناً
-              </span>
+              <h1 className="text-3xl font-black tracking-tight text-white">عيادتي</h1>
+              <p className="mt-1.5 text-sm font-medium text-blue-200/80">نظام إدارة العيادات الذكي</p>
+
+              <div className="mt-4 flex items-center gap-3">
+                {[
+                  { icon: "🏥", text: "13+ عيادة" },
+                  { icon: "🤖", text: "بوت واتساب" },
+                  { icon: "🔒", text: "بيانات آمنة" },
+                ].map((badge) => (
+                  <div key={badge.text} className="flex items-center gap-1 rounded-full border border-white/12 bg-white/8 px-2.5 py-1">
+                    <span className="text-xs">{badge.icon}</span>
+                    <span className="text-[11px] font-bold text-blue-100">{badge.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="rounded-lg border border-white/80 bg-white p-5 shadow-[0_22px_70px_rgba(28,52,92,0.14)] sm:p-6">
-              <div className="text-center">
-                <div className="min-w-0">
-                  <h1 className="max-w-full text-2xl font-black leading-tight text-[#0f1f3d] sm:text-3xl">
-                    تسجيل عيادة جديدة
-                  </h1>
-                  <p className="mx-auto mt-2 max-w-sm text-sm font-bold leading-6 text-[#61728a]">
+            <div className="flex-1 rounded-t-[32px] bg-white px-6 pb-10 pt-8 shadow-[0_-8px_40px_rgba(0,0,0,0.25)]">
+              <div className="mb-6">
+                <h2 className="text-2xl font-black text-[#0C1F3F]">تسجيل عيادة جديدة</h2>
+                <p className="mt-1 text-sm text-[#64748B]">برقم الواتساب أو الإيميل</p>
+              </div>
+
+              <RegisterForm {...formProps} />
+
+              <div className="mt-6 border-t border-slate-100 pt-6 text-center">
+                <p className="text-sm text-[#64748B]">
+                  لديك حساب؟{" "}
+                  <Link href="/login" className="font-black text-[#2563EB] hover:underline">
+                    دخول العيادة
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative hidden min-h-screen items-center justify-center lg:flex">
+            <div className="w-full max-w-[520px]">
+              <div className="rounded-2xl bg-white p-7 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)]">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-black text-[#0C1F3F]">تسجيل عيادة جديدة</h2>
+                  <p className="mt-1 text-sm font-bold text-[#64748B]">
                     اختر رقم الهاتف أو البريد الإلكتروني، أرسل الكود، ثم فعّل حسابك.
                   </p>
                 </div>
+
+                <RegisterForm {...formProps} />
               </div>
 
-              <RegisterForm
-                regType={regType}
-                setRegType={(value) => {
-                  setRegType(value);
-                  setCodeMsg(null);
-                  setEmailMsg(null);
-                }}
-                phone={phone}
-                setPhone={(value) => {
-                  setPhone(value);
-                  setCodeMsg(null);
-                }}
-                email={email}
-                setEmail={(value) => {
-                  setEmail(value);
-                  setEmailMsg(null);
-                }}
-                sendingCode={sendingCode}
-                codeMsg={codeMsg}
-                sendingEmail={sendingEmail}
-                emailMsg={emailMsg}
-                handleRequestPhoneCode={handleRequestPhoneCode}
-                handleRequestEmailCode={handleRequestEmailCode}
-                handleSubmit={handleSubmit}
-                loading={loading}
-                error={error}
-              />
+              <p className="mt-5 text-center text-sm font-bold text-[#64748B]">
+                لديك حساب؟{" "}
+                <Link href="/login" className="font-black text-[#2563EB] hover:underline">
+                  دخول العيادة
+                </Link>
+              </p>
             </div>
-
-            <p className="mt-5 text-center text-sm font-bold text-[#61728a]">
-              لديك حساب؟{" "}
-              <Link href="/login" className="font-black text-[#2563eb] hover:underline">
-                تسجيل الدخول
-              </Link>
-            </p>
           </div>
         </section>
       </div>
