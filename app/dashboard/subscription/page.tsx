@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
 import {
   isPlanId,
   PLAN_LABELS,
@@ -20,8 +19,6 @@ import {
 
 type PaymentMethodId = "superkey" | "zaincash" | "crypto";
 type PurchaseMode = "renew" | "upgrade";
-
-const SUPERKEY_QR_VALUE = process.env.NEXT_PUBLIC_SUPERKEY_QR_VALUE ?? "SUPERKEY:07706688044";
 
 const PAYMENT_METHODS: Array<{
   id: PaymentMethodId;
@@ -417,7 +414,12 @@ export default function SubscriptionPage() {
               <div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-center ring-1 ring-emerald-100">
                 <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
                 <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-100">
-                  <QRCodeSVG value={SUPERKEY_QR_VALUE} size={190} level="M" includeMargin />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/payments/superkey-qr.jpeg"
+                    alt="باركود SuperKey للدفع"
+                    className="h-auto w-[190px] rounded-xl"
+                  />
                 </div>
                 <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
                   افتح تطبيق SuperKey ثم امسح الباركود لإكمال الدفع.
