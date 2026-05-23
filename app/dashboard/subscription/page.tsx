@@ -417,19 +417,21 @@ export default function SubscriptionPage() {
               })}
             </div>
 
-            {selectedMethod === "superkey" ? (
+            {selectedMethod === "superkey" || selectedMethod === "zaincash" ? (
               <div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-center ring-1 ring-emerald-100">
                 <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
                 <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/payments/superkey-qr.jpeg"
-                    alt="باركود SuperKey للدفع"
+                    src={selectedMethod === "superkey" ? "/payments/superkey-qr.jpeg" : "/payments/zaincash-qr.jpeg"}
+                    alt={selectedMethod === "superkey" ? "باركود SuperKey للدفع" : "باركود Zain Cash للدفع"}
                     className="h-auto w-[190px] rounded-xl"
                   />
                 </div>
                 <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
-                  افتح تطبيق SuperKey ثم امسح الباركود لإكمال الدفع.
+                  {selectedMethod === "superkey"
+                    ? "افتح تطبيق SuperKey ثم امسح الباركود لإكمال الدفع."
+                    : "افتح تطبيق Zain Cash ثم امسح الباركود لإكمال الدفع."}
                 </p>
               </div>
             ) : (
@@ -444,9 +446,7 @@ export default function SubscriptionPage() {
                   />
                 </div>
                 <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
-                  {selectedMethod === "zaincash"
-                    ? "افتح تطبيق Zain Cash ثم امسح الباركود لإكمال الدفع."
-                    : "امسح الباركود من تطبيق المحفظة أو Binance لإكمال التحويل."}
+                  امسح الباركود من تطبيق المحفظة أو Binance لإكمال التحويل.
                 </p>
               </div>
             )}
