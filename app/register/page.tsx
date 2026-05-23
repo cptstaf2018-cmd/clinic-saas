@@ -19,7 +19,6 @@ import {
   Stethoscope,
   UsersRound,
 } from "lucide-react";
-import { MEDICAL_SPECIALTIES } from "@/lib/medical-specialties";
 
 type VerificationType = "phone" | "email";
 
@@ -210,8 +209,6 @@ type RegisterFormProps = {
   codeMsg: { ok: boolean; text: string } | null;
   sendingEmail: boolean;
   emailMsg: { ok: boolean; text: string } | null;
-  selectedSpecialty: string;
-  setSelectedSpecialty: (v: string) => void;
   handleRequestPhoneCode: () => void;
   handleRequestEmailCode: () => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -230,8 +227,6 @@ function RegisterForm({
   codeMsg,
   sendingEmail,
   emailMsg,
-  selectedSpecialty,
-  setSelectedSpecialty,
   handleRequestPhoneCode,
   handleRequestEmailCode,
   handleSubmit,
@@ -245,40 +240,6 @@ function RegisterForm({
         <div className="relative">
           <Stethoscope className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
           <input name="clinicName" type="text" required className={`${inputClass} pr-11`} placeholder="عيادة د. أحمد محمد" />
-        </div>
-      </div>
-
-      <div>
-        <label className={labelClass}>اختصاص العيادة</label>
-        <div className="grid max-h-48 gap-2 overflow-y-auto rounded-lg border border-[#dbe6f3] bg-[#f4f8fd] p-2 sm:grid-cols-2">
-          {MEDICAL_SPECIALTIES.map((specialty) => {
-            const active = selectedSpecialty === specialty.key;
-            const isSpecialPlan = specialty.key === "dentistry" || specialty.key === "aesthetic";
-            return (
-              <button
-                key={specialty.key}
-                type="button"
-                onClick={() => setSelectedSpecialty(specialty.key)}
-                className={`min-w-0 rounded-lg border px-3 py-2 text-right transition ${
-                  active
-                    ? "border-[#2563eb] bg-white text-[#0f1f3d] shadow-sm"
-                    : "border-transparent bg-white/50 text-[#667891] hover:border-[#c8d8eb] hover:bg-white"
-                }`}
-              >
-                <span className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-black">{specialty.name}</span>
-                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
-                    active ? "bg-[#2563eb] text-white" : "bg-[#e7eef8] text-[#61728a]"
-                  }`}>
-                    {specialty.icon}
-                  </span>
-                </span>
-                {isSpecialPlan && (
-                  <span className="mt-1 block text-[11px] font-extrabold text-[#0f766e]">له اشتراك اختصاص خاص</span>
-                )}
-              </button>
-            );
-          })}
         </div>
       </div>
 
@@ -420,7 +381,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [regType, setRegType] = useState<VerificationType>("phone");
-  const [selectedSpecialty, setSelectedSpecialty] = useState("");
 
   const [phone, setPhone] = useState("");
   const [sendingCode, setSendingCode] = useState(false);
@@ -480,11 +440,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    if (!selectedSpecialty) {
-      setError("اختر اختصاص العيادة أولاً");
-      setLoading(false);
-      return;
-    }
     const form = new FormData(e.currentTarget);
     try {
       const res = await fetch("/api/register", {
@@ -492,7 +447,6 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clinicName: form.get("clinicName"),
-          specialty: selectedSpecialty,
           registrationType: regType,
           phone: regType === "phone" ? phone.trim() : undefined,
           email: regType === "email" ? email.trim() : undefined,
@@ -575,8 +529,6 @@ export default function RegisterPage() {
                 codeMsg={codeMsg}
                 sendingEmail={sendingEmail}
                 emailMsg={emailMsg}
-                selectedSpecialty={selectedSpecialty}
-                setSelectedSpecialty={setSelectedSpecialty}
                 handleRequestPhoneCode={handleRequestPhoneCode}
                 handleRequestEmailCode={handleRequestEmailCode}
                 handleSubmit={handleSubmit}

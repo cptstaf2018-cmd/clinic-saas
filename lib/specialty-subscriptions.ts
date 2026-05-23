@@ -8,18 +8,18 @@ const SPECIALTY_SUBSCRIPTION_RULES: Record<string, {
   badge: string;
 }> = {
   dentistry: {
-    title: "اشتراك الأسنان الخاص",
+    title: "باقة الأسنان",
     description: "يشمل خريطة الأسنان، تسجيل الزيارة، الأشعة والملاحظات، الوصفات، وملفات المراجع.",
     allowedPlans: ["vip"],
     monthlyPrice: 65000,
-    badge: "خاص بطب الأسنان",
+    badge: "طب الأسنان",
   },
   aesthetic: {
-    title: "اشتراك التجميل الخاص",
+    title: "باقة التجميل",
     description: "يشمل خريطة وجه وجسم، صور قبل/بعد، جلسات ومتابعات، مرفقات، ووصفات.",
     allowedPlans: ["vip"],
     monthlyPrice: 95000,
-    badge: "خاص بالتجميل",
+    badge: "التجميل",
   },
 };
 

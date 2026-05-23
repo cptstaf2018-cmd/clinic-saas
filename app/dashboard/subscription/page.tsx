@@ -274,7 +274,7 @@ export default function SubscriptionPage() {
         {(!isActive || purchaseMode) && step === "plans" && !submitted && (
           <section>
             <p className="mb-4 text-sm font-black text-slate-500">
-              {specialtyRule ? `${specialtyRule.badge} — تظهر هنا الباقة المطابقة للاختصاص فقط` : "اختر الباقة المناسبة لعيادتك"}
+              {specialtyRule ? `${specialtyRule.badge} — الباقة المطابقة لاختصاص العيادة` : "اختر الباقة المناسبة لعيادتك"}
             </p>
             <div className="mb-5 rounded-[26px] bg-white p-2 shadow-sm ring-1 ring-slate-200">
               <div className="grid gap-2 sm:grid-cols-4">
