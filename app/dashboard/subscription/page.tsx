@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import {
   isPlanId,
   PLAN_LABELS,
@@ -42,7 +43,7 @@ const PAYMENT_METHODS: Array<{
     id: "zaincash",
     label: "Zain Cash",
     scope: "داخل العراق",
-    destinationLabel: "رقم المحفظة",
+    destinationLabel: "باركود الدفع",
     destination: "07706688044",
     referenceLabel: "رقم العملية",
     referencePlaceholder: "مثال: ZC-123456",
@@ -51,7 +52,7 @@ const PAYMENT_METHODS: Array<{
     id: "crypto",
     label: "Binance / Crypto",
     scope: "خارج العراق",
-    destinationLabel: "عنوان المحفظة",
+    destinationLabel: "باركود المحفظة",
     destination: "TERnca1u35msfXDroSNPuu4UAZsr1YBcrR",
     referenceLabel: "Hash / TXID",
     referencePlaceholder: "ألصق Hash أو TXID هنا",
@@ -119,6 +120,12 @@ function formatDate(iso: string) {
 }
 function formatMoney(v: number) { return v.toLocaleString("ar-IQ"); }
 function arabicNumber(v: number) { return String(v).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]); }
+
+function qrValueForPayment(method: PaymentMethodId, destination: string) {
+  if (method === "zaincash") return `ZAINCASH:${destination}`;
+  if (method === "crypto") return destination;
+  return destination;
+}
 
 export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null | "loading">("loading");
@@ -426,15 +433,31 @@ export default function SubscriptionPage() {
                 </p>
               </div>
             ) : (
-              <div className="mt-5 rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+              <div className="mt-5 rounded-2xl bg-emerald-50 p-5 text-center ring-1 ring-emerald-100">
                 <p className="text-xs font-black text-emerald-700">{selectedPaymentMethod.destinationLabel}</p>
-                <p className="mt-1 text-xl font-black tracking-wide text-emerald-950" dir="ltr">{selectedPaymentMethod.destination}</p>
+                <div className="mx-auto mt-3 w-fit rounded-2xl bg-white p-3 shadow-sm ring-1 ring-emerald-100">
+                  <QRCodeSVG
+                    value={qrValueForPayment(selectedMethod, selectedPaymentMethod.destination)}
+                    size={190}
+                    level="M"
+                    includeMargin
+                  />
+                </div>
+                <p className="mx-auto mt-3 max-w-sm text-xs font-bold leading-6 text-emerald-800">
+                  {selectedMethod === "zaincash"
+                    ? "افتح تطبيق Zain Cash ثم امسح الباركود لإكمال الدفع."
+                    : "امسح الباركود من تطبيق المحفظة أو Binance لإكمال التحويل."}
+                </p>
               </div>
             )}
 
             <div className="mt-4 space-y-2">
               {[
-                selectedMethod === "superkey" ? "امسح باركود SuperKey الظاهر أعلاه." : `أكمل الدفع عبر ${selectedPaymentMethod.label}.`,
+                selectedMethod === "superkey"
+                  ? "امسح باركود SuperKey الظاهر أعلاه."
+                  : selectedMethod === "zaincash"
+                    ? "امسح باركود Zain Cash الظاهر أعلاه."
+                    : "امسح باركود المحفظة الظاهر أعلاه.",
                 selectedMethod === "crypto" ? "انسخ Hash أو TXID من منصة التحويل." : "انسخ رقم العملية من تطبيق الدفع.",
                 "أدخل رقم العملية هنا للتحقق والتفعيل.",
               ].map((step, i) => (
