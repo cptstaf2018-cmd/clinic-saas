@@ -466,7 +466,7 @@ export default async function PatientProfilePage({
         {/* ═══ Attachments ═══ */}
         {!isSecretary && (
           <section>
-            <PatientAttachmentsClient patientId={patient.id} />
+            <PatientAttachmentsClient patientId={patient.id} specialtyCode={specialtyConfig.code} />
           </section>
         )}
 

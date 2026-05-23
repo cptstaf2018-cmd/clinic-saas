@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 
 type Attachment = {
   id: string;
@@ -20,14 +20,29 @@ const TABS = [
   { id: "other",        label: "📎 أخرى",      empty: "لا توجد مستندات أخرى" },
 ];
 
+const AESTHETIC_TABS = [
+  { id: "aesthetic_before", label: "📷 قبل الإجراء", empty: "لا توجد صور قبل الإجراء" },
+  { id: "aesthetic_after",  label: "✨ بعد الإجراء",  empty: "لا توجد صور بعد الإجراء" },
+];
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("ar-IQ", {
     year: "numeric", month: "long", day: "numeric",
   });
 }
 
-export default function PatientAttachmentsClient({ patientId }: { patientId: string }) {
-  const [activeTab, setActiveTab] = useState("lab");
+export default function PatientAttachmentsClient({
+  patientId,
+  specialtyCode,
+}: {
+  patientId: string;
+  specialtyCode?: string;
+}) {
+  const tabs = useMemo(
+    () => (specialtyCode === "aesthetic" ? [...AESTHETIC_TABS, ...TABS] : TABS),
+    [specialtyCode]
+  );
+  const [activeTab, setActiveTab] = useState(tabs[0].id);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   const [showForm, setShowForm] = useState(false);
@@ -42,7 +57,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
   const [pendingFile, setPendingFile] = useState<{ url: string; name: string; type: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function loadTab(tabId: string) {
+  const loadTab = useCallback(async (tabId: string) => {
     if (loaded[tabId]) return;
     const res = await fetch(`/api/patients/${patientId}/attachments?type=${tabId}`);
     if (res.ok) {
@@ -50,7 +65,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
       setAttachments((prev) => [...prev.filter((a) => a.type !== tabId), ...data]);
       setLoaded((prev) => ({ ...prev, [tabId]: true }));
     }
-  }
+  }, [loaded, patientId]);
 
   async function switchTab(tabId: string) {
     setActiveTab(tabId);
@@ -59,7 +74,10 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
   }
 
   // load first tab on mount — useEffect runs client-side only
-  useEffect(() => { loadTab("lab"); }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadTab(tabs[0].id), 0);
+    return () => window.clearTimeout(timer);
+  }, [loadTab, tabs]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -80,7 +98,14 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
   }
 
   async function handleSave() {
-    if (!title.trim()) { setError("العنوان مطلوب"); return; }
+    const defaultTitle = activeTab === "aesthetic_before"
+      ? "صورة قبل الإجراء"
+      : activeTab === "aesthetic_after"
+      ? "صورة بعد الإجراء"
+      : "";
+    const finalTitle = title.trim() || defaultTitle;
+    if (!finalTitle) { setError("العنوان مطلوب"); return; }
+    if (isAestheticPhotoTab && !pendingFile) { setError("ارفع الصورة أولاً"); return; }
     setSaving(true);
     setError("");
     const res = await fetch(`/api/patients/${patientId}/attachments`, {
@@ -88,7 +113,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: activeTab,
-        title: title.trim(),
+        title: finalTitle,
         notes: notes.trim() || null,
         date,
         fileUrl: pendingFile?.url ?? null,
@@ -117,7 +142,8 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
   }
 
   const tabAttachments = attachments.filter((a) => a.type === activeTab);
-  const currentTab = TABS.find((t) => t.id === activeTab)!;
+  const currentTab = tabs.find((t) => t.id === activeTab)!;
+  const isAestheticPhotoTab = activeTab === "aesthetic_before" || activeTab === "aesthetic_after";
 
   return (
     <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
@@ -126,9 +152,13 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
         <div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-black text-violet-700">مميزة VIP</span>
-            <h2 className="text-2xl font-black text-slate-950">الفحوصات والمستندات</h2>
+            <h2 className="text-2xl font-black text-slate-950">
+              {specialtyCode === "aesthetic" ? "صور ومرفقات المراجع" : "الفحوصات والمستندات"}
+            </h2>
           </div>
-          <p className="mt-1 text-sm font-bold text-slate-400">تحاليل، أشعة، وصفات، ومستندات المريض</p>
+          <p className="mt-1 text-sm font-bold text-slate-400">
+            {specialtyCode === "aesthetic" ? "صور قبل/بعد، تحاليل، وصفات، ومستندات المراجع" : "تحاليل، أشعة، وصفات، ومستندات المريض"}
+          </p>
         </div>
         {!showForm && (
           <button
@@ -142,7 +172,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
 
       {/* Tabs */}
       <div className="mb-4 flex flex-wrap gap-2">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => switchTab(tab.id)}
@@ -162,12 +192,14 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
         <div className="mb-4 space-y-3 rounded-[24px] bg-violet-50/50 p-4 ring-1 ring-violet-100">
           <p className="text-sm font-black text-violet-700">إضافة {currentTab.label}</p>
           {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-600">{error}</p>}
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="العنوان — مثال: تحليل دم كامل"
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
-          />
+          {!isAestheticPhotoTab && (
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="العنوان — مثال: تحليل دم كامل"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
+            />
+          )}
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -191,7 +223,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
           {/* File Upload */}
           <div>
             <label className="mb-1 block text-xs font-bold text-slate-500">
-              رفع ملف <span className="font-normal text-slate-400">(PDF أو صورة — اختياري)</span>
+              {isAestheticPhotoTab ? "رفع صورة" : "رفع ملف"} <span className="font-normal text-slate-400">{isAestheticPhotoTab ? "(من الكاميرا أو المعرض)" : "(PDF أو صورة — اختياري)"}</span>
             </label>
             {pendingFile ? (
               <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-100">
@@ -204,10 +236,16 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
                 disabled={uploading}
                 className="w-full rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-bold text-slate-400 transition hover:border-violet-300 hover:text-violet-600 disabled:opacity-50"
               >
-                {uploading ? "جاري الرفع..." : "📎 اضغط لرفع ملف"}
+                {uploading ? "جاري الرفع..." : isAestheticPhotoTab ? "📷 رفع صورة من الموبايل" : "📎 اضغط لرفع ملف"}
               </button>
             )}
-            <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" className="hidden" onChange={handleFileChange} />
+            <input
+              ref={fileRef}
+              type="file"
+              accept={isAestheticPhotoTab ? "image/*" : ".pdf,.jpg,.jpeg,.png,.webp"}
+              className="hidden"
+              onChange={handleFileChange}
+            />
           </div>
 
           <div className="flex gap-2">
@@ -227,7 +265,7 @@ export default function PatientAttachmentsClient({ patientId }: { patientId: str
       ) : tabAttachments.length === 0 ? (
         <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
           <p className="text-lg font-black text-slate-400">{currentTab.empty}</p>
-          <p className="mt-1 text-xs font-bold text-slate-300">اضغط "+ إضافة" لإضافة أول سجل</p>
+          <p className="mt-1 text-xs font-bold text-slate-300">اضغط إضافة لإضافة أول سجل</p>
         </div>
       ) : (
         <div className="space-y-3">
