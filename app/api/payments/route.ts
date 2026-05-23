@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { encodePaymentReference, getPlanDurationPrice, isPlanId, isSubscriptionDurationId } from "@/lib/plans";
+import { encodePaymentReference, isPlanId, isSubscriptionDurationId } from "@/lib/plans";
 import { PaymentMethodId, validatePaymentReference } from "@/lib/payment-reference";
-import { getAllowedPlansForSpecialty, getSubscriptionRuleForSpecialty } from "@/lib/specialty-subscriptions";
+import { getAllowedPlansForSpecialty, getSpecialtyPlanDurationPrice, getSubscriptionRuleForSpecialty } from "@/lib/specialty-subscriptions";
 import { logSystemEvent } from "@/lib/system-events";
 
 export async function POST(req: Request) {
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   const duration = isSubscriptionDurationId(body.duration) ? body.duration : "monthly";
-  const expectedAmount = getPlanDurationPrice(body.plan, duration);
+  const expectedAmount = getSpecialtyPlanDurationPrice(body.plan, duration, clinic?.specialty);
   if (body.amount !== expectedAmount) {
     return NextResponse.json(
       { error: "المبلغ لا يطابق الباقة والمدة المختارة" },

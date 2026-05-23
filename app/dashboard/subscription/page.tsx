@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  getPlanDurationPrice,
   isPlanId,
   PLAN_LABELS,
   PLAN_PRICES,
@@ -11,7 +10,12 @@ import {
 } from "@/lib/plans";
 import type { SubscriptionDurationId } from "@/lib/plans";
 import { validatePaymentReference } from "@/lib/payment-reference";
-import { getAllowedPlansForSpecialty, getSubscriptionRuleForSpecialty } from "@/lib/specialty-subscriptions";
+import {
+  getAllowedPlansForSpecialty,
+  getSpecialtyPlanDurationPrice,
+  getSpecialtyPlanMonthlyPrice,
+  getSubscriptionRuleForSpecialty,
+} from "@/lib/specialty-subscriptions";
 
 type PaymentMethodId = "superkey" | "zaincash" | "crypto";
 type PurchaseMode = "renew" | "upgrade";
@@ -169,7 +173,7 @@ export default function SubscriptionPage() {
     if (!check.ok) { setError(check.error); return; }
     setSubmitting(true); setError("");
     const plan = PLANS.find((p) => p.id === selectedPlan)!;
-    const amount = getPlanDurationPrice(plan.id, selectedDuration);
+    const amount = getSpecialtyPlanDurationPrice(plan.id, selectedDuration, subscriptionSpecialty);
     const res = await fetch("/api/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -191,8 +195,9 @@ export default function SubscriptionPage() {
   const selectedPaymentMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
   const selected = visiblePlans.find((p) => p.id === effectiveSelectedPlan) ?? visiblePlans[0] ?? PLANS[0];
   const selectedDurationMeta = SUBSCRIPTION_DURATIONS[selectedDuration];
-  const selectedAmount = getPlanDurationPrice(selected.id, selectedDuration);
-  const selectedBaseAmount = selected.price * selectedDurationMeta.months;
+  const selectedMonthlyPrice = getSpecialtyPlanMonthlyPrice(selected.id, subscriptionSpecialty);
+  const selectedAmount = getSpecialtyPlanDurationPrice(selected.id, selectedDuration, subscriptionSpecialty);
+  const selectedBaseAmount = selectedMonthlyPrice * selectedDurationMeta.months;
   const selectedSaving = selectedBaseAmount - selectedAmount;
   const selectedDisplayName = specialtyRule ? specialtyRule.title : selected.name;
   const nextUpgradePlan = visiblePlans.find((p) => PLAN_RANK[p.id] > PLAN_RANK[activePlan]);
@@ -303,8 +308,9 @@ export default function SubscriptionPage() {
             <div className={`grid gap-4 sm:grid-cols-2 ${specialtyRule ? "xl:grid-cols-1" : "xl:grid-cols-4"}`}>
               {selectablePlans.map((plan) => {
                 const isSelected = effectiveSelectedPlan === plan.id;
-                const amount = getPlanDurationPrice(plan.id, selectedDuration);
-                const baseAmount = plan.price * selectedDurationMeta.months;
+                const monthlyPrice = getSpecialtyPlanMonthlyPrice(plan.id, subscriptionSpecialty);
+                const amount = getSpecialtyPlanDurationPrice(plan.id, selectedDuration, subscriptionSpecialty);
+                const baseAmount = monthlyPrice * selectedDurationMeta.months;
                 const saving = baseAmount - amount;
                 const monthlyEquivalent = Math.round(amount / selectedDurationMeta.months);
                 return (
