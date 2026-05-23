@@ -69,19 +69,123 @@ function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
 
+type RecordCopy = {
+  kicker: string;
+  title: string;
+  countUnit: string;
+  addButton: string;
+  addTitle: string;
+  editTitle: string;
+  emptyTitle: string;
+  emptyDescription: string;
+};
+
+const SPECIALTY_RECORD_COPY: Record<string, RecordCopy> = {
+  dentistry: {
+    kicker: "ملف الأسنان",
+    title: "خطة علاج الأسنان",
+    countUnit: "خطة محفوظة",
+    addButton: "خطة علاج جديدة",
+    addTitle: "إضافة خطة علاج جديدة",
+    editTitle: "تعديل خطة العلاج",
+    emptyTitle: "لا توجد خطط علاج",
+    emptyDescription: "أضف أول خطة علاج أسنان، وتشمل الأشعة والملاحظات والوصفة عند الحاجة.",
+  },
+  pediatrics: {
+    kicker: "ملف الطفل",
+    title: "نمو وتطعيمات الطفل",
+    countUnit: "متابعة محفوظة",
+    addButton: "متابعة طفل جديدة",
+    addTitle: "إضافة متابعة طفل جديدة",
+    editTitle: "تعديل متابعة الطفل",
+    emptyTitle: "لا توجد متابعات أطفال",
+    emptyDescription: "أضف أول متابعة للوزن والطول والحرارة والتطعيمات والجرعات.",
+  },
+  aesthetic: {
+    kicker: "ملف التجميل",
+    title: "جلسات ومتابعات التجميل",
+    countUnit: "جلسة محفوظة",
+    addButton: "جلسة جديدة",
+    addTitle: "إضافة جلسة تجميل جديدة",
+    editTitle: "تعديل جلسة التجميل",
+    emptyTitle: "لا توجد جلسات تجميل",
+    emptyDescription: "أضف أول جلسة مع صور قبل/بعد، الموافقة، والتعليمات.",
+  },
+  ophthalmology: {
+    kicker: "ملف العيون",
+    title: "فحص العيون ووصفة النظارات",
+    countUnit: "فحص محفوظ",
+    addButton: "فحص عيون جديد",
+    addTitle: "إضافة فحص عيون جديد",
+    editTitle: "تعديل فحص العيون",
+    emptyTitle: "لا توجد فحوص عيون",
+    emptyDescription: "أضف أول فحص لحدة البصر، ضغط العين، ووصفة النظارات.",
+  },
+  internal_medicine: {
+    kicker: "ملف الباطنية",
+    title: "الأمراض المزمنة وخطة العلاج",
+    countUnit: "متابعة محفوظة",
+    addButton: "متابعة باطنية جديدة",
+    addTitle: "إضافة متابعة باطنية جديدة",
+    editTitle: "تعديل متابعة الباطنية",
+    emptyTitle: "لا توجد متابعات باطنية",
+    emptyDescription: "أضف أول متابعة للأمراض المزمنة والتحاليل وخطة العلاج.",
+  },
+  gynecology: {
+    kicker: "ملف النسائية والتوليد",
+    title: "متابعة الحمل والسونار",
+    countUnit: "زيارة محفوظة",
+    addButton: "زيارة نسائية جديدة",
+    addTitle: "إضافة زيارة نسائية جديدة",
+    editTitle: "تعديل الزيارة النسائية",
+    emptyTitle: "لا توجد زيارات نسائية",
+    emptyDescription: "أضف أول متابعة للحمل، السونار، وجدول الزيارات.",
+  },
+  dermatology: {
+    kicker: "ملف الجلدية",
+    title: "آفات جلدية وصور ومتابعة",
+    countUnit: "حالة محفوظة",
+    addButton: "حالة جلدية جديدة",
+    addTitle: "إضافة حالة جلدية جديدة",
+    editTitle: "تعديل الحالة الجلدية",
+    emptyTitle: "لا توجد حالات جلدية",
+    emptyDescription: "أضف أول حالة جلدية مع مكان الآفة والصور والملاحظات والخزعات.",
+  },
+  cardiology: {
+    kicker: "ملف القلب",
+    title: "ضغط ونبض وECG",
+    countUnit: "متابعة محفوظة",
+    addButton: "متابعة قلب جديدة",
+    addTitle: "إضافة متابعة قلب جديدة",
+    editTitle: "تعديل متابعة القلب",
+    emptyTitle: "لا توجد متابعات قلب",
+    emptyDescription: "أضف أول متابعة للضغط والنبض وECG والإيكو.",
+  },
+  orthopedics: {
+    kicker: "ملف العظام",
+    title: "ألم وحركة وأشعة وتأهيل",
+    countUnit: "متابعة محفوظة",
+    addButton: "متابعة عظام جديدة",
+    addTitle: "إضافة متابعة عظام جديدة",
+    editTitle: "تعديل متابعة العظام",
+    emptyTitle: "لا توجد متابعات عظام",
+    emptyDescription: "أضف أول متابعة للألم، الحركة، الأشعة، وخطة التأهيل.",
+  },
+  surgery: {
+    kicker: "ملف الجراحة",
+    title: "إجراءات وفحص الجروح",
+    countUnit: "إجراء محفوظ",
+    addButton: "إجراء جديد",
+    addTitle: "إضافة إجراء جديد",
+    editTitle: "تعديل الإجراء",
+    emptyTitle: "لا توجد إجراءات",
+    emptyDescription: "أضف أول إجراء مع ملاحظة العملية، فحص الجرح، وخطة ما بعد العملية.",
+  },
+};
+
 function recordCopy(specialtyConfig: SpecialtyConfig) {
-  if (specialtyConfig.code === "dentistry") {
-    return {
-      kicker: "ملف الأسنان",
-      title: "خطة علاج الأسنان",
-      countUnit: "خطة محفوظة",
-      addButton: "خطة علاج جديدة",
-      addTitle: "إضافة خطة علاج جديدة",
-      editTitle: "تعديل خطة العلاج",
-      emptyTitle: "لا توجد خطط علاج",
-      emptyDescription: "أضف أول خطة علاج أسنان، وتشمل الأشعة والملاحظات والوصفة عند الحاجة.",
-    };
-  }
+  const specialtyCopy = SPECIALTY_RECORD_COPY[specialtyConfig.code];
+  if (specialtyCopy) return specialtyCopy;
 
   return {
     kicker: `قالب ${specialtyConfig.nameAr}`,

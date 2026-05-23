@@ -6,7 +6,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "طع",
     category: "عام",
     map: "قالب زيارة",
-    modules: ["فحص عام", "خطة علاج", "وصفة طبية", "تحويل أخصائي"],
+    modules: ["فحص عام", "وصفات طبية", "تحويلات أخصائي"],
   },
   {
     key: "dentistry",
@@ -24,7 +24,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ن",
     category: "الأكثر استخداماً",
     map: "خريطة نسائية",
-    modules: ["خريطة نسائية", "متابعة حمل", "سونار", "وصفة طبية"],
+    modules: ["متابعة حمل", "سونار", "جدول زيارات"],
   },
   {
     key: "pediatrics",
@@ -33,7 +33,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ط",
     category: "الأكثر استخداماً",
     map: "خريطة طفل",
-    modules: ["خريطة طفل", "نمو وتطعيمات", "حاسبة جرعات", "وصفة طبية"],
+    modules: ["نمو وتطعيمات", "جرعات", "متابعة حرارة ووزن"],
   },
   {
     key: "dermatology",
@@ -60,7 +60,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ق",
     category: "اختصاصات سريرية",
     map: "خريطة قلب",
-    modules: ["خريطة قلب", "ضغط ونبض", "ECG", "إيكو"],
+    modules: ["ضغط ونبض", "ECG", "متابعة زمنية"],
   },
   {
     key: "ophthalmology",
@@ -78,7 +78,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "ظم",
     category: "اختصاصات سريرية",
     map: "هيكل عظمي",
-    modules: ["هيكل عظمي", "ألم وحركة", "أشعة", "خطة تأهيل"],
+    modules: ["ألم وحركة", "أشعة وتأهيل", "خطة تأهيل"],
   },
   {
     key: "internal_medicine",
@@ -87,7 +87,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "+",
     category: "الأكثر استخداماً",
     map: "خريطة أعضاء",
-    modules: ["خريطة أعضاء", "تحاليل", "أمراض مزمنة", "خطة علاج"],
+    modules: ["تحاليل", "أمراض مزمنة", "خطة علاج"],
   },
   {
     key: "surgery",
@@ -96,7 +96,7 @@ export const MEDICAL_SPECIALTIES = [
     icon: "جر",
     category: "إجراءات ومراكز",
     map: "قالب إجراءات",
-    modules: ["قالب إجراءات", "ملاحظة العملية", "فحص الجرح", "خطة ما بعد العملية"],
+    modules: ["ملاحظة العملية", "فحص الجرح", "خطة ما بعد العملية"],
   },
 ] as const;
 
