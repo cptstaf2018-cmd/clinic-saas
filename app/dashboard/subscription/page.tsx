@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getPlanDurationPrice,
   isPlanId,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/plans";
 import type { SubscriptionDurationId } from "@/lib/plans";
 import { validatePaymentReference } from "@/lib/payment-reference";
+import { getAllowedPlansForSpecialty, getSubscriptionRuleForSpecialty } from "@/lib/specialty-subscriptions";
 
 type PaymentMethodId = "superkey" | "zaincash" | "crypto";
 type PurchaseMode = "renew" | "upgrade";
@@ -107,7 +108,7 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }>
 const PLAN_RANK: Record<PlanId, number> = { basic: 1, standard: 2, premium: 3, vip: 4 };
 const DURATION_OPTIONS = Object.entries(SUBSCRIPTION_DURATIONS) as Array<[SubscriptionDurationId, typeof SUBSCRIPTION_DURATIONS[SubscriptionDurationId]]>;
 
-interface Subscription { plan: string; status: string; startDate: string; expiresAt: string; }
+interface Subscription { plan: string; status: string; startDate: string; expiresAt: string; specialty: string | null; }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("ar-IQ", { year: "numeric", month: "long", day: "numeric" });
@@ -135,6 +136,16 @@ export default function SubscriptionPage() {
       .catch(() => setSubscription(null));
   }, []);
 
+  const subscriptionSpecialty = typeof subscription === "object" && subscription !== null ? subscription.specialty : null;
+  const specialtyRule = getSubscriptionRuleForSpecialty(subscriptionSpecialty);
+  const visiblePlans = useMemo(() => {
+    const allowedPlans = getAllowedPlansForSpecialty(subscriptionSpecialty);
+    return PLANS.filter((plan) => allowedPlans.includes(plan.id));
+  }, [subscriptionSpecialty]);
+  const effectiveSelectedPlan = visiblePlans.some((plan) => plan.id === selectedPlan)
+    ? selectedPlan
+    : visiblePlans[0]?.id ?? "standard";
+
   useEffect(() => {
     if (!submitted) return;
     const check = async () => {
@@ -142,14 +153,14 @@ export default function SubscriptionPage() {
       if (!res.ok) return;
       const latest = (await res.json()) as Subscription | null;
       setSubscription(latest);
-      if (latest?.status === "active" && latest.plan === selectedPlan) {
+      if (latest?.status === "active" && latest.plan === effectiveSelectedPlan) {
         setSubmitted(false); setReference(""); setStep("plans");
       }
     };
     check();
     const t = setInterval(check, 5000);
     return () => clearInterval(t);
-  }, [selectedPlan, submitted]);
+  }, [effectiveSelectedPlan, submitted]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -178,15 +189,17 @@ export default function SubscriptionPage() {
   const activePlan = subscription && isPlanId(subscription.plan) ? subscription.plan : "basic";
   const isActive = subscription?.status === "active" && daysLeft > 0;
   const selectedPaymentMethod = PAYMENT_METHODS.find((m) => m.id === selectedMethod)!;
-  const selected = PLANS.find((p) => p.id === selectedPlan)!;
+  const selected = visiblePlans.find((p) => p.id === effectiveSelectedPlan) ?? visiblePlans[0] ?? PLANS[0];
   const selectedDurationMeta = SUBSCRIPTION_DURATIONS[selectedDuration];
   const selectedAmount = getPlanDurationPrice(selected.id, selectedDuration);
   const selectedBaseAmount = selected.price * selectedDurationMeta.months;
   const selectedSaving = selectedBaseAmount - selectedAmount;
+  const selectedDisplayName = specialtyRule ? specialtyRule.title : selected.name;
+  const nextUpgradePlan = visiblePlans.find((p) => PLAN_RANK[p.id] > PLAN_RANK[activePlan]);
   const selectablePlans = isActive
-    ? purchaseMode === "renew" ? PLANS.filter((p) => p.id === activePlan)
-    : purchaseMode === "upgrade" ? PLANS.filter((p) => PLAN_RANK[p.id] > PLAN_RANK[activePlan])
-    : [] : PLANS;
+    ? purchaseMode === "renew" ? visiblePlans.filter((p) => p.id === activePlan)
+    : purchaseMode === "upgrade" ? visiblePlans.filter((p) => PLAN_RANK[p.id] > PLAN_RANK[activePlan])
+    : [] : visiblePlans;
 
   return (
     <div className="p-4 md:p-8" dir="rtl">
@@ -197,7 +210,12 @@ export default function SubscriptionPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-sm font-black text-emerald-700">إدارة الاشتراك</p>
-              <h1 className="mt-1 text-3xl font-black text-slate-950">باقات تشغيل العيادة</h1>
+              <h1 className="mt-1 text-3xl font-black text-slate-950">
+                {specialtyRule ? specialtyRule.title : "باقات تشغيل العيادة"}
+              </h1>
+              {specialtyRule && (
+                <p className="mt-2 max-w-xl text-sm font-bold leading-6 text-slate-500">{specialtyRule.description}</p>
+              )}
             </div>
             {subscription && status && (
               <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-slate-100 text-center min-w-[160px]">
@@ -224,12 +242,14 @@ export default function SubscriptionPage() {
                 <p className="text-sm font-semibold text-slate-500">ينتهي {formatDate(subscription!.expiresAt)}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <button onClick={() => { setPurchaseMode("renew"); setSelectedPlan(activePlan); setStep("plans"); setError(""); }}
-                  className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white hover:bg-blue-700">
-                  تجديد الباقة
-                </button>
-                {activePlan !== "vip" && (
-                  <button onClick={() => { setPurchaseMode("upgrade"); setSelectedPlan(activePlan === "basic" ? "standard" : activePlan === "standard" ? "premium" : "vip"); setStep("plans"); setError(""); }}
+                {visiblePlans.some((plan) => plan.id === activePlan) && (
+                  <button onClick={() => { setPurchaseMode("renew"); setSelectedPlan(activePlan); setStep("plans"); setError(""); }}
+                    className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white hover:bg-blue-700">
+                    تجديد الباقة
+                  </button>
+                )}
+                {nextUpgradePlan && (
+                  <button onClick={() => { setPurchaseMode("upgrade"); setSelectedPlan(nextUpgradePlan.id); setStep("plans"); setError(""); }}
                     className="rounded-2xl bg-emerald-50 px-5 py-2.5 text-sm font-black text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100">
                     ترقية الاشتراك
                   </button>
@@ -248,7 +268,9 @@ export default function SubscriptionPage() {
         {/* STEP 1 — Plan cards */}
         {(!isActive || purchaseMode) && step === "plans" && !submitted && (
           <section>
-            <p className="mb-4 text-sm font-black text-slate-500">اختر الباقة المناسبة لعيادتك</p>
+            <p className="mb-4 text-sm font-black text-slate-500">
+              {specialtyRule ? `${specialtyRule.badge} — تظهر هنا الباقة المطابقة للاختصاص فقط` : "اختر الباقة المناسبة لعيادتك"}
+            </p>
             <div className="mb-5 rounded-[26px] bg-white p-2 shadow-sm ring-1 ring-slate-200">
               <div className="grid gap-2 sm:grid-cols-4">
                 {DURATION_OPTIONS.map(([id, duration]) => {
@@ -278,9 +300,9 @@ export default function SubscriptionPage() {
                 })}
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className={`grid gap-4 sm:grid-cols-2 ${specialtyRule ? "xl:grid-cols-1" : "xl:grid-cols-4"}`}>
               {selectablePlans.map((plan) => {
-                const isSelected = selectedPlan === plan.id;
+                const isSelected = effectiveSelectedPlan === plan.id;
                 const amount = getPlanDurationPrice(plan.id, selectedDuration);
                 const baseAmount = plan.price * selectedDurationMeta.months;
                 const saving = baseAmount - amount;
@@ -299,7 +321,10 @@ export default function SubscriptionPage() {
                       </span>
                     )}
                     <p className="text-xs font-bold text-slate-400">{plan.title}</p>
-                    <h2 className="mt-1 text-2xl font-black text-slate-950">{plan.name}</h2>
+                    <h2 className="mt-1 text-2xl font-black text-slate-950">{specialtyRule ? specialtyRule.title : plan.name}</h2>
+                    {specialtyRule && (
+                      <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{specialtyRule.description}</p>
+                    )}
                     <p className="mt-3 text-3xl font-black text-slate-950">
                       {formatMoney(monthlyEquivalent)}
                       <span className="text-sm font-bold text-slate-400 mr-1">د.ع / شهر</span>
@@ -335,7 +360,7 @@ export default function SubscriptionPage() {
                 onClick={() => { setStep("payment"); setError(""); }}
                 className="rounded-2xl bg-blue-600 px-10 py-3.5 text-base font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5 hover:bg-blue-700"
               >
-                متابعة الدفع ← {selected.name} · {selectedDurationMeta.shortLabel} · {formatMoney(selectedAmount)} د.ع
+                متابعة الدفع ← {selectedDisplayName} · {selectedDurationMeta.shortLabel} · {formatMoney(selectedAmount)} د.ع
               </button>
             </div>
           </section>
@@ -350,7 +375,7 @@ export default function SubscriptionPage() {
                 ← تغيير الباقة
               </button>
               <div className="rounded-2xl bg-slate-50 px-4 py-2 ring-1 ring-slate-200">
-                <span className="text-sm font-black text-slate-950">{selected.name}</span>
+                <span className="text-sm font-black text-slate-950">{selectedDisplayName}</span>
                 <span className="mr-2 text-sm font-bold text-emerald-700">
                   {selectedDurationMeta.shortLabel} · {formatMoney(selectedAmount)} د.ع
                 </span>

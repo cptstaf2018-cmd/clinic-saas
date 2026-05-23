@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { dateAfterDays, TRIAL_PERIOD_DAYS } from "@/lib/subscription-durations";
 import { sendWhatsApp } from "@/lib/whatsapp";
-import { sendOtpEmail } from "@/lib/email";
+import { isMedicalSpecialty } from "@/lib/medical-specialties";
 
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
@@ -28,10 +28,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "محاولات كثيرة، حاول بعد 15 دقيقة" }, { status: 429 });
   }
 
-  const { clinicName, registrationType, phone, email, otp, password } = await req.json();
+  const { clinicName, registrationType, phone, email, otp, password, specialty } = await req.json();
 
-  if (!clinicName || !password || !otp) {
+  if (!clinicName || !password || !otp || !specialty) {
     return NextResponse.json({ error: "جميع الحقول مطلوبة" }, { status: 400 });
+  }
+
+  if (!isMedicalSpecialty(specialty)) {
+    return NextResponse.json({ error: "اختر اختصاصاً طبياً صحيحاً" }, { status: 400 });
   }
 
   if (password.length < 6) {
@@ -77,7 +81,8 @@ export async function POST(req: NextRequest) {
         data: {
           name: clinicName,
           whatsappNumber: phone.trim(),
-          specialtyOnboardingRequired: true,
+          specialty,
+          specialtyOnboardingRequired: false,
           users: { create: { passwordHash, role: "doctor" } },
           subscription: { create: { plan: "trial", status: "trial", expiresAt: trialExpiresAt } },
         },
@@ -105,7 +110,8 @@ export async function POST(req: NextRequest) {
       data: {
         name: clinicName,
         whatsappNumber: phone.trim(),
-        specialtyOnboardingRequired: true,
+        specialty,
+        specialtyOnboardingRequired: false,
         users: { create: { passwordHash, role: "doctor" } },
         subscription: { create: { plan: "trial", status: "trial", expiresAt: trialExpiresAt } },
       },
@@ -151,7 +157,8 @@ export async function POST(req: NextRequest) {
     data: {
       name: clinicName,
       backupEmail: cleanEmail,
-      specialtyOnboardingRequired: true,
+      specialty,
+      specialtyOnboardingRequired: false,
       users: { create: { passwordHash, role: "doctor" } },
       subscription: { create: { plan: "trial", status: "trial", expiresAt: trialExpiresAt } },
     },

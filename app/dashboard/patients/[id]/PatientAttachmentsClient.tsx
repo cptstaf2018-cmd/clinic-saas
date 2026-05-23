@@ -82,17 +82,28 @@ export default function PatientAttachmentsClient({
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    const looksLikeImage =
+      file.type.startsWith("image/") || /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
+    if (isAestheticPhotoTab && !looksLikeImage) {
+      setError("ارفع صورة فقط في تبويب قبل/بعد");
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     setUploading(true);
     setError("");
     const fd = new FormData();
     fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    if (res.ok) {
-      const data = await res.json();
-      setPendingFile({ url: data.url, name: data.fileName, type: data.fileType });
-    } else {
-      const d = await res.json();
-      setError(d.error ?? "فشل رفع الملف");
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingFile({ url: data.url, name: data.fileName, type: data.fileType });
+      } else {
+        const d = await res.json().catch(() => null);
+        setError(d?.error ?? "فشل رفع الملف");
+      }
+    } catch {
+      setError("تعذر الاتصال أثناء رفع الملف");
     }
     setUploading(false);
   }
@@ -242,7 +253,7 @@ export default function PatientAttachmentsClient({
             <input
               ref={fileRef}
               type="file"
-              accept={isAestheticPhotoTab ? "image/*" : ".pdf,.jpg,.jpeg,.png,.webp"}
+              accept={isAestheticPhotoTab ? "image/*,.heic,.heif" : ".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif"}
               className="hidden"
               onChange={handleFileChange}
             />

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { encodePaymentReference, getPlanDurationPrice, isPlanId, isSubscriptionDurationId } from "@/lib/plans";
 import { PaymentMethodId, validatePaymentReference } from "@/lib/payment-reference";
+import { getAllowedPlansForSpecialty, getSubscriptionRuleForSpecialty } from "@/lib/specialty-subscriptions";
 import { logSystemEvent } from "@/lib/system-events";
 
 export async function POST(req: Request) {
@@ -28,6 +29,19 @@ export async function POST(req: Request) {
 
   if (!isPlanId(body.plan)) {
     return NextResponse.json({ error: "الباقة غير صحيحة" }, { status: 400 });
+  }
+
+  const clinic = await db.clinic.findUnique({
+    where: { id: clinicId },
+    select: { specialty: true },
+  });
+  const allowedPlans = getAllowedPlansForSpecialty(clinic?.specialty);
+  if (!allowedPlans.includes(body.plan)) {
+    const specialtyRule = getSubscriptionRuleForSpecialty(clinic?.specialty);
+    return NextResponse.json(
+      { error: specialtyRule ? `هذه العيادة تحتاج ${specialtyRule.title}.` : "هذه الباقة غير متاحة لاختصاص العيادة." },
+      { status: 400 }
+    );
   }
 
   const duration = isSubscriptionDurationId(body.duration) ? body.duration : "monthly";

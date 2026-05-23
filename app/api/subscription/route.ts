@@ -12,6 +12,10 @@ export async function GET() {
   const subscription = await db.subscription.findUnique({
     where: { clinicId: session.user.clinicId },
   });
+  const clinic = await db.clinic.findUnique({
+    where: { id: session.user.clinicId },
+    select: { specialty: true },
+  });
 
   if (!subscription) {
     return NextResponse.json(null);
@@ -19,6 +23,7 @@ export async function GET() {
 
   return NextResponse.json({
     ...subscription,
+    specialty: clinic?.specialty ?? null,
     entitlements: getEntitlements(subscription.plan),
   });
 }
