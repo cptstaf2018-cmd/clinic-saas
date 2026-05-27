@@ -25,10 +25,12 @@ export async function POST(req: Request) {
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: "Asia/Baghdad",
   });
   const timeStr = new Date(appointment.date).toLocaleTimeString("ar-IQ", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Baghdad",
   });
 
   await sendWhatsApp(

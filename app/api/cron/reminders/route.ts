@@ -8,6 +8,10 @@ import { logSystemEvent } from "@/lib/system-events";
 export const maxDuration = 60;
 
 const BATCH_SIZE = 50;
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+const REMINDER_WINDOW_MS = 10 * MINUTE_MS;
 
 type ReminderAppointment = {
   id: string;
@@ -29,10 +33,12 @@ async function processBatch(
         weekday: "long",
         day: "numeric",
         month: "long",
+        timeZone: "Asia/Baghdad",
       });
       const timeStr = new Date(appt.date).toLocaleTimeString("ar-IQ", {
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "Asia/Baghdad",
       });
 
       const message =
@@ -98,8 +104,10 @@ export async function GET(req: NextRequest) {
 
   let sent24h = 0;
   let sent1h = 0;
-  const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-  const in1h = new Date(now.getTime() + 60 * 60 * 1000);
+  const reminder24hStart = new Date(now.getTime() + DAY_MS - REMINDER_WINDOW_MS);
+  const reminder24hEnd = new Date(now.getTime() + DAY_MS + REMINDER_WINDOW_MS);
+  const reminder1hStart = new Date(now.getTime() + HOUR_MS - REMINDER_WINDOW_MS);
+  const reminder1hEnd = new Date(now.getTime() + HOUR_MS + REMINDER_WINDOW_MS);
 
   // 24h reminders — paginated by id
   let cursor: string | undefined = undefined;
@@ -109,7 +117,7 @@ export async function GET(req: NextRequest) {
         clinicId: { in: clinicIds },
         status: { in: ["pending", "confirmed"] },
         reminder24hSent: false,
-        date: { gte: now, lte: in24h },
+        date: { gte: reminder24hStart, lte: reminder24hEnd },
       },
       include: {
         patient: { select: { name: true, whatsappPhone: true } },
@@ -134,7 +142,7 @@ export async function GET(req: NextRequest) {
         clinicId: { in: clinicIds },
         status: { in: ["pending", "confirmed"] },
         reminder1hSent: false,
-        date: { gte: now, lte: in1h },
+        date: { gte: reminder1hStart, lte: reminder1hEnd },
       },
       include: {
         patient: { select: { name: true, whatsappPhone: true } },
@@ -206,5 +214,14 @@ export async function GET(req: NextRequest) {
     if (batch.length < BATCH_SIZE) break;
   }
 
-  return NextResponse.json({ sent24h, sent1h, sentCheer, clinics: clinicIds.length });
+  return NextResponse.json({
+    sent24h,
+    sent1h,
+    sentCheer,
+    clinics: clinicIds.length,
+    windows: {
+      reminder24h: { from: reminder24hStart.toISOString(), to: reminder24hEnd.toISOString() },
+      reminder1h: { from: reminder1hStart.toISOString(), to: reminder1hEnd.toISOString() },
+    },
+  });
 }
