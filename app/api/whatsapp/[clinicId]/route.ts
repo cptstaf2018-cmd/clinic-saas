@@ -4,6 +4,7 @@ import { timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { logSystemEvent } from "@/lib/system-events";
+import { iraqMobileVariants, normalizeIraqMobile } from "@/lib/phone";
 
 const IRAQ_OFFSET_MS = 3 * 60 * 60 * 1000;
 const EMOJI = ["1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣"];
@@ -18,10 +19,7 @@ function verifySignature(received: string | null, expected: string | null): bool
 }
 
 function normalizePhone(raw: string): string {
-  const d = raw.replace(/\D/g, "");
-  if (d.startsWith("964")) return `0${d.slice(3)}`;
-  if (d.startsWith("07"))  return d;
-  return d;
+  return normalizeIraqMobile(raw);
 }
 
 function parseNum(text: string): number {
@@ -41,21 +39,9 @@ function formatTime(time: string): string {
   return `${String(dh).padStart(2,"0")}:${String(m).padStart(2,"0")} ${period}`;
 }
 
-function norm(text: string): string {
-  return text.trim().toLowerCase()
-    .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
-    .replace(/[إأآا]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه")
-    .replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ");
-}
-
-function matches(text: string, words: string[]): boolean {
-  const t = norm(text);
-  return words.some(w => t === norm(w) || t.includes(norm(w)));
-}
-
 function extractIraqPhone(text: string): string | null {
   const compact = text.replace(/\s/g, "");
-  const match = compact.match(/(?:\+?964|0)7[3-9]\d{8}/);
+  const match = compact.match(/(?:\+?964|0)?7[3-9]\d{8}/);
   return match ? normalizePhone(match[0]) : null;
 }
 
@@ -73,10 +59,8 @@ function extractPatientName(text: string, phone: string | null): string {
 // ── Find patient by phone (tries 07... and 964... formats) ────────────────────
 
 async function findPatient(clinicId: string, phone: string) {
-  const alt = phone.startsWith("07") ? `964${phone.slice(1)}`
-    : phone.startsWith("964") ? `0${phone.slice(3)}` : null;
   return db.patient.findFirst({
-    where: { clinicId, whatsappPhone: { in: [phone, ...(alt ? [alt] : [])] } },
+    where: { clinicId, whatsappPhone: { in: iraqMobileVariants(phone) } },
     include: {
       appointments: {
         where: { date: { gte: new Date() }, status: { not: "cancelled" } },
@@ -222,32 +206,37 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
   async function showSlots(patientId: string, patientName: string) {
     const r = await getSlots(clinicId);
     if (!r.slots.length) {
-      await reply(`لا تتوفر مواعيد حالياً في ${clinic!.name} 😔`);
+      await reply("لا تتوفر مواعيد حالياً.");
       return;
     }
     await upsertStep(`awaiting_slot|${r.date}|${r.slots.join(",")}|${patientId}`);
     const list = r.slots.map((s, i) => `${i + 1}- ${formatTime(s)}`).join("\n");
-    await reply(`أهلاً ${patientName}\nهذه الأوقات المتاحة:\n${list}\n\nأرسل رقم الوقت للحجز`);
+    await reply(`${patientName}\nالأوقات المتاحة:\n${list}\n\nأرسل رقم الموعد`);
+  }
+
+  async function savePatientName(name: string) {
+    const existingPatient = await db.patient.findFirst({
+      where: { clinicId, whatsappPhone: { in: iraqMobileVariants(phone) } },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return existingPatient
+      ? db.patient.update({
+          where: { id: existingPatient.id },
+          data: { name },
+          include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
+        })
+      : db.patient.upsert({
+          where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: phone } },
+          update: { name },
+          create: { clinicId, name, whatsappPhone: phone },
+          include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
+        });
   }
 
   // ════════════════════════════════════════════════════════════════════════════
   // BOT LOGIC
   // ════════════════════════════════════════════════════════════════════════════
-
-  // الاسم + رقم الهاتف يبدأ أو يعيد ضبط الحجز من أي مرحلة، حتى لو كانت هناك جلسة قديمة.
-  const typedPhone = extractIraqPhone(msgBody);
-  const typedName = extractPatientName(msgBody, typedPhone);
-  if (typedName && typedPhone) {
-    const resolvedPatient = await db.patient.upsert({
-      where: { clinicId_whatsappPhone: { clinicId, whatsappPhone: typedPhone } },
-      update: { name: typedName },
-      create: { clinicId, name: typedName, whatsappPhone: typedPhone },
-      include: { appointments: { where: { date: { gte: new Date() }, status: { not:"cancelled" } }, orderBy: { date:"asc" }, take:1 } },
-    });
-
-    await showSlots(resolvedPatient.id, resolvedPatient.name);
-    return NextResponse.json({ ok:true });
-  }
 
   // ── حالة: اختيار موعد ──────────────────────────────────────────────────────
   if (step.startsWith("awaiting_slot|")) {
@@ -276,25 +265,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
     return NextResponse.json({ ok:true });
   }
 
-  // ── حالة: انتظار الاسم أو رقم الهاتف (مريض جديد) ──────────────────────────
-  if (step === "awaiting_identity") {
-    await reply("للحجز أرسل الاسم ورقم الهاتف في رسالة واحدة\nمثال:\nأحمد علي 07700000000");
-    return NextResponse.json({ ok:true });
-  }
-
-  // ── طلب الموقع أو العنوان ──────────────────────────────────────────────────
-  const LOCATION_KW = ["موقع","عنوان","مكان","وين","اين","أين","خريطة","لوكيشن","maps","google","كوكل","قوقل"];
-  if (matches(msgBody, LOCATION_KW)) {
-    const addr = clinic.address?.trim();
-    const url  = clinic.locationUrl?.trim();
-    if (!addr && !url) {
-      await reply("لم يتم إضافة موقع العيادة بعد.");
-    } else {
-      const lines: string[] = [`موقع ${clinic.name}`];
-      if (addr) lines.push(`العنوان: ${addr}`);
-      if (url)  lines.push(/^https?:\/\//.test(url) ? `رابط الخريطة:\n${url}` : url);
-      await reply(lines.join("\n"));
+  // ── حالة: انتظار اسم المراجع الجديد ───────────────────────────────────────
+  if (step === "awaiting_name" || step === "awaiting_identity") {
+    const typedPhone = extractIraqPhone(msgBody);
+    const typedName = extractPatientName(msgBody, typedPhone) || extractPatientName(msgBody, null);
+    if (!typedName || typedName.length < 2) {
+      await reply("أرسل الاسم فقط");
+      return NextResponse.json({ ok:true });
     }
+
+    const resolvedPatient = await savePatientName(typedName);
+    await showSlots(resolvedPatient.id, resolvedPatient.name);
     return NextResponse.json({ ok:true });
   }
 
@@ -303,9 +284,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
     // مريض معروف → مواعيد مباشرة
     await showSlots(patient.id, patient.name);
   } else {
-    // مريض جديد → اطلب التعريف
-    await upsertStep("awaiting_identity");
-    await reply(`مرحباً بك في ${clinic.name}\nللحجز أرسل الاسم ورقم الهاتف في رسالة واحدة\nمثال:\nأحمد علي 07700000000`);
+    // مريض جديد → اطلب الاسم فقط، لأن رقم واتساب محفوظ تلقائياً
+    await upsertStep("awaiting_name");
+    await reply("أرسل اسمك للحجز");
   }
 
   return NextResponse.json({ ok:true });

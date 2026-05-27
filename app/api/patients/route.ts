@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { db } from "@/lib/db";
 import { isSecretaryRole } from "@/lib/clinic-roles";
+import { iraqMobileVariants, normalizeIraqMobile } from "@/lib/phone";
 
 export async function GET(req: NextRequest) {
   const token = await getToken({
@@ -70,26 +71,28 @@ export async function POST(req: NextRequest) {
 
   const body: { name?: string; whatsappPhone?: string; phone?: string } = await req.json().catch(() => ({}));
   const name = body.name?.trim();
-  const whatsappPhone = (body.whatsappPhone ?? body.phone ?? "").trim();
+  const whatsappPhone = normalizeIraqMobile(body.whatsappPhone ?? body.phone ?? "");
 
   if (!name || !whatsappPhone) {
     return NextResponse.json({ error: "اسم المراجع ورقم الهاتف مطلوبان" }, { status: 400 });
   }
 
-  const patient = await db.patient.upsert({
-    where: {
-      clinicId_whatsappPhone: {
-        clinicId: token.clinicId as string,
-        whatsappPhone,
-      },
-    },
-    update: { name },
-    create: {
-      clinicId: token.clinicId as string,
-      name,
-      whatsappPhone,
-    },
+  const clinicId = token.clinicId as string;
+  const existingPatient = await db.patient.findFirst({
+    where: { clinicId, whatsappPhone: { in: iraqMobileVariants(whatsappPhone) } },
+    orderBy: { createdAt: "asc" },
   });
+
+  const patient = existingPatient
+    ? await db.patient.update({
+        where: { id: existingPatient.id },
+        data: { name },
+      })
+    : await db.patient.upsert({
+        where: { clinicId_whatsappPhone: { clinicId, whatsappPhone } },
+        update: { name },
+        create: { clinicId, name, whatsappPhone },
+      });
 
   return NextResponse.json(patient, { status: 201 });
 }
