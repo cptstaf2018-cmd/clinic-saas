@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomInt } from "crypto";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 
@@ -16,7 +17,7 @@ function isRateLimited(key: string): boolean {
 }
 
 function generate6(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1000000));
 }
 
 export async function POST(req: NextRequest) {
@@ -33,9 +34,9 @@ export async function POST(req: NextRequest) {
 
   const isPhone = /^07\d{7,}$/.test(identifier.trim());
 
-  let clinicUser = null;
   let sendTo = "";
   let method: "whatsapp" | "email" = "whatsapp";
+  let clinicFound = false;
 
   if (isPhone) {
     const phone = identifier.trim();
@@ -43,10 +44,7 @@ export async function POST(req: NextRequest) {
       where: { whatsappNumber: phone },
       include: { users: { take: 1 } },
     });
-    if (!clinic || clinic.users.length === 0) {
-      return NextResponse.json({ error: "هذا الرقم غير مسجل لدينا" }, { status: 404 });
-    }
-    clinicUser = clinic.users[0];
+    clinicFound = !!(clinic && clinic.users.length > 0);
     sendTo = phone;
     method = "whatsapp";
   } else {
@@ -54,12 +52,14 @@ export async function POST(req: NextRequest) {
       where: { backupEmail: clean },
       include: { users: { take: 1 } },
     });
-    if (!clinic || clinic.users.length === 0) {
-      return NextResponse.json({ error: "هذا الإيميل غير مسجل لدينا" }, { status: 404 });
-    }
-    clinicUser = clinic.users[0];
+    clinicFound = !!(clinic && clinic.users.length > 0);
     sendTo = clean;
     method = "email";
+  }
+
+  // Always return success to prevent user enumeration
+  if (!clinicFound) {
+    return NextResponse.json({ success: true, method, masked: maskIdentifier(sendTo, method) });
   }
 
   // إلغاء OTPs السابقة
