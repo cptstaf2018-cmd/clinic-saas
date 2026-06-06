@@ -1,10 +1,116 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import Image from "next/image";
 import { MEDICAL_SPECIALTIES } from "@/lib/medical-specialties";
 import type { MedicalSpecialtyKey } from "@/lib/medical-specialties";
 
 const FILTERS = ["الكل", "الأكثر استخداماً", "اختصاصات سريرية", "إجراءات ومراكز", "عام"] as const;
+
+type SpecialtyIconProps = {
+  specialty: MedicalSpecialtyKey;
+  active?: boolean;
+  className?: string;
+};
+
+const filterIcons: Record<(typeof FILTERS)[number], string> = {
+  "الكل": "grid",
+  "الأكثر استخداماً": "user",
+  "اختصاصات سريرية": "brain",
+  "إجراءات ومراكز": "clipboard",
+  "عام": "shield",
+};
+
+const specialtyIconSrc: Record<MedicalSpecialtyKey, string> = {
+  general_medicine: "/specialty-icons-v2/general-medicine.png",
+  dentistry: "/specialty-icons-v2/dentistry.png",
+  gynecology: "/specialty-icons-v2/gynecology.png",
+  pediatrics: "/specialty-icons-v2/pediatrics.png",
+  dermatology: "/specialty-icons-v2/dermatology.png",
+  aesthetic: "/specialty-icons-v2/aesthetic.png",
+  cardiology: "/specialty-icons-v2/cardiology.png",
+  ophthalmology: "/specialty-icons-v2/ophthalmology.png",
+  orthopedics: "/specialty-icons-v2/orthopedics.png",
+  internal_medicine: "/specialty-icons-v2/internal-medicine.png",
+  surgery: "/specialty-icons-v2/surgery.png",
+};
+
+function IconShell({
+  children,
+  active = false,
+  className = "",
+}: {
+  children: ReactNode;
+  active?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`relative grid place-items-center rounded-2xl bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_12px_26px_rgba(15,23,42,0.13)] ring-1 ring-slate-200/80 transition ${className} ${
+        active ? "scale-105 ring-blue-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_18px_34px_rgba(37,99,235,0.22)]" : ""
+      }`}
+    >
+      <span className="pointer-events-none absolute inset-x-3 top-2 h-4 rounded-full bg-white/80 blur-[2px]" />
+      {children}
+    </span>
+  );
+}
+
+function SpecialtyIcon({ specialty, active = false, className = "h-20 w-20" }: SpecialtyIconProps) {
+  return (
+    <span
+      className={`relative grid place-items-center rounded-2xl transition ${className} ${
+        active ? "scale-105" : ""
+      }`}
+    >
+      <Image
+        src={specialtyIconSrc[specialty]}
+        alt=""
+        width={512}
+        height={512}
+        className="h-full w-full scale-125 object-contain drop-shadow-[0_16px_18px_rgba(15,23,42,0.16)]"
+        sizes="(max-width: 768px) 144px, 168px"
+        priority={active}
+      />
+    </span>
+  );
+}
+
+function FilterIcon({ type, active }: { type: string; active: boolean }) {
+  const fill = active ? "#FFFFFF" : "#2563EB";
+
+  return (
+    <IconShell active={active} className="h-11 w-11 rounded-xl">
+      <svg viewBox="0 0 48 48" className="h-8 w-8" aria-hidden>
+        {type === "grid" && (
+          <>
+            {[8, 26].map((x) => [8, 26].map((y) => <rect key={`${x}-${y}`} x={x} y={y} width="14" height="14" rx="3" fill={fill} opacity={x === 8 && y === 8 ? ".85" : "1"} />))}
+          </>
+        )}
+        {type === "user" && (
+          <>
+            <circle cx="24" cy="17" r="9" fill={fill} />
+            <path d="M10 40c2-10 10-15 24-15 8 0 13 5 14 15Z" fill={fill} opacity=".9" />
+          </>
+        )}
+        {type === "brain" && (
+          <path d="M18 11c-7 1-10 7-8 13-4 3-4 11 2 14 3 6 12 5 15 0 4 5 14 4 16-3 5-3 5-12 0-16 1-7-6-12-13-9-4-5-11-4-12 1Z" fill={fill} />
+        )}
+        {type === "clipboard" && (
+          <>
+            <rect x="12" y="9" width="24" height="34" rx="5" fill={fill} opacity=".9" />
+            <rect x="18" y="5" width="12" height="8" rx="3" fill={active ? "#DBEAFE" : "#93C5FD"} />
+            <path d="M18 21h12M18 29h12M18 37h8" stroke={active ? "#2563EB" : "#FFFFFF"} strokeWidth="3" strokeLinecap="round" />
+          </>
+        )}
+        {type === "shield" && (
+          <path d="M24 44C14 39 9 31 9 12l15-6 15 6c0 19-5 27-15 32Z" fill={fill} />
+        )}
+      </svg>
+    </IconShell>
+  );
+}
 
 export default function SpecialtyOnboardingClient() {
   const [selected, setSelected] = useState<MedicalSpecialtyKey>(MEDICAL_SPECIALTIES[0].key);
@@ -75,24 +181,25 @@ export default function SpecialtyOnboardingClient() {
 
         <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
           <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:p-5">
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {FILTERS.map((item) => (
                 <button
                   key={item}
                   type="button"
                   onClick={() => changeFilter(item)}
-                  className={`h-10 rounded-lg border px-4 text-sm font-black transition ${
+                  className={`group flex min-h-24 flex-col items-center justify-center gap-2 rounded-lg border px-3 py-3 text-sm font-black transition ${
                     filter === item
-                      ? "border-blue-600 bg-blue-600 text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
+                      ? "border-blue-600 bg-blue-600 text-white shadow-[0_16px_30px_rgba(37,99,235,0.18)]"
+                      : "border-slate-200 bg-gradient-to-b from-white to-slate-50 text-slate-600 shadow-sm hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50"
                   }`}
                 >
-                  {item}
+                  <FilterIcon type={filterIcons[item]} active={filter === item} />
+                  <span className="leading-5">{item}</span>
                 </button>
               ))}
             </div>
 
-            <div className="mt-4 grid gap-2 md:grid-cols-2">
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {filteredSpecialties.map((specialty) => {
                 const active = selected === specialty.key;
                 return (
@@ -100,27 +207,15 @@ export default function SpecialtyOnboardingClient() {
                     key={specialty.key}
                     type="button"
                     onClick={() => setSelected(specialty.key)}
-                    className={`rounded-lg border p-4 text-right transition ${
+                    className={`group relative flex aspect-square min-h-36 flex-col items-center justify-center overflow-hidden rounded-lg border p-3 text-center transition sm:min-h-40 ${
                       active
-                        ? "border-blue-600 bg-blue-50 shadow-sm"
-                        : "border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50"
+                        ? "border-blue-600 bg-blue-50 shadow-[0_18px_40px_rgba(37,99,235,0.18)]"
+                        : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-black ${
-                          active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        {specialty.icon}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-lg font-black text-slate-950">{specialty.name}</span>
-                        <span className="mt-1 block text-sm font-bold leading-6 text-slate-500">
-                          {specialty.description}
-                        </span>
-                      </span>
-                    </div>
+                    <span className="pointer-events-none absolute inset-x-4 top-3 h-9 rounded-full bg-white/80 blur-md" />
+                    <SpecialtyIcon specialty={specialty.key} active={active} className="h-32 w-32 sm:h-36 sm:w-36" />
+                    <span className="mt-4 block text-xl font-black leading-7 text-slate-800">{specialty.name}</span>
                   </button>
                 );
               })}
@@ -131,8 +226,13 @@ export default function SpecialtyOnboardingClient() {
             <aside className="rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="border-b border-slate-100 p-5">
                 <p className="text-xs font-black text-slate-400">المعاينة بعد الاختيار</p>
-                <h2 className="mt-2 text-3xl font-black text-slate-950">{selectedSpecialty.name}</h2>
-                <p className="mt-2 text-sm font-bold leading-7 text-slate-500">{selectedSpecialty.description}</p>
+                <div className="mt-3 flex items-center gap-4">
+                  <SpecialtyIcon specialty={selectedSpecialty.key} active className="h-24 w-24" />
+                  <div>
+                    <h2 className="text-3xl font-black text-slate-950">{selectedSpecialty.name}</h2>
+                    <p className="mt-2 text-sm font-bold leading-7 text-slate-500">{selectedSpecialty.description}</p>
+                  </div>
+                </div>
               </div>
 
               <div className="p-5">

@@ -22,6 +22,8 @@ function LoginForm() {
   const params = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [recoverySent, setRecoverySent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,11 +32,34 @@ function LoginForm() {
     try {
       const result = await loginAction(new FormData(e.currentTarget));
       if (result) { setError(result); setLoading(false); }
-    } catch (err: any) {
-      if (err?.digest?.startsWith("NEXT_REDIRECT")) return;
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "digest" in err &&
+        typeof err.digest === "string" &&
+        err.digest.startsWith("NEXT_REDIRECT")
+      ) return;
       setError("حدث خطأ في الاتصال، حاول مجدداً");
       setLoading(false);
     }
+  }
+
+  function openForgotMode() {
+    setError("");
+    setRecoverySent(false);
+    setForgotMode(true);
+  }
+
+  function closeForgotMode() {
+    setError("");
+    setRecoverySent(false);
+    setForgotMode(false);
+  }
+
+  function handleRecoverySubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setRecoverySent(true);
   }
 
   return (
@@ -222,8 +247,12 @@ function LoginForm() {
           {/* Mobile form card */}
           <div className="flex-1 bg-white rounded-t-[32px] px-6 pt-8 pb-10 shadow-[0_-8px_40px_rgba(0,0,0,0.25)]">
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-[#0C1F3F]">تسجيل الدخول</h2>
-              <p className="text-[#64748B] text-sm mt-1">برقم الواتساب أو الإيميل</p>
+              <h2 className="text-2xl font-black text-[#0C1F3F]">
+                {forgotMode ? "نسيت كلمة المرور؟" : "تسجيل الدخول"}
+              </h2>
+              <p className="text-[#64748B] text-sm mt-1">
+                {forgotMode ? "أدخل رقم الواتساب أو الإيميل المسجل" : "برقم الواتساب أو الإيميل"}
+              </p>
             </div>
 
             {params.get("registered") && (
@@ -232,31 +261,65 @@ function LoginForm() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
-                <input name="identifier" type="text" required
-                  className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
-                  placeholder="07701234567" dir="ltr" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-[#475569] mb-1.5">كلمة المرور</label>
-                <input name="password" type="password" required
-                  className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">
-                  {error}
+            {forgotMode ? (
+              <form onSubmit={handleRecoverySubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
+                  <input name="identifier" type="text" required
+                    className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
+                    placeholder="07701234567 أو email@example.com" dir="ltr" />
                 </div>
-              )}
 
-              <button type="submit" disabled={loading}
-                className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
-                style={{background: "linear-gradient(135deg,#2563eb,#1d4ed8)", boxShadow: "0 8px 24px rgba(37,99,235,0.4)"}}>
-                {loading ? "جاري الدخول..." : "دخول →"}
-              </button>
-            </form>
+                {recoverySent && (
+                  <div className="bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 text-sm font-medium">
+                    تم تجهيز طلب الاستعادة. تواصل مع دعم عيادتي باستخدام هذا الرقم أو الإيميل لتأكيد ملكية الحساب.
+                  </div>
+                )}
+
+                <button type="submit"
+                  className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2"
+                  style={{background: "linear-gradient(135deg,#2563eb,#1d4ed8)", boxShadow: "0 8px 24px rgba(37,99,235,0.4)"}}>
+                  إرسال طلب الاستعادة
+                </button>
+
+                <button type="button" onClick={closeForgotMode}
+                  className="w-full text-[#64748B] font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
+                  رجوع لتسجيل الدخول
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
+                  <input name="identifier" type="text" required
+                    className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
+                    placeholder="07701234567" dir="ltr" />
+                </div>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className="block text-xs font-bold text-[#475569]">كلمة المرور</label>
+                    <button type="button" onClick={openForgotMode}
+                      className="text-xs font-bold text-[#2563EB] hover:underline">
+                      نسيت كلمة المرور؟
+                    </button>
+                  </div>
+                  <input name="password" type="password" required
+                    className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">
+                    {error}
+                  </div>
+                )}
+
+                <button type="submit" disabled={loading}
+                  className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
+                  style={{background: "linear-gradient(135deg,#2563eb,#1d4ed8)", boxShadow: "0 8px 24px rgba(37,99,235,0.4)"}}>
+                  {loading ? "جاري الدخول..." : "دخول →"}
+                </button>
+              </form>
+            )}
 
             <div className="mt-6 pt-6 border-t border-slate-100 text-center">
               <p className="text-sm text-[#64748B]">
@@ -286,8 +349,12 @@ function LoginForm() {
         <div className="hidden lg:block w-full max-w-sm fade-in">
           <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)] p-8">
             <div className="mb-7">
-              <h2 className="text-2xl font-extrabold text-[#0C1F3F]">أهلاً بك</h2>
-              <p className="text-[#64748B] text-sm mt-1">ادخل برقم واتساب العيادة</p>
+              <h2 className="text-2xl font-extrabold text-[#0C1F3F]">
+                {forgotMode ? "نسيت كلمة المرور؟" : "أهلاً بك"}
+              </h2>
+              <p className="text-[#64748B] text-sm mt-1">
+                {forgotMode ? "أدخل رقم الواتساب أو الإيميل المسجل" : "ادخل برقم واتساب العيادة"}
+              </p>
             </div>
 
             {params.get("registered") && (
@@ -296,34 +363,71 @@ function LoginForm() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
-                  رقم الواتساب أو الإيميل
-                </label>
-                <input name="identifier" type="text" required
-                  className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
-                  placeholder="07701234567 أو email@example.com" dir="ltr" />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
-                  كلمة المرور
-                </label>
-                <input name="password" type="password" required
-                  className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
-              </div>
+            {forgotMode ? (
+              <form onSubmit={handleRecoverySubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
+                    رقم الواتساب أو الإيميل
+                  </label>
+                  <input name="identifier" type="text" required
+                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
+                    placeholder="07701234567 أو email@example.com" dir="ltr" />
+                </div>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>
-              )}
+                {recoverySent && (
+                  <div className="bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 text-sm">
+                    تم تجهيز طلب الاستعادة. تواصل مع دعم عيادتي باستخدام هذا الرقم أو الإيميل لتأكيد ملكية الحساب.
+                  </div>
+                )}
 
-              <button type="submit" disabled={loading}
-                className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
-                {loading ? "جاري الدخول..." : "تسجيل الدخول"}
-              </button>
-            </form>
+                <button type="submit"
+                  className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                  إرسال طلب الاستعادة
+                </button>
 
-            <p className="text-center text-xs text-[#94A3B8] mt-4">يمكنك الدخول برقم الواتساب أو الإيميل</p>
+                <button type="button" onClick={closeForgotMode}
+                  className="w-full text-[#64748B] font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
+                  رجوع لتسجيل الدخول
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
+                    رقم الواتساب أو الإيميل
+                  </label>
+                  <input name="identifier" type="text" required
+                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
+                    placeholder="07701234567 أو email@example.com" dir="ltr" />
+                </div>
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <label className="block text-xs font-semibold text-[#0C1F3F] uppercase tracking-wide">
+                      كلمة المرور
+                    </label>
+                    <button type="button" onClick={openForgotMode}
+                      className="text-xs font-semibold text-[#2563EB] hover:underline">
+                      نسيت كلمة المرور؟
+                    </button>
+                  </div>
+                  <input name="password" type="password" required
+                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>
+                )}
+
+                <button type="submit" disabled={loading}
+                  className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                  {loading ? "جاري الدخول..." : "تسجيل الدخول"}
+                </button>
+              </form>
+            )}
+
+            {!forgotMode && (
+              <p className="text-center text-xs text-[#94A3B8] mt-4">يمكنك الدخول برقم الواتساب أو الإيميل</p>
+            )}
           </div>
 
           <p className="text-center text-sm text-[#64748B] mt-5">
