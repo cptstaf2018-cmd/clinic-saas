@@ -207,14 +207,25 @@ export default function SpecialtyOnboardingClient() {
                     key={specialty.key}
                     type="button"
                     onClick={() => setSelected(specialty.key)}
-                    className={`group relative flex flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border px-2 py-4 text-center transition ${
+                    className={`group flex flex-col overflow-hidden rounded-xl border transition ${
                       active
-                        ? "border-blue-600 bg-blue-50 shadow-[0_8px_20px_rgba(37,99,235,0.18)]"
-                        : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-[0_4px_12px_rgba(15,23,42,0.07)] hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_8px_20px_rgba(15,23,42,0.10)]"
+                        ? "border-blue-500 shadow-[0_6px_18px_rgba(37,99,235,0.20)]"
+                        : "border-slate-200 shadow-[0_2px_8px_rgba(15,23,42,0.07)] hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_6px_16px_rgba(15,23,42,0.10)]"
                     }`}
                   >
-                    <SpecialtyIcon specialty={specialty.key} active={active} className="h-16 w-16" />
-                    <span className="text-xs font-black leading-4 text-slate-800">{specialty.name}</span>
+                    <div className={`flex items-center justify-center p-2.5 ${active ? "bg-blue-50" : "bg-white"}`}>
+                      <Image
+                        src={specialtyIconSrc[specialty.key]}
+                        alt={specialty.name}
+                        width={200}
+                        height={200}
+                        className="h-auto w-full object-contain drop-shadow-sm"
+                        sizes="(max-width: 640px) 25vw, 15vw"
+                      />
+                    </div>
+                    <div className={`border-t px-2 py-1.5 text-center text-xs font-black leading-4 ${active ? "border-blue-200 bg-blue-50 text-blue-700" : "border-slate-100 bg-slate-50 text-slate-700"}`}>
+                      {specialty.name}
+                    </div>
                   </button>
                 );
               })}
