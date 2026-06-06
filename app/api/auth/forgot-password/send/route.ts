@@ -3,17 +3,12 @@ import { randomInt } from "crypto";
 import { db } from "@/lib/db";
 import { sendWhatsApp } from "@/lib/whatsapp";
 
-const attempts = new Map<string, { count: number; resetAt: number }>();
-
-function isRateLimited(key: string): boolean {
-  const now = Date.now();
-  const record = attempts.get(key);
-  if (!record || now > record.resetAt) {
-    attempts.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
-    return false;
-  }
-  record.count++;
-  return record.count > 3;
+async function isRateLimited(sendTo: string): Promise<boolean> {
+  const windowStart = new Date(Date.now() - 15 * 60 * 1000);
+  const recentCount = await db.otpCode.count({
+    where: { phone: sendTo, createdAt: { gte: windowStart } },
+  });
+  return recentCount >= 3;
 }
 
 function generate6(): string {
@@ -26,35 +21,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "أدخل رقم الواتساب أو الإيميل" }, { status: 400 });
   }
 
-  const clean = identifier.trim().toLowerCase();
+  const isPhone = /^07\d{7,}$/.test(identifier.trim());
+  const sendTo = isPhone ? identifier.trim() : identifier.trim().toLowerCase();
+  const method: "whatsapp" | "email" = isPhone ? "whatsapp" : "email";
 
-  if (isRateLimited(clean)) {
+  if (await isRateLimited(sendTo)) {
     return NextResponse.json({ error: "محاولات كثيرة، حاول بعد 15 دقيقة" }, { status: 429 });
   }
 
-  const isPhone = /^07\d{7,}$/.test(identifier.trim());
-
-  let sendTo = "";
-  let method: "whatsapp" | "email" = "whatsapp";
   let clinicFound = false;
 
   if (isPhone) {
-    const phone = identifier.trim();
     const clinic = await db.clinic.findUnique({
-      where: { whatsappNumber: phone },
-      include: { users: { take: 1 } },
+      where: { whatsappNumber: sendTo },
+      select: { id: true },
     });
-    clinicFound = !!(clinic && clinic.users.length > 0);
-    sendTo = phone;
-    method = "whatsapp";
+    clinicFound = !!clinic;
   } else {
     const clinic = await db.clinic.findFirst({
-      where: { backupEmail: clean },
-      include: { users: { take: 1 } },
+      where: { backupEmail: sendTo },
+      select: { id: true },
     });
-    clinicFound = !!(clinic && clinic.users.length > 0);
-    sendTo = clean;
-    method = "email";
+    clinicFound = !!clinic;
   }
 
   // Always return success to prevent user enumeration
