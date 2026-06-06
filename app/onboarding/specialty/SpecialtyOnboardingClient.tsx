@@ -207,14 +207,14 @@ export default function SpecialtyOnboardingClient() {
                     key={specialty.key}
                     type="button"
                     onClick={() => setSelected(specialty.key)}
-                    className={`group relative flex aspect-square min-h-28 flex-col items-center justify-center overflow-hidden rounded-lg border p-3 text-center transition sm:min-h-32 ${
+                    className={`group relative flex aspect-square min-h-36 flex-col items-center justify-center overflow-hidden rounded-lg border p-3 text-center transition sm:min-h-40 ${
                       active
                         ? "border-blue-600 bg-blue-50 shadow-[0_18px_40px_rgba(37,99,235,0.18)]"
                         : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-[0_10px_24px_rgba(15,23,42,0.08)] hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]"
                     }`}
                   >
                     <span className="pointer-events-none absolute inset-x-4 top-3 h-9 rounded-full bg-white/80 blur-md" />
-                    <SpecialtyIcon specialty={specialty.key} active={active} className="h-14 w-14 sm:h-16 sm:w-16" />
+                    <SpecialtyIcon specialty={specialty.key} active={active} className="h-20 w-20 sm:h-24 sm:w-24" />
                     <span className="mt-2 block text-sm font-black leading-5 text-slate-800">{specialty.name}</span>
                   </button>
                 );
