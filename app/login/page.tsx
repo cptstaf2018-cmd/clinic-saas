@@ -18,12 +18,19 @@ function HealthIcon({ className = "w-6 h-6" }: { className?: string }) {
   );
 }
 
+type ForgotStep = "input" | "otp" | "password" | "done";
+
 function LoginForm() {
   const params = useSearchParams();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
-  const [recoverySent, setRecoverySent] = useState(false);
+  const [forgotStep, setForgotStep] = useState<ForgotStep>("input");
+  const [forgotIdentifier, setForgotIdentifier] = useState("");
+  const [forgotMasked, setForgotMasked] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotPassword, setForgotPassword] = useState("");
+  const [forgotConfirm, setForgotConfirm] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,19 +54,59 @@ function LoginForm() {
 
   function openForgotMode() {
     setError("");
-    setRecoverySent(false);
+    setForgotStep("input");
+    setForgotIdentifier("");
+    setForgotOtp("");
+    setForgotPassword("");
+    setForgotConfirm("");
+    setForgotMasked("");
     setForgotMode(true);
   }
 
   function closeForgotMode() {
     setError("");
-    setRecoverySent(false);
+    setForgotStep("input");
     setForgotMode(false);
   }
 
-  function handleRecoverySubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleForgotSend(e: React.FormEvent) {
     e.preventDefault();
-    setRecoverySent(true);
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/auth/forgot-password/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: forgotIdentifier }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setLoading(false);
+    if (!res.ok) { setError(data.error ?? "حدث خطأ، حاول مجدداً"); return; }
+    setForgotMasked(data.masked);
+    setForgotStep("otp");
+  }
+
+  function handleForgotOtpNext(e: React.FormEvent) {
+    e.preventDefault();
+    if (!forgotOtp || forgotOtp.length < 6) { setError("أدخل الكود المكون من 6 أرقام"); return; }
+    setError("");
+    setForgotStep("password");
+  }
+
+  async function handleForgotReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (forgotPassword !== forgotConfirm) { setError("كلمتا المرور غير متطابقتين"); return; }
+    if (forgotPassword.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل"); return; }
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/auth/forgot-password/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: forgotIdentifier, otp: forgotOtp, newPassword: forgotPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setLoading(false);
+    if (!res.ok) { setError(data.error ?? "حدث خطأ، حاول مجدداً"); return; }
+    setForgotStep("done");
   }
 
   return (
@@ -251,7 +298,12 @@ function LoginForm() {
                 {forgotMode ? "نسيت كلمة المرور؟" : "تسجيل الدخول"}
               </h2>
               <p className="text-[#64748B] text-sm mt-1">
-                {forgotMode ? "أدخل رقم الواتساب أو الإيميل المسجل" : "برقم الواتساب أو الإيميل"}
+                {forgotMode
+                  ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
+                    : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
+                    : forgotStep === "done" ? "تمت العملية بنجاح"
+                    : "أدخل رقم الواتساب أو الإيميل المسجل"
+                  : "برقم الواتساب أو الإيميل"}
               </p>
             </div>
 
@@ -262,31 +314,91 @@ function LoginForm() {
             )}
 
             {forgotMode ? (
-              <form onSubmit={handleRecoverySubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
-                  <input name="identifier" type="text" required
-                    className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
-                    placeholder="07701234567 أو email@example.com" dir="ltr" />
-                </div>
-
-                {recoverySent && (
-                  <div className="bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 text-sm font-medium">
-                    تم تجهيز طلب الاستعادة. تواصل مع دعم عيادتي باستخدام هذا الرقم أو الإيميل لتأكيد ملكية الحساب.
+              <>
+                {forgotStep === "input" && (
+                  <form onSubmit={handleForgotSend} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
+                      <input type="text" required value={forgotIdentifier}
+                        onChange={(e) => setForgotIdentifier(e.target.value)}
+                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
+                        placeholder="07701234567 أو email@example.com" dir="ltr" />
+                    </div>
+                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
+                    <button type="submit" disabled={loading}
+                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
+                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
+                      {loading ? "جاري الإرسال..." : "إرسال الكود"}
+                    </button>
+                    <button type="button" onClick={closeForgotMode}
+                      className="w-full text-[#64748B] font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
+                      رجوع لتسجيل الدخول
+                    </button>
+                  </form>
+                )}
+                {forgotStep === "otp" && (
+                  <form onSubmit={handleForgotOtpNext} className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-medium">
+                      أُرسل كود التحقق إلى <span className="font-black" dir="ltr">{forgotMasked}</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#475569] mb-1.5">كود التحقق (6 أرقام)</label>
+                      <input type="text" inputMode="numeric" maxLength={6} required
+                        value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g,""))}
+                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-xl bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-mono text-center tracking-widest"
+                        dir="ltr" placeholder="------" />
+                    </div>
+                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
+                    <button type="submit"
+                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2"
+                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
+                      التالي
+                    </button>
+                    <button type="button" onClick={() => setForgotStep("input")}
+                      className="w-full text-[#64748B] font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
+                      تغيير رقم الواتساب / الإيميل
+                    </button>
+                  </form>
+                )}
+                {forgotStep === "password" && (
+                  <form onSubmit={handleForgotReset} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#475569] mb-1.5">كلمة المرور الجديدة</label>
+                      <input type="password" required value={forgotPassword}
+                        onChange={(e) => setForgotPassword(e.target.value)}
+                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#475569] mb-1.5">تأكيد كلمة المرور</label>
+                      <input type="password" required value={forgotConfirm}
+                        onChange={(e) => setForgotConfirm(e.target.value)}
+                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
+                    </div>
+                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
+                    <button type="submit" disabled={loading}
+                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
+                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
+                      {loading ? "جاري التغيير..." : "تغيير كلمة المرور"}
+                    </button>
+                  </form>
+                )}
+                {forgotStep === "done" && (
+                  <div className="space-y-5 text-center py-4">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} className="w-8 h-8">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-black text-[#0C1F3F]">تم تغيير كلمة المرور!</p>
+                    <p className="text-sm text-[#64748B]">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
+                    <button type="button" onClick={closeForgotMode}
+                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all"
+                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
+                      تسجيل الدخول
+                    </button>
                   </div>
                 )}
-
-                <button type="submit"
-                  className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2"
-                  style={{background: "linear-gradient(135deg,#2563eb,#1d4ed8)", boxShadow: "0 8px 24px rgba(37,99,235,0.4)"}}>
-                  إرسال طلب الاستعادة
-                </button>
-
-                <button type="button" onClick={closeForgotMode}
-                  className="w-full text-[#64748B] font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
-                  رجوع لتسجيل الدخول
-                </button>
-              </form>
+              </>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -353,7 +465,12 @@ function LoginForm() {
                 {forgotMode ? "نسيت كلمة المرور؟" : "أهلاً بك"}
               </h2>
               <p className="text-[#64748B] text-sm mt-1">
-                {forgotMode ? "أدخل رقم الواتساب أو الإيميل المسجل" : "ادخل برقم واتساب العيادة"}
+                {forgotMode
+                  ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
+                    : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
+                    : forgotStep === "done" ? "تمت العملية بنجاح"
+                    : "أدخل رقم الواتساب أو الإيميل المسجل"
+                  : "ادخل برقم واتساب العيادة"}
               </p>
             </div>
 
@@ -364,32 +481,87 @@ function LoginForm() {
             )}
 
             {forgotMode ? (
-              <form onSubmit={handleRecoverySubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
-                    رقم الواتساب أو الإيميل
-                  </label>
-                  <input name="identifier" type="text" required
-                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
-                    placeholder="07701234567 أو email@example.com" dir="ltr" />
-                </div>
-
-                {recoverySent && (
-                  <div className="bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-3 text-sm">
-                    تم تجهيز طلب الاستعادة. تواصل مع دعم عيادتي باستخدام هذا الرقم أو الإيميل لتأكيد ملكية الحساب.
+              <>
+                {forgotStep === "input" && (
+                  <form onSubmit={handleForgotSend} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">رقم الواتساب أو الإيميل</label>
+                      <input type="text" required value={forgotIdentifier}
+                        onChange={(e) => setForgotIdentifier(e.target.value)}
+                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
+                        placeholder="07701234567 أو email@example.com" dir="ltr" />
+                    </div>
+                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
+                    <button type="submit" disabled={loading}
+                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      {loading ? "جاري الإرسال..." : "إرسال الكود"}
+                    </button>
+                    <button type="button" onClick={closeForgotMode}
+                      className="w-full text-[#64748B] font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
+                      رجوع لتسجيل الدخول
+                    </button>
+                  </form>
+                )}
+                {forgotStep === "otp" && (
+                  <form onSubmit={handleForgotOtpNext} className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
+                      أُرسل كود التحقق إلى <span className="font-bold" dir="ltr">{forgotMasked}</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">كود التحقق (6 أرقام)</label>
+                      <input type="text" inputMode="numeric" maxLength={6} required
+                        value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g,""))}
+                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-xl bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all font-mono text-center tracking-widest"
+                        dir="ltr" placeholder="------" />
+                    </div>
+                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
+                    <button type="submit"
+                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      التالي
+                    </button>
+                    <button type="button" onClick={() => setForgotStep("input")}
+                      className="w-full text-[#64748B] font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
+                      تغيير رقم الواتساب / الإيميل
+                    </button>
+                  </form>
+                )}
+                {forgotStep === "password" && (
+                  <form onSubmit={handleForgotReset} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">كلمة المرور الجديدة</label>
+                      <input type="password" required value={forgotPassword}
+                        onChange={(e) => setForgotPassword(e.target.value)}
+                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">تأكيد كلمة المرور</label>
+                      <input type="password" required value={forgotConfirm}
+                        onChange={(e) => setForgotConfirm(e.target.value)}
+                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
+                    </div>
+                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
+                    <button type="submit" disabled={loading}
+                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      {loading ? "جاري التغيير..." : "تغيير كلمة المرور"}
+                    </button>
+                  </form>
+                )}
+                {forgotStep === "done" && (
+                  <div className="space-y-4 text-center py-4">
+                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} className="w-7 h-7">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                    <p className="text-base font-bold text-[#0C1F3F]">تم تغيير كلمة المرور!</p>
+                    <p className="text-sm text-[#64748B]">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
+                    <button type="button" onClick={closeForgotMode}
+                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      تسجيل الدخول
+                    </button>
                   </div>
                 )}
-
-                <button type="submit"
-                  className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
-                  إرسال طلب الاستعادة
-                </button>
-
-                <button type="button" onClick={closeForgotMode}
-                  className="w-full text-[#64748B] font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
-                  رجوع لتسجيل الدخول
-                </button>
-              </form>
+              </>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
