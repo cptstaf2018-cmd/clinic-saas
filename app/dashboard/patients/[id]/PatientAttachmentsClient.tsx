@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Database, ExternalLink, ImagePlus, Plus, Server, ShieldCheck } from "lucide-react";
+import { Database, ExternalLink, Plus, Server } from "lucide-react";
 
 type Attachment = {
   id: string;
@@ -253,13 +253,6 @@ export default function PatientAttachmentsClient({
   const isAestheticPhotoTab = activeTab === "aesthetic_before" || activeTab === "aesthetic_after";
   const isXrayTab = activeTab === "xray";
   const normalizedOhifUrl = (ohifViewerUrl?.trim() || "https://viewer.ohif.org/viewer").replace(/\/+$/, "");
-  const ohifLaunchUrl = normalizedOhifUrl.includes("{patientId}")
-    ? normalizedOhifUrl.replaceAll("{patientId}", encodeURIComponent(patientId))
-    : normalizedOhifUrl;
-  const firstDicomStudyUid = dicomStudies.find((study) => study.fileName)?.fileName ?? "";
-  const firstDicomStudyUrl = firstDicomStudyUid
-    ? buildOhifStudyUrl(normalizedOhifUrl, firstDicomStudyUid, patientId)
-    : "";
 
   return (
     <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
@@ -377,57 +370,35 @@ export default function PatientAttachmentsClient({
 
       {/* DICOM studies */}
       {isXrayTab && (
-        <div className="mb-4 rounded-[24px] border border-blue-100 bg-blue-50/50 p-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mb-4 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
                   <Server className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
-                  <h3 className="text-base font-black text-slate-950">دراسات DICOM الطبية</h3>
+                  <h3 className="text-base font-black text-slate-950">دراسات الصور الطبية PACS</h3>
                   <p className="mt-0.5 text-xs font-bold text-slate-500">
-                    فتح الأشعة الأصلية عبر عارض OHIF عند ربط PACS أو Orthanc
+                    افتح الدراسة الأصلية في OHIF بواسطة رقم StudyInstanceUID
                   </p>
-                </div>
-              </div>
-
-              <div className="mt-3 grid gap-2 text-xs font-bold text-slate-500 sm:grid-cols-3">
-                <div className="flex items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-blue-100">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                  <span>عرض طبي متخصص</span>
-                </div>
-                <div className="flex items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-blue-100">
-                  <ImagePlus className="h-4 w-4 text-blue-600" aria-hidden="true" />
-                  <span>يدعم CT و MRI و X-Ray</span>
-                </div>
-                <div className="flex items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-blue-100">
-                  <ExternalLink className="h-4 w-4 text-slate-600" aria-hidden="true" />
-                  <span>يفتح خارج الملف الطبي</span>
                 </div>
               </div>
             </div>
 
-            {firstDicomStudyUrl ? (
-              <a
-                href={firstDicomStudyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
+            {!showDicomForm && (
+              <button
+                onClick={() => { setShowDicomForm(true); setError(""); }}
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
               >
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                فتح عارض OHIF
-              </a>
-            ) : (
-              <div className="shrink-0 rounded-2xl bg-white px-4 py-3 text-center ring-1 ring-blue-100">
-                <p className="text-xs font-black text-slate-700">أضف دراسة DICOM أولاً</p>
-                <p className="mt-1 text-[11px] font-bold text-slate-400">زر OHIF يحتاج رقم StudyInstanceUID</p>
-              </div>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                إضافة دراسة
+              </button>
             )}
           </div>
 
           {showDicomForm && (
-            <div className="mt-4 space-y-3 rounded-[20px] bg-white p-4 ring-1 ring-blue-100">
+            <div className="mt-4 space-y-3 rounded-[16px] bg-slate-50 p-4 ring-1 ring-slate-200">
               <p className="text-sm font-black text-blue-700">إضافة دراسة DICOM</p>
               {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-600">{error}</p>}
               <input
@@ -478,28 +449,28 @@ export default function PatientAttachmentsClient({
             </div>
           )}
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs font-black text-slate-500">
-              {dicomStudies.length > 0 ? `${dicomStudies.length} دراسة DICOM محفوظة` : "لا توجد دراسات DICOM محفوظة بعد"}
-            </p>
-            {!showDicomForm && (
-              <button
-                onClick={() => { setShowDicomForm(true); setError(""); }}
-                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-50"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                إضافة دراسة DICOM
-              </button>
-            )}
-          </div>
+          <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-xs font-black text-slate-500">
+                {dicomStudies.length > 0 ? `${dicomStudies.length} دراسة محفوظة` : "لا توجد دراسات DICOM محفوظة"}
+              </p>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black text-slate-500">
+                OHIF
+              </span>
+            </div>
 
-          {dicomStudies.length > 0 && (
-            <div className="mt-3 grid gap-3">
+            {dicomStudies.length === 0 ? (
+              <div className="rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
+                <p className="text-sm font-black text-slate-500">أضف StudyInstanceUID لفتح الدراسة الطبية</p>
+                <p className="mt-1 text-xs font-bold text-slate-400">الصور العادية وملفات PDF تبقى في قسم الملفات المرفوعة بالأسفل</p>
+              </div>
+            ) : (
+              <div className="grid gap-3">
               {dicomStudies.map((study) => {
                 const studyUid = study.fileName ?? "";
-                const studyUrl = studyUid ? buildOhifStudyUrl(normalizedOhifUrl, studyUid, patientId) : ohifLaunchUrl;
+                const studyUrl = buildOhifStudyUrl(normalizedOhifUrl, studyUid, patientId);
                 return (
-                  <div key={study.id} className="rounded-[18px] bg-white p-3 ring-1 ring-blue-100">
+                  <div key={study.id} className="rounded-[16px] bg-slate-50 p-3 ring-1 ring-slate-200">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
@@ -522,7 +493,7 @@ export default function PatientAttachmentsClient({
                           className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700"
                         >
                           <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                          فتح
+                          فتح في OHIF
                         </a>
                         <button
                           onClick={() => handleDelete(study.id)}
@@ -536,8 +507,9 @@ export default function PatientAttachmentsClient({
                   </div>
                 );
               })}
+              </div>
+            )}
             </div>
-          )}
         </div>
       )}
 
