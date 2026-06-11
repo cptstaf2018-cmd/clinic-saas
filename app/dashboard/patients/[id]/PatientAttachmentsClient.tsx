@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Database, ExternalLink, Plus, Server } from "lucide-react";
+import { Database, ExternalLink, Server } from "lucide-react";
 
 type Attachment = {
   id: string;
@@ -84,14 +84,9 @@ export default function PatientAttachmentsClient({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   const [showForm, setShowForm] = useState(false);
-  const [showDicomForm, setShowDicomForm] = useState(false);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  const [dicomTitle, setDicomTitle] = useState("");
-  const [dicomStudyUid, setDicomStudyUid] = useState("");
-  const [dicomNotes, setDicomNotes] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [dicomDate, setDicomDate] = useState(new Date().toISOString().slice(0, 10));
   const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -191,48 +186,6 @@ export default function PatientAttachmentsClient({
       setTitle(""); setNotes(""); setPendingFile(null);
       setDate(new Date().toISOString().slice(0, 10));
       setShowForm(false);
-    } else {
-      const d = await res.json();
-      setError(d.error ?? "حدث خطأ");
-    }
-    setSaving(false);
-  }
-
-  async function handleSaveDicomStudy() {
-    const studyUid = extractStudyUid(dicomStudyUid);
-    const finalTitle = dicomTitle.trim() || "دراسة DICOM";
-    if (!studyUid) {
-      setError("رقم StudyInstanceUID مطلوب");
-      return;
-    }
-    if (!/^[0-9.]+$/.test(studyUid) || !studyUid.includes(".")) {
-      setError("أدخل رقم StudyInstanceUID فقط أو رابط OHIF يحتوي عليه");
-      return;
-    }
-    setSaving(true);
-    setError("");
-    const res = await fetch(`/api/patients/${patientId}/attachments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "dicom_study",
-        title: finalTitle,
-        notes: dicomNotes.trim() || null,
-        date: dicomDate,
-        fileUrl: null,
-        fileName: studyUid,
-        fileType: "dicom",
-      }),
-    });
-    if (res.ok) {
-      const created = await res.json();
-      setAttachments((prev) => [created, ...prev]);
-      setDicomTitle("");
-      setDicomStudyUid("");
-      setDicomNotes("");
-      setDicomDate(new Date().toISOString().slice(0, 10));
-      setShowDicomForm(false);
-      setLoaded((prev) => ({ ...prev, xray: true }));
     } else {
       const d = await res.json();
       setError(d.error ?? "حدث خطأ");
@@ -380,74 +333,17 @@ export default function PatientAttachmentsClient({
                 <div>
                   <h3 className="text-base font-black text-slate-950">دراسات الصور الطبية PACS</h3>
                   <p className="mt-0.5 text-xs font-bold text-slate-500">
-                    افتح الدراسة الأصلية في OHIF بواسطة رقم StudyInstanceUID
+                    تظهر هنا دراسات CT و MRI و X-Ray القادمة من نظام الأشعة
                   </p>
                 </div>
               </div>
             </div>
 
-            {!showDicomForm && (
-              <button
-                onClick={() => { setShowDicomForm(true); setError(""); }}
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                إضافة دراسة
-              </button>
-            )}
-          </div>
-
-          {showDicomForm && (
-            <div className="mt-4 space-y-3 rounded-[16px] bg-slate-50 p-4 ring-1 ring-slate-200">
-              <p className="text-sm font-black text-blue-700">إضافة دراسة DICOM</p>
-              {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-600">{error}</p>}
-              <input
-                value={dicomTitle}
-                onChange={(e) => setDicomTitle(e.target.value)}
-                placeholder="العنوان — مثال: CT Chest"
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-              />
-              <input
-                value={dicomStudyUid}
-                onChange={(e) => setDicomStudyUid(e.target.value)}
-                placeholder="StudyInstanceUID — مثال: 1.3.6.1..."
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-                dir="ltr"
-              />
-              <textarea
-                value={dicomNotes}
-                onChange={(e) => setDicomNotes(e.target.value)}
-                placeholder="ملاحظات الدراسة (اختياري)"
-                rows={2}
-                className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-              />
-              <div>
-                <label className="mb-1 block text-xs font-bold text-slate-500">التاريخ</label>
-                <input
-                  type="date"
-                  value={dicomDate}
-                  onChange={(e) => setDicomDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
-                  dir="ltr"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSaveDicomStudy}
-                  disabled={saving}
-                  className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {saving ? "جاري الحفظ..." : "حفظ الدراسة"}
-                </button>
-                <button
-                  onClick={() => { setShowDicomForm(false); setError(""); }}
-                  className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 hover:bg-slate-200"
-                >
-                  إلغاء
-                </button>
-              </div>
+            <div className="shrink-0 rounded-xl bg-slate-50 px-4 py-2.5 text-center ring-1 ring-slate-200">
+              <p className="text-xs font-black text-slate-700">ربط PACS</p>
+              <p className="mt-0.5 text-[11px] font-bold text-slate-400">DICOMweb / Orthanc</p>
             </div>
-          )}
+          </div>
 
           <div className="mt-4 border-t border-slate-100 pt-4">
             <div className="mb-3 flex items-center justify-between gap-3">
@@ -461,8 +357,8 @@ export default function PatientAttachmentsClient({
 
             {dicomStudies.length === 0 ? (
               <div className="rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-                <p className="text-sm font-black text-slate-500">أضف StudyInstanceUID لفتح الدراسة الطبية</p>
-                <p className="mt-1 text-xs font-bold text-slate-400">الصور العادية وملفات PDF تبقى في قسم الملفات المرفوعة بالأسفل</p>
+                <p className="text-sm font-black text-slate-500">لا توجد دراسات PACS مرتبطة بهذا المريض</p>
+                <p className="mt-1 text-xs font-bold text-slate-400">عند ربط Orthanc أو PACS ستظهر الدراسات هنا تلقائياً للطبيب</p>
               </div>
             ) : (
               <div className="grid gap-3">
