@@ -229,6 +229,10 @@ export default function PatientAttachmentsClient({
   const ohifLaunchUrl = normalizedOhifUrl.includes("{patientId}")
     ? normalizedOhifUrl.replaceAll("{patientId}", encodeURIComponent(patientId))
     : normalizedOhifUrl;
+  const firstDicomStudyUid = dicomStudies.find((study) => study.fileName)?.fileName ?? "";
+  const firstDicomStudyUrl = firstDicomStudyUid
+    ? buildOhifStudyUrl(normalizedOhifUrl, firstDicomStudyUid, patientId)
+    : "";
 
   return (
     <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
@@ -377,9 +381,9 @@ export default function PatientAttachmentsClient({
               </div>
             </div>
 
-            {ohifLaunchUrl ? (
+            {firstDicomStudyUrl ? (
               <a
-                href={ohifLaunchUrl}
+                href={firstDicomStudyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
@@ -389,8 +393,8 @@ export default function PatientAttachmentsClient({
               </a>
             ) : (
               <div className="shrink-0 rounded-2xl bg-white px-4 py-3 text-center ring-1 ring-blue-100">
-                <p className="text-xs font-black text-slate-700">عارض DICOM غير مفعّل</p>
-                <p className="mt-1 text-[11px] font-bold text-slate-400">اضبط NEXT_PUBLIC_OHIF_VIEWER_URL بعد تشغيل OHIF</p>
+                <p className="text-xs font-black text-slate-700">أضف دراسة DICOM أولاً</p>
+                <p className="mt-1 text-[11px] font-bold text-slate-400">زر OHIF يحتاج رقم StudyInstanceUID</p>
               </div>
             )}
           </div>
