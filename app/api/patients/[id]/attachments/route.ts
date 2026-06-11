@@ -56,7 +56,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "النوع والعنوان مطلوبان" }, { status: 400 });
   }
 
-  const validTypes = ["lab", "xray", "prescription", "other", "aesthetic_before", "aesthetic_after"];
+  const validTypes = ["lab", "xray", "dicom_study", "prescription", "other", "aesthetic_before", "aesthetic_after"];
   if (!validTypes.includes(type)) {
     return NextResponse.json({ error: "نوع غير صالح" }, { status: 400 });
   }

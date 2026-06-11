@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { ExternalLink, ImagePlus, Server, ShieldCheck } from "lucide-react";
+import { Database, ExternalLink, ImagePlus, Plus, Server, ShieldCheck } from "lucide-react";
 
 type Attachment = {
   id: string;
@@ -32,6 +32,18 @@ function formatDate(iso: string) {
   });
 }
 
+function buildOhifStudyUrl(baseUrl: string, studyUid: string, patientId: string) {
+  const encodedStudyUid = encodeURIComponent(studyUid);
+  const encodedPatientId = encodeURIComponent(patientId);
+  if (baseUrl.includes("{StudyInstanceUIDs}")) {
+    return baseUrl
+      .replaceAll("{StudyInstanceUIDs}", encodedStudyUid)
+      .replaceAll("{patientId}", encodedPatientId);
+  }
+  const withPatient = baseUrl.replaceAll("{patientId}", encodedPatientId);
+  return `${withPatient}${withPatient.includes("?") ? "&" : "?"}StudyInstanceUIDs=${encodedStudyUid}`;
+}
+
 export default function PatientAttachmentsClient({
   patientId,
   specialtyCode,
@@ -49,9 +61,14 @@ export default function PatientAttachmentsClient({
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loaded, setLoaded] = useState<Record<string, boolean>>({});
   const [showForm, setShowForm] = useState(false);
+  const [showDicomForm, setShowDicomForm] = useState(false);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [dicomTitle, setDicomTitle] = useState("");
+  const [dicomStudyUid, setDicomStudyUid] = useState("");
+  const [dicomNotes, setDicomNotes] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [dicomDate, setDicomDate] = useState(new Date().toISOString().slice(0, 10));
   const [lightbox, setLightbox] = useState<{ url: string; title: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -62,10 +79,20 @@ export default function PatientAttachmentsClient({
 
   const loadTab = useCallback(async (tabId: string) => {
     if (loaded[tabId]) return;
-    const res = await fetch(`/api/patients/${patientId}/attachments?type=${tabId}`);
-    if (res.ok) {
-      const data = await res.json();
-      setAttachments((prev) => [...prev.filter((a) => a.type !== tabId), ...data]);
+    const types = tabId === "xray" ? ["xray", "dicom_study"] : [tabId];
+    const responses = await Promise.all(
+      types.map(async (type) => {
+        const res = await fetch(`/api/patients/${patientId}/attachments?type=${type}`);
+        if (!res.ok) return [];
+        return (await res.json()) as Attachment[];
+      })
+    );
+    const data = responses.flat();
+    if (data) {
+      setAttachments((prev) => [
+        ...prev.filter((a) => !types.includes(a.type)),
+        ...data,
+      ]);
       setLoaded((prev) => ({ ...prev, [tabId]: true }));
     }
   }, [loaded, patientId]);
@@ -148,6 +175,44 @@ export default function PatientAttachmentsClient({
     setSaving(false);
   }
 
+  async function handleSaveDicomStudy() {
+    const studyUid = dicomStudyUid.trim();
+    const finalTitle = dicomTitle.trim() || "دراسة DICOM";
+    if (!studyUid) {
+      setError("رقم StudyInstanceUID مطلوب");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const res = await fetch(`/api/patients/${patientId}/attachments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "dicom_study",
+        title: finalTitle,
+        notes: dicomNotes.trim() || null,
+        date: dicomDate,
+        fileUrl: null,
+        fileName: studyUid,
+        fileType: "dicom",
+      }),
+    });
+    if (res.ok) {
+      const created = await res.json();
+      setAttachments((prev) => [created, ...prev]);
+      setDicomTitle("");
+      setDicomStudyUid("");
+      setDicomNotes("");
+      setDicomDate(new Date().toISOString().slice(0, 10));
+      setShowDicomForm(false);
+      setLoaded((prev) => ({ ...prev, xray: true }));
+    } else {
+      const d = await res.json();
+      setError(d.error ?? "حدث خطأ");
+    }
+    setSaving(false);
+  }
+
   async function handleDelete(id: string) {
     setDeletingId(id);
     const res = await fetch(`/api/patients/${patientId}/attachments/${id}`, { method: "DELETE" });
@@ -156,10 +221,11 @@ export default function PatientAttachmentsClient({
   }
 
   const tabAttachments = attachments.filter((a) => a.type === activeTab);
+  const dicomStudies = attachments.filter((a) => a.type === "dicom_study");
   const currentTab = tabs.find((t) => t.id === activeTab)!;
   const isAestheticPhotoTab = activeTab === "aesthetic_before" || activeTab === "aesthetic_after";
   const isXrayTab = activeTab === "xray";
-  const normalizedOhifUrl = ohifViewerUrl?.replace(/\/+$/, "") ?? "";
+  const normalizedOhifUrl = (ohifViewerUrl?.trim() || "https://viewer.ohif.org/viewer").replace(/\/+$/, "");
   const ohifLaunchUrl = normalizedOhifUrl.includes("{patientId}")
     ? normalizedOhifUrl.replaceAll("{patientId}", encodeURIComponent(patientId))
     : normalizedOhifUrl;
@@ -328,6 +394,119 @@ export default function PatientAttachmentsClient({
               </div>
             )}
           </div>
+
+          {showDicomForm && (
+            <div className="mt-4 space-y-3 rounded-[20px] bg-white p-4 ring-1 ring-blue-100">
+              <p className="text-sm font-black text-blue-700">إضافة دراسة DICOM</p>
+              {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-600">{error}</p>}
+              <input
+                value={dicomTitle}
+                onChange={(e) => setDicomTitle(e.target.value)}
+                placeholder="العنوان — مثال: CT Chest"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+              />
+              <input
+                value={dicomStudyUid}
+                onChange={(e) => setDicomStudyUid(e.target.value)}
+                placeholder="StudyInstanceUID — مثال: 1.3.6.1..."
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                dir="ltr"
+              />
+              <textarea
+                value={dicomNotes}
+                onChange={(e) => setDicomNotes(e.target.value)}
+                placeholder="ملاحظات الدراسة (اختياري)"
+                rows={2}
+                className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+              />
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-500">التاريخ</label>
+                <input
+                  type="date"
+                  value={dicomDate}
+                  onChange={(e) => setDicomDate(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400"
+                  dir="ltr"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveDicomStudy}
+                  disabled={saving}
+                  className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {saving ? "جاري الحفظ..." : "حفظ الدراسة"}
+                </button>
+                <button
+                  onClick={() => { setShowDicomForm(false); setError(""); }}
+                  className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 hover:bg-slate-200"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs font-black text-slate-500">
+              {dicomStudies.length > 0 ? `${dicomStudies.length} دراسة DICOM محفوظة` : "لا توجد دراسات DICOM محفوظة بعد"}
+            </p>
+            {!showDicomForm && (
+              <button
+                onClick={() => { setShowDicomForm(true); setError(""); }}
+                className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-50"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                إضافة دراسة DICOM
+              </button>
+            )}
+          </div>
+
+          {dicomStudies.length > 0 && (
+            <div className="mt-3 grid gap-3">
+              {dicomStudies.map((study) => {
+                const studyUid = study.fileName ?? "";
+                const studyUrl = studyUid ? buildOhifStudyUrl(normalizedOhifUrl, studyUid, patientId) : ohifLaunchUrl;
+                return (
+                  <div key={study.id} className="rounded-[18px] bg-white p-3 ring-1 ring-blue-100">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Database className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+                          <p className="font-black text-slate-950">{study.title}</p>
+                        </div>
+                        <p className="mt-1 text-xs font-bold text-slate-400">{formatDate(study.date)}</p>
+                        {studyUid && (
+                          <p className="mt-1 truncate text-xs font-bold text-slate-500" dir="ltr">
+                            {studyUid}
+                          </p>
+                        )}
+                        {study.notes && <p className="mt-2 text-sm text-slate-600 whitespace-pre-line">{study.notes}</p>}
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <a
+                          href={studyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700"
+                        >
+                          <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                          فتح
+                        </a>
+                        <button
+                          onClick={() => handleDelete(study.id)}
+                          disabled={deletingId === study.id}
+                          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-red-600 ring-1 ring-red-100 hover:bg-red-50 disabled:opacity-40"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
