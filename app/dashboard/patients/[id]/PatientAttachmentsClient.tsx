@@ -32,8 +32,23 @@ function formatDate(iso: string) {
   });
 }
 
+function extractStudyUid(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.searchParams.get("StudyInstanceUIDs")?.trim() ?? trimmed;
+  } catch {
+    const withoutParamName = trimmed.replace(/^StudyInstanceUIDs=/i, "").trim();
+    const firstValue = withoutParamName.split(/[,\s]+/)[0]?.trim() ?? "";
+    return firstValue;
+  }
+}
+
 function buildOhifStudyUrl(baseUrl: string, studyUid: string, patientId: string) {
-  const encodedStudyUid = encodeURIComponent(studyUid);
+  const cleanStudyUid = extractStudyUid(studyUid);
+  const encodedStudyUid = encodeURIComponent(cleanStudyUid);
   const encodedPatientId = encodeURIComponent(patientId);
   if (baseUrl.includes("{StudyInstanceUIDs}")) {
     return baseUrl
@@ -41,7 +56,15 @@ function buildOhifStudyUrl(baseUrl: string, studyUid: string, patientId: string)
       .replaceAll("{patientId}", encodedPatientId);
   }
   const withPatient = baseUrl.replaceAll("{patientId}", encodedPatientId);
-  return `${withPatient}${withPatient.includes("?") ? "&" : "?"}StudyInstanceUIDs=${encodedStudyUid}`;
+  try {
+    const parsed = new URL(withPatient);
+    parsed.searchParams.delete("StudyInstanceUIDs");
+    parsed.searchParams.set("StudyInstanceUIDs", cleanStudyUid);
+    return parsed.toString();
+  } catch {
+    const withoutStudyParam = withPatient.replace(/([?&])StudyInstanceUIDs=[^&]*&?/i, "$1").replace(/[?&]$/, "");
+    return `${withoutStudyParam}${withoutStudyParam.includes("?") ? "&" : "?"}StudyInstanceUIDs=${encodedStudyUid}`;
+  }
 }
 
 export default function PatientAttachmentsClient({
@@ -176,10 +199,14 @@ export default function PatientAttachmentsClient({
   }
 
   async function handleSaveDicomStudy() {
-    const studyUid = dicomStudyUid.trim();
+    const studyUid = extractStudyUid(dicomStudyUid);
     const finalTitle = dicomTitle.trim() || "دراسة DICOM";
     if (!studyUid) {
       setError("رقم StudyInstanceUID مطلوب");
+      return;
+    }
+    if (!/^[0-9.]+$/.test(studyUid) || !studyUid.includes(".")) {
+      setError("أدخل رقم StudyInstanceUID فقط أو رابط OHIF يحتوي عليه");
       return;
     }
     setSaving(true);
