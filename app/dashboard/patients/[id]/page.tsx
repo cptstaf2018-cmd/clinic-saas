@@ -136,6 +136,7 @@ export default async function PatientProfilePage({
   }));
 
   const waNumber = patient.whatsappPhone.replace(/^0/, "964").replace(/\D/g, "");
+  const ohifViewerUrl = (process.env.NEXT_PUBLIC_OHIF_VIEWER_URL ?? "").trim();
 
   return (
     <div className="p-4 md:p-8" dir="rtl">
@@ -466,7 +467,11 @@ export default async function PatientProfilePage({
         {/* ═══ Attachments ═══ */}
         {!isSecretary && (
           <section>
-            <PatientAttachmentsClient patientId={patient.id} specialtyCode={specialtyConfig.code} />
+            <PatientAttachmentsClient
+              patientId={patient.id}
+              specialtyCode={specialtyConfig.code}
+              ohifViewerUrl={ohifViewerUrl}
+            />
           </section>
         )}
 

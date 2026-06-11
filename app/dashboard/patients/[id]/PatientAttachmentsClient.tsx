@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { ExternalLink, ImagePlus, Server, ShieldCheck } from "lucide-react";
 
 type Attachment = {
   id: string;
@@ -34,9 +35,11 @@ function formatDate(iso: string) {
 export default function PatientAttachmentsClient({
   patientId,
   specialtyCode,
+  ohifViewerUrl,
 }: {
   patientId: string;
   specialtyCode?: string;
+  ohifViewerUrl?: string;
 }) {
   const tabs = useMemo(
     () => (specialtyCode === "aesthetic" ? [...AESTHETIC_TABS, ...TABS] : TABS),
@@ -155,6 +158,11 @@ export default function PatientAttachmentsClient({
   const tabAttachments = attachments.filter((a) => a.type === activeTab);
   const currentTab = tabs.find((t) => t.id === activeTab)!;
   const isAestheticPhotoTab = activeTab === "aesthetic_before" || activeTab === "aesthetic_after";
+  const isXrayTab = activeTab === "xray";
+  const normalizedOhifUrl = ohifViewerUrl?.replace(/\/+$/, "") ?? "";
+  const ohifLaunchUrl = normalizedOhifUrl.includes("{patientId}")
+    ? normalizedOhifUrl.replaceAll("{patientId}", encodeURIComponent(patientId))
+    : normalizedOhifUrl;
 
   return (
     <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
@@ -266,6 +274,59 @@ export default function PatientAttachmentsClient({
             <button onClick={() => { setShowForm(false); setError(""); setPendingFile(null); }} className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 hover:bg-slate-200">
               إلغاء
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* DICOM studies */}
+      {isXrayTab && (
+        <div className="mb-4 rounded-[24px] border border-blue-100 bg-blue-50/50 p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                  <Server className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="text-base font-black text-slate-950">دراسات DICOM الطبية</h3>
+                  <p className="mt-0.5 text-xs font-bold text-slate-500">
+                    فتح الأشعة الأصلية عبر عارض OHIF عند ربط PACS أو Orthanc
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid gap-2 text-xs font-bold text-slate-500 sm:grid-cols-3">
+                <div className="flex items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-blue-100">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  <span>عرض طبي متخصص</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-blue-100">
+                  <ImagePlus className="h-4 w-4 text-blue-600" aria-hidden="true" />
+                  <span>يدعم CT و MRI و X-Ray</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl bg-white/80 px-3 py-2 ring-1 ring-blue-100">
+                  <ExternalLink className="h-4 w-4 text-slate-600" aria-hidden="true" />
+                  <span>يفتح خارج الملف الطبي</span>
+                </div>
+              </div>
+            </div>
+
+            {ohifLaunchUrl ? (
+              <a
+                href={ohifLaunchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
+              >
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                فتح عارض OHIF
+              </a>
+            ) : (
+              <div className="shrink-0 rounded-2xl bg-white px-4 py-3 text-center ring-1 ring-blue-100">
+                <p className="text-xs font-black text-slate-700">عارض DICOM غير مفعّل</p>
+                <p className="mt-1 text-[11px] font-bold text-slate-400">اضبط NEXT_PUBLIC_OHIF_VIEWER_URL بعد تشغيل OHIF</p>
+              </div>
+            )}
           </div>
         </div>
       )}
