@@ -29,3 +29,7 @@ export async function loginAction(formData: FormData) {
       : "الإيميل أو كلمة المرور غير صحيحة";
   }
 }
+
+export async function googleSignInAction() {
+  await signIn("google", { redirectTo: "/dashboard" });
+}

@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction } from "./actions";
+import GoogleButton from "./GoogleButton";
 
 function HealthIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
@@ -400,6 +401,7 @@ function LoginForm() {
                 )}
               </>
             ) : (
+            <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
@@ -431,6 +433,8 @@ function LoginForm() {
                   {loading ? "جاري الدخول..." : "دخول →"}
                 </button>
               </form>
+              <GoogleButton />
+            </>
             )}
 
             <div className="mt-6 pt-6 border-t border-slate-100 text-center">
@@ -563,6 +567,7 @@ function LoginForm() {
                 )}
               </>
             ) : (
+            <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
@@ -595,6 +600,8 @@ function LoginForm() {
                   {loading ? "جاري الدخول..." : "تسجيل الدخول"}
                 </button>
               </form>
+              <GoogleButton />
+            </>
             )}
 
             {!forgotMode && (

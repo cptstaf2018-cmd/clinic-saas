@@ -1,8 +1,10 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { verifyImpersonateToken } from "@/lib/impersonate";
+import { findOrCreateGoogleUser } from "@/lib/google-account";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
@@ -10,6 +12,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   useSecureCookies: process.env.NODE_ENV === "production",
   providers: [
+    ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+      ? [Google({ clientId: process.env.AUTH_GOOGLE_ID, clientSecret: process.env.AUTH_GOOGLE_SECRET })]
+      : []),
     Credentials({
       credentials: {
         identifier:        { label: "Phone or Email",    type: "text"     },
@@ -83,7 +88,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async signIn({ account, profile }) {
+      if (account?.provider !== "google") return true;
+      if (!profile?.email || profile.email_verified !== true) return false;
+      try {
+        return (await findOrCreateGoogleUser(profile.email, profile.name)) !== null;
+      } catch (e) {
+        console.error("Google sign-in error:", e);
+        return false;
+      }
+    },
+    async jwt({ token, user, account, profile }) {
+      if (account?.provider === "google" && profile?.email) {
+        const dbUser = await findOrCreateGoogleUser(profile.email, profile.name);
+        if (dbUser) {
+          token.sub      = dbUser.id;
+          token.role     = dbUser.role;
+          token.clinicId = dbUser.clinicId;
+        }
+        return token;
+      }
       if (user) {
         token.role    = (user as any).role;
         token.clinicId = (user as any).clinicId ?? null;
