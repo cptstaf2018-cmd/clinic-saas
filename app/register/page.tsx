@@ -1,5 +1,6 @@
 "use client";
 
+import GoogleButton from "../login/GoogleButton";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -553,6 +554,7 @@ export default function RegisterPage() {
               </div>
 
               <RegisterForm {...formProps} />
+              <GoogleButton label="التسجيل بحساب Google" />
 
               <div className="mt-6 border-t border-slate-100 pt-6 text-center">
                 <p className="text-sm text-[#64748B]">
@@ -576,6 +578,7 @@ export default function RegisterPage() {
                 </div>
 
                 <RegisterForm {...formProps} />
+              <GoogleButton label="التسجيل بحساب Google" />
               </div>
 
               <p className="mt-5 text-center text-sm font-bold text-[#64748B]">
