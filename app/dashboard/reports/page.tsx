@@ -113,8 +113,8 @@ export default async function ReportsPage({
       title: "التقارير الطبية",
       description: `تقارير ${specialtyConfig.nameAr}، ملفات المرضى، الوصفات، والمستندات الطبية.`,
       icon: "🩺",
-      accent: "border-t-4 border-blue-500",
-      iconBg: "bg-blue-50 text-blue-600",
+      accent: "border-t-4 border-brand-border",
+      iconBg: "bg-brand-soft text-brand-blue",
       items: [
         { label: "سجلات اليوم", value: medicalRecordsToday, hint: "زيارات موثقة" },
         { label: "سجلات الشهر", value: medicalRecordsMonth, hint: "نشاط طبي" },
@@ -127,8 +127,8 @@ export default async function ReportsPage({
       title: "التقارير المالية",
       description: "الإيرادات، المدفوعات، الذمم، والملخصات المالية حسب الفترة.",
       icon: "💰",
-      accent: "border-t-4 border-emerald-500",
-      iconBg: "bg-emerald-50 text-emerald-600",
+      accent: "border-t-4 border-brand-mint",
+      iconBg: "bg-brand-mint-soft text-brand-mint-text",
       items: [
         { label: "إيراد اليوم من المرضى", value: `${formatMoney(todayRevenue)} د.ع`, hint: "ما دفعه المرضى اليوم" },
         { label: "إيراد الشهر من المرضى", value: `${formatMoney(monthRevenue)} د.ع`, hint: "من بداية الشهر" },
@@ -185,13 +185,13 @@ export default async function ReportsPage({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={clinic.logoUrl} alt="شعار العيادة" className="h-16 w-16 rounded-full object-cover border border-slate-300" />
               ) : (
-                <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-black border border-blue-200">
+                <div className="h-16 w-16 rounded-full bg-brand-soft flex items-center justify-center text-brand-blue text-xl font-black border border-brand-border">
                   {clinic?.name?.slice(0, 1) ?? "ع"}
                 </div>
               )}
               <div>
                 <p className="text-base font-black text-slate-900">{clinic?.name ?? "العيادة"}</p>
-                <p className="text-sm font-bold text-blue-700">اختصاص {specialtyConfig.nameAr}</p>
+                <p className="text-sm font-bold text-brand-blue">اختصاص {specialtyConfig.nameAr}</p>
                 <p className="text-xs text-slate-500">{clinic?.whatsappNumber}</p>
               </div>
             </div>
@@ -215,9 +215,9 @@ export default async function ReportsPage({
                 <p className="text-[10px] text-slate-500">الوقت</p>
                 <p className="text-sm font-black text-slate-900">{reportTime}</p>
               </div>
-              <div className="rounded-lg bg-blue-50 px-3 py-1 border border-blue-200">
-                <p className="text-[10px] text-blue-600">رقم التقرير</p>
-                <p className="text-xs font-black text-blue-800" dir="ltr">{reportNumber}</p>
+              <div className="rounded-lg bg-brand-soft px-3 py-1 border border-brand-border">
+                <p className="text-[10px] text-brand-blue">رقم التقرير</p>
+                <p className="text-xs font-black text-brand-blue" dir="ltr">{reportNumber}</p>
               </div>
             </div>
           </div>
@@ -232,10 +232,10 @@ export default async function ReportsPage({
         {/* ═══════════════════════════════════════════════════════
             رأس الويب العادي — يختفي عند الطباعة
         ═══════════════════════════════════════════════════════ */}
-        <section className="print:hidden rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
+        <section className="print:hidden rounded-[32px] bg-gradient-to-br from-white via-brand-soft to-brand-mint-soft p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-brand-border">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-black text-emerald-700">مركز التقارير</p>
+              <p className="text-sm font-black text-brand-mint-text">مركز التقارير</p>
               <h1 className="mt-2 text-3xl font-black md:text-4xl">كل تقارير العيادة</h1>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-slate-500">
                 مركز واحد للتقارير الطبية، المالية، المواعيد، المرضى، واتساب مع الطباعة والمشاركة.
@@ -253,7 +253,7 @@ export default async function ReportsPage({
                   className="text-sm font-bold text-slate-800 outline-none"
                   onChange={undefined}
                 />
-                <button type="submit" className="rounded-xl bg-blue-600 px-3 py-1 text-xs font-black text-white hover:bg-blue-700">
+                <button type="submit" className="rounded-xl bg-brand-navy px-3 py-1 text-xs font-black text-white hover:bg-brand-navy-2">
                   عرض
                 </button>
               </form>

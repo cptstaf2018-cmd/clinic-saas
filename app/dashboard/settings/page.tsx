@@ -57,7 +57,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inputCls = "w-full h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100";
+const inputCls = "w-full h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold text-slate-800 outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft";
 const officialAppUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://www.clinic-ai-pro.com").replace(/\/$/, "");
 
 export default function SettingsPage() {
@@ -266,8 +266,8 @@ export default function SettingsPage() {
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-5xl space-y-7">
-      <section className="rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
-        <p className="text-sm font-black text-sky-700">إدارة النظام</p>
+      <section className="rounded-[32px] bg-gradient-to-br from-white via-brand-soft to-brand-mint-soft p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-brand-border">
+        <p className="text-sm font-black text-brand-blue">إدارة النظام</p>
         <h1 className="mt-2 text-3xl font-black md:text-4xl">الإعدادات</h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
           تحكم بملف العيادة، واتساب، التذكيرات، والأمان من واجهة واحدة مرتبة.
@@ -281,7 +281,7 @@ export default function SettingsPage() {
             key={t.id}
             onClick={() => { setTab(t.id); setSaved(""); setError(""); }}
             className={`flex min-w-max flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black whitespace-nowrap transition-all ${
-              tab === t.id ? "bg-blue-600 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+              tab === t.id ? "bg-brand-navy text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
             }`}
           >
             <span className={`flex h-7 w-7 items-center justify-center rounded-xl text-xs ${tab === t.id ? "bg-white/15 text-white" : "bg-slate-100 text-slate-500"}`}>{t.icon}</span>
@@ -291,7 +291,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Status messages */}
-      {saved && <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700">{saved}</div>}
+      {saved && <div className="rounded-2xl border border-brand-border bg-brand-mint-soft px-4 py-3 text-sm font-black text-brand-mint-text">{saved}</div>}
       {error && <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-black text-red-700">{error}</div>}
 
       {/* ── PROFILE TAB ── */}
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={uploadingLogo}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                  className="bg-brand-navy hover:bg-brand-navy-2 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
                 >
                   {uploadingLogo ? "جاري الرفع..." : "رفع شعار"}
                 </button>
@@ -343,7 +343,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ name: settings.name })}
               disabled={saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ المعلومات"}
             </button>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ doctorDegree: settings.doctorDegree, doctorUniversity: settings.doctorUniversity, doctorBoard: settings.doctorBoard })}
               disabled={saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ بيانات الطبيب"}
             </button>
@@ -407,7 +407,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ address: settings.address, locationUrl: settings.locationUrl })}
               disabled={saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ موقع العيادة"}
             </button>
@@ -415,14 +415,14 @@ export default function SettingsPage() {
 
           <Section title="شاشة الانتظار" description="افتح هذا الرابط على تلفزيون غرفة الانتظار">
             <div className="bg-gray-900 rounded-xl p-3">
-              <code className="text-xs text-blue-400 break-all font-mono block mb-2">
+              <code className="text-xs text-brand-muted break-all font-mono block mb-2">
                 {displayUrl}
               </code>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => window.open(displayUrl, "_blank", "noopener,noreferrer")}
-                  className="text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg transition-colors"
+                  className="text-xs bg-brand-navy-2 hover:bg-brand-navy text-white px-3 py-1.5 rounded-lg transition-colors"
                 >
                   فتح الشاشة
                 </button>
@@ -455,7 +455,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => slideRef.current?.click()}
                   disabled={uploadingSlide}
-                  className="aspect-video rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 flex flex-col items-center justify-center gap-1 text-blue-400 hover:border-blue-400 hover:bg-blue-100 transition disabled:opacity-50"
+                  className="aspect-video rounded-xl border-2 border-dashed border-brand-border bg-brand-soft flex flex-col items-center justify-center gap-1 text-brand-muted hover:border-brand-border hover:bg-brand-soft transition disabled:opacity-50"
                 >
                   <span className="text-2xl">+</span>
                   <span className="text-xs font-bold">{uploadingSlide ? "جاري الرفع..." : "إضافة صورة"}</span>
@@ -506,7 +506,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ whatsappWelcomeMessage: settings.whatsappWelcomeMessage })}
               disabled={saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ رسالة الترحيب"}
             </button>
@@ -572,7 +572,7 @@ export default function SettingsPage() {
                 botShowLocation: settings.botShowLocation,
               })}
               disabled={saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ حدود البوت"}
             </button>
@@ -596,7 +596,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-4 text-xs text-blue-700">
+            <div className="bg-brand-soft border border-brand-border rounded-xl p-3 mb-4 text-xs text-brand-blue">
               للحصول على API Key: سجّل في{" "}
               <a href="https://wasenderapi.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
                 wasenderapi.com
@@ -622,13 +622,13 @@ export default function SettingsPage() {
                 ? "bg-green-50 border border-green-200 text-green-700"
                 : "bg-gray-50 border border-gray-200 text-gray-500"
             }`}>
-              <span className={`h-2.5 w-2.5 rounded-full ${settings.whatsappAccessToken ? "bg-emerald-500" : "bg-slate-300"}`} />
+              <span className={`h-2.5 w-2.5 rounded-full ${settings.whatsappAccessToken ? "bg-brand-mint" : "bg-slate-300"}`} />
               <span>{settings.whatsappAccessToken ? "API Key محفوظ — البوت جاهز للإرسال" : "لم يتم إدخال API Key بعد"}</span>
             </div>
             <button
               onClick={() => saveSettings({ whatsappAccessToken: settings.whatsappAccessToken })}
               disabled={saving}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ API Key"}
             </button>
@@ -682,7 +682,7 @@ export default function SettingsPage() {
               <button
                 onClick={addSecretary}
                 disabled={teamLoading}
-                className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50"
               >
                 إضافة سكرتير
               </button>
@@ -703,7 +703,7 @@ export default function SettingsPage() {
                   <div key={user.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-sm font-black text-slate-950" dir="ltr">{user.email}</p>
-                      <p className={`mt-1 text-xs font-black ${user.active ? "text-emerald-600" : "text-rose-600"}`}>
+                      <p className={`mt-1 text-xs font-black ${user.active ? "text-brand-mint-text" : "text-rose-600"}`}>
                         {user.active ? "فعال" : "موقوف"}
                       </p>
                     </div>
@@ -713,7 +713,7 @@ export default function SettingsPage() {
                       className={`rounded-xl px-4 py-2 text-xs font-black disabled:opacity-50 ${
                         user.active
                           ? "bg-rose-50 text-rose-700 ring-1 ring-rose-100 hover:bg-rose-100"
-                          : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100"
+                          : "bg-brand-mint-soft text-brand-mint-text ring-1 ring-brand-border hover:bg-emerald-100"
                       }`}
                     >
                       {user.active ? "إيقاف الوصول" : "تفعيل الوصول"}
@@ -746,7 +746,7 @@ export default function SettingsPage() {
           <button
             onClick={() => saveSettings({ backupEmail: settings?.backupEmail ?? null })}
             disabled={saving}
-            className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50"
+            className="w-full rounded-xl bg-brand-navy py-2.5 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50"
           >
             {saving ? "جاري الحفظ..." : "حفظ الإيميل"}
           </button>
@@ -766,7 +766,7 @@ export default function SettingsPage() {
           {pwSaved && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-3">تم تغيير كلمة المرور بنجاح</div>}
           <button
             onClick={changePassword}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+            className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
           >
             تغيير كلمة المرور
           </button>

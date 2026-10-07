@@ -14,8 +14,8 @@ type Appt = {
 
 const STATUS_MAP: Record<string, { label: string; badge: string; dot: string }> = {
   pending: { label: "معلق", badge: "bg-amber-50 text-amber-700 ring-amber-100", dot: "bg-amber-400" },
-  confirmed: { label: "مؤكد", badge: "bg-blue-50 text-blue-700 ring-blue-100", dot: "bg-blue-500" },
-  completed: { label: "مكتمل", badge: "bg-emerald-50 text-emerald-700 ring-emerald-100", dot: "bg-emerald-500" },
+  confirmed: { label: "مؤكد", badge: "bg-brand-soft text-brand-blue ring-brand-border", dot: "bg-brand-soft0" },
+  completed: { label: "مكتمل", badge: "bg-brand-mint-soft text-brand-mint-text ring-brand-border", dot: "bg-brand-mint" },
   cancelled: { label: "ملغي", badge: "bg-red-50 text-red-700 ring-red-100", dot: "bg-red-500" },
 };
 
@@ -238,7 +238,7 @@ export default function AppointmentsPage() {
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-6xl space-y-7">
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-sky-50 to-cyan-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-sky-100">
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-brand-soft to-cyan-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-brand-border">
           <div className="absolute inset-0 opacity-10 pattern-medical" />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
@@ -251,7 +251,7 @@ export default function AppointmentsPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowBooking(true)}
-                className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-700"
+                className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white shadow-lg shadow-brand-navy/30 transition hover:bg-brand-navy-2"
               >
                 + حجز جديد
               </button>
@@ -265,9 +265,9 @@ export default function AppointmentsPage() {
 
         <section className="grid gap-4 md:grid-cols-4">
           {[
-            { label: "الإجمالي", value: total, color: "bg-blue-600" },
+            { label: "الإجمالي", value: total, color: "bg-brand-navy" },
             { label: "معلق", value: pending, color: "bg-amber-500" },
-            { label: "مؤكد", value: confirmed, color: "bg-blue-600" },
+            { label: "مؤكد", value: confirmed, color: "bg-brand-navy" },
             { label: "مكتمل", value: completed, color: "bg-emerald-600" },
           ].map((stat) => (
             <div key={stat.label} className="rounded-[26px] bg-white p-5 shadow-[0_14px_38px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
@@ -286,7 +286,7 @@ export default function AppointmentsPage() {
                   key={tab.id}
                   onClick={() => setRange(tab.id)}
                   className={`min-w-max flex-1 rounded-2xl px-4 py-2.5 text-sm font-black transition ${
-                    range === tab.id ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                    range === tab.id ? "bg-white text-brand-blue shadow-sm" : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   {tab.label}
@@ -306,7 +306,7 @@ export default function AppointmentsPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="ابحث باسم المراجع أو رقم الهاتف"
-                className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pr-11 pl-4 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pr-11 pl-4 text-sm font-bold text-slate-800 outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto">
@@ -316,7 +316,7 @@ export default function AppointmentsPage() {
                   onClick={() => setStatusFilter(filter.id)}
                   className={`min-w-max rounded-2xl px-4 py-2.5 text-xs font-black ring-1 transition ${
                     statusFilter === filter.id
-                      ? "bg-blue-600 text-white ring-blue-600"
+                      ? "bg-brand-navy text-white ring-brand-border"
                       : "bg-white text-slate-500 ring-slate-200 hover:text-slate-800"
                   }`}
                 >
@@ -352,7 +352,7 @@ export default function AppointmentsPage() {
                   >
                     <div className="flex flex-col gap-4 md:flex-row md:items-center">
                       <div className="flex min-w-0 flex-1 items-center gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-base font-black text-white">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-navy text-base font-black text-white">
                           {appointment.queueNumber ? arabicNumber(appointment.queueNumber) : initials(appointment.patient.name)}
                         </div>
                         <div className="min-w-0">
@@ -368,7 +368,7 @@ export default function AppointmentsPage() {
                           <p className="mt-1 text-xs font-black text-slate-500">
                             {formatDate(appointment.date)}
                             <span className="mx-2 text-slate-300">|</span>
-                            <span className="text-blue-700">{formatTime(appointment.date)}</span>
+                            <span className="text-brand-blue">{formatTime(appointment.date)}</span>
                           </p>
                         </div>
                       </div>
@@ -376,11 +376,11 @@ export default function AppointmentsPage() {
                       {appointment.status !== "cancelled" && appointment.status !== "completed" && (
                         <div className="grid grid-cols-2 gap-2 md:flex md:justify-end">
                           {appointment.status === "pending" && (
-                            <button onClick={() => updateStatus(appointment.id, "confirmed")} disabled={actionLoading === appointment.id + "confirmed"} className="rounded-2xl bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100 disabled:opacity-50">
+                            <button onClick={() => updateStatus(appointment.id, "confirmed")} disabled={actionLoading === appointment.id + "confirmed"} className="rounded-2xl bg-brand-soft px-4 py-2.5 text-xs font-black text-brand-blue ring-1 ring-brand-border transition hover:bg-brand-soft disabled:opacity-50">
                               تأكيد
                             </button>
                           )}
-                          <button onClick={() => updateStatus(appointment.id, "completed")} disabled={actionLoading === appointment.id + "completed"} className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100 disabled:opacity-50">
+                          <button onClick={() => updateStatus(appointment.id, "completed")} disabled={actionLoading === appointment.id + "completed"} className="rounded-2xl bg-brand-mint-soft px-4 py-2.5 text-xs font-black text-brand-mint-text ring-1 ring-brand-border transition hover:bg-emerald-100 disabled:opacity-50">
                             مكتمل
                           </button>
                           <button onClick={() => sendReminder(appointment.id)} disabled={actionLoading === appointment.id + "remind" || reminded.has(appointment.id)} className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-700 ring-1 ring-amber-100 transition hover:bg-amber-100 disabled:opacity-50">
@@ -412,7 +412,7 @@ export default function AppointmentsPage() {
                     value={patientName}
                     onChange={(e) => { setPatientName(e.target.value); setBookingError(""); }}
                     placeholder="مثال: هدى طارق وليد"
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-soft"
                   />
                 </div>
 
@@ -424,7 +424,7 @@ export default function AppointmentsPage() {
                     onChange={(e) => { setPatientPhone(e.target.value); setBookingError(""); }}
                     placeholder="07700000000"
                     dir="ltr"
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-bold outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-soft"
                   />
                 </div>
 
@@ -434,7 +434,7 @@ export default function AppointmentsPage() {
                     type="date"
                     value={bookingDate}
                     onChange={(e) => { setBookingDate(e.target.value); fetchSlots(e.target.value); }}
-                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                    className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-soft"
                   />
                 </div>
 
@@ -456,7 +456,7 @@ export default function AppointmentsPage() {
                             type="button"
                             disabled={bookingLoading}
                             onClick={() => handleBooking(slot.value)}
-                            className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-blue-600 hover:text-white disabled:opacity-50"
+                            className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-black text-slate-700 transition hover:bg-brand-navy hover:text-white disabled:opacity-50"
                           >
                             {slot.label}
                           </button>
@@ -467,8 +467,8 @@ export default function AppointmentsPage() {
                 )}
 
                 {bookingError && <p className="text-sm font-black text-red-600">{bookingError}</p>}
-                {bookingNotice && <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 ring-1 ring-emerald-100">{bookingNotice}</p>}
-                {bookingLoading && <p className="text-center text-sm font-black text-blue-600">جاري الحجز...</p>}
+                {bookingNotice && <p className="rounded-2xl bg-brand-mint-soft px-4 py-3 text-sm font-black text-brand-mint-text ring-1 ring-brand-border">{bookingNotice}</p>}
+                {bookingLoading && <p className="text-center text-sm font-black text-brand-blue">جاري الحجز...</p>}
 
                 <div className="flex justify-end pt-1">
                   <button

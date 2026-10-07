@@ -89,17 +89,17 @@ export default function WorkingHoursPage() {
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-5xl space-y-7">
-        <section className="rounded-[32px] bg-gradient-to-br from-white via-emerald-50 to-sky-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-emerald-100">
+        <section className="rounded-[32px] bg-gradient-to-br from-white via-brand-mint-soft to-brand-soft p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-brand-border">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-black text-emerald-700">تنظيم الاستقبال</p>
+              <p className="text-sm font-black text-brand-mint-text">تنظيم الاستقبال</p>
               <h1 className="mt-2 text-3xl font-black md:text-4xl">أوقات العمل</h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
                 اضبط الأيام والساعات التي تظهر للمراجعين عند الحجز عبر واتساب.
               </p>
             </div>
-            <div className="rounded-3xl bg-white px-5 py-4 shadow-sm ring-1 ring-emerald-100">
-              <p className="text-xs font-black text-emerald-700">أيام مفتوحة</p>
+            <div className="rounded-3xl bg-white px-5 py-4 shadow-sm ring-1 ring-brand-border">
+              <p className="text-xs font-black text-brand-mint-text">أيام مفتوحة</p>
               <p className="mt-1 text-4xl font-black text-slate-900">{arabicNumber(openDays)}</p>
             </div>
           </div>
@@ -130,12 +130,12 @@ export default function WorkingHoursPage() {
                         onChange={(event) => updateDay(day.dayOfWeek, { isOpen: event.target.checked })}
                         className="peer sr-only"
                       />
-                      <div className="h-7 w-12 rounded-full bg-slate-200 transition peer-checked:bg-blue-600" />
+                      <div className="h-7 w-12 rounded-full bg-slate-200 transition peer-checked:bg-brand-navy" />
                       <div className="absolute right-1 top-1 h-5 w-5 rounded-full bg-white shadow transition peer-checked:-translate-x-5" />
                     </label>
                     <div>
                       <p className="text-base font-black text-slate-950">{DAY_NAMES[day.dayOfWeek]}</p>
-                      <p className={`mt-0.5 text-xs font-black ${day.isOpen ? "text-emerald-600" : "text-slate-400"}`}>
+                      <p className={`mt-0.5 text-xs font-black ${day.isOpen ? "text-brand-mint-text" : "text-slate-400"}`}>
                         {day.isOpen ? "متاح للحجز" : "مغلق"}
                       </p>
                     </div>
@@ -149,7 +149,7 @@ export default function WorkingHoursPage() {
                           type="time"
                           value={day.startTime}
                           onChange={(event) => updateDay(day.dayOfWeek, { startTime: event.target.value })}
-                          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-800 outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
                         />
                       </label>
                       <label className="block">
@@ -158,7 +158,7 @@ export default function WorkingHoursPage() {
                           type="time"
                           value={day.endTime}
                           onChange={(event) => updateDay(day.dayOfWeek, { endTime: event.target.value })}
-                          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-800 outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
                         />
                       </label>
                     </div>
@@ -178,12 +178,12 @@ export default function WorkingHoursPage() {
               <p className="mt-1 text-xs font-semibold text-slate-500">التغييرات ستنعكس على حجوزات واتساب الجديدة.</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {saved && <span className="text-sm font-black text-emerald-600">تم الحفظ بنجاح</span>}
+              {saved && <span className="text-sm font-black text-brand-mint-text">تم الحفظ بنجاح</span>}
               {error && <span className="text-sm font-black text-red-600">{error}</span>}
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-60"
+                className="rounded-2xl bg-brand-navy px-6 py-3 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-60"
               >
                 {saving ? "جاري الحفظ..." : "حفظ أوقات العمل"}
               </button>
