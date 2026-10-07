@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { PHARMACY_NAV, PHARMACY_SHARED_HREFS } from "./pharmacy-nav";
 
 const NAV = [
   {
@@ -57,9 +58,11 @@ const SECRETARY_ALLOWED_NAV = new Set(["/dashboard", "/dashboard/appointments", 
 
 export const MOBILE_NAV = NAV.slice(0, 5);
 
-export default function DashboardNav({ role }: { role?: string | null }) {
+export default function DashboardNav({ role, facilityType }: { role?: string | null; facilityType?: string }) {
   const pathname = usePathname();
-  const navItems = role === "secretary" ? NAV.filter((item) => SECRETARY_ALLOWED_NAV.has(item.href)) : NAV;
+  const navItems = facilityType === "pharmacy"
+    ? [...PHARMACY_NAV, ...NAV.filter((item) => PHARMACY_SHARED_HREFS.has(item.href))]
+    : role === "secretary" ? NAV.filter((item) => SECRETARY_ALLOWED_NAV.has(item.href)) : NAV;
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;

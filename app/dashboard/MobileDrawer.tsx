@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { PHARMACY_NAV, PHARMACY_SHARED_HREFS } from "./pharmacy-nav";
 
 const NAV = [
   { href: "/dashboard", label: "الرئيسية", exact: true, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="2" fill="currentColor" stroke="none"/></svg> },
@@ -22,7 +23,7 @@ export function HamburgerButton() {
   return null; // placeholder — state managed in MobileDrawer
 }
 
-export default function MobileDrawer({ signOutForm, role }: { signOutForm: React.ReactNode; role?: string | null }) {
+export default function MobileDrawer({ signOutForm, role, facilityType }: { signOutForm: React.ReactNode; role?: string | null; facilityType?: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -30,7 +31,9 @@ export default function MobileDrawer({ signOutForm, role }: { signOutForm: React
     return exact ? pathname === href : pathname.startsWith(href);
   }
 
-  const navItems = role === "secretary" ? NAV.filter((item) => SECRETARY_ALLOWED_NAV.has(item.href)) : NAV;
+  const navItems = facilityType === "pharmacy"
+    ? [...PHARMACY_NAV, ...NAV.filter((item) => PHARMACY_SHARED_HREFS.has(item.href))]
+    : role === "secretary" ? NAV.filter((item) => SECRETARY_ALLOWED_NAV.has(item.href)) : NAV;
 
   const drawer = (
     <>

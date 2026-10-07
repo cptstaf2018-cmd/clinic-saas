@@ -5,6 +5,8 @@ import Link from "next/link";
 import TodayAppointmentsClient from "./TodayAppointmentsClient";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import { canUseFeature } from "@/lib/feature-gates";
+import PharmacyPOS from "./pharmacy/PharmacyPOS";
+import { getPharmacyToday, listPosProducts } from "@/lib/pharmacy/queries";
 
 const ARABIC_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const ARABIC_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -160,6 +162,12 @@ export default async function DashboardPage() {
   if (!session?.user?.clinicId) redirect("/login");
 
   const clinicId = session.user.clinicId as string;
+  const facility = await db.clinic.findUnique({ where: { id: clinicId }, select: { facilityType: true } });
+  if (facility?.facilityType === "pharmacy") {
+    const [products, today] = await Promise.all([listPosProducts(clinicId), getPharmacyToday(clinicId)]);
+    return <PharmacyPOS initialProducts={products} initialToday={today} />;
+  }
+
   const today = new Date();
   const startOfDay = new Date(today);
   startOfDay.setHours(0, 0, 0, 0);
