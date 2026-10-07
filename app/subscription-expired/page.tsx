@@ -4,7 +4,7 @@ import { signOut } from "next-auth/react";
 
 export default function SubscriptionExpiredPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#EEF2F9] px-4" dir="rtl">
+    <div className="min-h-screen flex items-center justify-center bg-brand-bg px-4" dir="rtl">
       <div className="bg-white rounded-2xl shadow-lg p-8 max-w-sm w-full text-center space-y-6">
 
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
@@ -16,7 +16,7 @@ export default function SubscriptionExpiredPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-xl font-extrabold text-[#0C1F3F]">انتهت مدة تشغيل العيادة</h1>
+          <h1 className="text-xl font-extrabold text-brand-navy">انتهت مدة تشغيل العيادة</h1>
           <p className="text-sm text-gray-500 leading-relaxed">
             تم إيقاف الإضافات مؤقتاً بعد انتهاء مهلة التجديد.
             بيانات العيادة والمرضى محفوظة بالكامل.
@@ -24,7 +24,7 @@ export default function SubscriptionExpiredPage() {
         </div>
 
         <div className="bg-blue-50 rounded-xl p-4 space-y-1">
-          <p className="text-sm font-semibold text-[#0C1F3F]">لإعادة تشغيل العيادة</p>
+          <p className="text-sm font-semibold text-brand-navy">لإعادة تشغيل العيادة</p>
           <p className="text-xs text-gray-500">جدّد الاشتراك وسنفعّل المواعيد والواتساب والإضافات فوراً.</p>
           <a
             href="https://wa.me/9647806688044"

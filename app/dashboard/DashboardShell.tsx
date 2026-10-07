@@ -38,7 +38,7 @@ export default function DashboardShell({
   }
 
   const SidebarContent = () => (
-    <div className="flex min-h-full flex-col rounded-none md:rounded-[28px] bg-gradient-to-b from-[#0f766e] via-[#2563eb] to-[#1d4ed8] overflow-hidden h-full">
+    <div className="flex min-h-full flex-col rounded-none md:rounded-[28px] bg-gradient-to-b from-[#0f766e] via-brand-blue to-brand-blue-dark overflow-hidden h-full">
 
       {/* Logo */}
       <div className="px-5 py-6 border-b border-white/10">
@@ -95,7 +95,7 @@ export default function DashboardShell({
   );
 
   return (
-    <div className="min-h-screen flex bg-[#eef7f4]" dir="rtl">
+    <div className="min-h-screen flex bg-brand-bg" dir="rtl">
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-72 min-h-screen sticky top-0 h-screen shrink-0 p-4">
@@ -132,7 +132,7 @@ export default function DashboardShell({
       <div className="flex flex-col flex-1 min-w-0">
 
         {/* Mobile Header */}
-        <header className="md:hidden bg-[#0C1F3F] px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-lg">
+        <header className="md:hidden bg-brand-navy px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-lg">
           <div className="flex items-center gap-3">
             {/* Hamburger */}
             <button
@@ -149,7 +149,7 @@ export default function DashboardShell({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt={clinicName} className="w-7 h-7 object-contain rounded-lg shrink-0" />
             ) : (
-              <div className="w-7 h-7 bg-[#2563EB] rounded-lg flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 bg-brand-blue rounded-lg flex items-center justify-center shrink-0">
                 <svg viewBox="0 0 40 40" fill="none" className="w-4 h-4">
                   <rect x="15" y="4" width="10" height="32" rx="2" fill="white"/>
                   <rect x="4" y="15" width="32" height="10" rx="2" fill="white"/>

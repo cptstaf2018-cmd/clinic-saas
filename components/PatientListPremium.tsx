@@ -23,6 +23,30 @@ function arabicNumber(value: number) {
   return String(value).replace(/\d/g, (x) => "٠١٢٣٤٥٦٧٨٩"[+x]);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function lastVisitLabel(iso: string | null) {
+  if (!iso) return null;
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / DAY_MS);
+  if (days <= 0) return "آخر زيارة اليوم";
+  if (days === 1) return "آخر زيارة أمس";
+  if (days < 30) return `آخر زيارة قبل ${arabicNumber(days)} يوم`;
+  return `آخر زيارة ${formatDate(iso)}`;
+}
+
+const AVATAR_TONES = [
+  "bg-brand-soft text-brand-on-soft",
+  "bg-brand-mint-soft text-brand-mint-text",
+  "bg-amber-50 text-amber-800",
+  "bg-rose-50 text-rose-700",
+];
+
+function avatarTone(name: string) {
+  let hash = 0;
+  for (const ch of name) hash = (hash + ch.charCodeAt(0)) % AVATAR_TONES.length;
+  return AVATAR_TONES[hash];
+}
+
 export default function PatientListPremium({
   patients: initial,
   initialQuery = "",
@@ -101,7 +125,7 @@ export default function PatientListPremium({
   return (
     <div dir="rtl" className="space-y-6">
       {/* Header */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.07)]">
+      <section className="overflow-hidden rounded-3xl border border-brand-border bg-white">
         <SectionHeader
           title={LABELS.patientsList}
           subtitle="إدارة ملفات المرضى ومتابعة التاريخ الطبي"
@@ -145,33 +169,42 @@ export default function PatientListPremium({
             return (
               <div
                 key={patient.id}
-                className={`overflow-hidden rounded-xl border shadow-sm transition ${
-                  isDelete ? "border-rose-200 bg-rose-50 ring-1 ring-rose-100" : isEditing ? "border-blue-200 bg-blue-50 ring-1 ring-blue-100" : "border-slate-200 bg-white hover:shadow-md"
+                className={`overflow-hidden rounded-3xl border transition ${
+                  isDelete ? "border-rose-200 bg-rose-50" : isEditing ? "border-brand-blue/40 bg-brand-soft/50" : "border-brand-border bg-white hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(14,36,64,0.35)]"
                 }`}
               >
                 {!isEditing && !isDelete && (
-                  <div className="flex flex-col gap-4 p-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-base font-black text-slate-950">{patient.name}</p>
-                        {patient.hasUpcoming && (
-                          <Badge label={LABELS.upcomingAppointment} color="amber" />
-                        )}
+                  <div className="flex flex-col gap-4 p-5">
+                    <div className="flex items-start gap-3">
+                      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-bold ${avatarTone(patient.name)}`}>
+                        {patient.name.trim().charAt(0) || "؟"}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link href={`/dashboard/patients/${patient.id}`} className="truncate text-base font-bold text-brand-ink hover:text-brand-blue">
+                            {patient.name}
+                          </Link>
+                          {patient.hasUpcoming && (
+                            <Badge label={LABELS.upcomingAppointment} color="emerald" />
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-sm text-brand-muted" dir="ltr">
+                          {patient.phone}
+                        </p>
                       </div>
-                      <p className="mt-1 text-sm font-bold text-slate-400" dir="ltr">
-                        {patient.phone}
-                      </p>
-                      <p className="mt-1 text-xs font-bold text-slate-400">
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-2xl bg-brand-bg px-4 py-2.5 text-xs text-brand-muted">
+                      <span className="font-semibold text-brand-ink">
                         {patient.totalVisits > 0 ? `${arabicNumber(patient.totalVisits)} زيارة` : "لم يزر بعد"}
-                        {patient.lastVisit && <span className="mx-2 text-slate-300">•</span>}
-                        {patient.lastVisit && `${formatDate(patient.lastVisit)}`}
-                      </p>
+                      </span>
+                      <span>{lastVisitLabel(patient.lastVisit) ?? "مراجع جديد"}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <Link
                         href={`/dashboard/patients/${patient.id}`}
-                        className="rounded-lg bg-slate-950 px-3 py-2.5 text-center text-xs font-black text-white transition hover:bg-slate-800"
+                        className="flex min-h-10 items-center justify-center rounded-xl bg-brand-navy px-3 text-xs font-semibold text-white transition hover:bg-brand-navy-2"
                       >
                         {LABELS.patientProfile}
                       </Link>
@@ -182,14 +215,14 @@ export default function PatientListPremium({
                             setEditName(patient.name);
                             setEditPhone(patient.phone);
                           }}
-                          className="flex-1 rounded-lg bg-blue-50 px-2 py-2.5 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100"
+                          className="min-h-10 flex-1 rounded-xl bg-brand-soft px-2 text-xs font-semibold text-brand-on-soft transition hover:bg-brand-soft/70"
                         >
                           {LABELS.edit}
                         </button>
                         {canDelete && (
                           <button
                             onClick={() => setConfirmDeleteId(patient.id)}
-                            className="flex-1 rounded-lg bg-rose-50 px-2 py-2.5 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+                            className="min-h-10 flex-1 rounded-xl bg-rose-50 px-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
                           >
                             {LABELS.delete}
                           </button>

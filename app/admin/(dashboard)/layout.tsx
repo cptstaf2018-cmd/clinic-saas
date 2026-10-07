@@ -24,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   );
 
   return (
-    <div dir="rtl" className="flex min-h-screen bg-[#EEF3F8] text-slate-950">
+    <div dir="rtl" className="flex min-h-screen bg-brand-bg text-slate-950">
 
       {/* Desktop Sidebar */}
       <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col bg-gradient-to-b from-emerald-900 via-teal-900 to-slate-900 md:flex">

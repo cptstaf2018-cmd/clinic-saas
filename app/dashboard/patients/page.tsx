@@ -44,11 +44,6 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-7xl space-y-7">
         <PatientListPremium patients={serialized} initialQuery={initialQuery} canDelete={!isSecretary} />
-        
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex justify-end">
-          </div>
-        </section>
       </div>
     </div>
   );

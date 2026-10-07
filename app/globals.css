@@ -77,6 +77,52 @@
   --color-brand-line:       #EDF1F6;
   --color-brand-ink:        #0F1B2D;
   --color-brand-muted:      #566479;
+
+  /* إعادة تلوين لوحات Tailwind لتطابق الهوية في كل الصفحات */
+  --color-blue-50: #EEF4FE;
+  --color-blue-100: #E5EEFC;
+  --color-blue-200: #C9DBF8;
+  --color-blue-300: #9DBDF2;
+  --color-blue-400: #6A98E8;
+  --color-blue-500: #3F78DD;
+  --color-blue-600: #1F5FD1;
+  --color-blue-700: #174AA6;
+  --color-blue-800: #163E85;
+  --color-blue-900: #15356B;
+  --color-blue-950: #0E2440;
+  --color-slate-50: #F5F8FB;
+  --color-slate-100: #EDF1F6;
+  --color-slate-200: #DFE6EF;
+  --color-slate-300: #C7D2E0;
+  --color-slate-400: #8F9DB2;
+  --color-slate-500: #5F6E85;
+  --color-slate-600: #45546B;
+  --color-slate-700: #314058;
+  --color-slate-800: #1C2A40;
+  --color-slate-900: #0F1B2D;
+  --color-slate-950: #0B1626;
+  --color-gray-50: #F5F8FB;
+  --color-gray-100: #EDF1F6;
+  --color-gray-200: #DFE6EF;
+  --color-gray-300: #C7D2E0;
+  --color-gray-400: #8F9DB2;
+  --color-gray-500: #5F6E85;
+  --color-gray-600: #45546B;
+  --color-gray-700: #314058;
+  --color-gray-800: #1C2A40;
+  --color-gray-900: #0F1B2D;
+  --color-gray-950: #0B1626;
+  --color-emerald-50: #ECFBF6;
+  --color-emerald-100: #D9F7EE;
+  --color-emerald-200: #B3EEDB;
+  --color-emerald-300: #7CE0C3;
+  --color-emerald-400: #45C9A3;
+  --color-emerald-500: #1BAA83;
+  --color-emerald-600: #0E8466;
+  --color-emerald-700: #0B6B53;
+  --color-emerald-800: #0B5A45;
+  --color-emerald-900: #094A39;
+  --color-emerald-950: #052A20;
 }
 
 body {

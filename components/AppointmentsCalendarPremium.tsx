@@ -107,7 +107,7 @@ export default function AppointmentsCalendarPremium() {
   return (
     <div dir="rtl" className="space-y-6">
       {/* Header */}
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_18px_70px_rgba(15,23,42,0.07)]">
+      <section className="overflow-hidden rounded-3xl border border-brand-border bg-white">
         <SectionHeader
           title={LABELS.appointmentsCalendar}
           subtitle="إدارة وتنظيم جميع المواعيد والحجوزات"
@@ -184,7 +184,7 @@ export default function AppointmentsCalendarPremium() {
       ) : (
         <div className="space-y-3">
           {appointments.map((appointment) => (
-            <div key={appointment.id} className="rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition p-4">
+            <div key={appointment.id} className="rounded-3xl border border-brand-border bg-white transition p-5 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(14,36,64,0.35)]">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 {/* Appointment Info */}
                 <div className="flex-1 min-w-0">

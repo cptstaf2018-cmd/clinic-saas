@@ -102,7 +102,7 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
             className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50"
           />
           <button onClick={createCode} disabled={creating}
-            className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors whitespace-nowrap shadow-[0_4px_14px_rgba(37,99,235,0.3)]">
+            className="bg-brand-blue hover:bg-brand-blue-dark text-white font-bold px-6 py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors whitespace-nowrap shadow-[0_4px_14px_rgba(37,99,235,0.3)]">
             {creating ? "..." : "+ إنشاء كود"}
           </button>
         </div>
@@ -127,7 +127,7 @@ export default function CodesClient({ initialCodes }: { initialCodes: Code[] }) 
                 <div key={c.id} className="bg-white rounded-xl border border-green-200 shadow-sm px-5 py-3 space-y-3">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <span className="font-mono text-lg font-extrabold text-[#2563EB] tracking-widest bg-blue-50 px-3 py-1 rounded-lg">
+                      <span className="font-mono text-lg font-extrabold text-brand-blue tracking-widest bg-blue-50 px-3 py-1 rounded-lg">
                         {c.code}
                       </span>
                       {c.note && <span className="text-sm text-gray-500">{c.note}</span>}

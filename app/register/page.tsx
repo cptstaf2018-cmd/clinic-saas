@@ -24,9 +24,9 @@ import {
 type VerificationType = "phone" | "email";
 
 const inputClass =
-  "w-full rounded-2xl border-2 border-[#E2E8F0] bg-[#F8FAFD] px-4 py-3.5 text-sm font-semibold text-[#0f1f3d] outline-none transition focus:border-[#2563EB] focus:bg-white placeholder:text-[#94A3B8]";
+  "w-full rounded-2xl border-2 border-brand-border bg-brand-bg px-4 py-3.5 text-sm font-semibold text-brand-navy outline-none transition focus:border-brand-blue focus:bg-white placeholder:text-[#94A3B8]";
 
-const labelClass = "mb-1.5 block text-xs font-extrabold text-[#475569]";
+const labelClass = "mb-1.5 block text-xs font-extrabold text-brand-muted";
 
 function HealthIcon({ className = "h-6 w-6" }: { className?: string }) {
   return (
@@ -51,7 +51,7 @@ function HealthIcon({ className = "h-6 w-6" }: { className?: string }) {
 function BrandMark() {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#2f80ed] text-white shadow-[0_16px_34px_rgba(47,128,237,0.35)]">
+      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-blue text-white shadow-[0_16px_34px_rgba(47,128,237,0.35)]">
         <Plus className="h-7 w-7 stroke-[3]" />
       </div>
       <span className="text-2xl font-black text-white">عيادتي</span>
@@ -95,7 +95,7 @@ function AppointmentRow({
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2f80ed]/20 text-[#9dccff]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-blue/20 text-[#9dccff]">
           <UsersRound className="h-4 w-4" />
         </div>
         <div>
@@ -112,7 +112,7 @@ function AppointmentRow({
 
 function ProductPreview() {
   return (
-    <div dir="ltr" className="relative hidden min-h-screen flex-1 overflow-hidden bg-[#071a34] px-10 py-10 lg:flex">
+    <div dir="ltr" className="relative hidden min-h-screen flex-1 overflow-hidden bg-brand-navy px-10 py-10 lg:flex">
       <div
         className="absolute inset-0 opacity-70"
         style={{
@@ -155,7 +155,7 @@ function ProductPreview() {
               ].map((item) => (
                 <div key={item} className="flex items-center justify-end gap-3 text-sm font-bold text-slate-200">
                   {item}
-                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#2f80ed]/20 text-[#9dccff]">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-blue/20 text-[#9dccff]">
                     <Check className="h-4 w-4" />
                   </span>
                 </div>
@@ -176,7 +176,7 @@ function ProductPreview() {
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                <MetricTile icon={CalendarCheck} label="مواعيد اليوم" value="24" tone="bg-[#2f80ed]/20 text-[#9dccff]" />
+                <MetricTile icon={CalendarCheck} label="مواعيد اليوم" value="24" tone="bg-brand-blue/20 text-[#9dccff]" />
                 <MetricTile icon={MessageCircle} label="رسائل واتساب" value="18" tone="bg-emerald-400/15 text-emerald-200" />
                 <MetricTile icon={Clock3} label="الانتظار" value="07" tone="bg-cyan-300/15 text-cyan-100" />
               </div>
@@ -199,12 +199,12 @@ function ProductPreview() {
                     <div className="rounded-lg bg-white/[0.08] p-3 text-xs font-bold leading-6 text-slate-200">
                       تم تثبيت موعدك غداً الساعة 10:00 صباحاً. هل تريد تذكيراً قبل الموعد؟
                     </div>
-                    <div className="mr-auto w-fit rounded-lg bg-[#2f80ed] px-3 py-2 text-xs font-black text-white">
+                    <div className="mr-auto w-fit rounded-lg bg-brand-blue px-3 py-2 text-xs font-black text-white">
                       نعم، ذكرني
                     </div>
                   </div>
                   <div className="mt-5 h-2 rounded-lg bg-white/10">
-                    <div className="h-2 w-[72%] rounded-lg bg-[#2f80ed]" />
+                    <div className="h-2 w-[72%] rounded-lg bg-brand-blue" />
                   </div>
                   <p className="mt-2 text-xs font-bold text-slate-400">72% من حجوزات اليوم مؤكدة تلقائياً</p>
                 </div>
@@ -259,21 +259,21 @@ function RegisterForm({
       <div>
         <label className={labelClass}>اسم العيادة</label>
         <div className="relative">
-          <Stethoscope className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
+          <Stethoscope className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
           <input name="clinicName" type="text" required className={`${inputClass} pr-11`} placeholder="عيادة د. أحمد محمد" />
         </div>
       </div>
 
       <div>
         <label className={labelClass}>اختر طريقة التحقق</label>
-        <div className="grid grid-cols-2 gap-1 rounded-lg border border-[#dbe6f3] bg-[#edf3fb] p-1">
+        <div className="grid grid-cols-2 gap-1 rounded-lg border border-brand-border bg-[#edf3fb] p-1">
           <button
             type="button"
             onClick={() => {
               setRegType("phone");
             }}
             className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-black transition ${
-              regType === "phone" ? "bg-white text-[#2f6fe4] shadow-sm" : "text-[#667891] hover:text-[#0f1f3d]"
+              regType === "phone" ? "bg-white text-brand-blue shadow-sm" : "text-brand-muted hover:text-brand-navy"
             }`}
           >
             <Phone className="h-4 w-4" />
@@ -285,7 +285,7 @@ function RegisterForm({
               setRegType("email");
             }}
             className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-black transition ${
-              regType === "email" ? "bg-white text-[#2f6fe4] shadow-sm" : "text-[#667891] hover:text-[#0f1f3d]"
+              regType === "email" ? "bg-white text-brand-blue shadow-sm" : "text-brand-muted hover:text-brand-navy"
             }`}
           >
             <Mail className="h-4 w-4" />
@@ -298,7 +298,7 @@ function RegisterForm({
         <div>
           <label className={labelClass}>رقم الهاتف</label>
           <div className="relative">
-            <MessageCircle className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
+            <MessageCircle className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               type="text"
               value={phone}
@@ -327,7 +327,7 @@ function RegisterForm({
         <div>
           <label className={labelClass}>البريد الإلكتروني</label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
+            <Mail className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               type="email"
               value={email}
@@ -343,7 +343,7 @@ function RegisterForm({
             type="button"
             onClick={handleRequestEmailCode}
             disabled={sendingEmail}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#2f80ed] py-2.5 text-sm font-black text-white shadow-[0_12px_26px_rgba(47,128,237,0.28)] transition hover:bg-[#256bd0] disabled:opacity-60"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue py-2.5 text-sm font-black text-white shadow-[0_12px_26px_rgba(47,128,237,0.28)] transition hover:bg-brand-blue disabled:opacity-60"
           >
             <Send className="h-4 w-4" />
             {sendingEmail ? "جاري الإرسال..." : "إرسال الكود"}
@@ -356,7 +356,7 @@ function RegisterForm({
         <div>
           <label className={labelClass}>كود التحقق</label>
           <div className="relative">
-            <KeyRound className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
+            <KeyRound className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               name="otp"
               type="text"
@@ -371,7 +371,7 @@ function RegisterForm({
         <div>
           <label className={labelClass}>كلمة المرور</label>
           <div className="relative">
-            <LockKeyhole className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c91ad]" />
+            <LockKeyhole className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted" />
             <input
               name="password"
               type="password"
@@ -389,7 +389,7 @@ function RegisterForm({
       <button
         type="submit"
         disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2563eb] py-3.5 text-base font-black text-white shadow-[0_18px_34px_rgba(37,99,235,0.32)] transition hover:bg-[#1d4ed8] hover:shadow-[0_22px_42px_rgba(37,99,235,0.38)] disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue py-3.5 text-base font-black text-white shadow-[0_18px_34px_rgba(37,99,235,0.32)] transition hover:bg-brand-blue-dark hover:shadow-[0_22px_42px_rgba(37,99,235,0.38)] disabled:opacity-60"
       >
         {loading ? "جاري التسجيل..." : "إنشاء الحساب"}
         <ArrowLeft className="h-4 w-4" />
@@ -517,11 +517,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#071a34]" dir="rtl">
+    <main className="min-h-screen overflow-x-hidden bg-brand-navy" dir="rtl">
       <div className="flex min-h-screen w-full overflow-x-hidden">
         <ProductPreview />
 
-        <section className="w-full min-w-0 lg:w-[44%] lg:bg-[#EEF2F9] lg:px-8 lg:py-8">
+        <section className="w-full min-w-0 lg:w-[44%] lg:bg-brand-bg lg:px-8 lg:py-8">
           <div
             className="flex min-h-screen w-full flex-col lg:hidden"
             style={{ background: "linear-gradient(160deg,#0c1f3f 0%,#1a3a6b 40%,#1e4080 100%)" }}
@@ -549,17 +549,17 @@ export default function RegisterPage() {
 
             <div className="flex-1 rounded-t-[32px] bg-white px-6 pb-10 pt-8 shadow-[0_-8px_40px_rgba(0,0,0,0.25)]">
               <div className="mb-6">
-                <h2 className="text-2xl font-black text-[#0C1F3F]">تسجيل عيادة جديدة</h2>
-                <p className="mt-1 text-sm text-[#64748B]">برقم الواتساب أو الإيميل</p>
+                <h2 className="text-2xl font-black text-brand-navy">تسجيل عيادة جديدة</h2>
+                <p className="mt-1 text-sm text-brand-muted">برقم الواتساب أو الإيميل</p>
               </div>
 
               <RegisterForm {...formProps} />
               <GoogleButton label="التسجيل بحساب Google" />
 
               <div className="mt-6 border-t border-slate-100 pt-6 text-center">
-                <p className="text-sm text-[#64748B]">
+                <p className="text-sm text-brand-muted">
                   لديك حساب؟{" "}
-                  <Link href="/login" className="font-black text-[#2563EB] hover:underline">
+                  <Link href="/login" className="font-black text-brand-blue hover:underline">
                     دخول العيادة
                   </Link>
                 </p>
@@ -571,8 +571,8 @@ export default function RegisterPage() {
             <div className="w-full max-w-[520px]">
               <div className="rounded-2xl bg-white p-7 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)]">
                 <div className="mb-6">
-                  <h2 className="text-2xl font-black text-[#0C1F3F]">تسجيل عيادة جديدة</h2>
-                  <p className="mt-1 text-sm font-bold text-[#64748B]">
+                  <h2 className="text-2xl font-black text-brand-navy">تسجيل عيادة جديدة</h2>
+                  <p className="mt-1 text-sm font-bold text-brand-muted">
                     اختر رقم الهاتف أو البريد الإلكتروني، أرسل الكود، ثم فعّل حسابك.
                   </p>
                 </div>
@@ -581,9 +581,9 @@ export default function RegisterPage() {
               <GoogleButton label="التسجيل بحساب Google" />
               </div>
 
-              <p className="mt-5 text-center text-sm font-bold text-[#64748B]">
+              <p className="mt-5 text-center text-sm font-bold text-brand-muted">
                 لديك حساب؟{" "}
-                <Link href="/login" className="font-black text-[#2563EB] hover:underline">
+                <Link href="/login" className="font-black text-brand-blue hover:underline">
                   دخول العيادة
                 </Link>
               </p>

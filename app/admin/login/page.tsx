@@ -34,7 +34,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#F5F8FB] text-slate-950">
+    <main dir="rtl" className="min-h-screen bg-brand-bg text-slate-950">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-6 sm:px-6 lg:px-8">
         <section className="grid w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_24px_90px_rgba(15,23,42,0.10)] lg:grid-cols-[0.95fr_1.05fr]">
           <div className="order-2 border-t border-slate-200 bg-slate-50 p-5 sm:p-8 lg:order-1 lg:border-r lg:border-t-0">

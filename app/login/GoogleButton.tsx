@@ -4,13 +4,13 @@ export default function GoogleButton({ label = "المتابعة بحساب Goog
   return (
     <form action={googleSignInAction} className="mt-4">
       <div className="mb-4 flex items-center gap-3 text-xs font-bold text-[#94A3B8]">
-        <span className="h-px flex-1 bg-[#E2E8F0]" />
+        <span className="h-px flex-1 bg-brand-border" />
         أو
-        <span className="h-px flex-1 bg-[#E2E8F0]" />
+        <span className="h-px flex-1 bg-brand-border" />
       </div>
       <button
         type="submit"
-        className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-[#E2E8F0] bg-white px-4 py-3.5 text-sm font-bold text-[#334155] transition-all hover:border-[#2563EB] hover:bg-[#F8FAFD]"
+        className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-brand-border bg-white px-4 py-3.5 text-sm font-bold text-[#334155] transition-all hover:border-brand-blue hover:bg-brand-bg"
       >
         <svg viewBox="0 0 48 48" className="h-5 w-5" aria-hidden="true">
           <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/>

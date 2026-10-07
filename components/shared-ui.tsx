@@ -9,20 +9,21 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, subtitle, accent }: StatCardProps) {
-  const accentColors = {
-    slate: 'text-slate-950',
-    emerald: 'text-emerald-700',
-    amber: 'text-amber-700',
-    rose: 'text-rose-700',
+  const accentDots = {
+    slate: 'bg-brand-blue',
+    emerald: 'bg-brand-mint',
+    amber: 'bg-amber-500',
+    rose: 'bg-rose-500',
   };
 
   return (
-    <div className="bg-white px-5 py-4 transition hover:bg-slate-50">
-      <p className="text-xs font-black text-slate-400">{label}</p>
-      <div className="mt-2 flex items-end justify-between gap-3">
-        <p className={`text-3xl font-black ${accentColors[accent]}`}>{value}</p>
-        <p className="pb-1 text-[11px] font-bold text-slate-400">{subtitle}</p>
+    <div className="bg-white px-5 py-5 transition hover:bg-brand-bg">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-brand-muted">{label}</p>
+        <span className={`h-2.5 w-2.5 rounded-full ${accentDots[accent]}`} />
       </div>
+      <p className="mt-2 text-4xl font-bold leading-none text-brand-ink">{value}</p>
+      <p className="mt-2 text-xs text-brand-muted">{subtitle}</p>
     </div>
   );
 }
@@ -38,14 +39,14 @@ export function FilterTab({ active, label, count, onClick }: FilterTabProps) {
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-lg px-3 py-2 text-xs font-black ring-1 transition ${
+      className={`min-h-10 shrink-0 rounded-xl px-4 text-sm font-semibold transition ${
         active
-          ? 'bg-blue-600 text-white ring-blue-600'
-          : 'bg-white text-slate-600 ring-slate-200 hover:bg-slate-50'
+          ? 'bg-brand-navy text-white'
+          : 'bg-white text-brand-muted ring-1 ring-brand-border hover:bg-brand-bg hover:text-brand-ink'
       }`}
     >
       {label}
-      <span className={`mr-2 rounded-full px-2 py-0.5 ${active ? 'bg-white/15' : 'bg-slate-100 text-slate-500'}`}>
+      <span className={`mr-2 rounded-full px-2 py-0.5 text-xs ${active ? 'bg-brand-mint text-brand-mint-ink' : 'bg-brand-line text-brand-muted'}`}>
         {count}
       </span>
     </button>
@@ -62,15 +63,16 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ superLabel, title, subtitle, badge, children }: SectionHeaderProps) {
   return (
-    <div className="border-b border-slate-200 bg-[linear-gradient(90deg,#ffffff,#eef6ff,#f6fffb)] px-5 py-5 lg:px-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="relative px-5 py-6 lg:px-7">
+      <span aria-hidden className="absolute inset-y-6 right-0 w-1 rounded-l-full bg-brand-mint" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex-1">
           {superLabel && (
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">{superLabel}</p>
+            <p className="text-xs font-semibold tracking-wide text-brand-on-soft">{superLabel}</p>
           )}
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">{title}</h1>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-brand-ink">{title}</h1>
           {subtitle && (
-            <p className="mt-2 text-sm font-semibold text-slate-500">{subtitle}</p>
+            <p className="mt-2 text-sm text-brand-muted">{subtitle}</p>
           )}
         </div>
         {(badge || children) && (
@@ -78,10 +80,10 @@ export function SectionHeader({ superLabel, title, subtitle, badge, children }: 
             {badge?.map((b, i) => (
               <span
                 key={i}
-                className={`rounded-full px-3 py-2 text-xs font-black ring-1 ${
+                className={`rounded-full px-3.5 py-2 text-xs font-semibold ${
                   b.color === 'blue'
-                    ? 'bg-blue-50 text-blue-700 ring-blue-100'
-                    : 'bg-rose-50 text-rose-700 ring-rose-100'
+                    ? 'bg-brand-soft text-brand-on-soft'
+                    : 'bg-brand-mint-soft text-brand-mint-text'
                 }`}
               >
                 {b.text}
@@ -106,7 +108,7 @@ interface StatsGridProps {
 
 export function StatsGrid({ stats }: StatsGridProps) {
   return (
-    <div className="grid gap-px bg-slate-200 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-px bg-brand-line sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
         <StatCard
           key={stat.label}
@@ -128,13 +130,20 @@ interface SearchBarProps {
 
 export function SearchBar({ value, onChange, placeholder }: SearchBarProps) {
   return (
-    <input
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-50 xl:w-[420px]"
-      dir="rtl"
-    />
+    <label className="flex min-h-12 w-full items-center gap-2 rounded-2xl border border-brand-border bg-brand-bg px-4 transition focus-within:border-brand-blue focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-soft xl:w-[440px]">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-[18px] w-[18px] shrink-0 text-brand-muted" aria-hidden>
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-4-4" />
+      </svg>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label={placeholder}
+        className="w-full bg-transparent text-sm text-brand-ink outline-none placeholder:text-brand-muted/80"
+        dir="rtl"
+      />
+    </label>
   );
 }
 
@@ -156,23 +165,23 @@ export function ActionButton({
   size = 'md',
 }: ActionButtonProps) {
   const sizeClasses = {
-    sm: 'px-3 py-2 text-xs',
-    md: 'px-5 py-2.5 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'min-h-10 px-4 text-xs',
+    md: 'min-h-11 px-5 text-sm',
+    lg: 'min-h-12 px-6 text-base',
   };
 
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
-    secondary: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
-    danger: 'bg-rose-50 text-rose-700 ring-1 ring-rose-100 hover:bg-rose-100',
-    success: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100',
+    primary: 'bg-brand-blue text-white hover:bg-brand-blue-dark',
+    secondary: 'bg-brand-line text-brand-ink hover:bg-brand-border',
+    danger: 'bg-rose-50 text-rose-700 hover:bg-rose-100',
+    success: 'bg-brand-mint-soft text-brand-mint-text hover:bg-brand-mint/40',
   };
 
   return (
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`rounded-lg font-black transition disabled:opacity-50 ${sizeClasses[size]} ${variantClasses[variant]}`}
+      className={`rounded-xl font-semibold transition hover:-translate-y-0.5 active:translate-y-0 disabled:translate-y-0 disabled:opacity-50 ${sizeClasses[size]} ${variantClasses[variant]}`}
     >
       {loading ? LABELS.loading : label}
     </button>
@@ -187,9 +196,26 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, icon = 'inbox' }: EmptyStateProps) {
   return (
-    <div className="border-t border-slate-100 py-16 text-center">
-      <p className="text-lg font-black text-slate-400">{title}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-400">{description}</p>
+    <div className="py-16 text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand-on-soft">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden>
+          {icon === 'search' ? (
+            <>
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-4-4" />
+            </>
+          ) : icon === 'folder' ? (
+            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          ) : (
+            <>
+              <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+              <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+            </>
+          )}
+        </svg>
+      </div>
+      <p className="text-lg font-semibold text-brand-ink">{title}</p>
+      <p className="mt-1 text-sm text-brand-muted">{description}</p>
     </div>
   );
 }
@@ -201,15 +227,15 @@ interface BadgeProps {
 
 export function Badge({ label, color }: BadgeProps) {
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-700 ring-blue-100',
-    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-    amber: 'bg-amber-50 text-amber-700 ring-amber-100',
-    rose: 'bg-rose-50 text-rose-700 ring-rose-100',
-    slate: 'bg-slate-100 text-slate-600 ring-slate-200',
+    blue: 'bg-brand-soft text-brand-on-soft',
+    emerald: 'bg-brand-mint-soft text-brand-mint-text',
+    amber: 'bg-amber-50 text-amber-800',
+    rose: 'bg-rose-50 text-rose-700',
+    slate: 'bg-brand-line text-brand-muted',
   };
 
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-black ring-1 ${colorClasses[color]}`}>
+    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${colorClasses[color]}`}>
       {label}
     </span>
   );
@@ -224,15 +250,15 @@ interface PanelProps {
 
 export function Panel({ title, description, children, variant = 'default' }: PanelProps) {
   const bgClass = variant === 'danger' ? 'bg-rose-50' : 'bg-white';
-  const borderClass = variant === 'danger' ? 'border-rose-200 ring-rose-100' : 'border-slate-200';
+  const borderClass = variant === 'danger' ? 'border-rose-200' : 'border-brand-border';
 
   return (
-    <section className={`overflow-hidden rounded-xl border ${borderClass} ${bgClass} shadow-[0_12px_50px_rgba(15,23,42,0.05)]`}>
+    <section className={`overflow-hidden rounded-3xl border ${borderClass} ${bgClass}`}>
       {(title || description) && (
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-base font-black text-slate-950">{title}</h2>
+        <div className="border-b border-brand-line px-5 py-4 md:px-6">
+          <h2 className="text-lg font-bold text-brand-ink">{title}</h2>
           {description && (
-            <p className="mt-1 text-sm font-semibold text-slate-500">{description}</p>
+            <p className="mt-1 text-sm text-brand-muted">{description}</p>
           )}
         </div>
       )}

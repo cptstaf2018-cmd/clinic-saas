@@ -64,7 +64,7 @@ export default function AdminShell({ logoUrl, userEmail, children, signOutForm }
   const [open, setOpen] = useState(false);
 
   return (
-    <div dir="rtl" className="flex min-h-screen bg-[#EEF3F8] text-slate-950">
+    <div dir="rtl" className="flex min-h-screen bg-brand-bg text-slate-950">
 
       {/* Desktop Sidebar */}
       <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-l border-slate-200 bg-white/95 shadow-[0_20px_80px_rgba(15,23,42,0.06)] md:flex">

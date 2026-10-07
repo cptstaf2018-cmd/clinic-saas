@@ -96,7 +96,7 @@ export default function DashboardAssistantFloating({ initialAccess }: { initialA
             </div>
           </header>
 
-          <div className="flex-1 space-y-3 overflow-y-auto bg-[#f8fbf8] p-4">
+          <div className="flex-1 space-y-3 overflow-y-auto bg-brand-bg p-4">
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.role === "user" ? "justify-start" : "justify-end"}`}>
                 <p className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm font-bold leading-6 ${

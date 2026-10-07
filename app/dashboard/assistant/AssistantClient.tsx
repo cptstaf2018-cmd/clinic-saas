@@ -92,7 +92,7 @@ export default function AssistantClient({ initialAccess }: { initialAccess: Acce
           </div>
         </div>
 
-        <div className="min-h-[420px] space-y-3 bg-[#f8fbf8] p-5">
+        <div className="min-h-[420px] space-y-3 bg-brand-bg p-5">
           {messages.map((message, index) => (
             <div key={index} className={`flex ${message.role === "user" ? "justify-start" : "justify-end"}`}>
               <p className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-bold leading-7 ${

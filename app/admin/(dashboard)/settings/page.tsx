@@ -108,11 +108,11 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold text-[#0C1F3F]">الإعدادات</h1>
+      <h1 className="text-2xl font-bold text-brand-navy">الإعدادات</h1>
 
       {/* Logo */}
       <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
-        <h2 className="text-lg font-bold text-[#0C1F3F] flex items-center gap-2">
+        <h2 className="text-lg font-bold text-brand-navy flex items-center gap-2">
           <span className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
@@ -142,7 +142,7 @@ export default function AdminSettingsPage() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={logoLoading}
-                className="bg-[#0C1F3F] hover:bg-[#1a3060] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition disabled:opacity-50"
+                className="bg-brand-navy hover:bg-brand-navy-2 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition disabled:opacity-50"
               >
                 {logoLoading ? "جاري الرفع..." : "رفع شعار"}
               </button>
@@ -191,7 +191,7 @@ export default function AdminSettingsPage() {
 
       {/* WhatsApp System Key */}
       <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
-        <h2 className="text-lg font-bold text-[#0C1F3F] flex items-center gap-2">
+        <h2 className="text-lg font-bold text-brand-navy flex items-center gap-2">
           <span className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
             <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
@@ -252,7 +252,7 @@ export default function AdminSettingsPage() {
           <button
             type="submit"
             disabled={wasenderLoading || !wasenderKey}
-            className="bg-[#0C1F3F] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#1a3060] transition disabled:opacity-50"
+            className="bg-brand-navy text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-navy-2 transition disabled:opacity-50"
           >
             {wasenderLoading ? "جاري الحفظ..." : "حفظ المفتاح"}
           </button>
@@ -261,7 +261,7 @@ export default function AdminSettingsPage() {
 
       {/* Password */}
       <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
-        <h2 className="text-lg font-bold text-[#0C1F3F] flex items-center gap-2">
+        <h2 className="text-lg font-bold text-brand-navy flex items-center gap-2">
           <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -323,7 +323,7 @@ export default function AdminSettingsPage() {
           <button
             type="submit"
             disabled={passLoading}
-            className="bg-[#0C1F3F] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#1a3060] transition disabled:opacity-50"
+            className="bg-brand-navy text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-navy-2 transition disabled:opacity-50"
           >
             {passLoading ? "جاري التغيير..." : "تغيير كلمة المرور"}
           </button>

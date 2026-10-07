@@ -268,7 +268,7 @@ function LoginForm() {
       </div>
 
       {/* Form panel */}
-      <div className="w-full lg:w-[42%] flex items-center justify-center lg:p-6 lg:bg-[#EEF2F9]">
+      <div className="w-full lg:w-[42%] flex items-center justify-center lg:p-6 lg:bg-brand-bg">
 
         {/* ── Mobile full-screen layout ── */}
         <div className="w-full lg:hidden min-h-screen flex flex-col" style={{background: "linear-gradient(160deg,#0c1f3f 0%,#1a3a6b 40%,#1e4080 100%)"}}>
@@ -295,10 +295,10 @@ function LoginForm() {
           {/* Mobile form card */}
           <div className="flex-1 bg-white rounded-t-[32px] px-6 pt-8 pb-10 shadow-[0_-8px_40px_rgba(0,0,0,0.25)]">
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-[#0C1F3F]">
+              <h2 className="text-2xl font-black text-brand-navy">
                 {forgotMode ? "نسيت كلمة المرور؟" : "تسجيل الدخول"}
               </h2>
-              <p className="text-[#64748B] text-sm mt-1">
+              <p className="text-brand-muted text-sm mt-1">
                 {forgotMode
                   ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
                     : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
@@ -319,10 +319,10 @@ function LoginForm() {
                 {forgotStep === "input" && (
                   <form onSubmit={handleForgotSend} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
+                      <label className="block text-xs font-bold text-brand-muted mb-1.5">رقم الواتساب أو الإيميل</label>
                       <input type="text" required value={forgotIdentifier}
                         onChange={(e) => setForgotIdentifier(e.target.value)}
-                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
+                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all placeholder:text-[#94A3B8] font-medium"
                         placeholder="07701234567 أو email@example.com" dir="ltr" />
                     </div>
                     {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
@@ -332,7 +332,7 @@ function LoginForm() {
                       {loading ? "جاري الإرسال..." : "إرسال الكود"}
                     </button>
                     <button type="button" onClick={closeForgotMode}
-                      className="w-full text-[#64748B] font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
+                      className="w-full text-brand-muted font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
                       رجوع لتسجيل الدخول
                     </button>
                   </form>
@@ -343,10 +343,10 @@ function LoginForm() {
                       أُرسل كود التحقق إلى <span className="font-black" dir="ltr">{forgotMasked}</span>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[#475569] mb-1.5">كود التحقق (6 أرقام)</label>
+                      <label className="block text-xs font-bold text-brand-muted mb-1.5">كود التحقق (6 أرقام)</label>
                       <input type="text" inputMode="numeric" maxLength={6} required
                         value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g,""))}
-                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-xl bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-mono text-center tracking-widest"
+                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-xl bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-mono text-center tracking-widest"
                         dir="ltr" placeholder="------" />
                     </div>
                     {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
@@ -356,7 +356,7 @@ function LoginForm() {
                       التالي
                     </button>
                     <button type="button" onClick={() => setForgotStep("input")}
-                      className="w-full text-[#64748B] font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
+                      className="w-full text-brand-muted font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
                       تغيير رقم الواتساب / الإيميل
                     </button>
                   </form>
@@ -364,16 +364,16 @@ function LoginForm() {
                 {forgotStep === "password" && (
                   <form onSubmit={handleForgotReset} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-[#475569] mb-1.5">كلمة المرور الجديدة</label>
+                      <label className="block text-xs font-bold text-brand-muted mb-1.5">كلمة المرور الجديدة</label>
                       <input type="password" required value={forgotPassword}
                         onChange={(e) => setForgotPassword(e.target.value)}
-                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
+                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-medium" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[#475569] mb-1.5">تأكيد كلمة المرور</label>
+                      <label className="block text-xs font-bold text-brand-muted mb-1.5">تأكيد كلمة المرور</label>
                       <input type="password" required value={forgotConfirm}
                         onChange={(e) => setForgotConfirm(e.target.value)}
-                        className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
+                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-medium" />
                     </div>
                     {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
                     <button type="submit" disabled={loading}
@@ -390,8 +390,8 @@ function LoginForm() {
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </div>
-                    <p className="text-lg font-black text-[#0C1F3F]">تم تغيير كلمة المرور!</p>
-                    <p className="text-sm text-[#64748B]">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
+                    <p className="text-lg font-black text-brand-navy">تم تغيير كلمة المرور!</p>
+                    <p className="text-sm text-brand-muted">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
                     <button type="button" onClick={closeForgotMode}
                       className="w-full text-white font-black rounded-2xl py-4 text-base transition-all"
                       style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
@@ -404,21 +404,21 @@ function LoginForm() {
             <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#475569] mb-1.5">رقم الواتساب أو الإيميل</label>
+                  <label className="block text-xs font-bold text-brand-muted mb-1.5">رقم الواتساب أو الإيميل</label>
                   <input name="identifier" type="text" required
-                    className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8] font-medium"
+                    className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all placeholder:text-[#94A3B8] font-medium"
                     placeholder="07701234567" dir="ltr" />
                 </div>
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
-                    <label className="block text-xs font-bold text-[#475569]">كلمة المرور</label>
+                    <label className="block text-xs font-bold text-brand-muted">كلمة المرور</label>
                     <button type="button" onClick={openForgotMode}
-                      className="text-xs font-bold text-[#2563EB] hover:underline">
+                      className="text-xs font-bold text-brand-blue hover:underline">
                       نسيت كلمة المرور؟
                     </button>
                   </div>
                   <input name="password" type="password" required
-                    className="w-full border-2 border-[#E2E8F0] rounded-2xl px-4 py-3.5 text-sm bg-[#F8FAFD] focus:outline-none focus:border-[#2563EB] transition-all font-medium" />
+                    className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-medium" />
                 </div>
 
                 {error && (
@@ -438,9 +438,9 @@ function LoginForm() {
             )}
 
             <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <p className="text-sm text-[#64748B]">
+              <p className="text-sm text-brand-muted">
                 عيادة جديدة؟{" "}
-                <Link href="/register" className="text-[#2563EB] font-black hover:underline">سجّل مجاناً</Link>
+                <Link href="/register" className="text-brand-blue font-black hover:underline">سجّل مجاناً</Link>
               </p>
             </div>
 
@@ -465,10 +465,10 @@ function LoginForm() {
         <div className="hidden lg:block w-full max-w-sm fade-in">
           <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)] p-8">
             <div className="mb-7">
-              <h2 className="text-2xl font-extrabold text-[#0C1F3F]">
+              <h2 className="text-2xl font-extrabold text-brand-navy">
                 {forgotMode ? "نسيت كلمة المرور؟" : "أهلاً بك"}
               </h2>
-              <p className="text-[#64748B] text-sm mt-1">
+              <p className="text-brand-muted text-sm mt-1">
                 {forgotMode
                   ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
                     : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
@@ -489,19 +489,19 @@ function LoginForm() {
                 {forgotStep === "input" && (
                   <form onSubmit={handleForgotSend} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">رقم الواتساب أو الإيميل</label>
+                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">رقم الواتساب أو الإيميل</label>
                       <input type="text" required value={forgotIdentifier}
                         onChange={(e) => setForgotIdentifier(e.target.value)}
-                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
+                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all placeholder:text-[#94A3B8]"
                         placeholder="07701234567 أو email@example.com" dir="ltr" />
                     </div>
                     {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
                     <button type="submit" disabled={loading}
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      className="w-full bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
                       {loading ? "جاري الإرسال..." : "إرسال الكود"}
                     </button>
                     <button type="button" onClick={closeForgotMode}
-                      className="w-full text-[#64748B] font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
+                      className="w-full text-brand-muted font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
                       رجوع لتسجيل الدخول
                     </button>
                   </form>
@@ -512,19 +512,19 @@ function LoginForm() {
                       أُرسل كود التحقق إلى <span className="font-bold" dir="ltr">{forgotMasked}</span>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">كود التحقق (6 أرقام)</label>
+                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">كود التحقق (6 أرقام)</label>
                       <input type="text" inputMode="numeric" maxLength={6} required
                         value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g,""))}
-                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-xl bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all font-mono text-center tracking-widest"
+                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-xl bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all font-mono text-center tracking-widest"
                         dir="ltr" placeholder="------" />
                     </div>
                     {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
                     <button type="submit"
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      className="w-full bg-brand-blue hover:bg-brand-blue-dark text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
                       التالي
                     </button>
                     <button type="button" onClick={() => setForgotStep("input")}
-                      className="w-full text-[#64748B] font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
+                      className="w-full text-brand-muted font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
                       تغيير رقم الواتساب / الإيميل
                     </button>
                   </form>
@@ -532,20 +532,20 @@ function LoginForm() {
                 {forgotStep === "password" && (
                   <form onSubmit={handleForgotReset} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">كلمة المرور الجديدة</label>
+                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">كلمة المرور الجديدة</label>
                       <input type="password" required value={forgotPassword}
                         onChange={(e) => setForgotPassword(e.target.value)}
-                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
+                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all" />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">تأكيد كلمة المرور</label>
+                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">تأكيد كلمة المرور</label>
                       <input type="password" required value={forgotConfirm}
                         onChange={(e) => setForgotConfirm(e.target.value)}
-                        className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
+                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all" />
                     </div>
                     {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
                     <button type="submit" disabled={loading}
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      className="w-full bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
                       {loading ? "جاري التغيير..." : "تغيير كلمة المرور"}
                     </button>
                   </form>
@@ -557,10 +557,10 @@ function LoginForm() {
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </div>
-                    <p className="text-base font-bold text-[#0C1F3F]">تم تغيير كلمة المرور!</p>
-                    <p className="text-sm text-[#64748B]">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
+                    <p className="text-base font-bold text-brand-navy">تم تغيير كلمة المرور!</p>
+                    <p className="text-sm text-brand-muted">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
                     <button type="button" onClick={closeForgotMode}
-                      className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                      className="w-full bg-brand-blue hover:bg-brand-blue-dark text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
                       تسجيل الدخول
                     </button>
                   </div>
@@ -570,25 +570,25 @@ function LoginForm() {
             <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-[#0C1F3F] mb-1.5 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">
                     رقم الواتساب أو الإيميل
                   </label>
                   <input name="identifier" type="text" required
-                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all placeholder:text-[#94A3B8]"
+                    className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all placeholder:text-[#94A3B8]"
                     placeholder="07701234567 أو email@example.com" dir="ltr" />
                 </div>
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
-                    <label className="block text-xs font-semibold text-[#0C1F3F] uppercase tracking-wide">
+                    <label className="block text-xs font-semibold text-brand-navy uppercase tracking-wide">
                       كلمة المرور
                     </label>
                     <button type="button" onClick={openForgotMode}
-                      className="text-xs font-semibold text-[#2563EB] hover:underline">
+                      className="text-xs font-semibold text-brand-blue hover:underline">
                       نسيت كلمة المرور؟
                     </button>
                   </div>
                   <input name="password" type="password" required
-                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 text-sm bg-[#F8FAFD] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all" />
+                    className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all" />
                 </div>
 
                 {error && (
@@ -596,7 +596,7 @@ function LoginForm() {
                 )}
 
                 <button type="submit" disabled={loading}
-                  className="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
+                  className="w-full bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
                   {loading ? "جاري الدخول..." : "تسجيل الدخول"}
                 </button>
               </form>
@@ -609,9 +609,9 @@ function LoginForm() {
             )}
           </div>
 
-          <p className="text-center text-sm text-[#64748B] mt-5">
+          <p className="text-center text-sm text-brand-muted mt-5">
             عيادة جديدة؟{" "}
-            <Link href="/register" className="text-[#2563EB] font-semibold hover:underline">سجّل مجاناً</Link>
+            <Link href="/register" className="text-brand-blue font-semibold hover:underline">سجّل مجاناً</Link>
           </p>
         </div>
       </div>
