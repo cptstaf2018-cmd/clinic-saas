@@ -72,7 +72,7 @@ const PLANS: Array<{
     name: "أساسية",
     title: "للعيادات الصغيرة",
     price: PLAN_PRICES.basic,
-    color: "border-slate-200 bg-white",
+    color: "border-brand-border bg-white",
     features: ["المرضى والحجوزات", "شاشة الانتظار", "السجل الطبي", "تقرير يومي"],
   },
   {
@@ -80,7 +80,7 @@ const PLANS: Array<{
     name: "متوسطة",
     title: "للعيادات النشطة",
     price: PLAN_PRICES.standard,
-    color: "border-emerald-300 bg-emerald-50",
+    color: "border-brand-mint bg-white",
     badge: "الأكثر اختياراً",
     features: ["كل أساسية", "تذكيرات واتساب", "متابعة مراجعات", "تقارير PDF"],
   },
@@ -89,7 +89,7 @@ const PLANS: Array<{
     name: "مميزة",
     title: "للمراكز الكبيرة",
     price: PLAN_PRICES.premium,
-    color: "border-blue-300 bg-blue-50",
+    color: "border-brand-border bg-white",
     features: ["كل متوسطة", "واتساب متقدم", "دعم أولوية", "نسخ احتياطي متقدم"],
   },
   {
@@ -97,16 +97,16 @@ const PLANS: Array<{
     name: "مميزة VIP",
     title: "للمراكز المتميزة",
     price: PLAN_PRICES.vip,
-    color: "border-violet-300 bg-violet-50",
+    color: "border-brand-navy-2 bg-brand-navy text-white",
     badge: "الأقوى",
-    features: ["كل مميزة", "🧪 تحاليل وأشعة", "💊 وصفات مرضى", "📎 رفع ملفات", "💚 رسائل اطمئنان"],
+    features: ["كل مميزة", "تحاليل وأشعة", "وصفات مرضى", "رفع ملفات", "رسائل اطمئنان"],
   },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }> = {
-  trial:    { label: "تجريبي", cls: "bg-amber-50 text-amber-700 ring-amber-200",   dot: "bg-amber-500"  },
-  active:   { label: "نشط",    cls: "bg-emerald-50 text-emerald-700 ring-emerald-200", dot: "bg-emerald-500" },
-  inactive: { label: "منتهي", cls: "bg-red-50 text-red-700 ring-red-200",          dot: "bg-red-500"    },
+  trial:    { label: "تجريبي", cls: "bg-amber-400/20 text-amber-200",   dot: "bg-amber-400"  },
+  active:   { label: "نشط",    cls: "bg-brand-mint/20 text-brand-mint", dot: "bg-brand-mint" },
+  inactive: { label: "منتهي", cls: "bg-red-400/20 text-red-200",          dot: "bg-red-400"    },
 };
 
 const PLAN_RANK: Record<PlanId, number> = { basic: 1, standard: 2, premium: 3, vip: 4 };
@@ -211,26 +211,32 @@ export default function SubscriptionPage() {
       <div className="mx-auto max-w-5xl space-y-6">
 
         {/* Header */}
-        <section className="rounded-[30px] bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 shadow-[0_24px_70px_rgba(37,99,235,0.09)] ring-1 ring-sky-100">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-black text-emerald-700">إدارة الاشتراك</p>
-              <h1 className="mt-1 text-3xl font-black text-slate-950">
+        <section className="relative overflow-hidden rounded-3xl bg-brand-navy p-6 text-white md:p-8">
+          <div aria-hidden className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full border-[44px] border-white/[0.05]" />
+          <div className="relative flex flex-wrap items-center justify-between gap-6">
+            <div className="max-w-xl">
+              <p className="text-sm font-semibold text-brand-mint">إدارة الاشتراك</p>
+              <h1 className="mt-1 text-3xl font-bold leading-tight">
                 {specialtyRule ? specialtyRule.title : "باقات تشغيل العيادة"}
               </h1>
-              {specialtyRule && (
-                <p className="mt-2 max-w-xl text-sm font-bold leading-6 text-slate-500">{specialtyRule.description}</p>
-              )}
+              <p className="mt-2 text-sm leading-7 text-brand-side-muted">
+                {specialtyRule
+                  ? specialtyRule.description
+                  : "البوت والحجوزات وشاشة الانتظار تعمل بلا انقطاع طالما اشتراكك فعّال. اختر المدة الأطول لتوفّر أكثر."}
+              </p>
             </div>
             {subscription && status && (
-              <div className="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-slate-100 text-center min-w-[160px]">
-                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-black ring-1 ${status.cls}`}>
+              <div className="min-w-[190px] rounded-3xl border border-brand-navy-line bg-brand-navy-3 p-5 text-center">
+                <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${status.cls}`}>
                   <span className={`h-2 w-2 rounded-full ${status.dot}`} />
                   {status.label}
                 </span>
-                <p className="mt-2 text-2xl font-black text-slate-950">{arabicNumber(daysLeft)}</p>
-                <p className="text-xs font-bold text-slate-400">يوم متبقي</p>
-                <p className="mt-1 text-xs font-black text-slate-600">
+                <p className="mt-3 text-5xl font-bold leading-none">{arabicNumber(daysLeft)}</p>
+                <p className="mt-1 text-xs text-brand-side-muted">يوم متبقي</p>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-brand-navy">
+                  <div className="h-1.5 rounded-full bg-brand-mint" style={{ width: `${Math.min(100, Math.round((daysLeft / (subscription.status === "trial" ? 14 : 30)) * 100))}%` }} />
+                </div>
+                <p className="mt-3 text-xs font-semibold text-brand-mint">
                   {PLAN_LABELS[subscription.plan as keyof typeof PLAN_LABELS] ?? subscription.plan}
                 </p>
               </div>
@@ -243,13 +249,13 @@ export default function SubscriptionPage() {
           <section className="rounded-[26px] bg-white p-5 shadow-sm ring-1 ring-emerald-100">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-black text-slate-950">اشتراكك نشط ✅</h2>
+                <h2 className="text-lg font-bold text-brand-ink">اشتراكك نشط</h2>
                 <p className="text-sm font-semibold text-slate-500">ينتهي {formatDate(subscription!.expiresAt)}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {visiblePlans.some((plan) => plan.id === activePlan) && (
                   <button onClick={() => { setPurchaseMode("renew"); setSelectedPlan(activePlan); setStep("plans"); setError(""); }}
-                    className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white hover:bg-blue-700">
+                    className="min-h-11 rounded-2xl bg-brand-navy px-5 text-sm font-bold text-white hover:bg-brand-navy-2">
                     تجديد الباقة
                   </button>
                 )}
@@ -286,18 +292,18 @@ export default function SubscriptionPage() {
                       type="button"
                       onClick={() => setSelectedDuration(id)}
                       className={`relative rounded-2xl px-4 py-3 text-center transition ${
-                        isSelected ? "bg-blue-600 text-white shadow" : "bg-slate-50 text-slate-600 hover:bg-blue-50"
+                        isSelected ? "bg-brand-navy text-white shadow" : "bg-brand-bg text-brand-muted hover:bg-brand-soft"
                       }`}
                     >
                       {duration.badge && (
                         <span className={`absolute -top-2 right-3 rounded-full px-2 py-0.5 text-[10px] font-black ${
-                          isSelected ? "bg-white text-blue-700" : "bg-emerald-100 text-emerald-700"
+                          isSelected ? "bg-brand-mint text-brand-mint-ink" : "bg-brand-mint-soft text-brand-mint-text"
                         }`}>
                           {duration.badge}
                         </span>
                       )}
                       <p className="text-sm font-black">{duration.label}</p>
-                      <p className={`mt-0.5 text-xs font-bold ${isSelected ? "text-blue-100" : "text-slate-400"}`}>
+                      <p className={`mt-0.5 text-xs font-bold ${isSelected ? "text-brand-side-muted" : "text-brand-muted"}`}>
                         {duration.discountPercent ? `وفر ${duration.discountPercent}%` : "بدون التزام"}
                       </p>
                     </button>
@@ -317,21 +323,21 @@ export default function SubscriptionPage() {
                   <div
                     key={plan.id}
                     onClick={() => setSelectedPlan(plan.id)}
-                    className={`relative cursor-pointer rounded-[26px] border-2 p-5 transition hover:-translate-y-0.5 hover:shadow-lg ${plan.color} ${
-                      isSelected ? "border-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.15)]" : ""
+                    className={`relative cursor-pointer rounded-[26px] border-2 p-5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-24px_rgba(14,36,64,0.4)] ${plan.color} ${
+                      isSelected ? "!border-brand-blue shadow-[0_0_0_4px_rgba(31,95,209,0.15)]" : ""
                     }`}
                   >
                     {plan.badge && (
-                      <span className="absolute -top-3 right-4 rounded-full bg-blue-600 px-3 py-1 text-xs font-black text-white shadow">
+                      <span className="absolute -top-3 right-4 rounded-full bg-brand-mint px-3 py-1 text-xs font-bold text-brand-mint-ink shadow">
                         {plan.badge}
                       </span>
                     )}
-                    <p className="text-xs font-bold text-slate-400">{plan.title}</p>
-                    <h2 className="mt-1 text-2xl font-black text-slate-950">{specialtyRule ? specialtyRule.title : plan.name}</h2>
+                    <p className={`text-xs ${plan.id === "vip" ? "text-brand-side-muted" : "text-brand-muted"}`}>{plan.title}</p>
+                    <h2 className="mt-1 text-2xl font-bold">{specialtyRule ? specialtyRule.title : plan.name}</h2>
                     {specialtyRule && (
                       <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{specialtyRule.description}</p>
                     )}
-                    <p className="mt-3 text-3xl font-black text-slate-950">
+                    <p className="mt-3 text-3xl font-bold">
                       {formatMoney(monthlyEquivalent)}
                       <span className="text-sm font-bold text-slate-400 mr-1">د.ع / شهر</span>
                     </p>
@@ -347,13 +353,13 @@ export default function SubscriptionPage() {
                     )}
                     <ul className="mt-4 space-y-2">
                       {plan.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                          <span className="text-emerald-500">✓</span> {f}
+                        <li key={f} className="flex items-center gap-2 text-sm font-medium">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-mint text-[11px] font-bold text-brand-mint-ink">✓</span> {f}
                         </li>
                       ))}
                     </ul>
                     <div className={`mt-5 w-full rounded-2xl py-2.5 text-center text-sm font-black transition ${
-                      isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
+                      isSelected ? "bg-brand-blue text-white" : plan.id === "vip" ? "bg-white/10 text-white" : "bg-brand-line text-brand-muted"
                     }`}>
                       {isSelected ? "✓ مختارة" : "اختيار"}
                     </div>
@@ -364,7 +370,7 @@ export default function SubscriptionPage() {
             <div className="mt-5 flex justify-center">
               <button
                 onClick={() => { setStep("payment"); setError(""); }}
-                className="rounded-2xl bg-blue-600 px-10 py-3.5 text-base font-black text-white shadow-[0_12px_28px_rgba(37,99,235,0.25)] transition hover:-translate-y-0.5 hover:bg-blue-700"
+                className="min-h-14 rounded-2xl bg-brand-navy px-8 text-base font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-navy-2"
               >
                 متابعة الدفع ← {selectedDisplayName} · {selectedDurationMeta.shortLabel} · {formatMoney(selectedAmount)} د.ع
               </button>
@@ -401,10 +407,10 @@ export default function SubscriptionPage() {
                   <button key={method.id} type="button"
                     onClick={() => { setSelectedMethod(method.id); setReference(""); }}
                     className={`rounded-2xl p-3 text-right ring-1 transition ${
-                      isSel ? "bg-blue-600 text-white ring-blue-600" : "bg-slate-50 text-slate-700 ring-slate-200 hover:bg-blue-50"
+                      isSel ? "bg-brand-navy text-white ring-brand-navy" : "bg-brand-bg text-brand-ink ring-brand-border hover:bg-brand-soft"
                     }`}>
                     <p className="font-black">{method.label}</p>
-                    <p className={`text-xs mt-0.5 ${isSel ? "text-blue-100" : "text-slate-400"}`}>{method.scope}</p>
+                    <p className={`text-xs mt-0.5 ${isSel ? "text-brand-side-muted" : "text-brand-muted"}`}>{method.scope}</p>
                   </button>
                 );
               })}
@@ -453,7 +459,7 @@ export default function SubscriptionPage() {
                 "أدخل رقم العملية هنا للتحقق والتفعيل.",
               ].map((step, i) => (
                 <div key={i} className="flex gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-black text-white">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-bold text-white">
                     {arabicNumber(i + 1)}
                   </span>
                   <p className="pt-0.5 text-sm font-semibold text-slate-600">{step}</p>
@@ -472,8 +478,8 @@ export default function SubscriptionPage() {
             {error && <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ring-1 ring-red-100">{error}</p>}
 
             <button type="submit" disabled={submitting}
-              className="mt-4 w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50">
-              {submitting ? "جاري الإرسال..." : "إرسال للتحقق والتفعيل ✓"}
+              className="mt-4 min-h-12 w-full rounded-2xl bg-brand-mint text-sm font-bold text-brand-mint-ink transition hover:bg-brand-mint-hover disabled:opacity-50">
+              {submitting ? "جاري الإرسال..." : "إرسال للتحقق والتفعيل"}
             </button>
 
             <a href="/dashboard/support"
