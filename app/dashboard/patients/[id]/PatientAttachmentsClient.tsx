@@ -213,7 +213,7 @@ export default function PatientAttachmentsClient({
       <div className="mb-4 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-violet-100 px-3 py-1 text-xs font-black text-violet-700">مميزة VIP</span>
+            <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-black text-brand-blue">مميزة VIP</span>
             <h2 className="text-2xl font-black text-slate-950">
               {specialtyCode === "aesthetic" ? "صور ومرفقات المراجع" : "الفحوصات والمستندات"}
             </h2>
@@ -225,7 +225,7 @@ export default function PatientAttachmentsClient({
         {!showForm && (
           <button
             onClick={() => { setShowForm(true); setError(""); }}
-            className="rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-violet-700"
+            className="rounded-2xl bg-brand-navy px-4 py-2.5 text-sm font-black text-white transition hover:bg-brand-navy-2"
           >
             + إضافة
           </button>
@@ -240,7 +240,7 @@ export default function PatientAttachmentsClient({
             onClick={() => switchTab(tab.id)}
             className={`rounded-2xl px-4 py-2 text-sm font-black transition ${
               activeTab === tab.id
-                ? "bg-violet-600 text-white shadow-sm"
+                ? "bg-brand-navy text-white shadow-sm"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >
@@ -251,15 +251,15 @@ export default function PatientAttachmentsClient({
 
       {/* Form */}
       {showForm && (
-        <div className="mb-4 space-y-3 rounded-[24px] bg-violet-50/50 p-4 ring-1 ring-violet-100">
-          <p className="text-sm font-black text-violet-700">إضافة {currentTab.label}</p>
+        <div className="mb-4 space-y-3 rounded-[24px] bg-brand-soft/50 p-4 ring-1 ring-brand-border">
+          <p className="text-sm font-black text-brand-blue">إضافة {currentTab.label}</p>
           {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-bold text-red-600">{error}</p>}
           {!isAestheticPhotoTab && (
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="العنوان — مثال: تحليل دم كامل"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-blue"
             />
           )}
           <textarea
@@ -267,7 +267,7 @@ export default function PatientAttachmentsClient({
             onChange={(e) => setNotes(e.target.value)}
             placeholder="الملاحظات والنتائج (اختياري)"
             rows={3}
-            className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
+            className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-blue"
           />
           <div className="flex items-center gap-3">
             <div className="flex-1">
@@ -276,7 +276,7 @@ export default function PatientAttachmentsClient({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-violet-400"
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-blue"
                 dir="ltr"
               />
             </div>
@@ -288,15 +288,15 @@ export default function PatientAttachmentsClient({
               {isAestheticPhotoTab ? "رفع صورة" : "رفع ملف"} <span className="font-normal text-slate-400">{isAestheticPhotoTab ? "(من الكاميرا أو المعرض)" : "(PDF أو صورة — اختياري)"}</span>
             </label>
             {pendingFile ? (
-              <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2 ring-1 ring-emerald-100">
-                <span className="text-xs font-bold text-emerald-700">✓ {pendingFile.name}</span>
+              <div className="flex items-center justify-between rounded-xl bg-brand-mint-soft px-3 py-2 ring-1 ring-brand-border">
+                <span className="text-xs font-bold text-brand-mint-text">✓ {pendingFile.name}</span>
                 <button onClick={() => { setPendingFile(null); if (fileRef.current) fileRef.current.value = ""; }} className="text-xs font-black text-red-500 hover:text-red-700">حذف</button>
               </div>
             ) : (
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="w-full rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-bold text-slate-400 transition hover:border-violet-300 hover:text-violet-600 disabled:opacity-50"
+                className="w-full rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-bold text-slate-400 transition hover:border-brand-border hover:text-brand-blue disabled:opacity-50"
               >
                 {uploading ? "جاري الرفع..." : isAestheticPhotoTab ? "📷 رفع صورة من الموبايل" : "📎 اضغط لرفع ملف"}
               </button>
@@ -311,7 +311,7 @@ export default function PatientAttachmentsClient({
           </div>
 
           <div className="flex gap-2">
-            <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-violet-600 py-2.5 text-sm font-black text-white hover:bg-violet-700 disabled:opacity-50">
+            <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-brand-navy py-2.5 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50">
               {saving ? "جاري الحفظ..." : "حفظ"}
             </button>
             <button onClick={() => { setShowForm(false); setError(""); setPendingFile(null); }} className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 hover:bg-slate-200">
@@ -327,7 +327,7 @@ export default function PatientAttachmentsClient({
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-navy text-white">
                   <Server className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
@@ -370,7 +370,7 @@ export default function PatientAttachmentsClient({
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <Database className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+                          <Database className="h-4 w-4 shrink-0 text-brand-blue" aria-hidden="true" />
                           <p className="font-black text-slate-950">{study.title}</p>
                         </div>
                         <p className="mt-1 text-xs font-bold text-slate-400">{formatDate(study.date)}</p>
@@ -386,7 +386,7 @@ export default function PatientAttachmentsClient({
                           href={studyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-navy px-3 py-2 text-xs font-black text-white hover:bg-brand-navy-2"
                         >
                           <ExternalLink className="h-4 w-4" aria-hidden="true" />
                           فتح في OHIF
@@ -453,7 +453,7 @@ export default function PatientAttachmentsClient({
                       href={a.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-black text-blue-700 ring-1 ring-blue-100 hover:bg-blue-100"
+                      className="flex items-center gap-2 rounded-xl bg-brand-soft px-4 py-2.5 text-sm font-black text-brand-blue ring-1 ring-brand-border hover:bg-brand-soft"
                     >
                       📄 فتح الملف — {a.fileName}
                     </a>

@@ -45,9 +45,9 @@ function TagInput({
         <input value={input} onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
           placeholder={placeholder}
-          className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+          className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft" />
         <button onClick={add}
-          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-black text-white hover:bg-blue-700">+</button>
+          className="rounded-lg bg-brand-navy px-3 py-1.5 text-xs font-black text-white hover:bg-brand-navy-2">+</button>
       </div>
     </div>
   );
@@ -112,7 +112,7 @@ export default function PatientInfoCard({
               <p className="text-2xl mb-2">📋</p>
               <p className="text-sm font-black text-slate-400">لم تُضف بيانات الملف الطبي الدائم بعد</p>
               <button onClick={startEdit}
-                className="mt-3 rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700">
+                className="mt-3 rounded-xl bg-brand-navy px-4 py-2 text-xs font-black text-white hover:bg-brand-navy-2">
                 إضافة الآن
               </button>
             </div>
@@ -141,7 +141,7 @@ export default function PatientInfoCard({
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">🏥 الأمراض المزمنة</p>
                   <div className="flex flex-wrap gap-1.5">
                     {info.chronicConditions.map((c) => (
-                      <span key={c} className="rounded-full bg-purple-50 px-2.5 py-1 text-xs font-black text-purple-700 ring-1 ring-purple-200">{c}</span>
+                      <span key={c} className="rounded-full bg-brand-soft px-2.5 py-1 text-xs font-black text-brand-blue ring-1 ring-brand-border">{c}</span>
                     ))}
                   </div>
                 </div>
@@ -151,7 +151,7 @@ export default function PatientInfoCard({
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">💊 الأدوية الدائمة</p>
                   <div className="flex flex-wrap gap-1.5">
                     {info.currentMedications.map((m) => (
-                      <span key={m} className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-200">{m}</span>
+                      <span key={m} className="rounded-full bg-brand-mint-soft px-2.5 py-1 text-xs font-black text-brand-mint-text ring-1 ring-brand-border">{m}</span>
                     ))}
                   </div>
                 </div>
@@ -211,12 +211,12 @@ export default function PatientInfoCard({
                 onChange={(e) => setDraft({ ...draft, surgicalHistory: e.target.value })}
                 placeholder="مثال: استئصال زائدة 2020، ركبة يسرى 2022..."
                 rows={2}
-                className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft" />
             </div>
 
             <div className="flex gap-2 pt-1">
               <button onClick={save} disabled={saving}
-                className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-50 transition">
+                className="flex-1 rounded-xl bg-brand-navy py-2.5 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50 transition">
                 {saving ? "جاري الحفظ..." : "حفظ الملف الطبي"}
               </button>
               <button onClick={() => setEditing(false)}

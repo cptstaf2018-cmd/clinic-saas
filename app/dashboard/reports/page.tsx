@@ -155,8 +155,8 @@ export default async function ReportsPage({
       title: "تقارير المرضى",
       description: "المراجعين الجدد، إجمالي الملفات، رسائل واتساب والتنبيهات.",
       icon: "👥",
-      accent: "border-t-4 border-purple-500",
-      iconBg: "bg-purple-50 text-purple-600",
+      accent: "border-t-4 border-brand-border",
+      iconBg: "bg-brand-soft text-brand-blue",
       items: [
         { label: "مراجعون جدد", value: newPatients, hint: "أضيفوا اليوم" },
         { label: "إجمالي المرضى", value: totalPatients, hint: "ملفات العيادة" },

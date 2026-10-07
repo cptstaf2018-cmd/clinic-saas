@@ -238,11 +238,11 @@ export default function AppointmentsPage() {
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-6xl space-y-7">
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-brand-soft to-cyan-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-brand-border">
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-white via-brand-soft to-brand-soft p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)] ring-1 ring-brand-border">
           <div className="absolute inset-0 opacity-10 pattern-medical" />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-black text-cyan-700">تشغيل اليوم</p>
+              <p className="text-sm font-black text-brand-blue">تشغيل اليوم</p>
               <h1 className="mt-2 text-3xl font-black md:text-4xl">الحجوزات</h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
                 جدول عملي للحجوزات، التأكيدات، التذكيرات، وإنهاء الزيارات بدون ازدحام.
@@ -255,8 +255,8 @@ export default function AppointmentsPage() {
               >
                 + حجز جديد
               </button>
-              <div className="rounded-3xl bg-white px-5 py-4 shadow-sm ring-1 ring-cyan-100">
-                <p className="text-xs font-black text-cyan-700">حجوزات ظاهرة</p>
+              <div className="rounded-3xl bg-white px-5 py-4 shadow-sm ring-1 ring-brand-border">
+                <p className="text-xs font-black text-brand-blue">حجوزات ظاهرة</p>
                 <p className="mt-1 text-4xl font-black text-slate-900">{arabicNumber(total)}</p>
               </div>
             </div>
@@ -358,7 +358,7 @@ export default function AppointmentsPage() {
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="truncate text-base font-black text-slate-950">{appointment.patient.name}</p>
-                            {isToday && <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-700 ring-1 ring-cyan-100">اليوم</span>}
+                            {isToday && <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-black text-brand-blue ring-1 ring-brand-border">اليوم</span>}
                             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ring-1 ${status.badge}`}>
                               <span className={`h-2 w-2 rounded-full ${status.dot}`} />
                               {status.label}
@@ -380,7 +380,7 @@ export default function AppointmentsPage() {
                               تأكيد
                             </button>
                           )}
-                          <button onClick={() => updateStatus(appointment.id, "completed")} disabled={actionLoading === appointment.id + "completed"} className="rounded-2xl bg-brand-mint-soft px-4 py-2.5 text-xs font-black text-brand-mint-text ring-1 ring-brand-border transition hover:bg-emerald-100 disabled:opacity-50">
+                          <button onClick={() => updateStatus(appointment.id, "completed")} disabled={actionLoading === appointment.id + "completed"} className="rounded-2xl bg-brand-mint-soft px-4 py-2.5 text-xs font-black text-brand-mint-text ring-1 ring-brand-border transition hover:bg-brand-mint-soft disabled:opacity-50">
                             مكتمل
                           </button>
                           <button onClick={() => sendReminder(appointment.id)} disabled={actionLoading === appointment.id + "remind" || reminded.has(appointment.id)} className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-black text-amber-700 ring-1 ring-amber-100 transition hover:bg-amber-100 disabled:opacity-50">

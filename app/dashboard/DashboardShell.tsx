@@ -56,7 +56,7 @@ export default function DashboardShell({
           )}
           <div className="min-w-0">
             <p className="text-white font-black text-base leading-tight truncate">{clinicName}</p>
-            <p className="text-blue-100/60 text-xs mt-1">لوحة تشغيل العيادة</p>
+            <p className="text-brand-side-muted text-xs mt-1">لوحة تشغيل العيادة</p>
             <span className={`inline-flex mt-2 text-[10px] font-semibold border rounded-full px-2 py-0.5 ${badgeCls}`}>
               {badgeLabel}
             </span>
@@ -74,14 +74,14 @@ export default function DashboardShell({
               href={item.href}
               onClick={() => setOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                active ? "bg-white/12 text-white" : "text-blue-100/70 hover:text-white hover:bg-white/8"
+                active ? "bg-white/12 text-white" : "text-brand-side-muted hover:text-white hover:bg-white/8"
               }`}
             >
-              <span className={`transition-colors duration-200 ${active ? "text-blue-300" : "text-blue-300/60 group-hover:text-blue-300"}`}>
+              <span className={`transition-colors duration-200 ${active ? "text-brand-side-muted" : "text-brand-side-muted group-hover:text-brand-side-muted"}`}>
                 {item.icon}
               </span>
               {item.label}
-              {active && <span className="mr-auto w-1.5 h-1.5 rounded-full bg-blue-400" />}
+              {active && <span className="mr-auto w-1.5 h-1.5 rounded-full bg-brand-blue" />}
             </Link>
           );
         })}

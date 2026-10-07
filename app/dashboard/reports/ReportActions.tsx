@@ -31,7 +31,7 @@ export default function ReportActions({ clinicName, specialty }: {
       <button
         type="button"
         onClick={handleDownloadPdf}
-        className="flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-blue-700"
+        className="flex items-center gap-2 rounded-2xl bg-brand-navy px-4 py-2.5 text-xs font-black text-white transition hover:bg-brand-navy-2"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>

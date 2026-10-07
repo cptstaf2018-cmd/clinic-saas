@@ -264,10 +264,10 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
   return (
     <div className="p-4 md:p-8" dir="rtl">
       <div className="mx-auto max-w-7xl space-y-6">
-        <section className="relative overflow-hidden rounded-[28px] border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-emerald-50 p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)]">
+        <section className="relative overflow-hidden rounded-[28px] border border-brand-border bg-gradient-to-br from-white via-brand-soft to-brand-mint-soft p-6 text-slate-900 shadow-[0_24px_70px_rgba(37,99,235,0.10)]">
           <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-black text-emerald-700">واتساب العيادة</p>
+              <p className="text-sm font-black text-brand-mint-text">واتساب العيادة</p>
               <h1 className="mt-2 text-3xl font-black md:text-4xl">صندوق الرسائل</h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
                 محادثات مجمعة حسب رقم المراجع، مع متابعة غير المقروء وربط سريع بملف المريض.
@@ -275,7 +275,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
             </div>
             <button
               onClick={fetchMessages}
-              className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-blue-600/15 transition hover:bg-blue-700"
+              className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white shadow-lg shadow-brand-navy/15 transition hover:bg-brand-navy-2"
             >
               تحديث الرسائل
             </button>
@@ -284,7 +284,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
 
         <section className="grid gap-4 md:grid-cols-4">
           {[
-            { label: "محادثات نشطة", value: activeConversations.length, tone: "bg-blue-600 text-white" },
+            { label: "محادثات نشطة", value: activeConversations.length, tone: "bg-brand-navy text-white" },
             { label: "غير مقروءة", value: unread, tone: "bg-orange-500 text-white" },
             { label: "تمت مراجعتها", value: read, tone: "bg-emerald-600 text-white" },
             { label: "مؤرشفة", value: archivedConversations.length, tone: "bg-slate-900 text-white" },
@@ -306,7 +306,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="بحث باسم المراجع أو الرقم أو الرسالة"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none transition focus:border-blue-200 focus:ring-4 focus:ring-blue-50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none transition focus:border-brand-blue focus:ring-4 focus:ring-brand-soft"
                 />
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {filterTabs.map((tab) => {
@@ -316,7 +316,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                         key={tab.value}
                         onClick={() => setFilter(tab.value)}
                         className={`shrink-0 rounded-xl px-3 py-2 text-xs font-black ring-1 transition ${
-                          active ? "bg-blue-600 text-white ring-blue-600" : "bg-white text-slate-600 ring-slate-200"
+                          active ? "bg-brand-navy text-white ring-brand-navy" : "bg-white text-slate-600 ring-slate-200"
                         }`}
                       >
                         {tab.label}
@@ -346,7 +346,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                           type="button"
                           onClick={() => setSelectedPhone(conversation.phone)}
                           className={`w-full rounded-2xl p-3 text-right transition ${
-                            active ? "bg-blue-600 text-white shadow-sm" : "bg-white text-slate-950 ring-1 ring-slate-200 hover:bg-slate-50"
+                            active ? "bg-brand-navy text-white shadow-sm" : "bg-white text-slate-950 ring-1 ring-slate-200 hover:bg-slate-50"
                           }`}
                         >
                           <div className="flex items-center gap-3">
@@ -360,7 +360,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                               <div className="flex items-center justify-between gap-2">
                                 <p className="truncate text-sm font-black">{conversation.patientName ?? conversation.phone}</p>
                                 {conversation.unread > 0 ? (
-                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${active ? "bg-white/20 text-white" : "bg-blue-600 text-white"}`}>
+                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${active ? "bg-white/20 text-white" : "bg-brand-navy text-white"}`}>
                                     {arabicNumber(conversation.unread)}
                                   </span>
                                 ) : null}
@@ -403,12 +403,12 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                           </Link>
                         ) : null}
                         {selectedConversation.unread > 0 ? (
-                          <button onClick={() => markConversationRead(selectedConversation.phone)} className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 transition hover:bg-emerald-100">
+                          <button onClick={() => markConversationRead(selectedConversation.phone)} className="rounded-2xl bg-brand-mint-soft px-4 py-2.5 text-xs font-black text-brand-mint-text ring-1 ring-brand-border transition hover:bg-brand-mint-soft">
                             تعليم كمقروء
                           </button>
                         ) : null}
                         {selectedConversation.messages.every((message) => message.archived) ? (
-                          <button onClick={() => setConversationArchived(selectedConversation.phone, false)} className="rounded-2xl bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100">
+                          <button onClick={() => setConversationArchived(selectedConversation.phone, false)} className="rounded-2xl bg-brand-soft px-4 py-2.5 text-xs font-black text-brand-blue ring-1 ring-brand-border transition hover:bg-brand-soft">
                             إعادة للصندوق
                           </button>
                         ) : (
@@ -446,7 +446,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                     ) : null}
 
                     {toast ? (
-                      <div className={`mt-3 rounded-2xl px-4 py-3 text-sm font-black ${toast.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                      <div className={`mt-3 rounded-2xl px-4 py-3 text-sm font-black ${toast.ok ? "bg-brand-mint-soft text-brand-mint-text" : "bg-rose-50 text-rose-700"}`}>
                         {toast.text}
                       </div>
                     ) : null}
@@ -462,7 +462,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                             ? "rounded-tl-md bg-emerald-600 text-white ring-emerald-600"
                             : message.read
                               ? "rounded-tr-md bg-white text-slate-700 ring-slate-200"
-                              : "rounded-tr-md bg-blue-50 text-slate-900 ring-blue-100"
+                              : "rounded-tr-md bg-brand-soft text-slate-900 ring-brand-border"
                         }`}>
                           <p className="whitespace-pre-wrap text-sm font-bold leading-7">{message.body}</p>
                           <div className={`mt-2 flex flex-wrap items-center gap-2 text-[11px] font-bold ${outgoing ? "text-white/75" : "text-slate-400"}`}>
@@ -496,12 +496,12 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                         onChange={(event) => setReplyText(event.target.value)}
                         placeholder="اكتب رد العيادة هنا..."
                         rows={2}
-                        className="min-h-14 flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-blue-200 focus:bg-white focus:ring-4 focus:ring-blue-50"
+                        className="min-h-14 flex-1 resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
                       />
                       <button
                         onClick={sendReply}
                         disabled={sending || !replyText.trim()}
-                        className="rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-black text-white transition hover:bg-emerald-700 disabled:opacity-50 md:self-end"
+                        className="rounded-2xl bg-brand-navy px-6 py-3 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-50 md:self-end"
                       >
                         {sending ? "جاري الإرسال..." : "إرسال واتساب"}
                       </button>

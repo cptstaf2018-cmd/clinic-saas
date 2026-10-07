@@ -50,8 +50,8 @@ export default function BotSettingsPage() {
           فعّل أو عطّل البوت للرد التلقائي على المرضى
         </p>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-900">
+        <div className="bg-brand-soft border border-brand-border rounded-lg p-4 mb-6">
+          <p className="text-sm text-brand-navy">
             📱 <strong>رقم WhatsApp:</strong> سيتم ربط هذا الرقم مع البوت<br/>
             💬 <strong>الرد التلقائي:</strong> حجز مواعيد، تذكيرات، معلومات العيادة<br/>
             🔒 <strong>الخصوصية:</strong> يتم حفظ جميع المحادثات بشكل آمن

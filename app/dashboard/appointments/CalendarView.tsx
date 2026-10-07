@@ -9,8 +9,8 @@ type Appt = {
 
 const STATUS_COLORS: Record<string, string> = {
   pending:   "bg-amber-100 text-amber-800 border-amber-200",
-  confirmed: "bg-blue-100 text-blue-800 border-blue-200",
-  completed: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  confirmed: "bg-brand-soft text-brand-blue border-brand-border",
+  completed: "bg-brand-mint-soft text-brand-mint-text border-brand-border",
   cancelled: "bg-red-100 text-red-700 border-red-200 line-through opacity-60",
 };
 
@@ -70,10 +70,10 @@ export default function CalendarView({ appointments }: { appointments: Appt[] })
             <div
               key={i}
               className={`min-h-[72px] rounded-lg border p-1 text-right transition
-                ${isToday ? "border-blue-300 bg-blue-50" : "border-slate-100 bg-white hover:bg-slate-50"}`}
+                ${isToday ? "border-brand-border bg-brand-soft" : "border-slate-100 bg-white hover:bg-slate-50"}`}
             >
               <span className={`block text-xs font-black mb-1
-                ${isToday ? "text-blue-700" : "text-slate-600"}`}>
+                ${isToday ? "text-brand-blue" : "text-slate-600"}`}>
                 {day}
               </span>
               {appts.slice(0, 3).map((a) => (

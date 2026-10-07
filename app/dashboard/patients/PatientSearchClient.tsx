@@ -98,7 +98,7 @@ export default function PatientSearchClient({ patients: initial, initialQuery = 
             placeholder="ابحث بالاسم أو رقم الهاتف"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pr-11 pl-4 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+            className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pr-11 pl-4 text-sm font-bold text-slate-800 outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
             dir="rtl"
           />
         </div>
@@ -121,7 +121,7 @@ export default function PatientSearchClient({ patients: initial, initialQuery = 
               <div
                 key={patient.id}
                 className={`overflow-hidden rounded-[22px] bg-white shadow-sm ring-1 transition hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(15,23,42,0.07)] ${
-                  isDelete ? "ring-rose-100" : isEditing ? "ring-blue-100" : "ring-slate-200/80"
+                  isDelete ? "ring-rose-100" : isEditing ? "ring-brand-border" : "ring-slate-200/80"
                 }`}
               >
                 {!isEditing && !isDelete && (
@@ -179,11 +179,11 @@ export default function PatientSearchClient({ patients: initial, initialQuery = 
                   <div className="space-y-3 bg-slate-50/80 p-4">
                     <p className="text-sm font-black text-slate-800">تعديل بيانات المراجع</p>
                     <div className="grid gap-3 md:grid-cols-2">
-                      <input value={editName} onChange={(event) => setEditName(event.target.value)} placeholder="الاسم" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100" />
-                      <input value={editPhone} onChange={(event) => setEditPhone(event.target.value)} placeholder="رقم الهاتف" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100" dir="ltr" />
+                      <input value={editName} onChange={(event) => setEditName(event.target.value)} placeholder="الاسم" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-brand-soft" />
+                      <input value={editPhone} onChange={(event) => setEditPhone(event.target.value)} placeholder="رقم الهاتف" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-brand-soft" dir="ltr" />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => saveEdit(patient.id)} disabled={loading === `${patient.id}_edit`} className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-50">
+                      <button onClick={() => saveEdit(patient.id)} disabled={loading === `${patient.id}_edit`} className="rounded-2xl bg-brand-navy px-5 py-2.5 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-50">
                         {loading === `${patient.id}_edit` ? "جاري الحفظ..." : "حفظ"}
                       </button>
                       <button onClick={() => setEditingId(null)} className="rounded-2xl bg-white px-5 py-2.5 text-sm font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50">

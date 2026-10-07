@@ -32,8 +32,8 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 ring-amber-100",
-  confirmed: "bg-blue-50 text-blue-700 ring-blue-100",
-  completed: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  confirmed: "bg-brand-soft text-brand-blue ring-brand-border",
+  completed: "bg-brand-mint-soft text-brand-mint-text ring-brand-border",
   cancelled: "bg-red-50 text-red-700 ring-red-100",
 };
 
@@ -154,7 +154,7 @@ export default async function PatientProfilePage({
                 href={`https://wa.me/${waNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-black text-white transition hover:bg-emerald-700"
+                className="flex items-center gap-2 rounded-xl bg-brand-navy px-4 py-2 text-sm font-black text-white transition hover:bg-brand-navy-2"
               >
                 💬 واتساب
               </a>
@@ -163,7 +163,7 @@ export default async function PatientProfilePage({
                   <Link
                     href={`/dashboard/patients/${patient.id}/prescription`}
                     target="_blank"
-                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-black text-white transition hover:bg-blue-700"
+                    className="flex items-center gap-2 rounded-xl bg-brand-navy px-4 py-2 text-sm font-black text-white transition hover:bg-brand-navy-2"
                   >
                     🖊️ وصفة طبية
                   </Link>
@@ -180,7 +180,7 @@ export default async function PatientProfilePage({
 
           {/* Patient info */}
           <div className="flex flex-wrap items-center gap-5 px-5 py-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl font-black text-white">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-navy text-xl font-black text-white">
               {initials(patient.name)}
             </div>
             <div className="min-w-0 flex-1">
@@ -189,9 +189,9 @@ export default async function PatientProfilePage({
             </div>
             <div className="flex flex-wrap gap-4 text-center">
               {[
-                { label: "مواعيد", value: patient.appointments.length, color: "text-blue-600" },
-                { label: "زيارات مكتملة", value: completedCount, color: "text-emerald-600" },
-                ...(isSecretary ? [] : [{ label: "سجلات طبية", value: medicalRecords.length, color: "text-purple-600" }]),
+                { label: "مواعيد", value: patient.appointments.length, color: "text-brand-blue" },
+                { label: "زيارات مكتملة", value: completedCount, color: "text-brand-mint-text" },
+                ...(isSecretary ? [] : [{ label: "سجلات طبية", value: medicalRecords.length, color: "text-brand-blue" }]),
               ].map((s) => (
                 <div key={s.label} className="min-w-[64px]">
                   <p className={`text-2xl font-black ${s.color}`}>{arabicNumber(s.value)}</p>

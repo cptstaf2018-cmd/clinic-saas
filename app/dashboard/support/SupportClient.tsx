@@ -27,7 +27,7 @@ function arabicNumber(value: number) {
 }
 
 function StatusDot({ ok }: { ok: boolean }) {
-  return <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${ok ? "bg-emerald-500" : "bg-red-500"}`} />;
+  return <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${ok ? "bg-brand-mint-soft0" : "bg-red-500"}`} />;
 }
 
 export default function SupportClient() {
@@ -78,7 +78,7 @@ export default function SupportClient() {
     return (
       <div className="rounded-[30px] border border-dashed border-slate-200 bg-white py-16 text-center shadow-sm">
         <p className="text-lg font-black text-slate-400">تعذر تحميل حالة النظام</p>
-        <button onClick={fetchHealth} className="mt-4 rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-black text-white">
+        <button onClick={fetchHealth} className="mt-4 rounded-2xl bg-brand-navy px-5 py-2.5 text-sm font-black text-white">
           إعادة المحاولة
         </button>
       </div>
@@ -163,8 +163,8 @@ export default function SupportClient() {
         </div>
       </section>
 
-      <section className="rounded-[26px] bg-blue-50 p-4 ring-1 ring-blue-100">
-        <p className="text-sm font-bold leading-7 text-blue-800">
+      <section className="rounded-[26px] bg-brand-soft p-4 ring-1 ring-brand-border">
+        <p className="text-sm font-bold leading-7 text-brand-blue">
           عند استمرار المشكلة، تواصل مع الدعم من الزر العلوي وأرسل وصفاً قصيراً لما يحدث داخل اللوحة.
         </p>
       </section>
@@ -208,9 +208,9 @@ function FixCard({
     ? "bg-amber-50 ring-amber-100"
     : isWarning
     ? "bg-slate-50 ring-slate-100"
-    : "bg-emerald-50/60 ring-emerald-100";
-  const dot = hasIssue ? "bg-amber-500" : isWarning ? "bg-slate-400" : "bg-emerald-500";
-  const button = hasIssue ? "bg-amber-500 hover:bg-amber-600" : "bg-blue-600 hover:bg-blue-700";
+    : "bg-brand-mint-soft/60 ring-brand-border";
+  const dot = hasIssue ? "bg-amber-500" : isWarning ? "bg-slate-400" : "bg-brand-mint-soft0";
+  const button = hasIssue ? "bg-amber-500 hover:bg-amber-600" : "bg-brand-navy hover:bg-brand-navy-2";
 
   return (
     <div className={`rounded-[24px] p-4 ring-1 ${tone}`}>

@@ -379,14 +379,14 @@ export default function MedicalRecordsClient({
     <div className="rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.09)] ring-1 ring-slate-200/70">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-black text-blue-700">{copy.kicker}</p>
+          <p className="text-xs font-black text-brand-blue">{copy.kicker}</p>
           <h2 className="mt-1 text-2xl font-black text-slate-950">{copy.title}</h2>
           <p className="mt-1 text-sm font-bold text-slate-400">{arabicNumber(records.length)} {copy.countUnit}</p>
         </div>
         {!showForm && !editingId && (
           <button
             onClick={startAdd}
-            className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-black text-white transition hover:bg-blue-700"
+            className="rounded-2xl bg-brand-navy px-4 py-2.5 text-sm font-black text-white transition hover:bg-brand-navy-2"
           >
             {copy.addButton}
           </button>
@@ -394,7 +394,7 @@ export default function MedicalRecordsClient({
       </div>
 
       {notice && (
-        <p className="mb-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-700 ring-1 ring-emerald-100">
+        <p className="mb-4 rounded-2xl bg-brand-mint-soft px-4 py-3 text-sm font-black text-brand-mint-text ring-1 ring-brand-border">
           {notice}
         </p>
       )}
@@ -428,7 +428,7 @@ export default function MedicalRecordsClient({
 
             if (isEdit) {
               return (
-                <div key={r.id} className="rounded-[24px] bg-blue-50/40 p-4 ring-1 ring-blue-100">
+                <div key={r.id} className="rounded-[24px] bg-brand-soft/40 p-4 ring-1 ring-brand-border">
                   <RecordForm
                     form={form}
                     setForm={setForm}
@@ -458,7 +458,7 @@ export default function MedicalRecordsClient({
                       onClick={() => setExpandedId(isExpanded ? null : r.id)}
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-sm font-black text-blue-700 ring-1 ring-slate-200">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-sm font-black text-brand-blue ring-1 ring-slate-200">
                           {specialtyConfig.nameAr.slice(0, 1)}
                         </div>
                         <div className="min-w-0">
@@ -469,7 +469,7 @@ export default function MedicalRecordsClient({
                       <div className="mr-2 flex shrink-0 items-center gap-1">
                         <button
                           onClick={(e) => { e.stopPropagation(); startEdit(r); }}
-                          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-50"
+                          className="rounded-xl bg-white px-3 py-2 text-xs font-black text-brand-blue ring-1 ring-brand-border transition hover:bg-brand-soft"
                         >
                           تعديل
                         </button>
@@ -566,13 +566,13 @@ function RecordDetails({
         </div>
       )}
       {record.followUpDate && (
-        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-lg border border-brand-border bg-brand-soft px-3 py-2">
           <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth={2} className="h-4 w-4 shrink-0">
             <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
           </svg>
           <div>
-            <p className="text-[11px] font-bold text-blue-600">موعد المراجعة القادمة</p>
-            <p className="text-sm font-semibold text-blue-800">{formatDate(record.followUpDate)}</p>
+            <p className="text-[11px] font-bold text-brand-blue">موعد المراجعة القادمة</p>
+            <p className="text-sm font-semibold text-brand-blue">{formatDate(record.followUpDate)}</p>
           </div>
         </div>
       )}
@@ -619,10 +619,10 @@ function RecordForm({
   }
 
   return (
-    <div className="mb-4 space-y-4 rounded-xl border border-blue-200 bg-blue-50/20 p-4">
+    <div className="mb-4 space-y-4 rounded-xl border border-brand-border bg-brand-soft/20 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-bold text-blue-700">{title}</p>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-blue-700 ring-1 ring-blue-100">
+        <p className="text-sm font-bold text-brand-blue">{title}</p>
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-brand-blue ring-1 ring-brand-border">
           {specialtyConfig.nameAr}
         </span>
       </div>
@@ -633,7 +633,7 @@ function RecordForm({
       )}
 
       {isAesthetic && (
-        <div className="rounded-xl border border-violet-100 bg-white p-3">
+        <div className="rounded-xl border border-brand-border bg-white p-3">
           <p className="text-sm font-black text-slate-950">توثيق إجراء تجميلي</p>
           <p className="mt-1 text-xs font-bold leading-5 text-slate-500">
             سجّل الخدمة، المنطقة، المنتج، الجرعة، Batch/Lot، الموافقة، الصور، التعليمات، وخطة المراجعة.
@@ -658,7 +658,7 @@ function RecordForm({
           <input
             {...field("diagnosis")}
             placeholder="التشخيص الطبي"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft"
           />
           <div className="mt-2 flex flex-wrap gap-1.5">
             {specialtyConfig.quickDiagnoses.map((diagnosis) => (
@@ -666,7 +666,7 @@ function RecordForm({
                 key={diagnosis}
                 type="button"
                 onClick={() => setForm({ ...form, diagnosis })}
-                className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-slate-200 hover:text-blue-700"
+                className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-slate-600 ring-1 ring-slate-200 hover:text-brand-blue"
               >
                 {diagnosis}
               </button>
@@ -679,7 +679,7 @@ function RecordForm({
           <input
             type="date"
             {...field("date")}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft"
             dir="ltr"
           />
         </div>
@@ -696,7 +696,7 @@ function RecordForm({
             {...field("prescription")}
             placeholder="الأدوية والجرعات"
             rows={2}
-            className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft"
           />
           <div className="mt-2 flex flex-wrap gap-1.5">
             {specialtyConfig.favoriteMedications.map((medication) => (
@@ -704,7 +704,7 @@ function RecordForm({
                 key={medication}
                 type="button"
                 onClick={() => appendMedication(medication)}
-                className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100"
+                className="rounded-full bg-brand-mint-soft px-2.5 py-1 text-[11px] font-black text-brand-mint-text ring-1 ring-brand-border hover:bg-brand-mint-soft"
               >
                 {medication}
               </button>
@@ -718,12 +718,12 @@ function RecordForm({
             {...field("notes")}
             placeholder="أي ملاحظات أخرى"
             rows={2}
-            className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft"
           />
         </div>
 
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-bold text-blue-600">
+          <label className="mb-1 block text-xs font-bold text-brand-blue">
             موعد المراجعة القادمة <span className="font-normal text-gray-400">(اختياري)</span>
           </label>
           {canUseFollowUp ? (
@@ -731,7 +731,7 @@ function RecordForm({
               type="date"
               {...field("followUpDate")}
               min={new Date().toISOString().slice(0, 10)}
-              className="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full rounded-lg border border-brand-border bg-brand-soft px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft"
               dir="ltr"
             />
           ) : (
@@ -740,7 +740,7 @@ function RecordForm({
             </div>
           )}
           {form.followUpDate && (
-            <p className="mt-1 text-xs text-blue-600">
+            <p className="mt-1 text-xs text-brand-blue">
               سيُنشأ حجز مراجعة تلقائياً ويُرسل تذكير قبل 24 ساعة
             </p>
           )}
@@ -751,7 +751,7 @@ function RecordForm({
         <button
           onClick={onSave}
           disabled={loading}
-          className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="flex-1 rounded-lg bg-brand-navy py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-2 disabled:opacity-50"
         >
           {loading ? "جاري الحفظ..." : "حفظ السجل"}
         </button>
@@ -782,8 +782,8 @@ function VitalsBlock({ vitals, onChange, compact = false }: { vitals: Vitals; on
   ];
 
   return (
-    <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3">
-      <p className="mb-2.5 text-xs font-black text-blue-700 uppercase tracking-wide">
+    <div className="rounded-xl border border-brand-border bg-brand-soft/40 p-3">
+      <p className="mb-2.5 text-xs font-black text-brand-blue uppercase tracking-wide">
         {compact ? "العلامات الحيوية عند الحاجة" : "💉 العلامات الحيوية"}
       </p>
       <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
@@ -794,7 +794,7 @@ function VitalsBlock({ vitals, onChange, compact = false }: { vitals: Vitals; on
               <input type="number" value={vitals[f.key]}
                 onChange={(e) => onChange({ ...vitals, [f.key]: e.target.value })}
                 placeholder={f.placeholder}
-                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-soft" />
               <span className="absolute -bottom-4 left-0 right-0 text-center text-[9px] text-slate-400">{f.unit}</span>
             </div>
           </div>
@@ -803,7 +803,7 @@ function VitalsBlock({ vitals, onChange, compact = false }: { vitals: Vitals; on
       <div className={compact ? "mt-6 hidden" : "mt-6"}>
         <div className="flex items-center justify-between mb-1.5">
           <p className="text-xs font-black text-slate-600">😣 مقياس الألم</p>
-          <span className={`text-sm font-black ${parseInt(vitals.pain) >= 7 ? "text-red-600" : parseInt(vitals.pain) >= 4 ? "text-amber-600" : "text-emerald-600"}`}>
+          <span className={`text-sm font-black ${parseInt(vitals.pain) >= 7 ? "text-red-600" : parseInt(vitals.pain) >= 4 ? "text-amber-600" : "text-brand-mint-text"}`}>
             {vitals.pain || "0"} / 10
           </span>
         </div>
@@ -816,7 +816,7 @@ function VitalsBlock({ vitals, onChange, compact = false }: { vitals: Vitals; on
       </div>
       {bmi && (
         <p className="mt-2 text-xs font-bold text-slate-500">
-          BMI: <span className={`font-black ${parseFloat(bmi) > 30 ? "text-red-600" : parseFloat(bmi) > 25 ? "text-amber-600" : "text-emerald-600"}`}>{bmi}</span>
+          BMI: <span className={`font-black ${parseFloat(bmi) > 30 ? "text-red-600" : parseFloat(bmi) > 25 ? "text-amber-600" : "text-brand-mint-text"}`}>{bmi}</span>
         </p>
       )}
     </div>
@@ -837,7 +837,7 @@ function EncounterInput({
       {section.labelAr} {section.required ? <span className="text-red-500">*</span> : null}
     </label>
   );
-  const commonClass = "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400";
+  const commonClass = "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft";
 
   if (section.kind === "textarea") {
     return (

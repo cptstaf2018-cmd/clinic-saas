@@ -86,7 +86,7 @@ export default function AssistantClient({ initialAccess }: { initialAccess: Acce
               <h2 className="text-xl font-black text-slate-950">محادثة إرشادية</h2>
               <p className="mt-1 text-xs font-bold text-slate-500">يساعدك في فهم استخدام التطبيق فقط.</p>
             </div>
-            <span className={`rounded-full px-3 py-1.5 text-xs font-black ring-1 ${locked ? "bg-rose-50 text-rose-700 ring-rose-100" : "bg-emerald-50 text-emerald-700 ring-emerald-100"}`}>
+            <span className={`rounded-full px-3 py-1.5 text-xs font-black ring-1 ${locked ? "bg-rose-50 text-rose-700 ring-rose-100" : "bg-brand-mint-soft text-brand-mint-text ring-brand-border"}`}>
               {accessLabel(access)}
             </span>
           </div>
@@ -97,7 +97,7 @@ export default function AssistantClient({ initialAccess }: { initialAccess: Acce
             <div key={index} className={`flex ${message.role === "user" ? "justify-start" : "justify-end"}`}>
               <p className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-bold leading-7 ${
                 message.role === "user"
-                  ? "bg-blue-600 text-white"
+                  ? "bg-brand-navy text-white"
                   : "bg-white text-slate-700 shadow-sm ring-1 ring-slate-200"
               }`}>
                 {message.text}
@@ -124,9 +124,9 @@ export default function AssistantClient({ initialAccess }: { initialAccess: Acce
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder="اسأل عن طريقة استخدام التطبيق..."
-                className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
               />
-              <button disabled={loading} className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-50">
+              <button disabled={loading} className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-50">
                 {loading ? "..." : "إرسال"}
               </button>
             </form>
@@ -143,7 +143,7 @@ export default function AssistantClient({ initialAccess }: { initialAccess: Acce
                 key={item}
                 onClick={() => ask(item)}
                 disabled={loading || locked}
-                className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-right text-sm font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
+                className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-right text-sm font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-brand-soft hover:text-brand-blue disabled:opacity-50"
               >
                 {item}
               </button>

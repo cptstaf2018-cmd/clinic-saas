@@ -239,7 +239,7 @@ export default function PatientListPremium({
                       <input
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-brand-soft"
                         dir="rtl"
                       />
                     </div>
@@ -248,7 +248,7 @@ export default function PatientListPremium({
                       <input
                         value={editPhone}
                         onChange={(e) => setEditPhone(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold outline-none focus:ring-4 focus:ring-brand-soft"
                         dir="ltr"
                       />
                     </div>

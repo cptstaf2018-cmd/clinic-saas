@@ -70,7 +70,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
           {saving ? "جاري الحفظ..." : "طباعة وحفظ"}
         </button>
         {saved && (
-          <span className="text-sm font-black text-emerald-600">✓ محفوظة في ملف المريض</span>
+          <span className="text-sm font-black text-brand-mint-text">✓ محفوظة في ملف المريض</span>
         )}
         <button
           onClick={() => window.close()}
@@ -90,7 +90,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
             {/* يمين — معلومات العيادة */}
             <div className="text-right">
               <p className="text-base font-black text-slate-900">{clinicName}</p>
-              <p className="text-sm font-bold text-blue-700">اختصاص {specialty}</p>
+              <p className="text-sm font-bold text-brand-blue">اختصاص {specialty}</p>
               {doctorDegree && <p className="text-xs font-bold text-slate-600 mt-0.5">{doctorDegree}</p>}
               {doctorUniversity && <p className="text-xs font-bold text-slate-500">{doctorUniversity}</p>}
               {doctorBoard && <p className="text-xs font-bold text-slate-500">{doctorBoard}</p>}
@@ -104,7 +104,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="شعار العيادة" className="h-20 w-20 rounded-full object-cover border-2 border-slate-300" />
               ) : (
-                <div className="h-20 w-20 rounded-full bg-blue-700 flex items-center justify-center text-white text-3xl font-black border-2 border-blue-800">
+                <div className="h-20 w-20 rounded-full bg-brand-navy flex items-center justify-center text-white text-3xl font-black border-2 border-brand-navy-line">
                   {clinicName.slice(0, 1)}
                 </div>
               )}

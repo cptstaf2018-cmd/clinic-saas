@@ -73,7 +73,7 @@ export default function DashboardAssistantFloating({ initialAccess }: { initialA
     <div className="fixed bottom-24 right-4 z-40 md:bottom-6 md:right-[19rem]" dir="rtl">
       {open && (
         <section className="mb-3 flex h-[min(620px,calc(100vh-120px))] w-[calc(100vw-2rem)] max-w-[420px] flex-col overflow-hidden rounded-[24px] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.24)] ring-1 ring-slate-200">
-          <header className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-l from-blue-600 to-teal-600 px-4 py-3 text-white">
+          <header className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-l from-brand-navy to-brand-blue px-4 py-3 text-white">
             <div>
               <p className="text-sm font-black">مساعد العيادة</p>
               <p className="mt-0.5 text-[11px] font-bold text-white/70">إرشادات استخدام التطبيق</p>
@@ -101,7 +101,7 @@ export default function DashboardAssistantFloating({ initialAccess }: { initialA
               <div key={index} className={`flex ${message.role === "user" ? "justify-start" : "justify-end"}`}>
                 <p className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 text-sm font-bold leading-6 ${
                   message.role === "user"
-                    ? "bg-blue-600 text-white"
+                    ? "bg-brand-navy text-white"
                     : "bg-white text-slate-700 shadow-sm ring-1 ring-slate-200"
                 }`}>
                   {message.text}
@@ -130,7 +130,7 @@ export default function DashboardAssistantFloating({ initialAccess }: { initialA
                       type="button"
                       onClick={() => ask(question)}
                       disabled={loading}
-                      className="shrink-0 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
+                      className="shrink-0 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-brand-soft hover:text-brand-blue disabled:opacity-50"
                     >
                       {question}
                     </button>
@@ -147,12 +147,12 @@ export default function DashboardAssistantFloating({ initialAccess }: { initialA
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     placeholder="اسأل عن استخدام التطبيق..."
-                    className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none transition focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                    className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-50"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-navy text-white transition hover:bg-brand-navy-2 disabled:opacity-50"
                     aria-label="إرسال السؤال"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.3} className="h-5 w-5">
@@ -170,7 +170,7 @@ export default function DashboardAssistantFloating({ initialAccess }: { initialA
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-blue-600 to-teal-600 text-white shadow-[0_14px_35px_rgba(37,99,235,0.35)] ring-4 ring-white/80 transition hover:scale-105"
+        className="grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-brand-navy to-brand-blue text-white shadow-[0_14px_35px_rgba(37,99,235,0.35)] ring-4 ring-white/80 transition hover:scale-105"
         aria-label="فتح مساعد العيادة"
         title="مساعد العيادة"
       >
