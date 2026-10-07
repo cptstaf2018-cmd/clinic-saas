@@ -6,20 +6,150 @@ import Link from "next/link";
 import { loginAction } from "./actions";
 import GoogleButton from "./GoogleButton";
 
-function HealthIcon({ className = "w-6 h-6" }: { className?: string }) {
+type ForgotStep = "input" | "otp" | "password" | "done";
+
+const INPUT_CLASS =
+  "w-full min-h-12 rounded-2xl border border-brand-border bg-white px-4 text-[15px] text-brand-ink outline-none transition placeholder:text-brand-muted/60 focus:border-brand-blue focus:ring-4 focus:ring-brand-soft";
+const PRIMARY_BTN =
+  "flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-navy text-[15px] font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-navy-2 active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
+const GHOST_BTN =
+  "flex min-h-11 w-full items-center justify-center rounded-2xl text-sm font-semibold text-brand-muted transition hover:bg-brand-line hover:text-brand-ink";
+
+const DAY_SEGMENTS = 16;
+const CURRENT_SEGMENT = 6;
+
+function Field({ label, aside, children }: { label: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <svg viewBox="0 0 40 40" fill="none" className={className}>
-      {/* Heart */}
-      <path d="M20 34s-14-9-14-19a8 8 0 0 1 14-5.3A8 8 0 0 1 34 15c0 10-14 19-14 19z"
-        fill="white" fillOpacity="0.9" />
-      {/* ECG line */}
-      <path d="M8 20h4l2-5 3 10 3-8 2 3h10"
-        stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    </svg>
+    <label className="block">
+      <span className="mb-1.5 flex items-center justify-between gap-3 text-sm font-semibold text-brand-ink">
+        {label}
+        {aside}
+      </span>
+      {children}
+    </label>
   );
 }
 
-type ForgotStep = "input" | "otp" | "password" | "done";
+function ErrorBox({ message }: { message: string }) {
+  if (!message) return null;
+  return (
+    <div role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+      {message}
+    </div>
+  );
+}
+
+function BrandMark({ tone }: { tone: "light" | "dark" }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-mint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="h-5 w-5 text-brand-mint-ink" aria-hidden>
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </div>
+      <span className={`text-xl font-bold tracking-tight ${tone === "dark" ? "text-white" : "text-brand-navy"}`}>Clinic AI Pro</span>
+    </div>
+  );
+}
+
+/** قرص يوم العيادة: كل قطعة موعد، والنعناعي المنتهي، والمتوهّج هو الحالي */
+function DayDial() {
+  const radius = 120;
+  const circumference = 2 * Math.PI * radius;
+  const segment = circumference / DAY_SEGMENTS;
+  return (
+    <div className="relative mx-auto aspect-square w-[min(300px,100%)]" aria-hidden>
+      <svg viewBox="0 0 300 300" className="absolute inset-0 h-full w-full">
+        {Array.from({ length: DAY_SEGMENTS }, (_, i) => {
+          const done = i < CURRENT_SEGMENT;
+          const current = i === CURRENT_SEGMENT;
+          return (
+            <circle
+              key={i}
+              cx="150"
+              cy="150"
+              r={radius}
+              fill="none"
+              strokeWidth={current ? 26 : 18}
+              stroke={done ? "#7CE0C3" : current ? "#FFFFFF" : "#2A4B78"}
+              strokeDasharray={`${segment - 5} ${circumference}`}
+              transform={`rotate(${-90 + (i * 360) / DAY_SEGMENTS} 150 150)`}
+              className={current ? "dial-current" : undefined}
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span className="text-xs tracking-widest text-brand-side-muted">الدور الآن</span>
+        <span className="text-7xl font-bold leading-none text-white">٠٧</span>
+        <span className="mt-1 text-sm text-brand-mint">زينب حسن</span>
+      </div>
+    </div>
+  );
+}
+
+function BotChat() {
+  const bubbles = [
+    { mine: true, text: "السلام عليكم، أريد موعد" },
+    { mine: false, text: "أهلاً بك، اكتب اسمك الكريم" },
+    { mine: false, text: "تم حجزك الأربعاء 11:40 ✓" },
+  ];
+  return (
+    <div className="space-y-2 rounded-3xl border border-white/10 bg-white/[0.06] p-4" aria-hidden>
+      <div className="mb-1 flex items-center gap-2 text-xs text-brand-side-muted">
+        <span className="h-2 w-2 rounded-full bg-brand-mint" />
+        البوت يرد على المرضى وأنت في الكشف
+      </div>
+      {bubbles.map((b) => (
+        <div key={b.text} className={`flex ${b.mine ? "justify-start" : "justify-end"}`}>
+          <span
+            className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${
+              b.mine ? "bg-white/10 text-white" : "bg-brand-mint text-brand-mint-ink font-semibold"
+            }`}
+          >
+            {b.text}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BrandPanel() {
+  return (
+    <div className="relative hidden flex-col justify-between overflow-hidden bg-brand-navy p-10 text-white lg:flex lg:w-[54%] xl:p-14">
+      <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full border-[56px] border-white/[0.04]" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-32 -right-20 h-[26rem] w-[26rem] rounded-full border-[56px] border-brand-mint/[0.07]" />
+
+      <div className="relative">
+        <BrandMark tone="dark" />
+      </div>
+
+      <div className="relative space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold leading-[1.25] xl:text-5xl">
+            عيادتك تعمل
+            <br />
+            <span className="text-brand-mint">حتى وأنت في الكشف.</span>
+          </h1>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-brand-side-muted">
+            المريض يحجز عبر واتساب، وأنت تنادي التالي بضغطة واحدة، وشاشة الانتظار تنطق اسمه. كل شيء في مكان واحد.
+          </p>
+        </div>
+        <div className="grid items-center gap-6 xl:grid-cols-[auto_1fr]">
+          <DayDial />
+          <BotChat />
+        </div>
+      </div>
+
+      <div className="relative flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-brand-side-muted">
+        <span>٤ باقات تبدأ من ٣٥٬٠٠٠ دينار</span>
+        <span aria-hidden className="h-1 w-1 rounded-full bg-brand-side-dot" />
+        <span>١٤ يوماً تجربة مجانية كاملة</span>
+      </div>
+    </div>
+  );
+}
 
 function LoginForm() {
   const params = useSearchParams();
@@ -110,511 +240,127 @@ function LoginForm() {
     setForgotStep("done");
   }
 
+  const title = forgotMode ? "نسيت كلمة المرور؟" : "أهلاً بعودتك";
+  const subtitle = forgotMode
+    ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
+      : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
+      : forgotStep === "done" ? "تمت العملية بنجاح"
+      : "أدخل رقم الواتساب أو الإيميل المسجل"
+    : "سجّل دخولك برقم الواتساب أو الإيميل";
+
   return (
-    <div className="min-h-screen flex" dir="rtl">
+    <div className="flex min-h-screen bg-brand-bg" dir="rtl">
+      <style>{`
+        @keyframes dial-glow { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
+        .dial-current { animation: dial-glow 2.4s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .dial-current { animation: none; } }
+      `}</style>
 
-      {/* ── Hero Panel ── */}
-      <div className="hidden lg:flex lg:w-[58%] relative overflow-hidden flex-col"
-        style={{ background: "linear-gradient(135deg, #060f24 0%, #0c1f3f 45%, #0f2a54 100%)" }}>
+      <BrandPanel />
 
-        {/* Animated background blobs */}
-        <div className="absolute top-[-120px] right-[-120px] w-[500px] h-[500px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)", animation: "pulse 8s ease-in-out infinite" }} />
-        <div className="absolute bottom-[-80px] left-[-80px] w-[400px] h-[400px] rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, #60a5fa 0%, transparent 70%)", animation: "pulse 10s ease-in-out infinite reverse" }} />
-        <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #2563eb 0%, transparent 70%)", animation: "pulse 12s ease-in-out infinite 2s" }} />
+      <main className="flex flex-1 flex-col">
+        {/* شريط الهوية للموبايل */}
+        <div className="flex items-center justify-between bg-brand-navy px-5 py-4 lg:hidden">
+          <BrandMark tone="dark" />
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-brand-side-muted">١٤ يوماً مجاناً</span>
+        </div>
 
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+        <div className="flex flex-1 items-center justify-center px-5 py-10 lg:px-10">
+          <div className="w-full max-w-[420px]">
+            <h2 className="text-3xl font-bold text-brand-ink">{title}</h2>
+            <p className="mt-2 text-sm text-brand-muted">{subtitle}</p>
 
-        <div className="relative z-10 flex flex-col h-full p-12">
+            {params.get("registered") && (
+              <div className="mt-5 flex items-center gap-2 rounded-2xl bg-brand-mint-soft px-4 py-3 text-sm font-semibold text-brand-mint-text">
+                ✓ تم تسجيل العيادة بنجاح! سجّل دخولك الآن.
+              </div>
+            )}
 
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/40">
-              <HealthIcon />
+            <div className="mt-7">
+              {forgotMode ? (
+                <>
+                  {forgotStep === "input" && (
+                    <form onSubmit={handleForgotSend} className="space-y-4">
+                      <Field label="رقم الواتساب أو الإيميل">
+                        <input type="text" required value={forgotIdentifier} onChange={(e) => setForgotIdentifier(e.target.value)}
+                          className={INPUT_CLASS} placeholder="07701234567 أو email@example.com" dir="ltr" />
+                      </Field>
+                      <ErrorBox message={error} />
+                      <button type="submit" disabled={loading} className={PRIMARY_BTN}>{loading ? "جاري الإرسال..." : "إرسال الكود"}</button>
+                      <button type="button" onClick={closeForgotMode} className={GHOST_BTN}>رجوع لتسجيل الدخول</button>
+                    </form>
+                  )}
+                  {forgotStep === "otp" && (
+                    <form onSubmit={handleForgotOtpNext} className="space-y-4">
+                      <div className="rounded-2xl bg-brand-soft px-4 py-3 text-sm text-brand-on-soft">
+                        أُرسل كود التحقق إلى <span className="font-bold" dir="ltr">{forgotMasked}</span>
+                      </div>
+                      <Field label="كود التحقق (6 أرقام)">
+                        <input type="text" inputMode="numeric" maxLength={6} required value={forgotOtp}
+                          onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ""))}
+                          className={`${INPUT_CLASS} text-center font-mono text-xl tracking-[0.5em]`} dir="ltr" placeholder="------" />
+                      </Field>
+                      <ErrorBox message={error} />
+                      <button type="submit" className={PRIMARY_BTN}>التالي</button>
+                      <button type="button" onClick={() => setForgotStep("input")} className={GHOST_BTN}>تغيير رقم الواتساب / الإيميل</button>
+                    </form>
+                  )}
+                  {forgotStep === "password" && (
+                    <form onSubmit={handleForgotReset} className="space-y-4">
+                      <Field label="كلمة المرور الجديدة">
+                        <input type="password" required value={forgotPassword} onChange={(e) => setForgotPassword(e.target.value)} className={INPUT_CLASS} />
+                      </Field>
+                      <Field label="تأكيد كلمة المرور">
+                        <input type="password" required value={forgotConfirm} onChange={(e) => setForgotConfirm(e.target.value)} className={INPUT_CLASS} />
+                      </Field>
+                      <ErrorBox message={error} />
+                      <button type="submit" disabled={loading} className={PRIMARY_BTN}>{loading ? "جاري التغيير..." : "تغيير كلمة المرور"}</button>
+                    </form>
+                  )}
+                  {forgotStep === "done" && (
+                    <div className="space-y-5 py-4 text-center">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-mint-soft">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-8 w-8 text-brand-mint-text" aria-hidden>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                      <p className="text-lg font-bold text-brand-ink">تم تغيير كلمة المرور!</p>
+                      <p className="text-sm text-brand-muted">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
+                      <button type="button" onClick={closeForgotMode} className={PRIMARY_BTN}>تسجيل الدخول</button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <Field label="رقم الواتساب أو الإيميل">
+                      <input name="identifier" type="text" required className={INPUT_CLASS} placeholder="07701234567 أو email@example.com" dir="ltr" autoComplete="username" />
+                    </Field>
+                    <Field
+                      label="كلمة المرور"
+                      aside={
+                        <button type="button" onClick={openForgotMode} className="text-xs font-semibold text-brand-blue hover:underline">
+                          نسيت كلمة المرور؟
+                        </button>
+                      }
+                    >
+                      <input name="password" type="password" required className={INPUT_CLASS} autoComplete="current-password" />
+                    </Field>
+                    <ErrorBox message={error} />
+                    <button type="submit" disabled={loading} className={PRIMARY_BTN}>{loading ? "جاري الدخول..." : "تسجيل الدخول"}</button>
+                  </form>
+                  <GoogleButton />
+                </>
+              )}
             </div>
-            <span className="text-white text-2xl font-extrabold tracking-wide">عيادتي</span>
-            <span className="text-[10px] text-blue-300/70 border border-blue-400/30 rounded-full px-2 py-0.5 font-semibold mr-1">PRO</span>
-          </div>
 
-          {/* Main headline */}
-          <div className="mt-12 mb-10">
-            <div className="inline-flex items-center gap-2 bg-blue-500/15 border border-blue-400/25 rounded-full px-3 py-1.5 mb-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-blue-200 text-xs font-semibold">نظام إدارة العيادات #1 في العراق</span>
-            </div>
-            <h1 className="text-white text-5xl font-black leading-tight mb-4">
-              إدارة عيادتك<br/>
-              <span style={{ background: "linear-gradient(90deg, #60a5fa, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                بذكاء وسهولة
-              </span>
-            </h1>
-            <p className="text-blue-200/70 text-base leading-relaxed max-w-md">
-              كل ما تحتاجه لإدارة عيادتك في نظام واحد — من حجز المريض عبر واتساب حتى استدعائه بالصوت في غرفة الانتظار.
+            <p className="mt-8 text-center text-sm text-brand-muted">
+              عيادة جديدة؟{" "}
+              <Link href="/register" className="font-bold text-brand-blue hover:underline">ابدأ تجربتك المجانية</Link>
             </p>
           </div>
-
-          {/* Feature cards grid */}
-          <div className="grid grid-cols-2 gap-3 flex-1">
-            {[
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-                    <rect x="9" y="3" width="6" height="4" rx="1"/>
-                    <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
-                  </svg>
-                ),
-                color: "#3b82f6",
-                title: "سجلات طبية كاملة",
-                desc: "تشخيص، وصفة، ومتابعة لكل مريض",
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                ),
-                color: "#22c55e",
-                title: "بوت واتساب ذكي",
-                desc: "يستقبل الحجوزات تلقائياً 24/7",
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="2" fill="currentColor" stroke="none"/>
-                  </svg>
-                ),
-                color: "#a78bfa",
-                title: "إدارة المواعيد",
-                desc: "جدولة وتأكيد وإلغاء بضغطة واحدة",
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-                    <rect x="2" y="3" width="20" height="14" rx="2"/>
-                    <path d="M8 21h8M12 17v4"/>
-                  </svg>
-                ),
-                color: "#f59e0b",
-                title: "شاشة انتظار بالصوت",
-                desc: "ينادي المريض باسمه على التلفزيون",
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                  </svg>
-                ),
-                color: "#ec4899",
-                title: "تذكيرات تلقائية",
-                desc: "رسائل واتساب قبل الموعد بـ 24 ساعة",
-              },
-              {
-                icon: (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-5 h-5">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
-                ),
-                color: "#06b6d4",
-                title: "ملفات المرضى",
-                desc: "تاريخ كامل ومواعيد مراجعة للمتابعة",
-              },
-            ].map((f) => (
-              <div key={f.title}
-                className="rounded-2xl p-4 flex gap-3 items-start transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.01]"
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.09)",
-                  backdropFilter: "blur(12px)",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
-                }}>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${f.color}22`, color: f.color, border: `1px solid ${f.color}33` }}>
-                  {f.icon}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-white text-sm font-bold leading-tight">{f.title}</p>
-                  <p className="text-blue-200/55 text-xs mt-0.5 leading-snug">{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Stats bar */}
-          <div className="mt-8 flex items-center gap-6 pt-6"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-            {[
-              { num: "13+", label: "عيادة تثق بنا" },
-              { num: "24/7", label: "بوت واتساب" },
-              { num: "100%", label: "آمان البيانات" },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="text-white text-xl font-black">{s.num}</p>
-                <p className="text-blue-300/60 text-xs">{s.label}</p>
-              </div>
-            ))}
-            <div className="mr-auto text-blue-300/40 text-xs">© 2026 عيادتي</div>
-          </div>
         </div>
-      </div>
-
-      {/* Form panel */}
-      <div className="w-full lg:w-[42%] flex items-center justify-center lg:p-6 lg:bg-brand-bg">
-
-        {/* ── Mobile full-screen layout ── */}
-        <div className="w-full lg:hidden min-h-screen flex flex-col" style={{background: "linear-gradient(160deg,#0c1f3f 0%,#1a3a6b 40%,#1e4080 100%)"}}>
-
-          {/* Mobile hero */}
-          <div className="flex flex-col items-center pt-14 pb-8 px-6 text-center">
-            <div className="w-16 h-16 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-              <HealthIcon className="w-9 h-9" />
-            </div>
-            <h1 className="text-white text-3xl font-black tracking-tight">عيادتي</h1>
-            <p className="text-blue-200/80 text-sm mt-1.5 font-medium">نظام إدارة العيادات الذكي</p>
-
-            {/* trust badges */}
-            <div className="flex items-center gap-3 mt-4">
-              {[{icon:"🏥", text:"13+ عيادة"},{icon:"🤖", text:"بوت واتساب"},{icon:"🔒", text:"بيانات آمنة"}].map((b) => (
-                <div key={b.text} className="flex items-center gap-1 bg-white/8 border border-white/12 rounded-full px-2.5 py-1">
-                  <span className="text-xs">{b.icon}</span>
-                  <span className="text-[11px] text-blue-100 font-bold">{b.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile form card */}
-          <div className="flex-1 bg-white rounded-t-[32px] px-6 pt-8 pb-10 shadow-[0_-8px_40px_rgba(0,0,0,0.25)]">
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-brand-navy">
-                {forgotMode ? "نسيت كلمة المرور؟" : "تسجيل الدخول"}
-              </h2>
-              <p className="text-brand-muted text-sm mt-1">
-                {forgotMode
-                  ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
-                    : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
-                    : forgotStep === "done" ? "تمت العملية بنجاح"
-                    : "أدخل رقم الواتساب أو الإيميل المسجل"
-                  : "برقم الواتساب أو الإيميل"}
-              </p>
-            </div>
-
-            {params.get("registered") && (
-              <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm mb-5 flex items-center gap-2">
-                <span>✓</span> تم تسجيل العيادة بنجاح!
-              </div>
-            )}
-
-            {forgotMode ? (
-              <>
-                {forgotStep === "input" && (
-                  <form onSubmit={handleForgotSend} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-brand-muted mb-1.5">رقم الواتساب أو الإيميل</label>
-                      <input type="text" required value={forgotIdentifier}
-                        onChange={(e) => setForgotIdentifier(e.target.value)}
-                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all placeholder:text-[#94A3B8] font-medium"
-                        placeholder="07701234567 أو email@example.com" dir="ltr" />
-                    </div>
-                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
-                    <button type="submit" disabled={loading}
-                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
-                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
-                      {loading ? "جاري الإرسال..." : "إرسال الكود"}
-                    </button>
-                    <button type="button" onClick={closeForgotMode}
-                      className="w-full text-brand-muted font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
-                      رجوع لتسجيل الدخول
-                    </button>
-                  </form>
-                )}
-                {forgotStep === "otp" && (
-                  <form onSubmit={handleForgotOtpNext} className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 font-medium">
-                      أُرسل كود التحقق إلى <span className="font-black" dir="ltr">{forgotMasked}</span>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-brand-muted mb-1.5">كود التحقق (6 أرقام)</label>
-                      <input type="text" inputMode="numeric" maxLength={6} required
-                        value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g,""))}
-                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-xl bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-mono text-center tracking-widest"
-                        dir="ltr" placeholder="------" />
-                    </div>
-                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
-                    <button type="submit"
-                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2"
-                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
-                      التالي
-                    </button>
-                    <button type="button" onClick={() => setForgotStep("input")}
-                      className="w-full text-brand-muted font-bold rounded-2xl py-3 text-sm transition-all hover:bg-slate-50">
-                      تغيير رقم الواتساب / الإيميل
-                    </button>
-                  </form>
-                )}
-                {forgotStep === "password" && (
-                  <form onSubmit={handleForgotReset} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-brand-muted mb-1.5">كلمة المرور الجديدة</label>
-                      <input type="password" required value={forgotPassword}
-                        onChange={(e) => setForgotPassword(e.target.value)}
-                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-medium" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-brand-muted mb-1.5">تأكيد كلمة المرور</label>
-                      <input type="password" required value={forgotConfirm}
-                        onChange={(e) => setForgotConfirm(e.target.value)}
-                        className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-medium" />
-                    </div>
-                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">{error}</div>}
-                    <button type="submit" disabled={loading}
-                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
-                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
-                      {loading ? "جاري التغيير..." : "تغيير كلمة المرور"}
-                    </button>
-                  </form>
-                )}
-                {forgotStep === "done" && (
-                  <div className="space-y-5 text-center py-4">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} className="w-8 h-8">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                    <p className="text-lg font-black text-brand-navy">تم تغيير كلمة المرور!</p>
-                    <p className="text-sm text-brand-muted">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
-                    <button type="button" onClick={closeForgotMode}
-                      className="w-full text-white font-black rounded-2xl py-4 text-base transition-all"
-                      style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",boxShadow:"0 8px 24px rgba(37,99,235,0.4)"}}>
-                      تسجيل الدخول
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-            <>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-brand-muted mb-1.5">رقم الواتساب أو الإيميل</label>
-                  <input name="identifier" type="text" required
-                    className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all placeholder:text-[#94A3B8] font-medium"
-                    placeholder="07701234567" dir="ltr" />
-                </div>
-                <div>
-                  <div className="mb-1.5 flex items-center justify-between gap-3">
-                    <label className="block text-xs font-bold text-brand-muted">كلمة المرور</label>
-                    <button type="button" onClick={openForgotMode}
-                      className="text-xs font-bold text-brand-blue hover:underline">
-                      نسيت كلمة المرور؟
-                    </button>
-                  </div>
-                  <input name="password" type="password" required
-                    className="w-full border-2 border-brand-border rounded-2xl px-4 py-3.5 text-sm bg-brand-bg focus:outline-none focus:border-brand-blue transition-all font-medium" />
-                </div>
-
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm font-medium">
-                    {error}
-                  </div>
-                )}
-
-                <button type="submit" disabled={loading}
-                  className="w-full text-white font-black rounded-2xl py-4 text-base transition-all mt-2 disabled:opacity-60"
-                  style={{background: "linear-gradient(135deg,#2563eb,#1d4ed8)", boxShadow: "0 8px 24px rgba(37,99,235,0.4)"}}>
-                  {loading ? "جاري الدخول..." : "دخول →"}
-                </button>
-              </form>
-              <GoogleButton />
-            </>
-            )}
-
-            <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <p className="text-sm text-brand-muted">
-                عيادة جديدة؟{" "}
-                <Link href="/register" className="text-brand-blue font-black hover:underline">سجّل مجاناً</Link>
-              </p>
-            </div>
-
-            {/* feature list */}
-            <div className="mt-6 grid grid-cols-2 gap-2">
-              {[
-                {icon:"💬", text:"بوت واتساب تلقائي"},
-                {icon:"📋", text:"ملفات مرضى كاملة"},
-                {icon:"📺", text:"شاشة انتظار ذكية"},
-                {icon:"🔔", text:"تذكيرات تلقائية"},
-              ].map((f) => (
-                <div key={f.text} className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2.5">
-                  <span className="text-base">{f.icon}</span>
-                  <span className="text-xs font-bold text-slate-600">{f.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Desktop layout (unchanged) ── */}
-        <div className="hidden lg:block w-full max-w-sm fade-in">
-          <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.06),0_16px_48px_rgba(37,99,235,0.08)] p-8">
-            <div className="mb-7">
-              <h2 className="text-2xl font-extrabold text-brand-navy">
-                {forgotMode ? "نسيت كلمة المرور؟" : "أهلاً بك"}
-              </h2>
-              <p className="text-brand-muted text-sm mt-1">
-                {forgotMode
-                  ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
-                    : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
-                    : forgotStep === "done" ? "تمت العملية بنجاح"
-                    : "أدخل رقم الواتساب أو الإيميل المسجل"
-                  : "ادخل برقم واتساب العيادة"}
-              </p>
-            </div>
-
-            {params.get("registered") && (
-              <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm mb-5 flex items-center gap-2">
-                <span>✓</span> تم تسجيل العيادة بنجاح! سجّل دخولك الآن.
-              </div>
-            )}
-
-            {forgotMode ? (
-              <>
-                {forgotStep === "input" && (
-                  <form onSubmit={handleForgotSend} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">رقم الواتساب أو الإيميل</label>
-                      <input type="text" required value={forgotIdentifier}
-                        onChange={(e) => setForgotIdentifier(e.target.value)}
-                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all placeholder:text-[#94A3B8]"
-                        placeholder="07701234567 أو email@example.com" dir="ltr" />
-                    </div>
-                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
-                    <button type="submit" disabled={loading}
-                      className="w-full bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
-                      {loading ? "جاري الإرسال..." : "إرسال الكود"}
-                    </button>
-                    <button type="button" onClick={closeForgotMode}
-                      className="w-full text-brand-muted font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
-                      رجوع لتسجيل الدخول
-                    </button>
-                  </form>
-                )}
-                {forgotStep === "otp" && (
-                  <form onSubmit={handleForgotOtpNext} className="space-y-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
-                      أُرسل كود التحقق إلى <span className="font-bold" dir="ltr">{forgotMasked}</span>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">كود التحقق (6 أرقام)</label>
-                      <input type="text" inputMode="numeric" maxLength={6} required
-                        value={forgotOtp} onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g,""))}
-                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-xl bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all font-mono text-center tracking-widest"
-                        dir="ltr" placeholder="------" />
-                    </div>
-                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
-                    <button type="submit"
-                      className="w-full bg-brand-blue hover:bg-brand-blue-dark text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
-                      التالي
-                    </button>
-                    <button type="button" onClick={() => setForgotStep("input")}
-                      className="w-full text-brand-muted font-bold rounded-xl py-3 text-sm transition-all hover:bg-slate-50">
-                      تغيير رقم الواتساب / الإيميل
-                    </button>
-                  </form>
-                )}
-                {forgotStep === "password" && (
-                  <form onSubmit={handleForgotReset} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">كلمة المرور الجديدة</label>
-                      <input type="password" required value={forgotPassword}
-                        onChange={(e) => setForgotPassword(e.target.value)}
-                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">تأكيد كلمة المرور</label>
-                      <input type="password" required value={forgotConfirm}
-                        onChange={(e) => setForgotConfirm(e.target.value)}
-                        className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all" />
-                    </div>
-                    {error && <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>}
-                    <button type="submit" disabled={loading}
-                      className="w-full bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
-                      {loading ? "جاري التغيير..." : "تغيير كلمة المرور"}
-                    </button>
-                  </form>
-                )}
-                {forgotStep === "done" && (
-                  <div className="space-y-4 text-center py-4">
-                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth={2.5} className="w-7 h-7">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                    <p className="text-base font-bold text-brand-navy">تم تغيير كلمة المرور!</p>
-                    <p className="text-sm text-brand-muted">يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.</p>
-                    <button type="button" onClick={closeForgotMode}
-                      className="w-full bg-brand-blue hover:bg-brand-blue-dark text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
-                      تسجيل الدخول
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-            <>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-1.5 uppercase tracking-wide">
-                    رقم الواتساب أو الإيميل
-                  </label>
-                  <input name="identifier" type="text" required
-                    className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all placeholder:text-[#94A3B8]"
-                    placeholder="07701234567 أو email@example.com" dir="ltr" />
-                </div>
-                <div>
-                  <div className="mb-1.5 flex items-center justify-between gap-3">
-                    <label className="block text-xs font-semibold text-brand-navy uppercase tracking-wide">
-                      كلمة المرور
-                    </label>
-                    <button type="button" onClick={openForgotMode}
-                      className="text-xs font-semibold text-brand-blue hover:underline">
-                      نسيت كلمة المرور؟
-                    </button>
-                  </div>
-                  <input name="password" type="password" required
-                    className="w-full border border-brand-border rounded-xl px-4 py-3 text-sm bg-brand-bg focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue transition-all" />
-                </div>
-
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>
-                )}
-
-                <button type="submit" disabled={loading}
-                  className="w-full bg-brand-blue hover:bg-brand-blue-dark disabled:opacity-60 text-white font-bold rounded-xl py-3.5 text-sm transition-all shadow-[0_4px_14px_rgba(37,99,235,0.35)]">
-                  {loading ? "جاري الدخول..." : "تسجيل الدخول"}
-                </button>
-              </form>
-              <GoogleButton />
-            </>
-            )}
-
-            {!forgotMode && (
-              <p className="text-center text-xs text-[#94A3B8] mt-4">يمكنك الدخول برقم الواتساب أو الإيميل</p>
-            )}
-          </div>
-
-          <p className="text-center text-sm text-brand-muted mt-5">
-            عيادة جديدة؟{" "}
-            <Link href="/register" className="text-brand-blue font-semibold hover:underline">سجّل مجاناً</Link>
-          </p>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
