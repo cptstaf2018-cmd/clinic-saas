@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import TodayAppointmentsClient from "./TodayAppointmentsClient";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
-import ClinicDashboardPremium from "@/components/ClinicDashboardPremium";
 import { canUseFeature } from "@/lib/feature-gates";
 
 const ARABIC_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -175,7 +174,6 @@ export default async function DashboardPage() {
 
   const current = appointments.find((appointment) => appointment.queueStatus === "current");
   const waiting = appointments.filter((appointment) => appointment.queueStatus === "waiting");
-  const active = appointments.filter((appointment) => appointment.status !== "completed" && appointment.status !== "cancelled");
   const completed = appointments.filter((appointment) => appointment.status === "completed").length;
   const pending = appointments.filter((appointment) => appointment.status === "pending").length;
   const nextWaiting = waiting[0];
@@ -190,6 +188,28 @@ export default async function DashboardPage() {
     waiting: waiting.length,
     completed,
   };
+  const clinic = await db.clinic.findUnique({ where: { id: clinicId }, select: { name: true } });
+  const recentInbound = await db.incomingMessage.findMany({
+    where: { clinicId, direction: "inbound", archived: false },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    select: { id: true, phone: true, body: true, createdAt: true },
+  });
+  const senders = await db.patient.findMany({
+    where: { clinicId, whatsappPhone: { in: recentInbound.map((message) => message.phone) } },
+    select: { whatsappPhone: true, name: true },
+  });
+  const senderName = new Map(senders.map((patient) => [patient.whatsappPhone, patient.name]));
+  const unreadCount = await db.incomingMessage.count({ where: { clinicId, direction: "inbound", read: false, archived: false } });
+  const recentMessages = recentInbound.map((message) => ({
+    id: message.id,
+    from: senderName.get(message.phone) ?? message.phone,
+    body: message.body,
+    time: formatTime(message.createdAt),
+  }));
+  const baghdadHour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Baghdad" }).format(today));
+  const greeting = baghdadHour < 12 ? "صباح الخير" : "مساء الخير";
+  const todayLabel = today.toLocaleDateString("ar-IQ", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Baghdad" });
 
   const serialized = appointments.map((appointment) => ({
     id: appointment.id,
@@ -204,9 +224,33 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-4 md:p-8" dir="rtl">
-      <div className="mx-auto max-w-7xl">
-        <ClinicDashboardPremium specialty={specialtyConfig.code} clinicId={clinicId} stats={{ appointmentsToday: active.length, waitingCount: waiting.length, completedCount: completed, specialty: specialtyConfig.code }} />
-        <TodayAppointmentsClient appointments={serialized} canCheer={canCheer} />
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm text-brand-muted">{todayLabel} · {specialtyConfig.nameAr}</p>
+            <h1 className="mt-1 text-3xl font-bold leading-tight text-brand-ink md:text-[34px]">
+              {greeting}، {clinic?.name ?? "العيادة"}
+            </h1>
+          </div>
+          <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
+            <form action="/dashboard/patients" className="flex min-h-12 flex-1 items-center gap-2 rounded-2xl border border-brand-border bg-white px-4 focus-within:border-brand-blue md:w-72 md:flex-none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-[18px] w-[18px] shrink-0 text-brand-muted"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+              <input name="q" type="search" placeholder="ابحث عن مراجع بالاسم أو الرقم" aria-label="بحث عن مراجع" className="w-full bg-transparent text-sm text-brand-ink outline-none placeholder:text-brand-muted/80" />
+            </form>
+            <Link href="/dashboard/appointments" className="flex min-h-12 items-center gap-2 rounded-2xl bg-brand-blue px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-brand-blue-dark">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-[18px] w-[18px]"><path d="M12 5v14M5 12h14"/></svg>
+              حجز جديد
+            </Link>
+          </div>
+        </header>
+        <TodayAppointmentsClient
+          appointments={serialized}
+          canCheer={canCheer}
+          clinicId={clinicId}
+          stats={{ total: appointments.length, waiting: waiting.length, completed, pending }}
+          messages={recentMessages}
+          unreadCount={unreadCount}
+        />
       </div>
     </div>
   );

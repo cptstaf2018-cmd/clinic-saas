@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Cairo, Geist } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Geist } from "next/font/google";
 import "./globals.css";
 import RegisterSW from "./components/RegisterSW";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
-const cairo = Cairo({
+const plexArabic = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-cairo",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-arabic",
   display: "swap",
 });
 
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0C1F3F",
+  themeColor: "#0E2440",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -39,8 +39,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={cn("h-full", cairo.variable, "font-sans", geist.variable)}>
-      <body className="min-h-full flex flex-col bg-[#EEF2F9] text-[#0F172A] antialiased">
+    <html lang="ar" dir="rtl" className={cn("h-full", plexArabic.variable, "font-sans", geist.variable)}>
+      <body className="min-h-full flex flex-col bg-brand-bg text-brand-ink antialiased">
         <RegisterSW />
         {children}
       </body>

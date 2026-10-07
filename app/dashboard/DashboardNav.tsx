@@ -76,16 +76,16 @@ export default function DashboardNav({ role }: { role?: string | null }) {
             href={item.href}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
               active
-                ? "bg-white/12 text-white"
-                : "text-blue-100/70 hover:text-white hover:bg-white/8"
+                ? "bg-brand-navy-2 text-white"
+                : "text-brand-side-muted hover:text-white hover:bg-white/8"
             }`}
           >
-            <span className={`transition-colors duration-200 ${active ? "text-blue-300" : "text-blue-300/60 group-hover:text-blue-300"}`}>
+            <span className={`transition-colors duration-200 ${active ? "text-brand-mint" : "text-brand-side-muted/70 group-hover:text-white"}`}>
               {item.icon}
             </span>
             {item.label}
             {active && (
-              <span className="mr-auto w-1.5 h-1.5 rounded-full bg-blue-400" />
+              <span className="mr-auto h-4 w-1 rounded-full bg-brand-mint" />
             )}
           </Link>
         );
@@ -119,7 +119,7 @@ export function MobileDashboardNav() {
 
       {/* More items sheet */}
       {showMore && (
-        <div className="fixed bottom-16 inset-x-0 z-50 bg-[#0C1F3F] border-t border-white/10 rounded-t-2xl px-4 py-3">
+        <div className="fixed bottom-16 inset-x-0 z-50 bg-brand-navy border-t border-white/10 rounded-t-2xl px-4 py-3">
           <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4" />
           <div className="grid grid-cols-2 gap-2">
             {MORE_NAV.map((item) => {
@@ -130,7 +130,7 @@ export function MobileDashboardNav() {
                   href={item.href}
                   onClick={() => setShowMore(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    active ? "bg-white/12 text-blue-300" : "text-blue-200/70 hover:bg-white/8 hover:text-white"
+                    active ? "bg-brand-navy-2 text-brand-mint" : "text-brand-side-muted hover:bg-white/8 hover:text-white"
                   }`}
                 >
                   <span className="[&_svg]:w-5 [&_svg]:h-5">{item.icon}</span>
@@ -150,14 +150,14 @@ export function MobileDashboardNav() {
             key={item.href}
             href={item.href}
             className={`flex-1 flex flex-col items-center justify-center py-2.5 transition-colors gap-1 ${
-              active ? "text-blue-300" : "text-blue-200/60 hover:text-blue-300"
+              active ? "text-brand-mint" : "text-brand-side-muted hover:text-white"
             }`}
           >
             <span className={`[&_svg]:w-5 [&_svg]:h-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}>
               {item.icon}
             </span>
             <span className={`text-[10px] font-medium ${active ? "font-bold" : ""}`}>{item.label}</span>
-            {active && <span className="w-1 h-1 rounded-full bg-blue-400 mt-0.5" />}
+            {active && <span className="w-1 h-1 rounded-full bg-brand-mint mt-0.5" />}
           </Link>
         );
       })}
@@ -166,14 +166,14 @@ export function MobileDashboardNav() {
       <button
         onClick={() => setShowMore(v => !v)}
         className={`flex-1 flex flex-col items-center justify-center py-2.5 transition-colors gap-1 ${
-          anyMoreActive ? "text-blue-300" : "text-blue-200/60 hover:text-blue-300"
+          anyMoreActive ? "text-brand-mint" : "text-brand-side-muted hover:text-white"
         }`}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
           <circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/>
         </svg>
         <span className="text-[10px] font-medium">المزيد</span>
-        {anyMoreActive && <span className="w-1 h-1 rounded-full bg-blue-400 mt-0.5" />}
+        {anyMoreActive && <span className="w-1 h-1 rounded-full bg-brand-mint mt-0.5" />}
       </button>
     </>
   );

@@ -6,7 +6,9 @@ import { getAssistantAccess } from "@/lib/assistant-access";
 import DashboardAssistantFloating from "./DashboardAssistantFloating";
 import MobileDrawer from "./MobileDrawer";
 import SubscriptionNotice from "./SubscriptionNotice";
-import { getSubscriptionNotice, isSubscriptionHardLocked } from "@/lib/subscription-status";
+import { getSubscriptionNotice, isSubscriptionHardLocked, subscriptionDaysLeft } from "@/lib/subscription-status";
+import { PLAN_LABELS, isPlanId } from "@/lib/plans";
+import Link from "next/link";
 import OfflineStatus from "./OfflineStatus";
 
 async function getClinicData(clinicId: string) {
@@ -17,8 +19,8 @@ async function getClinicData(clinicId: string) {
 }
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  trial:    { label: "تجريبي", cls: "bg-amber-400/20 text-amber-300 border-amber-400/30" },
-  active:   { label: "نشط",    cls: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30" },
+  trial:    { label: "تجريبي", cls: "bg-amber-400/20 text-amber-200 border-amber-400/30" },
+  active:   { label: "نشط",    cls: "bg-brand-mint/15 text-brand-mint border-brand-mint/30" },
   inactive: { label: "منتهي",  cls: "bg-red-400/20 text-red-300 border-red-400/30" },
 };
 
@@ -44,6 +46,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const badge = STATUS_BADGE[subStatus] ?? STATUS_BADGE.inactive;
   const assistantAccess = await getAssistantAccess(clinicId, clinic?.subscription ?? null, false);
   const subscriptionNotice = getSubscriptionNotice(clinic?.subscription ?? null);
+  const daysLeft = Math.max(0, subscriptionDaysLeft(clinic?.subscription ?? null));
+  const isTrial = subStatus === "trial";
+  const trialProgress = isTrial ? Math.min(100, Math.max(4, Math.round(((14 - daysLeft) / 14) * 100))) : 0;
+  const planId = clinic?.subscription?.plan;
+  const planLabel = planId && isPlanId(planId) ? PLAN_LABELS[planId] : PLAN_LABELS.trial;
 
   const signOutForm = (
     <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
@@ -57,11 +64,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   );
 
   return (
-    <div className="min-h-screen flex bg-[#eef7f4]" dir="rtl">
+    <div className="min-h-screen flex bg-brand-bg" dir="rtl">
 
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex flex-col w-72 min-h-screen sticky top-0 h-screen shrink-0 p-4">
-        <div className="flex min-h-full flex-col rounded-[28px] bg-gradient-to-b from-[#0f766e] via-[#2563eb] to-[#1d4ed8] shadow-[0_20px_50px_rgba(37,99,235,0.18)] overflow-hidden">
+        <div className="flex min-h-full flex-col rounded-[28px] bg-brand-navy shadow-[0_24px_60px_-20px_rgba(14,36,64,0.55)] overflow-y-auto">
 
           {/* Logo */}
           <div className="px-5 py-6 border-b border-white/10">
@@ -70,16 +77,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={clinic.logoUrl} alt={name} className="w-11 h-11 object-contain rounded-2xl shrink-0 bg-white/95 p-1" />
               ) : (
-                <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-950/20">
-                  <svg viewBox="0 0 40 40" fill="none" className="w-5 h-5">
-                    <rect x="15" y="4" width="10" height="32" rx="2" fill="#065f46"/>
-                    <rect x="4" y="15" width="32" height="10" rx="2" fill="#2563eb"/>
+                <div className="w-11 h-11 bg-brand-mint rounded-2xl flex items-center justify-center shrink-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="w-5 h-5 text-brand-mint-ink">
+                    <path d="M12 5v14M5 12h14"/>
                   </svg>
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-white font-black text-base leading-tight truncate">{name}</p>
-                <p className="text-blue-100/60 text-xs mt-1">لوحة تشغيل العيادة</p>
+                <p className="text-white font-bold text-base leading-tight truncate">{name}</p>
+                <p className="text-brand-side-muted text-xs mt-1">Clinic AI Pro</p>
                 <span className={`inline-flex mt-2 text-[10px] font-semibold border rounded-full px-2 py-0.5 ${badge.cls}`}>
                   {badge.label}
                 </span>
@@ -89,6 +95,31 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           {/* Nav */}
           <DashboardNav role={session.user.role} />
+
+          {/* Subscription card */}
+          <div className="mx-3 mb-3 rounded-2xl border border-brand-navy-line bg-brand-navy-3 p-4">
+            {isTrial ? (
+              <>
+                <p className="text-xs text-brand-side-muted">الفترة التجريبية المجانية</p>
+                <p className="mt-1 text-xl font-bold text-white">باقي {daysLeft} {daysLeft === 1 ? "يوم" : "أيام"}</p>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-brand-navy">
+                  <div className="h-1.5 rounded-full bg-brand-mint" style={{ width: `${trialProgress}%` }} />
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-brand-side-muted">باقتك الحالية</p>
+                <p className="mt-1 text-lg font-bold text-white">{planLabel}</p>
+                <p className="mt-1 text-xs text-brand-side-muted">متبقي {daysLeft} يوم</p>
+              </>
+            )}
+            <Link
+              href="/dashboard/subscription"
+              className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-brand-mint text-sm font-bold text-brand-mint-ink transition hover:-translate-y-0.5 hover:bg-brand-mint-hover"
+            >
+              {isTrial ? "اشترك الآن" : "إدارة الاشتراك"}
+            </Link>
+          </div>
 
           {/* Logout */}
           <div className="px-3 py-4 border-t border-white/10">
@@ -101,7 +132,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="flex flex-col flex-1 min-w-0">
 
         {/* Mobile Header */}
-        <header className="md:hidden bg-[#0C1F3F] px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-lg">
+        <header className="md:hidden bg-brand-navy px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-lg">
           <div className="flex items-center gap-2">
 
             {/* زر ☰ + الدرج */}
@@ -111,10 +142,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
               // eslint-disable-next-line @next/next/no-img-element
               <img src={clinic.logoUrl} alt={name} className="w-8 h-8 object-contain rounded-lg shrink-0" />
             ) : (
-              <div className="w-8 h-8 bg-[#2563EB] rounded-lg flex items-center justify-center">
-                <svg viewBox="0 0 40 40" fill="none" className="w-4 h-4">
-                  <rect x="15" y="4" width="10" height="32" rx="2" fill="white"/>
-                  <rect x="4" y="15" width="32" height="10" rx="2" fill="white"/>
+              <div className="w-8 h-8 bg-brand-mint rounded-lg flex items-center justify-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="w-4 h-4 text-brand-mint-ink">
+                  <path d="M12 5v14M5 12h14"/>
                 </svg>
               </div>
             )}

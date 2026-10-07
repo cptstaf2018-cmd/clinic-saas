@@ -5,14 +5,14 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --navy:        #0C1F3F;
-  --navy-light:  #162D52;
-  --navy-border: #1E3A5F;
+  --navy:        #0E2440;
+  --navy-light:  #1C3A63;
+  --navy-border: #2A4B78;
   --blue:        #2563EB;
   --blue-hover:  #1D4ED8;
   --blue-bg:     #EFF6FF;
   --blue-border: #BFDBFE;
-  --bg:          #EEF2F9;
+  --bg:          #F3F6FA;
   --surface:     #FFFFFF;
   --text:        #0F172A;
   --muted:        oklch(0.97 0 0);
@@ -53,7 +53,31 @@
   --sidebar-ring:        oklch(0.708 0 0);
 }
 
-* { font-family: var(--font-cairo), 'Cairo', 'Segoe UI', sans-serif; }
+* { font-family: var(--font-arabic), 'IBM Plex Sans Arabic', 'Segoe UI', sans-serif; }
+
+/* هوية Clinic AI Pro — أزرق كحلي + نعناعي */
+@theme {
+  --color-brand-navy:       #0E2440;
+  --color-brand-navy-2:     #1C3A63;
+  --color-brand-navy-3:     #142F52;
+  --color-brand-navy-line:  #2A4B78;
+  --color-brand-side-muted: #A8B8CF;
+  --color-brand-side-dot:   #3F5C85;
+  --color-brand-blue:       #1F5FD1;
+  --color-brand-blue-dark:  #174AA6;
+  --color-brand-soft:       #E5EEFC;
+  --color-brand-on-soft:    #1A4FB0;
+  --color-brand-mint:       #7CE0C3;
+  --color-brand-mint-hover: #5FD3B1;
+  --color-brand-mint-ink:   #052A20;
+  --color-brand-mint-soft:  #D9F7EE;
+  --color-brand-mint-text:  #0B5A45;
+  --color-brand-bg:         #F3F6FA;
+  --color-brand-border:     #DFE6EF;
+  --color-brand-line:       #EDF1F6;
+  --color-brand-ink:        #0F1B2D;
+  --color-brand-muted:      #566479;
+}
 
 body {
   background: var(--bg);

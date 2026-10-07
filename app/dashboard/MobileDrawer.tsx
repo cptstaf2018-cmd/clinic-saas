@@ -44,7 +44,7 @@ export default function MobileDrawer({ signOutForm, role }: { signOutForm: React
 
       {/* الدرج */}
       <aside
-        className={`fixed inset-y-0 right-0 z-50 w-72 flex flex-col bg-gradient-to-b from-[#0f766e] via-[#2563eb] to-[#1d4ed8] shadow-2xl transition-transform duration-300 ${
+        className={`fixed inset-y-0 right-0 z-50 w-72 flex flex-col bg-brand-navy shadow-2xl transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -68,14 +68,14 @@ export default function MobileDrawer({ signOutForm, role }: { signOutForm: React
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                  active ? "bg-white/12 text-white" : "text-blue-100/70 hover:text-white hover:bg-white/8"
+                  active ? "bg-brand-navy-2 text-white" : "text-brand-side-muted hover:text-white hover:bg-white/8"
                 }`}
               >
-                <span className={`transition-colors ${active ? "text-blue-300" : "text-blue-300/60 group-hover:text-blue-300"}`}>
+                <span className={`transition-colors ${active ? "text-brand-mint" : "text-brand-side-muted/70 group-hover:text-white"}`}>
                   {item.icon}
                 </span>
                 {item.label}
-                {active && <span className="mr-auto w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                {active && <span className="mr-auto h-4 w-1 rounded-full bg-brand-mint" />}
               </Link>
             );
           })}
