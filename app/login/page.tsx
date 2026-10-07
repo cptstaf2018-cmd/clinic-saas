@@ -276,6 +276,12 @@ function LoginForm() {
               </div>
             )}
 
+            {params.get("error") && !forgotMode && (
+              <div role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                تعذّر الدخول بحساب Google. جرّب الدخول بالإيميل وكلمة المرور، أو استخدم حساب Google آخر.
+              </div>
+            )}
+
             <div className="mt-7">
               {forgotMode ? (
                 <>
