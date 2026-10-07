@@ -2,6 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import { FlaskConical, Pill, Stethoscope } from "lucide-react";
+import { FACILITY_TYPES } from "@/lib/facility-types";
+import type { FacilityTypeKey } from "@/lib/facility-types";
 import { MEDICAL_SPECIALTIES } from "@/lib/medical-specialties";
 import type { MedicalSpecialtyKey } from "@/lib/medical-specialties";
 
@@ -22,11 +25,15 @@ const specialtyIconSrc: Record<MedicalSpecialtyKey, string> = {
   surgery: "/specialty-icons-v2/surgery.png",
 };
 
+const facilityIcons = { clinic: Stethoscope, lab: FlaskConical, pharmacy: Pill } as const;
+
 function countFor(filter: Filter): number {
   return filter === "الكل" ? MEDICAL_SPECIALTIES.length : MEDICAL_SPECIALTIES.filter((s) => s.category === filter).length;
 }
 
 export default function SpecialtyOnboardingClient() {
+  const [step, setStep] = useState<"type" | "specialty">("type");
+  const [savingType, setSavingType] = useState<FacilityTypeKey | null>(null);
   const [selected, setSelected] = useState<MedicalSpecialtyKey>(MEDICAL_SPECIALTIES[0].key);
   const [filter, setFilter] = useState<Filter>("الكل");
   const [loading, setLoading] = useState(false);
@@ -45,6 +52,28 @@ export default function SpecialtyOnboardingClient() {
   }
 
   const selectedSpecialty = MEDICAL_SPECIALTIES.find((s) => s.key === selected) ?? MEDICAL_SPECIALTIES[0];
+
+  async function chooseFacility(type: FacilityTypeKey) {
+    if (savingType) return;
+    setError("");
+    if (type === "clinic") {
+      setStep("specialty");
+      return;
+    }
+    setSavingType(type);
+    const res = await fetch("/api/clinic/facility", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ facilityType: type }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error ?? "تعذر حفظ النوع");
+      setSavingType(null);
+      return;
+    }
+    window.location.href = "/dashboard";
+  }
 
   async function submit() {
     if (!selected || loading) return;
@@ -65,16 +94,75 @@ export default function SpecialtyOnboardingClient() {
     window.location.href = "/dashboard";
   }
 
+  if (step === "type") {
+    return (
+      <div className="min-h-screen bg-brand-bg" dir="rtl">
+        <header className="relative overflow-hidden bg-brand-navy px-5 py-10 text-white md:px-10 md:py-14">
+          <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-80 w-80 rounded-full border-[48px] border-white/[0.05]" />
+          <div className="relative mx-auto max-w-5xl">
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-mint/15 px-3.5 py-1.5 text-xs font-semibold text-brand-mint">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-mint" />
+              الخطوة الأخيرة قبل البدء
+            </span>
+            <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">ما نوع منشأتك؟</h1>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-brand-side-muted md:text-base">
+              نجهّز لك النظام المناسب لعملك. اختر نوع منشأتك لنبدأ.
+            </p>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-5xl px-5 py-8 md:px-10">
+          <div className="grid gap-4 md:grid-cols-3">
+            {FACILITY_TYPES.map((type) => {
+              const Icon = facilityIcons[type.key];
+              const busy = savingType === type.key;
+              return (
+                <button
+                  key={type.key}
+                  type="button"
+                  disabled={savingType !== null}
+                  onClick={() => chooseFacility(type.key)}
+                  className="group flex flex-col rounded-3xl bg-white p-6 text-right ring-2 ring-transparent transition hover:-translate-y-0.5 hover:ring-brand-mint disabled:opacity-60"
+                >
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-mint">
+                    <Icon className="h-7 w-7" aria-hidden />
+                  </span>
+                  <h2 className="mt-5 text-2xl font-bold text-brand-ink">{type.name}</h2>
+                  <p className="mt-1.5 text-sm leading-6 text-brand-muted">{type.description}</p>
+                  <ul className="mt-5 space-y-2 text-sm font-medium text-brand-ink">
+                    {type.highlights.map((item) => (
+                      <li key={item} className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-mint" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="mt-6 text-sm font-bold text-brand-blue">
+                    {busy ? "جاري الحفظ..." : type.key === "clinic" ? "اختيار الاختصاص ←" : "متابعة ←"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {error && <p role="alert" className="mt-5 text-sm font-semibold text-red-700">{error}</p>}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-brand-bg pb-28" dir="rtl">
       <header className="relative overflow-hidden bg-brand-navy px-5 py-10 text-white md:px-10 md:py-14">
         <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-80 w-80 rounded-full border-[48px] border-white/[0.05]" />
         <div aria-hidden className="pointer-events-none absolute -bottom-28 right-10 h-72 w-72 rounded-full border-[48px] border-brand-mint/[0.07]" />
         <div className="relative mx-auto max-w-6xl">
-          <span className="inline-flex items-center gap-2 rounded-full bg-brand-mint/15 px-3.5 py-1.5 text-xs font-semibold text-brand-mint">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-mint" />
-            الخطوة الأخيرة قبل البدء
-          </span>
+          <button
+            type="button"
+            onClick={() => setStep("type")}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/10 px-4 text-xs font-semibold text-white transition hover:bg-white/15"
+          >
+            → تغيير نوع المنشأة
+          </button>
           <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">ما اختصاص عيادتك؟</h1>
           <p className="mt-3 max-w-xl text-sm leading-7 text-brand-side-muted md:text-base">
             نجهّز لك القوالب والخرائط المناسبة داخل ملف المراجع. يمكنك تغييره لاحقاً من الإعدادات.
