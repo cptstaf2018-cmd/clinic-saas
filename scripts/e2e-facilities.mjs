@@ -10,8 +10,12 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import pg from "pg";
+import { readFileSync } from "node:fs";
+import { makeXlsx } from "./make-xlsx.mjs";
 
 const BASE = process.argv[2] ?? "http://localhost:3101";
+// Set E2E_HTTPS=1 when testing a production server (`next start`) over plain http: its cookies are https-only.
+const FORWARD_HTTPS = process.env.E2E_HTTPS === "1";
 const PASSWORD = "Zz-Test-98765";
 const PREFIX = "ZZTEST";
 const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL, max: 3 });
@@ -79,7 +83,7 @@ function client() {
   };
   const cookie = () => [...jar].map(([k, v]) => `${k}=${v}`).join("; ");
   async function request(path, init = {}) {
-    const res = await fetch(BASE + path, { redirect: "manual", ...init, headers: { ...(init.headers ?? {}), cookie: cookie() } });
+    const res = await fetch(BASE + path, { redirect: "manual", ...init, headers: { ...(FORWARD_HTTPS ? { "x-forwarded-proto": "https" } : {}), ...(init.headers ?? {}), cookie: cookie() } });
     absorb(res);
     return res;
   }
@@ -136,16 +140,26 @@ async function main() {
     const r = await anon.page(path);
     check(`public page ${path} loads`, r.status === 200, `HTTP ${r.status}`);
   }
+  // visible text of a page, so a label split across tags (e.g. "Google" in its own span) still reads as one phrase
+  const visibleText = (html) => html.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<style[\s\S]*?<\/style>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
   const loginHtml = (await anon.page("/login")).html;
-  check("login page carries the new brand", loginHtml.includes("الهلال الذهبي"));
-  check("login page speaks for clinics, labs and pharmacies", loginHtml.includes("مختبر") && loginHtml.includes("صيدلية") && loginHtml.includes("عيادة") && !loginHtml.includes("عيادتك تعمل"));
   const registerHtml = (await anon.page("/register")).html;
-  check("register page is Google only: no form fields, no code step", registerHtml.includes("التسجيل بحساب Google") && !/<input(?![^>]*type="hidden")/i.test(registerHtml) && !registerHtml.includes("إرسال الكود"));
-  check("register page speaks for all three facility types", registerHtml.includes("مختبر") && registerHtml.includes("صيدلية") && registerHtml.includes("عيادة"));
+  const loginText = visibleText(loginHtml);
+  const registerText = visibleText(registerHtml);
+  check("login page carries the new brand", loginHtml.includes("الذهبي"));
+  // A production build renders /login on the client, so its HTML holds only the title: these checks need the dev server.
+  const authPagesServerRendered = loginText.includes("صيدلية");
+  if (authPagesServerRendered) {
+    check("login page speaks for clinics, labs and pharmacies", loginText.includes("مختبر") && loginText.includes("صيدلية") && loginText.includes("عيادة") && !loginText.includes("عيادتك تعمل"));
+    check("register page is Google only: no form fields, no code step", registerText.includes("التسجيل بحساب Google") && !/<input(?![^>]*type="hidden")/i.test(registerHtml) && !registerText.includes("إرسال الكود"));
+    check("register page speaks for all three facility types", registerText.includes("مختبر") && registerText.includes("صيدلية") && registerText.includes("عيادة"));
+  } else {
+    warn("login/register page text was NOT checked: this server renders them in the browser (production build). Run against `next dev` to check them");
+  }
   const aboutHtml = (await anon.page("/about")).html;
   check("public about page shows the launch offer", aboutHtml.includes("مجاناً حتى نهاية ٢٠٢٦"));
   check("public about page shows no prices or payment names", !/35,000|45,000|55,000|65,000|75,000|SuperKey|سوبر ?كي|د\.ع \/ شهر/.test(aboutHtml));
-  check("login and register show the offer, not prices", loginHtml.includes("مجاناً حتى نهاية ٢٠٢٦") && registerHtml.includes("مجاناً حتى نهاية ٢٠٢٦") && !/35[,٬]000|٣٥٬٠٠٠/.test(loginHtml + registerHtml));
+  if (authPagesServerRendered) check("login and register show the offer, not prices", loginText.includes("مجاناً حتى نهاية ٢٠٢٦") && registerText.includes("مجاناً حتى نهاية ٢٠٢٦") && !/35[,٬]000|٣٥٬٠٠٠/.test(loginText + registerText));
   check("dashboard needs a login", [302, 307, 308].includes((await anon.page("/dashboard")).status));
   for (const path of ["/api/pharmacy/products", "/api/lab/tests", "/api/lab/orders"]) {
     const r = await anon.get(path);
@@ -324,6 +338,140 @@ async function main() {
   check("pharmacy settings hide clinic-only wording", (await ph.page("/dashboard/settings")).status === 200);
   check("clinic pages do not leak into a pharmacy sidebar", !posPage.html.includes("/dashboard/appointments"));
   check("delete (archive) product", (await ph.del(`/api/pharmacy/products/${pid2}`)).status === 200 && (await ph.get("/api/pharmacy/products")).data.length === 1);
+
+  // ───────── PHARMACY: bulk import, barcode receiving, price list ─────────
+  const XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  const IMPORT = "/api/pharmacy/import";
+  const tpl = await ph.request(`${IMPORT}/template`);
+  const tplBytes = Buffer.from(await tpl.arrayBuffer());
+  check("import template downloads as CSV with Arabic headers and a BOM", tpl.status === 200 && (tpl.headers.get("content-type") ?? "").includes("text/csv") && tplBytes.toString("utf8").includes("اسم الدواء") && tplBytes[0] === 0xef && tplBytes[1] === 0xbb && tplBytes[2] === 0xbf);
+  check("import template is for pharmacies only", (await lab.request(`${IMPORT}/template`)).status === 403);
+  check("import template needs a login", [401, 302, 307, 308].includes((await anon.request(`${IMPORT}/template`)).status));
+
+  const prodBefore = (await ph.get("/api/pharmacy/products")).data;
+  const benadol = prodBefore.find((x) => x.id === pid1);
+  const xlsx = makeXlsx([
+    ["جرد صيدلية الاختبار"],
+    [],
+    ["اسم الدواء", "سعر البيع", "سعر الشراء", "الكمية", "الباركود", "تاريخ الانتهاء"],
+    ["بنادول", 3500, 2500, 5, "6281001", "06/2027"],
+    ["أموكسيسيلين 500", "٤٬٥٠٠", 3000, 12, 6281009990001, "12/2027"],
+    ["شراب سعال", null, 1800, 6, null, null],
+    ["أموكسيسيلين 500", null, null, 3, null, null],
+    ["", 100],
+  ]);
+  const xParsed = await ph.upload(`${IMPORT}/parse`, xlsx, "stock.xlsx", XLSX_TYPE);
+  check("xlsx parse succeeds", xParsed.status === 200, JSON.stringify(xParsed.data).slice(0, 200));
+  check("xlsx header row found below the title rows", xParsed.data?.mapping?.name === 0 && xParsed.data?.mapping?.price === 1 && xParsed.data?.mapping?.cost === 2 && xParsed.data?.mapping?.stock === 3 && xParsed.data?.mapping?.barcode === 4 && xParsed.data?.mapping?.expiresAt === 5);
+  check("xlsx rows are read with their sheet row numbers", xParsed.data?.items?.length === 4 && xParsed.data.items[0].line === 4);
+  check("xlsx Arabic digits and a numeric barcode survive", xParsed.data?.items?.[1]?.row?.price === 4500 && xParsed.data.items[1].row.barcode === "6281009990001");
+  check("xlsx month/year expiry becomes the last day of the month", xParsed.data?.items?.[0]?.row?.expiresAt === "2027-06-30");
+  check("a row without a name is reported, not imported", xParsed.data?.problems?.length === 1 && xParsed.data.problems[0].line === 8);
+
+  const csv = "\uFEFFالاسم;السعر;الكمية\r\nقطرة عين;2500;4\r\nمرهم;1500;9\r\n";
+  const parsedCsv = await ph.upload(`${IMPORT}/parse`, Buffer.from(csv), "x.csv", "text/csv");
+  check("csv with semicolons and a BOM parses", parsedCsv.status === 200 && parsedCsv.data?.items?.length === 2 && parsedCsv.data.items[0].row.name === "قطرة عين" && parsedCsv.data.items[0].row.price === 2500);
+  const noName = await ph.upload(`${IMPORT}/parse`, Buffer.from("x,y\n1,2\n"), "x.csv", "text/csv");
+  check("a sheet without a name column asks for manual mapping", noName.status === 200 && noName.data?.needsMapping === true && noName.data?.items?.length === 0);
+  const remapped = await (async () => {
+    const form = new FormData();
+    form.append("file", new File([Buffer.from("x,y\nدواء أ,500\n")], "x.csv", { type: "text/csv" }));
+    form.append("mapping", JSON.stringify({ name: 0, price: 1 }));
+    const res = await ph.request(`${IMPORT}/parse`, { method: "POST", body: form });
+    return { status: res.status, data: await res.json().catch(() => null) };
+  })();
+  check("a manual column mapping is honoured", remapped.status === 200 && remapped.data?.items?.[0]?.row?.name === "دواء أ" && remapped.data.items[0].row.price === 500);
+  check("old .xls files are refused with advice", (await ph.upload(`${IMPORT}/parse`, Buffer.from("x"), "old.xls", "application/vnd.ms-excel")).status === 415);
+  check("other file types are refused", (await ph.upload(`${IMPORT}/parse`, Buffer.from("x"), "x.pdf", "application/pdf")).status === 415);
+  check("an empty file is refused", (await ph.upload(`${IMPORT}/parse`, Buffer.alloc(0), "x.csv", "text/csv")).status === 400);
+  check("a corrupt xlsx is refused politely", (await ph.upload(`${IMPORT}/parse`, Buffer.from("not a zip file at all"), "x.xlsx", XLSX_TYPE)).status === 422);
+  check("parse needs a pharmacy", (await lab.upload(`${IMPORT}/parse`, xlsx, "stock.xlsx", XLSX_TYPE)).status === 403);
+  check("parse needs a login", [401, 302, 307, 308].includes((await anon.upload(`${IMPORT}/parse`, xlsx, "stock.xlsx", XLSX_TYPE)).status));
+
+  // preview (dry run) changes nothing
+  const xRows = xParsed.data.items.map((i) => i.row);
+  const dry = await ph.post(`${IMPORT}/commit`, { rows: xRows, stockMode: "add", dryRun: true });
+  check("dry run classifies every line", dry.status === 200 && JSON.stringify(dry.data?.statuses?.map((x) => x.kind)) === JSON.stringify(["update", "create", "needsPrice", "merged"]), JSON.stringify(dry.data).slice(0, 300));
+  check("dry run summary", dry.data?.summary?.creates === 1 && dry.data?.summary?.updates === 1 && dry.data?.summary?.needsPrice === 1 && dry.data?.summary?.merged === 1);
+  check("dry run writes nothing", (await ph.get("/api/pharmacy/products")).data.length === prodBefore.length);
+
+  // the owner fixes the missing price, then confirms
+  const fixed = xRows.map((r) => (r.name === "شراب سعال" ? { ...r, price: 2500 } : r));
+  const applied = await ph.post(`${IMPORT}/commit`, { rows: fixed, stockMode: "add" });
+  check("import applies", applied.status === 200 && applied.data?.summary?.creates === 2 && applied.data?.summary?.updates === 1, JSON.stringify(applied.data).slice(0, 300));
+  const prodAfter = (await ph.get("/api/pharmacy/products")).data;
+  const byName = (name) => prodAfter.find((x) => x.name === name);
+  check("two new medicines were added", prodAfter.length === prodBefore.length + 2);
+  check("existing medicine: price, cost and expiry updated; quantity added", byName("بنادول")?.price === 3500 && byName("بنادول").cost === 2500 && String(byName("بنادول").expiresAt).startsWith("2027-06-30") && byName("بنادول").stock === benadol.stock + 5, JSON.stringify(byName("بنادول")));
+  check("duplicate lines in the file were folded into one medicine", byName("أموكسيسيلين 500")?.stock === 15 && byName("أموكسيسيلين 500").price === 4500 && byName("أموكسيسيلين 500").barcode === "6281009990001");
+  check("the medicine whose price was filled in by hand is created", byName("شراب سعال")?.price === 2500 && byName("شراب سعال").stock === 6);
+
+  // running the same file again adds the quantities again (that is what "add" means) and creates nothing new
+  const again = await ph.post(`${IMPORT}/commit`, { rows: fixed, stockMode: "add" });
+  check("a second import creates nothing and updates all three", again.data?.summary?.creates === 0 && again.data?.summary?.updates === 3);
+  check("the second import added the quantities again", (await ph.get("/api/pharmacy/products")).data.find((x) => x.name === "شراب سعال")?.stock === 12);
+
+  // replace mode sets the stock exactly
+  const replaced = await ph.post(`${IMPORT}/commit`, { rows: [{ name: "شراب سعال", stock: 7 }], stockMode: "replace" });
+  check("replace mode sets the exact quantity and needs no price", replaced.status === 200 && (await ph.get("/api/pharmacy/products")).data.find((x) => x.name === "شراب سعال")?.stock === 7);
+
+  // quantity changes are atomic: three imports at once add exactly three
+  const startStock = (await ph.get("/api/pharmacy/products")).data.find((x) => x.name === "شراب سعال").stock;
+  await Promise.all([1, 2, 3].map(() => ph.post(`${IMPORT}/commit`, { rows: [{ name: "شراب سعال", stock: 1 }], stockMode: "add" })));
+  check("concurrent imports never lose a quantity", (await ph.get("/api/pharmacy/products")).data.find((x) => x.name === "شراب سعال")?.stock === startStock + 3);
+
+  // never trust the browser
+  check("rows must be an array", (await ph.post(`${IMPORT}/commit`, { rows: "x" })).status === 400);
+  check("an empty list is refused", (await ph.post(`${IMPORT}/commit`, { rows: [] })).status === 400);
+  check("more than 5000 lines are refused", (await ph.post(`${IMPORT}/commit`, { rows: Array.from({ length: 5001 }, (_, i) => ({ name: `x${i}`, price: 1 })), dryRun: true })).status === 413);
+  const hostile = await ph.post(`${IMPORT}/commit`, { rows: [{ name: "ZZ هجوم", price: -5, stock: -3, clinicId: "someone-else", id: "x", category: "سيارات" }, "text", null, { price: 5 }], dryRun: true });
+  check("hostile rows are cleaned or rejected, never trusted", hostile.status === 200 && hostile.data.summary.rejected === 3 && hostile.data.statuses[0].kind === "needsPrice", JSON.stringify(hostile.data).slice(0, 300));
+  check("commit needs a pharmacy", (await lab.post(`${IMPORT}/commit`, { rows: [{ name: "x", price: 1 }] })).status === 403);
+  check("commit needs a login", [401, 307].includes((await anon.post(`${IMPORT}/commit`, { rows: [{ name: "x", price: 1 }] })).status));
+
+  // another pharmacy: same barcodes are fine, and nothing leaks either way
+  check("other pharmacy still has no products", (await phB.get("/api/pharmacy/products")).data.length === 0);
+  const other = await phB.post(`${IMPORT}/commit`, { rows: fixed, stockMode: "add" });
+  check("other pharmacy imports the same file as its own new medicines", other.status === 200 && other.data?.summary?.creates === 3 && other.data?.summary?.updates === 0, JSON.stringify(other.data).slice(0, 200));
+  check("my stock was not touched by the other pharmacy", (await ph.get("/api/pharmacy/products")).data.find((x) => x.name === "بنادول")?.stock === benadol.stock + 10);
+
+  // receiving stock by barcode
+  const myAmox = (await ph.get("/api/pharmacy/products")).data.find((x) => x.name === "أموكسيسيلين 500");
+  const rec = await ph.post(`/api/pharmacy/products/${myAmox.id}/receive`, { qty: 5, cost: 3200 });
+  check("receive adds to stock and updates the cost", rec.status === 200 && rec.data?.stock === myAmox.stock + 5 && rec.data?.cost === 3200);
+  check("receive rejects a zero quantity", (await ph.post(`/api/pharmacy/products/${myAmox.id}/receive`, { qty: 0 })).status === 400);
+  check("receive rejects a fractional quantity", (await ph.post(`/api/pharmacy/products/${myAmox.id}/receive`, { qty: 1.5 })).status === 400);
+  check("receive rejects a negative cost", (await ph.post(`/api/pharmacy/products/${myAmox.id}/receive`, { qty: 1, cost: -1 })).status === 400);
+  check("other pharmacy cannot receive stock into my product", (await phB.post(`/api/pharmacy/products/${myAmox.id}/receive`, { qty: 1 })).status === 404);
+  check("a lab cannot receive pharmacy stock", (await lab.post(`/api/pharmacy/products/${myAmox.id}/receive`, { qty: 1 })).status === 403);
+  const burst = await Promise.all([1, 2, 3, 4].map(() => ph.post(`/api/pharmacy/products/${myAmox.id}/receive`, { qty: 2 })));
+  check("concurrent receives all land", burst.every((r) => r.status === 200) && (await ph.get("/api/pharmacy/products")).data.find((x) => x.id === myAmox.id).stock === myAmox.stock + 5 + 8);
+
+  // receipt reading
+  const envKey = (() => { try { return /^ANTHROPIC_API_KEY=.+/m.test(readFileSync(".env", "utf8")); } catch { return false; } })();
+  check("receipt reading refuses a non-image", (await ph.upload(`${IMPORT}/receipt`, Buffer.from("hello world, not an image"), "x.png", "image/png")).status === 415);
+  check("receipt reading refuses an html file pretending to be a pdf", (await ph.upload(`${IMPORT}/receipt`, Buffer.from("<html><script>1</script></html>"), "x.pdf", "application/pdf")).status === 415);
+  check("receipt reading needs a pharmacy", (await lab.upload(`${IMPORT}/receipt`, PNG, "r.png", "image/png")).status === 403);
+  check("receipt reading needs a login", [401, 302, 307, 308].includes((await anon.upload(`${IMPORT}/receipt`, PNG, "r.png", "image/png")).status));
+  if (envKey) {
+    warn("ANTHROPIC_API_KEY is set locally: receipt reading with a real receipt was not exercised");
+  } else {
+    const noKey = await ph.upload(`${IMPORT}/receipt`, PNG, "r.png", "image/png");
+    check("without an API key, receipt reading answers 503 with a clear message", noKey.status === 503 && /غير مفعّلة/.test(noKey.data?.error ?? ""), JSON.stringify(noKey));
+    warn("receipt reading with a real receipt was NOT exercised: no ANTHROPIC_API_KEY is configured here");
+  }
+
+  // pages
+  const importPage = await ph.page("/dashboard/pharmacy/import");
+  check("import page opens for a pharmacy", importPage.status === 200 && importPage.html.includes("إضافة أدوية دفعة واحدة"));
+  check("import page is not shown to a lab", !(await lab.page("/dashboard/pharmacy/import")).html.includes("إضافة أدوية دفعة واحدة"));
+  const productsPage = await ph.page("/dashboard/pharmacy/products");
+  check("products page offers import, barcode scan and printing", productsPage.html.includes("/dashboard/pharmacy/import") && productsPage.html.includes("مسح الباركود") && productsPage.html.includes("/invoice/pharmacy-list"));
+  const list = await ph.page("/invoice/pharmacy-list");
+  check("price list shows my pharmacy and medicines", list.status === 200 && list.html.includes("ZZTEST pharmacy-A") && list.html.includes("أموكسيسيلين 500") && list.html.includes("شراب سعال"));
+  check("price list of another pharmacy has only its own medicines", !(await phB.page("/invoice/pharmacy-list")).html.includes("ZZTEST pharmacy-A"));
+  check("price list needs a login", [302, 307, 308].includes((await anon.page("/invoice/pharmacy-list")).status));
+  check("price list is not shown to a lab", !(await lab.page("/invoice/pharmacy-list")).html.includes("قائمة الأدوية والأسعار"));
 
   // ───────── LAB ─────────
   check("lab settings report facilityType", (await lab.get("/api/clinic/settings")).data?.facilityType === "lab");

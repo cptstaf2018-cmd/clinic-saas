@@ -4,11 +4,12 @@ const JPEG_QUALITY = 0.82;
 /**
  * Shrinks a photo in the browser before upload so storage and page loads stay small.
  * If the browser cannot decode the file, the original is sent and the server decides.
+ * Pass a larger `maxSide` where small print must stay readable (purchase receipts).
  */
-export async function shrinkImage(file: File): Promise<File> {
+export async function shrinkImage(file: File, maxSide = MAX_SIDE): Promise<File> {
   try {
     const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
