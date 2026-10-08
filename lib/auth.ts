@@ -43,29 +43,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const password   = credentials?.password as string;
           if (!identifier || !password) return null;
 
-          let user = null;
+          // Email login — try superadmin first, then clinic backupEmail
+          let user = await db.user.findUnique({ where: { email: identifier } });
 
-          // Phone login — find clinic by whatsapp number, get its user
-          const isPhone = /^07\d{7,}$/.test(identifier) || /^\+964/.test(identifier);
-          if (isPhone) {
-            const clinic = await db.clinic.findUnique({
-              where: { whatsappNumber: identifier },
+          if (!user) {
+            // Clinic user logging in with their backupEmail
+            const clinic = await db.clinic.findFirst({
+              where: { backupEmail: identifier },
               include: { users: { take: 1 } },
             });
-            if (!clinic || clinic.users.length === 0) return null;
-            user = clinic.users[0];
-          } else {
-            // Email login — try superadmin first, then clinic backupEmail
-            user = await db.user.findUnique({ where: { email: identifier } });
-
-            if (!user) {
-              // Clinic user logging in with their backupEmail
-              const clinic = await db.clinic.findFirst({
-                where: { backupEmail: identifier },
-                include: { users: { take: 1 } },
-              });
-              if (clinic?.users.length) user = clinic.users[0];
-            }
+            if (clinic?.users.length) user = clinic.users[0];
           }
 
           if (!user) return null;

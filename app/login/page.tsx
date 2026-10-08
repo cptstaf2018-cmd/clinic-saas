@@ -133,8 +133,8 @@ function LoginForm() {
     ? forgotStep === "otp" ? `أُرسل كود إلى ${forgotMasked}`
       : forgotStep === "password" ? "أدخل كلمة المرور الجديدة"
       : forgotStep === "done" ? "تمت العملية بنجاح"
-      : "أدخل رقم الواتساب أو الإيميل المسجل"
-    : "سجّل دخولك برقم الواتساب أو الإيميل";
+      : "أدخل الإيميل المسجل"
+    : "سجّل دخولك بالإيميل";
 
   return (
     <div className="flex min-h-screen bg-brand-bg" dir="rtl">
@@ -169,9 +169,9 @@ function LoginForm() {
                 <>
                   {forgotStep === "input" && (
                     <form onSubmit={handleForgotSend} className="space-y-4">
-                      <Field label="رقم الواتساب أو الإيميل">
+                      <Field label="الإيميل">
                         <input type="text" required value={forgotIdentifier} onChange={(e) => setForgotIdentifier(e.target.value)}
-                          className={INPUT_CLASS} placeholder="07701234567 أو email@example.com" dir="ltr" />
+                          className={INPUT_CLASS} placeholder="email@example.com" dir="ltr" />
                       </Field>
                       <ErrorBox message={error} />
                       <button type="submit" disabled={loading} className={PRIMARY_BTN}>{loading ? "جاري الإرسال..." : "إرسال الكود"}</button>
@@ -221,8 +221,8 @@ function LoginForm() {
               ) : (
                 <>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <Field label="رقم الواتساب أو الإيميل">
-                      <input name="identifier" type="text" required className={INPUT_CLASS} placeholder="07701234567 أو email@example.com" dir="ltr" autoComplete="username" />
+                    <Field label="الإيميل">
+                      <input name="identifier" type="text" required className={INPUT_CLASS} placeholder="email@example.com" dir="ltr" autoComplete="username" />
                     </Field>
                     <Field
                       label="كلمة المرور"
