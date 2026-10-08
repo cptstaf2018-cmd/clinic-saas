@@ -5,6 +5,7 @@ import { loadArabicVoice, synthesizeArabic } from "@/lib/tts/piper";
 import BrandLogo from "@/components/BrandLogo";
 
 interface DisplayData {
+  buildId?: string;
   clinicName: string;
   logoUrl: string | null;
   slideshowImages: string[];
@@ -133,6 +134,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const [audioStatus, setAudioStatus] = useState<"waiting" | "unlocked" | "playing">("waiting");
   // The Arabic voice (Piper) downloads once in the background; until it is ready the browser's own voice is used.
   const voiceReadyRef = useRef(false);
+  const buildIdRef = useRef<string | null>(null);
   const [voiceStatus, setVoiceStatus] = useState<"loading" | "ready" | "fallback">("loading");
   const [voiceProgress, setVoiceProgress] = useState(0);
 
@@ -178,7 +180,18 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
     const fetch_ = async () => {
       try {
         const res = await fetch(`/api/display/${clinicId}`);
-        if (res.ok) setData(await res.json());
+        if (res.ok) {
+          const next: DisplayData = await res.json();
+          // A new release went live while this screen was open: reload to pick up the new code
+          if (next.buildId) {
+            if (buildIdRef.current && buildIdRef.current !== next.buildId) {
+              window.location.reload();
+              return;
+            }
+            buildIdRef.current = next.buildId;
+          }
+          setData(next);
+        }
       } catch {}
     };
     fetch_();
@@ -215,6 +228,14 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
 
     const text = buildAnnouncementText(current);
 
+    // Right after the page opens the voice may still be downloading: give it a few seconds
+    // before settling for the browser's own voice, which often has no Arabic.
+    if (!voiceReadyRef.current) {
+      voiceReadyRef.current = await Promise.race([
+        loadArabicVoice().then(() => true, () => false),
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 6000)),
+      ]);
+    }
     if (voiceReadyRef.current) {
       try {
         const blob = await synthesizeArabic(text);

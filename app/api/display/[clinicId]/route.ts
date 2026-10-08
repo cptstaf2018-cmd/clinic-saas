@@ -49,6 +49,8 @@ export async function GET(
   ]);
 
   const data = {
+    // Lets a screen that has been open for days notice a new release and reload itself
+    buildId: process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_GIT_COMMIT_SHA ?? "dev",
     clinicName: clinic?.name ?? "",
     logoUrl: clinic?.logoUrl ?? null,
     slideshowImages: clinic?.slideshowImages ?? [],
