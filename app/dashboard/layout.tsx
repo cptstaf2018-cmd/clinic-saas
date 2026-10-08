@@ -10,6 +10,7 @@ import { getSubscriptionNotice, isSubscriptionHardLocked, subscriptionDaysLeft }
 import { PLAN_LABELS, isPlanId } from "@/lib/plans";
 import Link from "next/link";
 import OfflineStatus from "./OfflineStatus";
+import { BrandMark, BRAND_NAME } from "@/components/BrandLogo";
 
 async function getClinicData(clinicId: string) {
   return db.clinic.findUnique({
@@ -20,7 +21,7 @@ async function getClinicData(clinicId: string) {
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   trial:    { label: "تجريبي", cls: "bg-amber-400/20 text-amber-200 border-amber-400/30" },
-  active:   { label: "نشط",    cls: "bg-brand-mint/15 text-brand-mint border-brand-mint/30" },
+  active:   { label: "نشط",    cls: "bg-emerald-300/15 text-emerald-300 border-emerald-300/30" },
   inactive: { label: "منتهي",  cls: "bg-red-400/20 text-red-300 border-red-400/30" },
 };
 
@@ -77,15 +78,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={clinic.logoUrl} alt={name} className="w-11 h-11 object-contain rounded-2xl shrink-0 bg-white/95 p-1" />
               ) : (
-                <div className="w-11 h-11 bg-brand-mint rounded-2xl flex items-center justify-center shrink-0">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="w-5 h-5 text-brand-mint-ink">
-                    <path d="M12 5v14M5 12h14"/>
-                  </svg>
-                </div>
+                <BrandMark size={44} />
               )}
               <div className="min-w-0">
                 <p className="text-white font-bold text-base leading-tight truncate">{name}</p>
-                <p className="text-brand-side-muted text-xs mt-1">Clinic AI Pro</p>
+                <p className="text-brand-gold text-xs mt-1 font-semibold">{BRAND_NAME}</p>
                 <span className={`inline-flex mt-2 text-[10px] font-semibold border rounded-full px-2 py-0.5 ${badge.cls}`}>
                   {badge.label}
                 </span>
@@ -103,7 +100,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 <p className="text-xs text-brand-side-muted">الفترة التجريبية المجانية</p>
                 <p className="mt-1 text-xl font-bold text-white">باقي {daysLeft} {daysLeft === 1 ? "يوم" : "أيام"}</p>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-brand-navy">
-                  <div className="h-1.5 rounded-full bg-brand-mint" style={{ width: `${trialProgress}%` }} />
+                  <div className="h-1.5 rounded-full bg-brand-gold" style={{ width: `${trialProgress}%` }} />
                 </div>
               </>
             ) : (
@@ -115,7 +112,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             )}
             <Link
               href="/dashboard/subscription"
-              className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-brand-mint text-sm font-bold text-brand-mint-ink transition hover:-translate-y-0.5 hover:bg-brand-mint-hover"
+              className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-brand-gold text-sm font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover"
             >
               {isTrial ? "اشترك الآن" : "إدارة الاشتراك"}
             </Link>
@@ -142,11 +139,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               // eslint-disable-next-line @next/next/no-img-element
               <img src={clinic.logoUrl} alt={name} className="w-8 h-8 object-contain rounded-lg shrink-0" />
             ) : (
-              <div className="w-8 h-8 bg-brand-mint rounded-lg flex items-center justify-center">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="w-4 h-4 text-brand-mint-ink">
-                  <path d="M12 5v14M5 12h14"/>
-                </svg>
-              </div>
+              <BrandMark size={32} />
             )}
             <span className="text-white font-bold text-sm truncate max-w-[140px]">{name}</span>
           </div>

@@ -154,7 +154,7 @@ export default async function PatientProfilePage({
                 href={`https://wa.me/${waNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl bg-brand-navy px-4 py-2 text-sm font-black text-white transition hover:bg-brand-navy-2"
+                className="flex items-center gap-2 rounded-xl bg-brand-gold px-4 py-2 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover"
               >
                 💬 واتساب
               </a>
@@ -163,7 +163,7 @@ export default async function PatientProfilePage({
                   <Link
                     href={`/dashboard/patients/${patient.id}/prescription`}
                     target="_blank"
-                    className="flex items-center gap-2 rounded-xl bg-brand-navy px-4 py-2 text-sm font-black text-white transition hover:bg-brand-navy-2"
+                    className="flex items-center gap-2 rounded-xl bg-brand-gold px-4 py-2 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover"
                   >
                     🖊️ وصفة طبية
                   </Link>

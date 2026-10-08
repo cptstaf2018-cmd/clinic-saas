@@ -210,7 +210,7 @@ function FixCard({
     ? "bg-slate-50 ring-slate-100"
     : "bg-brand-mint-soft/60 ring-brand-border";
   const dot = hasIssue ? "bg-amber-500" : isWarning ? "bg-slate-400" : "bg-brand-mint-soft0";
-  const button = hasIssue ? "bg-amber-500 hover:bg-amber-600" : "bg-brand-navy hover:bg-brand-navy-2";
+  const button = hasIssue ? "bg-amber-500 hover:bg-amber-600" : "bg-brand-gold hover:bg-brand-gold-hover";
 
   return (
     <div className={`rounded-[24px] p-4 ring-1 ${tone}`}>

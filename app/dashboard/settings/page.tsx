@@ -311,7 +311,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => fileRef.current?.click()}
                   disabled={uploadingLogo}
-                  className="bg-brand-navy hover:bg-brand-navy-2 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                  className="bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink text-sm font-medium px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
                 >
                   {uploadingLogo ? "جاري الرفع..." : "رفع شعار"}
                 </button>
@@ -343,7 +343,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ name: settings.name })}
               disabled={saving}
-              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ المعلومات"}
             </button>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ doctorDegree: settings.doctorDegree, doctorUniversity: settings.doctorUniversity, doctorBoard: settings.doctorBoard })}
               disabled={saving}
-              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ بيانات الطبيب"}
             </button>
@@ -407,7 +407,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ address: settings.address, locationUrl: settings.locationUrl })}
               disabled={saving}
-              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ موقع العيادة"}
             </button>
@@ -506,7 +506,7 @@ export default function SettingsPage() {
             <button
               onClick={() => saveSettings({ whatsappWelcomeMessage: settings.whatsappWelcomeMessage })}
               disabled={saving}
-              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ رسالة الترحيب"}
             </button>
@@ -572,7 +572,7 @@ export default function SettingsPage() {
                 botShowLocation: settings.botShowLocation,
               })}
               disabled={saving}
-              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ حدود البوت"}
             </button>
@@ -622,13 +622,13 @@ export default function SettingsPage() {
                 ? "bg-green-50 border border-green-200 text-green-700"
                 : "bg-gray-50 border border-gray-200 text-gray-500"
             }`}>
-              <span className={`h-2.5 w-2.5 rounded-full ${settings.whatsappAccessToken ? "bg-brand-mint" : "bg-slate-300"}`} />
+              <span className={`h-2.5 w-2.5 rounded-full ${settings.whatsappAccessToken ? "bg-brand-gold" : "bg-slate-300"}`} />
               <span>{settings.whatsappAccessToken ? "API Key محفوظ — البوت جاهز للإرسال" : "لم يتم إدخال API Key بعد"}</span>
             </div>
             <button
               onClick={() => saveSettings({ whatsappAccessToken: settings.whatsappAccessToken })}
               disabled={saving}
-              className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
               {saving ? "جاري الحفظ..." : "حفظ API Key"}
             </button>
@@ -682,7 +682,7 @@ export default function SettingsPage() {
               <button
                 onClick={addSecretary}
                 disabled={teamLoading}
-                className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50"
+                className="rounded-2xl bg-brand-gold px-5 py-3 text-sm font-black text-brand-gold-ink hover:bg-brand-gold-hover disabled:opacity-50"
               >
                 إضافة سكرتير
               </button>
@@ -746,7 +746,7 @@ export default function SettingsPage() {
           <button
             onClick={() => saveSettings({ backupEmail: settings?.backupEmail ?? null })}
             disabled={saving}
-            className="w-full rounded-xl bg-brand-navy py-2.5 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50"
+            className="w-full rounded-xl bg-brand-gold py-2.5 text-sm font-black text-brand-gold-ink hover:bg-brand-gold-hover disabled:opacity-50"
           >
             {saving ? "جاري الحفظ..." : "حفظ الإيميل"}
           </button>
@@ -766,7 +766,7 @@ export default function SettingsPage() {
           {pwSaved && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 mb-3">تم تغيير كلمة المرور بنجاح</div>}
           <button
             onClick={changePassword}
-            className="w-full bg-brand-navy hover:bg-brand-navy-2 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+            className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm transition-colors"
           >
             تغيير كلمة المرور
           </button>

@@ -198,7 +198,7 @@ export default function TodayAppointmentsClient({
   const progress = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
   const statCards = [
     { label: "مواعيد اليوم", value: stats.total, note: "كل حجوزات اليوم", dot: "bg-brand-blue" },
-    { label: "في الانتظار", value: stats.waiting, note: "داخل الصالة الآن", dot: "bg-brand-mint" },
+    { label: "في الانتظار", value: stats.waiting, note: "داخل الصالة الآن", dot: "bg-brand-gold" },
     { label: "أُنجزت", value: stats.completed, note: `من أصل ${arabicNumber(stats.total)}`, dot: "bg-emerald-600" },
     { label: "بانتظار التأكيد", value: stats.pending, note: "تحتاج تأكيداً منك", dot: "bg-amber-500" },
   ];
@@ -226,7 +226,7 @@ export default function TodayAppointmentsClient({
               <button
                 onClick={completeWithPayment}
                 disabled={loading === paymentModal.id}
-                className="min-h-12 flex-1 rounded-2xl bg-brand-mint font-bold text-brand-mint-ink transition hover:bg-brand-mint-hover disabled:opacity-50"
+                className="min-h-12 flex-1 rounded-2xl bg-brand-gold font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:opacity-50"
               >
                 {loading === paymentModal.id ? "جاري..." : "إكمال"}
               </button>
@@ -244,7 +244,7 @@ export default function TodayAppointmentsClient({
       {toast && (
         <div className="fixed top-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-2xl bg-brand-navy px-5 py-3 text-sm font-semibold text-white shadow-xl">
           تم حفظ موعد {toast.name}
-          <Link href={`/dashboard/patients/${toast.patientId}`} className="text-brand-mint underline">
+          <Link href={`/dashboard/patients/${toast.patientId}`} className="text-brand-gold underline">
             الملف
           </Link>
         </div>
@@ -283,7 +283,7 @@ export default function TodayAppointmentsClient({
               <button
                 onClick={callNext}
                 disabled={loading === "next"}
-                className="min-h-14 rounded-2xl bg-brand-mint px-8 text-lg font-bold text-brand-mint-ink transition hover:-translate-y-0.5 hover:bg-brand-mint-hover active:translate-y-0 disabled:opacity-60"
+                className="min-h-14 rounded-2xl bg-brand-gold px-8 text-lg font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover active:translate-y-0 disabled:opacity-60"
               >
                 {loading === "next" ? "جاري..." : current ? "التالي ←" : "استدعاء أول مراجع"}
               </button>
@@ -302,7 +302,7 @@ export default function TodayAppointmentsClient({
               <span>{arabicNumber(stats.completed)} من {arabicNumber(stats.total)} مراجع</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-white/20">
-              <div className="h-2 rounded-full bg-brand-mint transition-all duration-500" style={{ width: `${progress}%` }} />
+              <div className="h-2 rounded-full bg-brand-gold transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
         </div>
@@ -400,7 +400,7 @@ export default function TodayAppointmentsClient({
                           تأكيد
                         </button>
                       )}
-                      <button onClick={() => { setPaymentModal(appointment); setPaymentAmount(""); }} disabled={loading === appointment.id} className="min-h-10 rounded-xl bg-brand-mint-soft px-4 text-xs font-semibold text-brand-mint-text transition hover:bg-brand-mint/40 disabled:opacity-50">
+                      <button onClick={() => { setPaymentModal(appointment); setPaymentAmount(""); }} disabled={loading === appointment.id} className="min-h-10 rounded-xl bg-brand-mint-soft px-4 text-xs font-semibold text-brand-mint-text transition hover:bg-brand-gold/40 disabled:opacity-50">
                         إكمال
                       </button>
                       <button onClick={() => remind(appointment.id)} disabled={loading === `${appointment.id}_remind` || reminded.has(appointment.id)} className="min-h-10 rounded-xl bg-amber-50 px-4 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 disabled:opacity-50">

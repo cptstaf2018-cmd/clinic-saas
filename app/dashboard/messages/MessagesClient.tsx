@@ -275,7 +275,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
             </div>
             <button
               onClick={fetchMessages}
-              className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white shadow-lg shadow-brand-navy/15 transition hover:bg-brand-navy-2"
+              className="rounded-2xl bg-brand-gold px-5 py-3 text-sm font-black text-brand-gold-ink shadow-lg shadow-brand-navy/15 transition hover:bg-brand-gold-hover"
             >
               تحديث الرسائل
             </button>
@@ -501,7 +501,7 @@ export default function MessagesClient({ canDeleteMessages }: { canDeleteMessage
                       <button
                         onClick={sendReply}
                         disabled={sending || !replyText.trim()}
-                        className="rounded-2xl bg-brand-navy px-6 py-3 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-50 md:self-end"
+                        className="rounded-2xl bg-brand-gold px-6 py-3 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:opacity-50 md:self-end"
                       >
                         {sending ? "جاري الإرسال..." : "إرسال واتساب"}
                       </button>

@@ -47,7 +47,7 @@ function TagInput({
           placeholder={placeholder}
           className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-soft" />
         <button onClick={add}
-          className="rounded-lg bg-brand-navy px-3 py-1.5 text-xs font-black text-white hover:bg-brand-navy-2">+</button>
+          className="rounded-lg bg-brand-gold px-3 py-1.5 text-xs font-black text-brand-gold-ink hover:bg-brand-gold-hover">+</button>
       </div>
     </div>
   );
@@ -112,7 +112,7 @@ export default function PatientInfoCard({
               <p className="text-2xl mb-2">📋</p>
               <p className="text-sm font-black text-slate-400">لم تُضف بيانات الملف الطبي الدائم بعد</p>
               <button onClick={startEdit}
-                className="mt-3 rounded-xl bg-brand-navy px-4 py-2 text-xs font-black text-white hover:bg-brand-navy-2">
+                className="mt-3 rounded-xl bg-brand-gold px-4 py-2 text-xs font-black text-brand-gold-ink hover:bg-brand-gold-hover">
                 إضافة الآن
               </button>
             </div>
@@ -216,7 +216,7 @@ export default function PatientInfoCard({
 
             <div className="flex gap-2 pt-1">
               <button onClick={save} disabled={saving}
-                className="flex-1 rounded-xl bg-brand-navy py-2.5 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50 transition">
+                className="flex-1 rounded-xl bg-brand-gold py-2.5 text-sm font-black text-brand-gold-ink hover:bg-brand-gold-hover disabled:opacity-50 transition">
                 {saving ? "جاري الحفظ..." : "حفظ الملف الطبي"}
               </button>
               <button onClick={() => setEditing(false)}

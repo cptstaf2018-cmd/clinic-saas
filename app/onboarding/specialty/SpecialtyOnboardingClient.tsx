@@ -100,8 +100,8 @@ export default function SpecialtyOnboardingClient() {
         <header className="relative overflow-hidden bg-brand-navy px-5 py-10 text-white md:px-10 md:py-14">
           <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-80 w-80 rounded-full border-[48px] border-white/[0.05]" />
           <div className="relative mx-auto max-w-5xl">
-            <span className="inline-flex items-center gap-2 rounded-full bg-brand-mint/15 px-3.5 py-1.5 text-xs font-semibold text-brand-mint">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-mint" />
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-gold/15 px-3.5 py-1.5 text-xs font-semibold text-brand-gold">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
               الخطوة الأخيرة قبل البدء
             </span>
             <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">ما نوع منشأتك؟</h1>
@@ -122,9 +122,9 @@ export default function SpecialtyOnboardingClient() {
                   type="button"
                   disabled={savingType !== null}
                   onClick={() => chooseFacility(type.key)}
-                  className="group flex flex-col rounded-3xl bg-white p-6 text-right ring-2 ring-transparent transition hover:-translate-y-0.5 hover:ring-brand-mint disabled:opacity-60"
+                  className="group flex flex-col rounded-3xl bg-white p-6 text-right ring-2 ring-transparent transition hover:-translate-y-0.5 hover:ring-brand-gold disabled:opacity-60"
                 >
-                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-mint">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-gold">
                     <Icon className="h-7 w-7" aria-hidden />
                   </span>
                   <h2 className="mt-5 text-2xl font-bold text-brand-ink">{type.name}</h2>
@@ -132,7 +132,7 @@ export default function SpecialtyOnboardingClient() {
                   <ul className="mt-5 space-y-2 text-sm font-medium text-brand-ink">
                     {type.highlights.map((item) => (
                       <li key={item} className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-mint" />
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold" />
                         {item}
                       </li>
                     ))}
@@ -154,7 +154,7 @@ export default function SpecialtyOnboardingClient() {
     <div className="min-h-screen bg-brand-bg pb-28" dir="rtl">
       <header className="relative overflow-hidden bg-brand-navy px-5 py-10 text-white md:px-10 md:py-14">
         <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-80 w-80 rounded-full border-[48px] border-white/[0.05]" />
-        <div aria-hidden className="pointer-events-none absolute -bottom-28 right-10 h-72 w-72 rounded-full border-[48px] border-brand-mint/[0.07]" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-28 right-10 h-72 w-72 rounded-full border-[48px] border-brand-gold/[0.07]" />
         <div className="relative mx-auto max-w-6xl">
           <button
             type="button"
@@ -203,11 +203,11 @@ export default function SpecialtyOnboardingClient() {
                   aria-pressed={active}
                   onClick={() => setSelected(specialty.key)}
                   className={`group relative flex flex-col overflow-hidden rounded-3xl bg-white text-center ring-2 transition hover:-translate-y-0.5 ${
-                    active ? "ring-brand-mint shadow-[0_18px_40px_-22px_rgba(14,36,64,0.5)]" : "ring-transparent shadow-[0_1px_0_rgba(14,36,64,0.06)] hover:ring-brand-border"
+                    active ? "ring-brand-gold shadow-[0_18px_40px_-22px_rgba(14,36,64,0.5)]" : "ring-transparent shadow-[0_1px_0_rgba(14,36,64,0.06)] hover:ring-brand-border"
                   }`}
                 >
                   {active && (
-                    <span className="absolute left-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-brand-mint text-xs font-bold text-brand-mint-ink">✓</span>
+                    <span className="absolute left-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold text-xs font-bold text-brand-gold-ink">✓</span>
                   )}
                   <div className="p-4 pb-2">
                     <Image
@@ -233,7 +233,7 @@ export default function SpecialtyOnboardingClient() {
                 <Image src={specialtyIconSrc[selectedSpecialty.key]} alt="" width={160} height={160} className="h-20 w-20 object-contain" />
               </div>
               <div>
-                <p className="text-xs text-brand-mint">اخترت</p>
+                <p className="text-xs text-brand-gold">اخترت</p>
                 <h2 className="text-2xl font-bold">{selectedSpecialty.name}</h2>
               </div>
             </div>
@@ -244,13 +244,13 @@ export default function SpecialtyOnboardingClient() {
                   <p className="text-xs text-brand-side-muted">القالب الجاهز</p>
                   <p className="mt-0.5 font-bold">{selectedSpecialty.map}</p>
                 </div>
-                <span className="rounded-full bg-brand-mint/20 px-3 py-1 text-xs font-semibold text-brand-mint">جاهز</span>
+                <span className="rounded-full bg-brand-gold/20 px-3 py-1 text-xs font-semibold text-brand-gold">جاهز</span>
               </div>
               <p className="mt-5 text-xs text-brand-side-muted">سيظهر داخل ملف كل مراجع</p>
               <ul className="mt-2 space-y-2">
                 {selectedSpecialty.modules.map((module) => (
                   <li key={module} className="flex items-center gap-3 rounded-2xl bg-white/[0.06] px-4 py-3 text-sm font-medium">
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-brand-mint" />
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-brand-gold" />
                     {module}
                   </li>
                 ))}
@@ -276,7 +276,7 @@ export default function SpecialtyOnboardingClient() {
             type="button"
             onClick={submit}
             disabled={!selected || loading}
-            className="min-h-12 shrink-0 rounded-2xl bg-brand-navy px-6 text-[15px] font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-navy-2 active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 md:px-8"
+            className="min-h-12 shrink-0 rounded-2xl bg-brand-gold px-6 text-[15px] font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 md:px-8"
           >
             {loading ? "جاري الحفظ..." : "متابعة إلى لوحة العيادة"}
           </button>

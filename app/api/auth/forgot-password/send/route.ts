@@ -66,14 +66,14 @@ export async function POST(req: NextRequest) {
     const adminKey = settings?.adminWasenderKey || process.env.ADMIN_WASENDER_KEY || process.env.WHATSAPP_API_TOKEN;
     await sendWhatsApp(
       sendTo,
-      `عيادتي 🏥 — إعادة تعيين كلمة المرور\n\nكود التحقق:\n\n*${code}*\n\nصالح لمدة 10 دقائق.\nإذا لم تطلب هذا، تجاهل الرسالة.`,
+      `الهلال الذهبي 🏥 — إعادة تعيين كلمة المرور\n\nكود التحقق:\n\n*${code}*\n\nصالح لمدة 10 دقائق.\nإذا لم تطلب هذا، تجاهل الرسالة.`,
       adminKey ?? undefined
     );
   } else {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: "عيادتي <noreply@clinic-ai-pro.com>",
+      from: "الهلال الذهبي <noreply@clinic-ai-pro.com>",
       to: sendTo,
       subject: "كود إعادة تعيين كلمة المرور",
       html: `<div dir="rtl" style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px">

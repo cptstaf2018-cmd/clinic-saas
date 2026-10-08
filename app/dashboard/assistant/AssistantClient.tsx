@@ -126,7 +126,7 @@ export default function AssistantClient({ initialAccess }: { initialAccess: Acce
                 placeholder="اسأل عن طريقة استخدام التطبيق..."
                 className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold outline-none transition focus:border-brand-blue focus:bg-white focus:ring-4 focus:ring-brand-soft"
               />
-              <button disabled={loading} className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-50">
+              <button disabled={loading} className="rounded-2xl bg-brand-gold px-5 py-3 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:opacity-50">
                 {loading ? "..." : "إرسال"}
               </button>
             </form>

@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         if (settings?.adminWasenderKey) {
           await sendWhatsApp(
             phone.trim(),
-            `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nلديك فترة تجريبية مجانية لمدة 14 يوم.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق عيادتي`,
+            `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nلديك فترة تجريبية مجانية لمدة 14 يوم.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق الهلال الذهبي`,
             settings.adminWasenderKey
           );
         }
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       if (settings?.adminWasenderKey) {
         await sendWhatsApp(
           phone.trim(),
-          `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nلديك فترة تجريبية مجانية لمدة 14 يوم.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق عيادتي`,
+          `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nلديك فترة تجريبية مجانية لمدة 14 يوم.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق الهلال الذهبي`,
           settings.adminWasenderKey
         );
       }
@@ -161,9 +161,9 @@ export async function POST(req: NextRequest) {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: "عيادتي <noreply@clinic-ai-pro.com>",
+      from: "الهلال الذهبي <noreply@clinic-ai-pro.com>",
       to: cleanEmail,
-      subject: "مرحباً بعيادتك في منصة عيادتي",
+      subject: "مرحباً بعيادتك في منصة الهلال الذهبي",
       html: `<div dir="rtl" style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:32px">
         <h2 style="color:#1e293b">مرحباً بعيادة ${clinicName} 🏥</h2>
         <p style="color:#475569">تم تفعيل حسابك بنجاح. لديك فترة تجريبية مجانية لمدة 14 يوم.</p>

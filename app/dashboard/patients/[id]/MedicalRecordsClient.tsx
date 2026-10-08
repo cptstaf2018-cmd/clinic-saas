@@ -386,7 +386,7 @@ export default function MedicalRecordsClient({
         {!showForm && !editingId && (
           <button
             onClick={startAdd}
-            className="rounded-2xl bg-brand-navy px-4 py-2.5 text-sm font-black text-white transition hover:bg-brand-navy-2"
+            className="rounded-2xl bg-brand-gold px-4 py-2.5 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover"
           >
             {copy.addButton}
           </button>
@@ -751,7 +751,7 @@ function RecordForm({
         <button
           onClick={onSave}
           disabled={loading}
-          className="flex-1 rounded-lg bg-brand-navy py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-2 disabled:opacity-50"
+          className="flex-1 rounded-lg bg-brand-gold py-2 text-sm font-semibold text-brand-gold-ink transition-colors hover:bg-brand-gold-hover disabled:opacity-50"
         >
           {loading ? "جاري الحفظ..." : "حفظ السجل"}
         </button>

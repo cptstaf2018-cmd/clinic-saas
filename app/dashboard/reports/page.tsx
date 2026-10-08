@@ -127,7 +127,7 @@ export default async function ReportsPage({
       title: "التقارير المالية",
       description: "الإيرادات، المدفوعات، الذمم، والملخصات المالية حسب الفترة.",
       icon: "💰",
-      accent: "border-t-4 border-brand-mint",
+      accent: "border-t-4 border-brand-gold",
       iconBg: "bg-brand-mint-soft text-brand-mint-text",
       items: [
         { label: "إيراد اليوم من المرضى", value: `${formatMoney(todayRevenue)} د.ع`, hint: "ما دفعه المرضى اليوم" },
@@ -225,7 +225,7 @@ export default async function ReportsPage({
           {/* عنوان التقرير */}
           <div className="mt-4 text-center border-t border-slate-300 pt-3">
             <h1 className="text-xl font-black text-slate-900">التقرير اليومي الرسمي للعيادة</h1>
-            <p className="text-sm text-slate-500">وثيقة رسمية صادرة عن نظام إدارة عيادتي</p>
+            <p className="text-sm text-slate-500">وثيقة رسمية صادرة عن نظام الهلال الذهبي</p>
           </div>
         </div>
 
@@ -253,7 +253,7 @@ export default async function ReportsPage({
                   className="text-sm font-bold text-slate-800 outline-none"
                   onChange={undefined}
                 />
-                <button type="submit" className="rounded-xl bg-brand-navy px-3 py-1 text-xs font-black text-white hover:bg-brand-navy-2">
+                <button type="submit" className="rounded-xl bg-brand-gold px-3 py-1 text-xs font-black text-brand-gold-ink hover:bg-brand-gold-hover">
                   عرض
                 </button>
               </form>

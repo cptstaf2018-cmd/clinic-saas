@@ -83,12 +83,12 @@ export default function DashboardNav({ role, facilityType }: { role?: string | n
                 : "text-brand-side-muted hover:text-white hover:bg-white/8"
             }`}
           >
-            <span className={`transition-colors duration-200 ${active ? "text-brand-mint" : "text-brand-side-muted/70 group-hover:text-white"}`}>
+            <span className={`transition-colors duration-200 ${active ? "text-brand-gold" : "text-brand-side-muted/70 group-hover:text-white"}`}>
               {item.icon}
             </span>
             {item.label}
             {active && (
-              <span className="mr-auto h-4 w-1 rounded-full bg-brand-mint" />
+              <span className="mr-auto h-4 w-1 rounded-full bg-brand-gold" />
             )}
           </Link>
         );
@@ -133,7 +133,7 @@ export function MobileDashboardNav() {
                   href={item.href}
                   onClick={() => setShowMore(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    active ? "bg-brand-navy-2 text-brand-mint" : "text-brand-side-muted hover:bg-white/8 hover:text-white"
+                    active ? "bg-brand-navy-2 text-brand-gold" : "text-brand-side-muted hover:bg-white/8 hover:text-white"
                   }`}
                 >
                   <span className="[&_svg]:w-5 [&_svg]:h-5">{item.icon}</span>
@@ -153,14 +153,14 @@ export function MobileDashboardNav() {
             key={item.href}
             href={item.href}
             className={`flex-1 flex flex-col items-center justify-center py-2.5 transition-colors gap-1 ${
-              active ? "text-brand-mint" : "text-brand-side-muted hover:text-white"
+              active ? "text-brand-gold" : "text-brand-side-muted hover:text-white"
             }`}
           >
             <span className={`[&_svg]:w-5 [&_svg]:h-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}>
               {item.icon}
             </span>
             <span className={`text-[10px] font-medium ${active ? "font-bold" : ""}`}>{item.label}</span>
-            {active && <span className="w-1 h-1 rounded-full bg-brand-mint mt-0.5" />}
+            {active && <span className="w-1 h-1 rounded-full bg-brand-gold mt-0.5" />}
           </Link>
         );
       })}
@@ -169,14 +169,14 @@ export function MobileDashboardNav() {
       <button
         onClick={() => setShowMore(v => !v)}
         className={`flex-1 flex flex-col items-center justify-center py-2.5 transition-colors gap-1 ${
-          anyMoreActive ? "text-brand-mint" : "text-brand-side-muted hover:text-white"
+          anyMoreActive ? "text-brand-gold" : "text-brand-side-muted hover:text-white"
         }`}
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
           <circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/>
         </svg>
         <span className="text-[10px] font-medium">المزيد</span>
-        {anyMoreActive && <span className="w-1 h-1 rounded-full bg-brand-mint mt-0.5" />}
+        {anyMoreActive && <span className="w-1 h-1 rounded-full bg-brand-gold mt-0.5" />}
       </button>
     </>
   );

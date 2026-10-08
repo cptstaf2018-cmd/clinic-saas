@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة المختبر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0E2440;--navy2:#16325A;--navy3:#1A3558;--line-d:#2A4B78;--side:#9FB3CD;
+  --mint:#7CE0C3;--mint-ink:#06352A;--mint-soft:#E3F8F1;--mint-text:#0B7A5C;
+  --blue:#1F5FD1;--soft:#EAF1FD;--bg:#F3F6FA;--card:#FFFFFF;--ink:#0F1B2D;--muted:#5B6B82;--border:#DDE5EF;--hair:#EEF2F7;
+  --amber:#B45309;--amber-soft:#FEF3C7;--red:#C2272D;--red-soft:#FDECEC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input{font:inherit}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.mark{width:36px;height:36px;border-radius:12px;background:var(--mint);display:grid;place-items:center;color:var(--mint-ink)}
+.tabs{display:flex;gap:6px;background:rgba(255,255,255,.07);padding:5px;border-radius:16px;margin-inline-start:auto}
+.tab{min-height:40px;padding:0 16px;border-radius:12px;font-weight:600;font-size:14px;color:var(--side);transition:.2s}
+.tab[aria-selected=true]{background:#fff;color:var(--navy)}
+.tab:hover:not([aria-selected=true]){color:#fff}
+
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 60px}
+.view{display:none;animation:in .45s cubic-bezier(.16,1,.3,1)}
+.view.on{display:block}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.head h1{font-size:30px;line-height:1.2}
+.head p{color:var(--muted);margin-top:4px;font-size:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:16px 18px}
+.tile .l{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.tile .v{font-size:34px;font-weight:700;margin-top:6px;line-height:1}
+.tile .n{font-size:12px;color:var(--muted);margin-top:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+/* lab board */
+.lab-grid{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:18px;align-items:start}
+.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.col{background:#E9EEF5;border-radius:20px;padding:10px;min-height:420px}
+.col h3{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;padding:4px 6px 10px}
+.order{background:#fff;border-radius:16px;padding:12px;margin-bottom:8px;border:2px solid transparent;transition:.25s;text-align:right;width:100%;display:block}
+.order:hover{transform:translateY(-2px);box-shadow:0 10px 24px -18px rgba(14,36,64,.6)}
+.order.sel{border-color:var(--mint)}
+.order .nm{font-weight:600;font-size:14px}
+.order .meta{font-size:11px;color:var(--muted);margin-top:3px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.chip{font-size:11px;background:var(--hair);border-radius:8px;padding:2px 7px;color:var(--ink)}
+.stat-tag{background:var(--red-soft);color:var(--red)}
+.order.flash{animation:flash 1.2s ease}
+@keyframes flash{0%{background:var(--mint-soft)}100%{background:#fff}}
+
+/* result panel */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden;position:sticky;top:84px}
+.ph{background:var(--navy);color:#fff;padding:18px 20px}
+.ph .who{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ph .who b{font-size:20px}
+.ph small{color:var(--side);font-size:12px}
+.sexsw{display:flex;background:rgba(255,255,255,.1);border-radius:10px;padding:3px}
+.sexsw button{padding:4px 10px;border-radius:8px;font-size:12px;color:var(--side)}
+.sexsw button.on{background:#fff;color:var(--navy);font-weight:600}
+.rows{padding:8px 16px}
+.row{padding:12px 4px;border-bottom:1px solid var(--hair)}
+.row:last-child{border:0}
+.rt{display:flex;align-items:center;gap:10px}
+.rt .tn{flex:1;font-weight:600;font-size:14px}
+.rt .tn span{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.rin{width:84px;min-height:40px;border:1px solid var(--border);border-radius:12px;text-align:center;font-weight:700;font-size:15px;direction:ltr;outline:none;transition:.2s}
+.rin:focus{border-color:var(--blue);box-shadow:0 0 0 4px var(--soft)}
+.unit{width:52px;font-size:11px;color:var(--muted);direction:ltr;text-align:left}
+.badge{min-width:62px;text-align:center;font-size:11px;font-weight:700;border-radius:8px;padding:4px 6px}
+.b-ok{background:var(--mint-soft);color:var(--mint-text)}
+.b-hi,.b-lo{background:var(--amber-soft);color:var(--amber)}
+.b-cr{background:var(--red);color:#fff;animation:pulse 1.2s ease-in-out infinite}
+.b-na{background:var(--hair);color:var(--muted)}
+.b-bad{background:var(--red-soft);color:var(--red)}
+@keyframes pulse{50%{opacity:.6}}
+.bar{position:relative;height:10px;border-radius:99px;margin-top:10px;background:linear-gradient(90deg,#F5C2C3 0,#FBE3B6 var(--lc),#FBE3B6 var(--lo),var(--mint) var(--lo),var(--mint) var(--hi),#FBE3B6 var(--hi),#FBE3B6 var(--hc),#F5C2C3 var(--hc),#F5C2C3 100%)}
+.bar .mk{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:var(--navy);border:3px solid #fff;box-shadow:0 2px 6px rgba(14,36,64,.4);transform:translate(50%,-50%);transition:right .5s cubic-bezier(.16,1,.3,1),opacity .3s}
+.scale{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;direction:ltr}
+.hint{font-size:12px;margin-top:6px;color:var(--red)}
+.alert{margin:0 16px 12px;border-radius:16px;padding:12px 14px;background:var(--red);color:#fff;display:none;gap:10px;align-items:center;font-size:13px}
+.alert.on{display:flex;animation:in .3s}
+.alert b{flex:1}
+.alert button{background:#fff;color:var(--red);border-radius:10px;padding:6px 12px;font-weight:700;font-size:12px}
+.actions{display:flex;gap:8px;padding:12px 16px 16px;flex-wrap:wrap}
+.btn{min-height:46px;border-radius:14px;padding:0 18px;font-weight:700;font-size:14px;transition:.2s}
+.btn:hover{transform:translateY(-1px)}
+.btn-navy{background:var(--navy);color:#fff;flex:1}
+.btn-mint{background:var(--mint);color:var(--mint-ink);flex:1}
+.btn-ghost{background:var(--hair);color:var(--ink)}
+.summary{margin:0 16px;font-size:12px;color:var(--muted);display:flex;gap:12px}
+
+/* phone */
+.phone{width:290px;border-radius:36px;background:#0B1626;padding:10px;box-shadow:0 30px 60px -30px rgba(14,36,64,.7)}
+.screen{border-radius:28px;overflow:hidden;background:#E9E3D8;min-height:520px;display:flex;flex-direction:column}
+.wa-h{background:#075E54;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:14px}
+.wa-h .av{width:32px;height:32px;border-radius:50%;background:var(--mint);color:var(--mint-ink);display:grid;place-items:center;font-weight:700}
+.wa-h small{display:block;font-size:11px;opacity:.8}
+.wa-b{padding:12px;display:flex;flex-direction:column;gap:8px;flex:1}
+.msg{max-width:88%;background:#fff;border-radius:12px 12px 12px 4px;padding:9px 11px;font-size:13px;line-height:1.6;align-self:flex-start;box-shadow:0 1px 1px rgba(0,0,0,.08);opacity:0;transform:translateY(6px);animation:pop .4s forwards}
+.msg.me{align-self:flex-end;background:#D9FDD3;border-radius:12px 12px 4px 12px}
+@keyframes pop{to{opacity:1;transform:none}}
+.msg .t{display:block;font-size:10px;color:#8696A0;text-align:left;margin-top:2px}
+.pdf{display:flex;gap:8px;align-items:center;background:#F0F2F5;border-radius:10px;padding:8px;margin-bottom:6px}
+.pdf i{width:30px;height:36px;border-radius:6px;background:var(--red);color:#fff;font-style:normal;font-size:9px;display:grid;place-items:center;font-weight:700}
+.mini{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:3px}
+.mini .mb{flex:1;height:6px;border-radius:9px;background:var(--hair);position:relative}
+.mini .mb s{position:absolute;inset-block:0;border-radius:9px;text-decoration:none}
+.qbtn{display:block;text-align:center;color:#027EB5;border-top:1px solid #E9EDEF;margin:6px -11px -9px;padding:8px;font-size:13px;font-weight:600}
+.sendlay{position:fixed;inset:0;background:rgba(14,36,64,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.sendlay.on{display:flex;animation:in .3s}
+.sendcard{display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:center}
+.sendinfo{color:#fff;max-width:300px}
+.sendinfo h2{font-size:26px;margin-bottom:8px}
+.sendinfo p{color:var(--side);font-size:14px;line-height:1.8}
+.sendinfo .btn{margin-top:16px;width:100%}
+
+/* pharmacy */
+.ph-grid{display:grid;grid-template-columns:300px minmax(0,1fr) 320px;gap:18px;align-items:start}
+.inbox{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:10px}
+.inbox h3,.side h3{font-size:14px;padding:8px 8px 10px;display:flex;justify-content:space-between;align-items:center}
+.ib{width:100%;text-align:right;display:flex;gap:10px;padding:10px;border-radius:16px;transition:.2s;align-items:center}
+.ib:hover{background:var(--bg)}
+.ib.sel{background:var(--mint-soft)}
+.ib .av{width:40px;height:40px;border-radius:14px;background:var(--navy);color:var(--mint);display:grid;place-items:center;font-weight:700;flex-shrink:0}
+.ib b{font-size:14px;display:block}
+.ib small{font-size:12px;color:var(--muted)}
+.ib .st{margin-inline-start:auto;font-size:11px}
+.rx{background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden}
+.rx-top{display:grid;grid-template-columns:170px 1fr;gap:16px;padding:18px;border-bottom:1px solid var(--hair)}
+.paper{border-radius:14px;background:#FFFDF6;border:1px solid #EFE6CF;height:200px;position:relative;overflow:hidden}
+.scan{position:absolute;inset-inline:0;height:40px;background:linear-gradient(180deg,transparent,rgba(124,224,195,.55),transparent);animation:scan 2.4s ease-in-out infinite}
+@keyframes scan{0%{top:-40px}100%{top:200px}}
+.steps{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.step{font-size:12px;padding:5px 10px;border-radius:99px;background:var(--hair);color:var(--muted)}
+.step.done{background:var(--mint-soft);color:var(--mint-text)}
+.step.now{background:var(--navy);color:#fff}
+.allergy{margin:14px 18px 0;background:var(--red-soft);color:var(--red);border-radius:14px;padding:10px 12px;font-size:13px;display:flex;gap:8px;align-items:flex-start}
+.items{padding:8px 18px}
+.item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:14px 0;border-bottom:1px solid var(--hair);align-items:center}
+.item:last-child{border:0}
+.item .nm{font-weight:700}
+.item .gen{font-size:12px;color:var(--muted)}
+.conf{font-size:11px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:6px}
+.conf i{display:inline-block;height:4px;width:60px;border-radius:9px;background:var(--hair);position:relative;overflow:hidden}
+.conf i s{position:absolute;inset-block:0;right:0;background:var(--mint)}
+.dose{display:flex;gap:4px;margin-top:8px;align-items:center;font-size:12px;color:var(--muted)}
+.dose span{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:13px;background:var(--hair);color:#B8C3D3}
+.dose span.on{background:var(--navy);color:var(--mint)}
+.price{text-align:left;font-weight:700;font-size:15px}
+.price small{display:block;font-size:11px;font-weight:500}
+.sub{margin-top:8px;background:var(--amber-soft);border-radius:12px;padding:8px 10px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:8px;justify-content:space-between}
+.sub button{background:#fff;border-radius:9px;padding:4px 10px;font-weight:700;color:var(--amber)}
+.total{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;background:var(--bg);border-top:1px solid var(--hair)}
+.total b{font-size:24px}
+.side{display:flex;flex-direction:column;gap:14px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:10px 12px 14px}
+.exp{padding:8px}
+.exp .r{display:flex;justify-content:space-between;font-size:13px}
+.exp .r small{color:var(--muted)}
+.exp .tr{height:6px;border-radius:9px;background:var(--hair);margin-top:6px;overflow:hidden}
+.exp .tr s{display:block;height:100%;border-radius:9px;text-decoration:none}
+.refill{display:flex;align-items:center;gap:10px;padding:8px;font-size:13px}
+.refill b{display:block}
+.refill small{color:var(--muted);font-size:12px}
+.refill button{margin-inline-start:auto;background:var(--navy);color:#fff;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.refill button.sent{background:var(--mint-soft);color:var(--mint-text)}
+
+/* patient */
+.pt-grid{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;align-items:flex-start}
+.pt-col{display:flex;flex-direction:column;align-items:center;gap:12px}
+.pt-col h3{font-size:15px}
+.pt-col p{font-size:13px;color:var(--muted);max-width:290px;text-align:center;line-height:1.7}
+.clock{width:150px;height:150px;margin:4px auto}
+.note{text-align:center;color:var(--muted);font-size:12px;margin-top:30px}
+
+@media (max-width:1100px){.lab-grid,.ph-grid{grid-template-columns:1fr}.panel{position:static}.board{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.board{grid-template-columns:1fr}.rx-top{grid-template-columns:1fr}.tabs{margin:0;width:100%}.tab{flex:1;padding:0 8px}.head h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><span class="mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Clinic AI Pro</div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-v="lab">لوحة المختبر</button>
+        <button class="tab" role="tab" aria-selected="false" data-v="pt">ما يصل للمراجع</button>
+  </nav>
+</header>
+
+<div class="wrap">
+
+<!-- ═════════ LAB ═════════ -->
+<section class="view on" id="v-lab">
+  <div class="head">
+    <div><h1>مختبر النور · الأربعاء</h1><p>كل عينة تمر من الاستلام إلى الإصدار، والنتيجة تصل المراجع على واتساب.</p></div>
+    <span class="pill" style="background:var(--mint-soft);color:var(--mint-text)"><span class="dot" style="background:var(--mint-text)"></span>متوسط زمن النتيجة اليوم: ٢ س ١٠ د</span>
+  </div>
+  <div class="tiles">
+    <div class="tile"><div class="l">طلبات اليوم<span class="dot" style="background:var(--blue)"></span></div><div class="v num">٢٤</div><div class="n">١٨ مراجعاً مباشراً · ٦ حجوزات</div></div>
+    <div class="tile"><div class="l">قيد العمل<span class="dot" style="background:var(--mint)"></span></div><div class="v num" id="c-work">٤</div><div class="n">عينات في الأجهزة الآن</div></div>
+    <div class="tile"><div class="l">بانتظار التدقيق<span class="dot" style="background:#F59E0B"></span></div><div class="v num">٢</div><div class="n">تحتاج اعتماد شخص ثانٍ</div></div>
+    <div class="tile"><div class="l">قيم حرجة اليوم<span class="dot" style="background:var(--red)"></span></div><div class="v num">١</div><div class="n">أُبلغ الطبيب خلال ٤ دقائق</div></div>
+  </div>
+
+  <div class="lab-grid">
+    <div class="board" id="board">
+      <div class="col" data-c="new"><h3>طلبات جديدة <span class="num">٣</span></h3></div>
+      <div class="col" data-c="work"><h3>قيد العمل <span class="num" id="h-work">٤</span></h3></div>
+      <div class="col" data-c="review"><h3>بانتظار التدقيق <span class="num">٢</span></h3></div>
+      <div class="col" data-c="done"><h3>صدرت <span class="num" id="h-done">٥</span></h3></div>
+    </div>
+
+    <aside class="panel" aria-label="إدخال النتائج">
+      <div class="ph">
+        <div class="who">
+          <div><small>إدخال النتائج · عينة <span class="num" dir="ltr">#A-1042</span></small><b id="p-name">زينب حسن</b><small id="p-meta">٣٤ سنة · طلب د. علي الجبوري</small></div>
+          <div class="sexsw" role="group" aria-label="الجنس">
+            <button class="on" data-s="f">أنثى</button><button data-s="m">ذكر</button>
+          </div>
+        </div>
+      </div>
+      <div class="alert" id="crit" role="alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        <b id="crit-t">قيمة حرجة: يجب إبلاغ الطبيب فوراً</b><button>اتصال بالطبيب</button>
+      </div>
+      <div class="rows" id="rows"></div>
+      <div class="summary"><span id="sum-ok"></span><span id="sum-ab"></span></div>
+      <div class="actions">
+        <button class="btn btn-ghost">حفظ مسودة</button>
+        <button class="btn btn-navy" id="send-lab">اعتماد وإرسال النتيجة</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ═════════ PATIENT ═════════ -->
+<section class="view" id="v-pt">
+  <div class="head"><div><h1>ما يصل للمراجع</h1><p>المريض لا يحمّل تطبيقاً. كل شيء على واتساب الذي يستخدمه أصلاً.</p></div></div>
+  <div class="pt-grid">
+    <div class="pt-col">
+      <h3>النتيجة من المختبر</h3>
+      <div class="phone"><div class="screen">
+        <div class="wa-h"><span class="av">ن</span><span>مختبر النور<small>حساب أعمال</small></span></div>
+        <div class="wa-b" id="pt-lab"></div>
+      </div></div>
+      <p>ملف PDF موقّع برمز QR للتحقق، وملخص بالألوان بلغة بسيطة.</p>
+    </div>
+    </div>
+  <p class="note">نموذج تصميم ببيانات تجريبية. الأسماء والأسعار والقيم للعرض فقط.</p>
+</section>
+</div>
+
+<!-- send overlay -->
+<div class="sendlay" id="lay" role="dialog" aria-modal="true" aria-label="معاينة الإرسال">
+  <div class="sendcard">
+    <div class="phone"><div class="screen"><div class="wa-h"><span class="av" id="lay-av">ن</span><span id="lay-from">مختبر النور<small>حساب أعمال</small></span></div><div class="wa-b" id="lay-body"></div></div></div>
+    <div class="sendinfo"><h2 id="lay-h">أُرسلت النتيجة ✓</h2><p id="lay-p"></p><button class="btn btn-mint" id="lay-x">تم</button></div>
+  </div>
+</div>
+
+<script>
+const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+const money = n => AR(n.toLocaleString("en-US")).replace(/,/g, "٬");
+
+/* tabs */
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + t.dataset.v));
+  if (t.dataset.v === "pt") renderPatientLab();
+});
+
+/* ── LAB ── reference ranges per sex, critical + valid limits (OpenELIS ResultLimit model) */
+const TESTS = [
+  { k:"hb",  n:"الهيموغلوبين", e:"Hemoglobin", u:"g/dL", v:{f:[12,15.5],m:[13.5,17.5]}, c:[7,20], ok:[2,25], val:"11.2" },
+  { k:"wbc", n:"كريات الدم البيضاء", e:"WBC", u:"×10³/µL", v:{f:[4,11],m:[4,11]}, c:[2,30], ok:[0.1,100], val:"7.4" },
+  { k:"plt", n:"الصفائح الدموية", e:"Platelets", u:"×10³/µL", v:{f:[150,450],m:[150,450]}, c:[50,1000], ok:[1,2000], val:"265" },
+  { k:"fbs", n:"سكر الصيام", e:"FBS", u:"mg/dL", v:{f:[70,99],m:[70,99]}, c:[40,400], ok:[10,1500], val:"132" },
+  { k:"cr",  n:"الكرياتينين", e:"Creatinine", u:"mg/dL", v:{f:[0.5,1.1],m:[0.7,1.3]}, c:[0.2,6], ok:[0.05,30], val:"0.8" },
+];
+let sex = "f";
+
+const ORDERS = [
+  { id:1, c:"new", n:"علي حسين", m:"قبل ٥ د · عيادة د. سلمى", t:["CBC","CRP"] },
+  { id:2, c:"new", n:"فاطمة عباس", m:"قبل ١٢ د · مراجعة مباشرة", t:["TSH","T4"] },
+  { id:3, c:"new", n:"أحمد ماجد", m:"قبل ١٨ د", t:["Lipid profile"], stat:true },
+  { id:4, c:"work", n:"زينب حسن", m:"سُحبت ٩:٤٠ · د. علي الجبوري", t:["CBC","FBS","Creatinine"], sel:true },
+  { id:5, c:"work", n:"مصطفى ليث", m:"سُحبت ٩:٥٥", t:["HbA1c"] },
+  { id:6, c:"work", n:"رقية سعد", m:"سُحبت ١٠:٠٥", t:["Urine R/E"] },
+  { id:7, c:"work", n:"كرار علاء", m:"سُحبت ١٠:١٠", t:["LFT"], stat:true },
+  { id:8, c:"review", n:"هدى ناظم", m:"أدخلها: حيدر", t:["Vitamin D"] },
+  { id:9, c:"review", n:"يوسف أمير", m:"أدخلها: حيدر", t:["Ferritin"] },
+  { id:10, c:"done", n:"ريم خالد", m:"صدرت ٩:٢٠ · أُرسلت", t:["CBC"] },
+  { id:11, c:"done", n:"باسم عادل", m:"صدرت ٩:٠٥ · أُرسلت", t:["RFT"] },
+];
+
+function renderBoard() {
+  document.querySelectorAll(".col").forEach(col => {
+    col.querySelectorAll(".order").forEach(o => o.remove());
+    ORDERS.filter(o => o.c === col.dataset.c).forEach(o => {
+      const b = document.createElement("button");
+      b.className = "order" + (o.sel ? " sel" : "") + (o.flash ? " flash" : "");
+      b.innerHTML = `<div class="nm">${o.n}</div><div class="meta">${o.m}</div><div class="chips">${o.stat ? '<span class="chip stat-tag">مستعجل</span>' : ""}${o.t.map(x => `<span class="chip" dir="ltr">${x}</span>`).join("")}</div>`;
+      col.appendChild(b);
+      o.flash = false;
+    });
+  });
+  const w = ORDERS.filter(o => o.c === "work").length, d = ORDERS.filter(o => o.c === "done").length;
+  document.getElementById("h-work").textContent = AR(w);
+  document.getElementById("c-work").textContent = AR(w);
+  document.getElementById("h-done").textContent = AR(d);
+}
+
+function classify(t, raw) {
+  const x = parseFloat(raw);
+  if (raw === "" || isNaN(x)) return { s:"na", l:"—" };
+  const [lo, hi] = t.v[sex];
+  if (x < t.ok[0] || x > t.ok[1]) return { s:"bad", l:"تحقق", x };
+  if (x <= t.c[0] || x >= t.c[1]) return { s:"cr", l:"حرجة", x };
+  if (x < lo) return { s:"lo", l:"منخفض", x };
+  if (x > hi) return { s:"hi", l:"مرتفع", x };
+  return { s:"ok", l:"طبيعي", x };
+}
+
+/* the bar spans from the low critical limit to the high critical limit, padded */
+function scale(t) {
+  const span = t.c[1] - t.c[0];
+  const a = Math.max(t.ok[0], t.c[0] - span * 0.08), b = t.c[1] + span * 0.08;
+  return { a, b, p: v => Math.min(100, Math.max(0, (v - a) / (b - a) * 100)) };
+}
+
+function renderRows() {
+  const rows = document.getElementById("rows");
+  rows.innerHTML = "";
+  TESTS.forEach(t => {
+    const sc = scale(t), [lo, hi] = t.v[sex];
+    const el = document.createElement("div");
+    el.className = "row";
+    el.innerHTML = `
+      <div class="rt">
+        <div class="tn">${t.n}<span dir="ltr">${t.e} · ${lo}–${hi}</span></div>
+        <input class="rin num" inputmode="decimal" value="${t.val}" aria-label="${t.n}">
+        <span class="unit">${t.u}</span>
+        <span class="badge"></span>
+      </div>
+      <div class="bar" style="--lc:${sc.p(t.c[0])}%;--lo:${sc.p(lo)}%;--hi:${sc.p(hi)}%;--hc:${sc.p(t.c[1])}%"><span class="mk"></span></div>
+      <div class="scale"><span>${t.c[0]}</span><span>${lo}</span><span>${hi}</span><span>${t.c[1]}</span></div>
+      <div class="hint"></div>`;
+    const input = el.querySelector("input");
+    const update = () => { t.val = input.value; paintRow(el, t); paintSummary(); };
+    input.addEventListener("input", update);
+    rows.appendChild(el);
+    paintRow(el, t);
+  });
+  paintSummary();
+}
+
+function paintRow(el, t) {
+  const r = classify(t, t.val), sc = scale(t);
+  const badge = el.querySelector(".badge"), mk = el.querySelector(".mk"), hint = el.querySelector(".hint");
+  badge.className = "badge b-" + r.s;
+  badge.textContent = r.l;
+  mk.style.opacity = r.s === "na" || r.s === "bad" ? 0 : 1;
+  if (r.x !== undefined) mk.style.right = (100 - sc.p(r.x)) + "%";
+  hint.textContent = r.s === "bad" ? `القيمة ${t.val} خارج المنطق لهذا التحليل. هل هي خطأ إدخال؟` : "";
+}
+
+function paintSummary() {
+  const rs = TESTS.map(t => classify(t, t.val));
+  const ok = rs.filter(r => r.s === "ok").length;
+  const ab = rs.filter(r => ["hi","lo","cr"].includes(r.s)).length;
+  const cr = TESTS.find(t => classify(t, t.val).s === "cr");
+  document.getElementById("sum-ok").textContent = `${AR(ok)} طبيعية`;
+  document.getElementById("sum-ab").textContent = ab ? `${AR(ab)} خارج النطاق` : "";
+  const box = document.getElementById("crit");
+  box.classList.toggle("on", !!cr);
+  if (cr) document.getElementById("crit-t").textContent = `قيمة حرجة في ${cr.n}: يجب إبلاغ الطبيب فوراً`;
+}
+
+document.querySelectorAll(".sexsw button").forEach(b => b.onclick = () => {
+  sex = b.dataset.s;
+  document.querySelectorAll(".sexsw button").forEach(x => x.classList.toggle("on", x === b));
+  renderRows();
+});
+
+function labMessages(target, animate = true) {
+  const rs = TESTS.map(t => ({ t, r: classify(t, t.val) })).filter(x => x.r.s !== "na" && x.r.s !== "bad");
+  const ab = rs.filter(x => x.r.s !== "ok");
+  const tone = s => s === "ok" ? "var(--mint)" : s === "cr" ? "var(--red)" : "#F59E0B";
+  const lines = rs.map(({ t, r }) => {
+    const sc = scale(t);
+    return `<div class="mini"><span style="width:86px">${t.n}</span><span class="mb"><s style="right:${100 - sc.p(r.x) - 4}%;width:8%;background:${tone(r.s)}"></s></span><b style="font-size:11px;color:${tone(r.s)}">${r.l}</b></div>`;
+  }).join("");
+  const d = i => animate ? `style="animation-delay:${i}s"` : `style="animation:none;opacity:1;transform:none"`;
+  target.innerHTML = `
+    <div class="msg" ${d(0.1)}>مرحباً زينب، نتيجة تحليلك جاهزة ✓<span class="t">١٠:٤٢ ص</span></div>
+    <div class="msg" ${d(0.5)}><div class="pdf"><i>PDF</i><span><b style="font-size:12px">نتيجة_A-1042.pdf</b><br><small style="color:#667781">موقّع · رمز QR للتحقق</small></span></div>
+      ${lines}
+      <div style="font-size:11px;color:#667781;margin-top:6px">${ab.length ? `${AR(ab.length)} قيمة خارج النطاق. راجع طبيبك لتفسيرها.` : "كل القيم ضمن النطاق الطبيعي."}</div>
+      <span class="t">١٠:٤٢ ص</span></div>
+    `;
+}
+function renderPatientLab() { labMessages(document.getElementById("pt-lab")); }
+
+const lay = document.getElementById("lay");
+document.getElementById("send-lab").onclick = () => {
+  if (TESTS.some(t => classify(t, t.val).s === "bad")) { alert("صحّح القيم غير المنطقية أولاً"); return; }
+  document.getElementById("lay-av").textContent = "ن";
+  document.getElementById("lay-from").innerHTML = "مختبر النور<small>حساب أعمال</small>";
+  document.getElementById("lay-h").textContent = "أُرسلت النتيجة ✓";
+  document.getElementById("lay-p").textContent = "وصلت النتيجة زينب على واتساب مع ملف PDF موقّع. البطاقة انتقلت إلى «صدرت».";
+  labMessages(document.getElementById("lay-body"));
+  lay.classList.add("on");
+  const o = ORDERS.find(o => o.id === 4);
+  o.c = "done"; o.sel = false; o.flash = true; o.m = "صدرت الآن · أُرسلت";
+  renderBoard();
+};
+document.getElementById("lay-x").onclick = () => lay.classList.remove("on");
+lay.onclick = e => { if (e.target === lay) lay.classList.remove("on"); };
+
+renderBoard(); renderRows();
+</script>
+</body>
+</html>

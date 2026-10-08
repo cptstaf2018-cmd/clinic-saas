@@ -74,11 +74,11 @@ export default function MobileDrawer({ signOutForm, role, facilityType }: { sign
                   active ? "bg-brand-navy-2 text-white" : "text-brand-side-muted hover:text-white hover:bg-white/8"
                 }`}
               >
-                <span className={`transition-colors ${active ? "text-brand-mint" : "text-brand-side-muted/70 group-hover:text-white"}`}>
+                <span className={`transition-colors ${active ? "text-brand-gold" : "text-brand-side-muted/70 group-hover:text-white"}`}>
                   {item.icon}
                 </span>
                 {item.label}
-                {active && <span className="mr-auto h-4 w-1 rounded-full bg-brand-mint" />}
+                {active && <span className="mr-auto h-4 w-1 rounded-full bg-brand-gold" />}
               </Link>
             );
           })}

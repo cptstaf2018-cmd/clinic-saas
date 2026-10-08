@@ -645,7 +645,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
         </div>
 
         <div className="dp-footer" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
-          <span>عيادتي — نظام إدارة العيادة</span>
+          <span>الهلال الذهبي</span>
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             padding: "3px 12px", borderRadius: 999, fontSize: 11, fontWeight: 700,

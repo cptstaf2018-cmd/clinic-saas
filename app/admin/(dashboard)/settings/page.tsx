@@ -142,7 +142,7 @@ export default function AdminSettingsPage() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={logoLoading}
-                className="bg-brand-navy hover:bg-brand-navy-2 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition disabled:opacity-50"
+                className="bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink text-sm font-semibold px-5 py-2.5 rounded-xl transition disabled:opacity-50"
               >
                 {logoLoading ? "جاري الرفع..." : "رفع شعار"}
               </button>
@@ -252,7 +252,7 @@ export default function AdminSettingsPage() {
           <button
             type="submit"
             disabled={wasenderLoading || !wasenderKey}
-            className="bg-brand-navy text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-navy-2 transition disabled:opacity-50"
+            className="bg-brand-gold text-brand-gold-ink px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-gold-hover transition disabled:opacity-50"
           >
             {wasenderLoading ? "جاري الحفظ..." : "حفظ المفتاح"}
           </button>
@@ -323,7 +323,7 @@ export default function AdminSettingsPage() {
           <button
             type="submit"
             disabled={passLoading}
-            className="bg-brand-navy text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-navy-2 transition disabled:opacity-50"
+            className="bg-brand-gold text-brand-gold-ink px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-brand-gold-hover transition disabled:opacity-50"
           >
             {passLoading ? "جاري التغيير..." : "تغيير كلمة المرور"}
           </button>

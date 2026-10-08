@@ -152,7 +152,7 @@ export default function DashboardAssistantFloating({ initialAccess }: { initialA
                   <button
                     type="submit"
                     disabled={loading}
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-navy text-white transition hover:bg-brand-navy-2 disabled:opacity-50"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-gold text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:opacity-50"
                     aria-label="إرسال السؤال"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.3} className="h-5 w-5">

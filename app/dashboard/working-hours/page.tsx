@@ -183,7 +183,7 @@ export default function WorkingHoursPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="rounded-2xl bg-brand-navy px-6 py-3 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-60"
+                className="rounded-2xl bg-brand-gold px-6 py-3 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:opacity-60"
               >
                 {saving ? "جاري الحفظ..." : "حفظ أوقات العمل"}
               </button>

@@ -7,12 +7,12 @@ export async function sendOtpEmail(to: string, code: string) {
   }
   const resend = new Resend(process.env.RESEND_API_KEY);
   const result = await resend.emails.send({
-    from: "عيادتي <noreply@clinic-ai-pro.com>",
+    from: "الهلال الذهبي <noreply@clinic-ai-pro.com>",
     to,
-    subject: "كود تسجيل عيادتي",
+    subject: "كود تسجيل الهلال الذهبي",
     html: `
       <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 32px;">
-        <h2 style="color: #1e293b; margin-bottom: 8px;">مرحباً بك في عيادتي 🏥</h2>
+        <h2 style="color: #1e293b; margin-bottom: 8px;">مرحباً بك في الهلال الذهبي 🏥</h2>
         <p style="color: #475569;">كود تسجيلك:</p>
         <div style="background: #f1f5f9; border-radius: 12px; padding: 24px; text-align: center; margin: 20px 0;">
           <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #2563eb;">${code}</span>
@@ -47,7 +47,7 @@ export async function sendBackupEmail({
   const fileName = `backup-${clinicName.replace(/\s+/g, "-")}-${month}.csv`;
 
   await resend.emails.send({
-    from: "عيادتي <backup@clinic-ai-pro.com>",
+    from: "الهلال الذهبي <backup@clinic-ai-pro.com>",
     to,
     subject: `📦 نسخة احتياطية — ${clinicName} — ${month}`,
     html: `
@@ -60,7 +60,7 @@ export async function sendBackupEmail({
           <p style="margin: 4px 0; color: #334155;">📋 السجلات الطبية: <strong>${stats.records}</strong></p>
         </div>
         <p style="color: #64748b; font-size: 14px;">الملف المرفق يحتوي على كل بيانات العيادة بصيغة CSV يمكن فتحها بـ Excel.</p>
-        <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">نظام عيادتي — النسخة الاحتياطية تُرسل تلقائياً كل أول الشهر.</p>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">نظام الهلال الذهبي — النسخة الاحتياطية تُرسل تلقائياً كل أول الشهر.</p>
       </div>
     `,
     attachments: [

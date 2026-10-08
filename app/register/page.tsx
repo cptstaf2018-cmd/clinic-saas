@@ -3,6 +3,7 @@
 import GoogleButton from "../login/GoogleButton";
 import { useState } from "react";
 import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
 import { ArrowLeft, KeyRound, LockKeyhole, Mail, MessageCircle, Phone, Send, Stethoscope } from "lucide-react";
 
 type VerificationType = "phone" | "email";
@@ -12,7 +13,7 @@ const INPUT_CLASS =
   "w-full min-h-12 rounded-2xl border border-brand-border bg-white pr-11 pl-4 text-[15px] text-brand-ink outline-none transition placeholder:text-brand-muted/60 focus:border-brand-blue focus:ring-4 focus:ring-brand-soft";
 const ICON_CLASS = "pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-muted";
 const SEND_BTN =
-  "mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brand-mint text-sm font-bold text-brand-mint-ink transition hover:-translate-y-0.5 hover:bg-brand-mint-hover active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
+  "mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-brand-gold text-sm font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
 
 const JOURNEY = [
   { title: "تسجّل عيادتك", desc: "اسم العيادة ورمز تحقق، بدون بطاقة ائتمان." },
@@ -21,39 +22,26 @@ const JOURNEY = [
   { title: "تنادي التالي", desc: "الاسم يُنطق بالصوت على شاشة الانتظار." },
 ];
 
-function BrandMark() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-mint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="h-5 w-5 text-brand-mint-ink" aria-hidden>
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </div>
-      <span className="text-xl font-bold tracking-tight text-white">Clinic AI Pro</span>
-    </div>
-  );
-}
-
 function BrandPanel() {
   return (
     <div className="relative hidden flex-col justify-between overflow-hidden bg-brand-navy p-10 text-white lg:flex lg:w-[48%] xl:p-14">
       <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full border-[56px] border-white/[0.04]" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-32 -right-20 h-[26rem] w-[26rem] rounded-full border-[56px] border-brand-mint/[0.07]" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-32 -right-20 h-[26rem] w-[26rem] rounded-full border-[56px] border-brand-gold/[0.07]" />
 
       <div className="relative">
-        <BrandMark />
+        <BrandLogo tone="dark" size={72} />
       </div>
 
       <div className="relative space-y-9">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full bg-brand-mint/15 px-3.5 py-1.5 text-xs font-semibold text-brand-mint">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-mint" />
+          <span className="inline-flex items-center gap-2 rounded-full bg-brand-gold/15 px-3.5 py-1.5 text-xs font-semibold text-brand-gold">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
             ١٤ يوماً تجربة مجانية كاملة
           </span>
           <h1 className="mt-5 text-4xl font-bold leading-[1.25] xl:text-5xl">
             من التسجيل إلى
             <br />
-            <span className="text-brand-mint">أول حجز عبر واتساب.</span>
+            <span className="text-brand-gold">أول حجز عبر واتساب.</span>
           </h1>
         </div>
 
@@ -63,7 +51,7 @@ function BrandPanel() {
             <li key={step.title} className="relative flex gap-4">
               <span
                 className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                  index === 0 ? "bg-brand-mint text-brand-mint-ink" : "border border-brand-navy-line bg-brand-navy-3 text-brand-side-muted"
+                  index === 0 ? "bg-brand-gold text-brand-gold-ink" : "border border-brand-navy-line bg-brand-navy-3 text-brand-side-muted"
                 }`}
               >
                 {index + 1}
@@ -201,7 +189,7 @@ export default function RegisterPage() {
 
       <main className="flex flex-1 flex-col">
         <div className="flex items-center justify-between bg-brand-navy px-5 py-4 lg:hidden">
-          <BrandMark />
+          <BrandLogo tone="dark" size={34} stacked={false} />
           <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-brand-side-muted">١٤ يوماً مجاناً</span>
         </div>
 
@@ -285,7 +273,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-navy text-[15px] font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-navy-2 active:translate-y-0 disabled:translate-y-0 disabled:opacity-60"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-gold text-[15px] font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover active:translate-y-0 disabled:translate-y-0 disabled:opacity-60"
               >
                 {loading ? "جاري التسجيل..." : "ابدأ تجربتي المجانية"}
                 <ArrowLeft className="h-4 w-4" />

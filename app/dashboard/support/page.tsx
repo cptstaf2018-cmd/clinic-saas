@@ -22,7 +22,7 @@ export default async function SupportPage() {
               href="https://wa.me/9647706688044"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white shadow-lg shadow-brand-navy/15 transition hover:-translate-y-0.5 hover:bg-brand-navy-2"
+              className="inline-flex items-center justify-center rounded-2xl bg-brand-gold px-5 py-3 text-sm font-black text-brand-gold-ink shadow-lg shadow-brand-navy/15 transition hover:-translate-y-0.5 hover:bg-brand-gold-hover"
             >
               تواصل مع الدعم
             </a>

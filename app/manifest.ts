@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "نظام إدارة العيادة",
-    short_name: "عيادتي",
-    description: "نظام متكامل لإدارة المواعيد والمرضى في عيادتك",
+    name: "الهلال الذهبي",
+    short_name: "الهلال الذهبي",
+    description: "نظام متكامل لإدارة العيادات والصيدليات والمختبرات",
     start_url: "/dashboard",
     display: "standalone",
     orientation: "portrait",
@@ -14,22 +14,9 @@ export default function manifest(): MetadataRoute.Manifest {
     dir: "rtl",
     categories: ["medical", "productivity", "business"],
     icons: [
-      {
-        src: "/apple-icon",
-        sizes: "180x180",
-        type: "image/png",
-      },
-      {
-        src: "/apple-icon",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        src: "/apple-icon",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
-      },
+      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png" },
+      { src: "/brand/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

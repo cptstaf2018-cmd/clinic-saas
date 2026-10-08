@@ -225,7 +225,7 @@ export default function PatientAttachmentsClient({
         {!showForm && (
           <button
             onClick={() => { setShowForm(true); setError(""); }}
-            className="rounded-2xl bg-brand-navy px-4 py-2.5 text-sm font-black text-white transition hover:bg-brand-navy-2"
+            className="rounded-2xl bg-brand-gold px-4 py-2.5 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover"
           >
             + إضافة
           </button>
@@ -311,7 +311,7 @@ export default function PatientAttachmentsClient({
           </div>
 
           <div className="flex gap-2">
-            <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-brand-navy py-2.5 text-sm font-black text-white hover:bg-brand-navy-2 disabled:opacity-50">
+            <button onClick={handleSave} disabled={saving} className="flex-1 rounded-xl bg-brand-gold py-2.5 text-sm font-black text-brand-gold-ink hover:bg-brand-gold-hover disabled:opacity-50">
               {saving ? "جاري الحفظ..." : "حفظ"}
             </button>
             <button onClick={() => { setShowForm(false); setError(""); setPendingFile(null); }} className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600 hover:bg-slate-200">
@@ -386,7 +386,7 @@ export default function PatientAttachmentsClient({
                           href={studyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-navy px-3 py-2 text-xs font-black text-white hover:bg-brand-navy-2"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-gold px-3 py-2 text-xs font-black text-brand-gold-ink hover:bg-brand-gold-hover"
                         >
                           <ExternalLink className="h-4 w-4" aria-hidden="true" />
                           فتح في OHIF

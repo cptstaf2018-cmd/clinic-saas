@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   await sendWhatsApp(
     phone.trim(),
-    `مرحباً 👋\n\nكود تسجيلك في منصة عيادتي:\n\n*${record.code}*\n\nسجّل عيادتك على:\nwww.clinic-ai-pro.com/register\n\nفريق عيادتي`,
+    `مرحباً 👋\n\nكود تسجيلك في منصة الهلال الذهبي:\n\n*${record.code}*\n\nسجّل عيادتك على:\nwww.clinic-ai-pro.com/register\n\nفريق الهلال الذهبي`,
     settings.adminWasenderKey
   );
 

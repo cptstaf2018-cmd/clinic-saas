@@ -204,7 +204,7 @@ export default function PatientListPremium({
                     <div className="grid grid-cols-2 gap-2">
                       <Link
                         href={`/dashboard/patients/${patient.id}`}
-                        className="flex min-h-10 items-center justify-center rounded-xl bg-brand-navy px-3 text-xs font-semibold text-white transition hover:bg-brand-navy-2"
+                        className="flex min-h-10 items-center justify-center rounded-xl bg-brand-gold px-3 text-xs font-semibold text-brand-gold-ink transition hover:bg-brand-gold-hover"
                       >
                         {LABELS.patientProfile}
                       </Link>

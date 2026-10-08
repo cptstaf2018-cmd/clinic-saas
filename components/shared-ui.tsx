@@ -11,7 +11,7 @@ interface StatCardProps {
 export function StatCard({ label, value, subtitle, accent }: StatCardProps) {
   const accentDots = {
     slate: 'bg-brand-blue',
-    emerald: 'bg-brand-mint',
+    emerald: 'bg-brand-gold',
     amber: 'bg-amber-500',
     rose: 'bg-rose-500',
   };
@@ -46,7 +46,7 @@ export function FilterTab({ active, label, count, onClick }: FilterTabProps) {
       }`}
     >
       {label}
-      <span className={`mr-2 rounded-full px-2 py-0.5 text-xs ${active ? 'bg-brand-mint text-brand-mint-ink' : 'bg-brand-line text-brand-muted'}`}>
+      <span className={`mr-2 rounded-full px-2 py-0.5 text-xs ${active ? 'bg-brand-gold text-brand-gold-ink' : 'bg-brand-line text-brand-muted'}`}>
         {count}
       </span>
     </button>
@@ -64,7 +64,7 @@ interface SectionHeaderProps {
 export function SectionHeader({ superLabel, title, subtitle, badge, children }: SectionHeaderProps) {
   return (
     <div className="relative px-5 py-6 lg:px-7">
-      <span aria-hidden className="absolute inset-y-6 right-0 w-1 rounded-l-full bg-brand-mint" />
+      <span aria-hidden className="absolute inset-y-6 right-0 w-1 rounded-l-full bg-brand-gold" />
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex-1">
           {superLabel && (
@@ -174,7 +174,7 @@ export function ActionButton({
     primary: 'bg-brand-blue text-white hover:bg-brand-blue-dark',
     secondary: 'bg-brand-line text-brand-ink hover:bg-brand-border',
     danger: 'bg-rose-50 text-rose-700 hover:bg-rose-100',
-    success: 'bg-brand-mint-soft text-brand-mint-text hover:bg-brand-mint/40',
+    success: 'bg-brand-mint-soft text-brand-mint-text hover:bg-brand-gold/40',
   };
 
   return (

@@ -183,7 +183,7 @@ export default function PatientSearchClient({ patients: initial, initialQuery = 
                       <input value={editPhone} onChange={(event) => setEditPhone(event.target.value)} placeholder="رقم الهاتف" className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:ring-4 focus:ring-brand-soft" dir="ltr" />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => saveEdit(patient.id)} disabled={loading === `${patient.id}_edit`} className="rounded-2xl bg-brand-navy px-5 py-2.5 text-sm font-black text-white transition hover:bg-brand-navy-2 disabled:opacity-50">
+                      <button onClick={() => saveEdit(patient.id)} disabled={loading === `${patient.id}_edit`} className="rounded-2xl bg-brand-gold px-5 py-2.5 text-sm font-black text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:opacity-50">
                         {loading === `${patient.id}_edit` ? "جاري الحفظ..." : "حفظ"}
                       </button>
                       <button onClick={() => setEditingId(null)} className="rounded-2xl bg-white px-5 py-2.5 text-sm font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50">

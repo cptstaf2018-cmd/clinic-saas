@@ -15,7 +15,7 @@ type Appt = {
 const STATUS_MAP: Record<string, { label: string; badge: string; dot: string }> = {
   pending: { label: "معلق", badge: "bg-amber-50 text-amber-700 ring-amber-100", dot: "bg-amber-400" },
   confirmed: { label: "مؤكد", badge: "bg-brand-soft text-brand-blue ring-brand-border", dot: "bg-brand-soft0" },
-  completed: { label: "مكتمل", badge: "bg-brand-mint-soft text-brand-mint-text ring-brand-border", dot: "bg-brand-mint" },
+  completed: { label: "مكتمل", badge: "bg-brand-mint-soft text-brand-mint-text ring-brand-border", dot: "bg-brand-gold" },
   cancelled: { label: "ملغي", badge: "bg-red-50 text-red-700 ring-red-100", dot: "bg-red-500" },
 };
 
@@ -251,7 +251,7 @@ export default function AppointmentsPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowBooking(true)}
-                className="rounded-2xl bg-brand-navy px-5 py-3 text-sm font-black text-white shadow-lg shadow-brand-navy/30 transition hover:bg-brand-navy-2"
+                className="rounded-2xl bg-brand-gold px-5 py-3 text-sm font-black text-brand-gold-ink shadow-lg shadow-brand-navy/30 transition hover:bg-brand-gold-hover"
               >
                 + حجز جديد
               </button>

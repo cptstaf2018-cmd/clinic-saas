@@ -14,13 +14,13 @@ const plexArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "عيادتي — نظام إدارة العيادة",
-  description: "نظام متكامل لإدارة المواعيد والمرضى في عيادتك",
+  title: "الهلال الذهبي — نظام إدارة العيادات والصيدليات والمختبرات",
+  description: "نظام متكامل لإدارة العيادات والصيدليات والمختبرات",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "عيادتي",
+    title: "الهلال الذهبي",
   },
   verification: {
     google: "kaJq6Uri2UG16KiQPnlgnviCwnzz-8myJlKaXIdLMfE",

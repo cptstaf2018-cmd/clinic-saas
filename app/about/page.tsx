@@ -1,7 +1,8 @@
+import BrandLogo from "@/components/BrandLogo";
 import Link from "next/link";
 
 export const metadata = {
-  title: "عيادتي — نظام إدارة العيادات الأذكى في العراق",
+  title: "الهلال الذهبي — نظام إدارة العيادات والصيدليات والمختبرات",
   description: "منصة SaaS متكاملة لإدارة العيادات الطبية في العراق. بوت واتساب ذكي، تذكيرات تلقائية، سجلات طبية، وشاشة انتظار. تطوير بغداد المستقبل AI.",
 };
 
@@ -150,10 +151,7 @@ export default function AboutPage() {
       {/* ══ NAV ══ */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(16px)", borderBottom: "1px solid var(--border)" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 24px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--teal)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 17 }}>ع</div>
-            <span style={{ fontWeight: 900, fontSize: 18, color: "var(--navy)" }}>عيادتي</span>
-          </div>
+          <BrandLogo tone="light" size={40} stacked={false} />
           <div className="hide-mobile" style={{ display: "flex", gap: 32 }}>
             {[["#services","الخدمات"],["#dental","طب الأسنان"],["#plans","الباقات"],["#company","الشركة"]].map(([h,l]) => (
               <a key={h} href={h} className="nav-link">{l}</a>
@@ -273,7 +271,7 @@ export default function AboutPage() {
                 <span style={{ color: "var(--teal)" }}>التخصصات الطبية</span>
               </h2>
               <p style={{ color: "var(--gray)", lineHeight: 1.9, marginBottom: 32, fontSize: 16 }}>
-                سواء كنت طبيب أسنان، أو نساء وتوليد، أو باطنية، أو أطفال — عيادتي يتكيّف مع تخصصك ويعطيك الأدوات الصحيحة لإدارة عيادتك بكفاءة عالية.
+                سواء كنت طبيب أسنان، أو نساء وتوليد، أو باطنية، أو أطفال — الهلال الذهبي يتكيّف مع تخصصك ويعطيك الأدوات الصحيحة لإدارة عيادتك بكفاءة عالية.
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 36 }}>
                 {["أسنان","نسائية","أطفال","جلدية","قلب","عيون","عظام","باطنية"].map(s => (
@@ -491,7 +489,7 @@ export default function AboutPage() {
                 <span style={{ color: "var(--teal)" }}>للذكاء الاصطناعي</span>
               </h2>
               <p style={{ color: "var(--gray)", lineHeight: 1.9, marginBottom: 32, fontSize: 15, fontWeight: 500 }}>
-                شركة تقنية عراقية متخصصة في حلول الذكاء الاصطناعي والأنظمة المؤسسية. طوّرت منصة <strong style={{ color: "var(--teal)" }}>عيادتي</strong> لرفع مستوى الرعاية الصحية في العراق من خلال أحدث التقنيات.
+                شركة تقنية عراقية متخصصة في حلول الذكاء الاصطناعي والأنظمة المؤسسية. طوّرت منصة <strong style={{ color: "var(--teal)" }}>الهلال الذهبي</strong> لرفع مستوى الرعاية الصحية في العراق من خلال أحدث التقنيات.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 32 }}>
                 {["ذكاء اصطناعي","حلول مؤسسية","تطوير SaaS","العراق"].map(t => (
@@ -530,14 +528,11 @@ export default function AboutPage() {
       {/* ══ FOOTER ══ */}
       <footer style={{ background: "var(--navy)", padding: "44px 24px" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--teal)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 16 }}>ع</div>
-            <div>
-              <div style={{ fontWeight: 900, fontSize: 16, color: "#F8FAFC" }}>عيادتي</div>
-              <div style={{ fontSize: 11, color: "rgba(248,250,252,.35)", fontWeight: 600 }}>تطوير بغداد المستقبل AI</div>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <BrandLogo tone="dark" size={40} stacked={false} />
+            <div style={{ fontSize: 11, color: "rgba(248,250,252,.35)", fontWeight: 600 }}>تطوير بغداد المستقبل AI</div>
           </div>
-          <p style={{ color: "rgba(248,250,252,.25)", fontSize: 13, fontWeight: 600 }}>© ٢٠٢٦ عيادتي — جميع الحقوق محفوظة</p>
+          <p style={{ color: "rgba(248,250,252,.25)", fontSize: 13, fontWeight: 600 }}>© ٢٠٢٦ الهلال الذهبي — جميع الحقوق محفوظة</p>
           <div style={{ display: "flex", gap: 24, fontSize: 13, fontWeight: 700 }}>
             <Link href="/login" className="footer-link" style={{ color: "rgba(248,250,252,.4)" }}>دخول</Link>
             <Link href="/register" style={{ color: "var(--teal2)" }}>تسجيل مجاني</Link>

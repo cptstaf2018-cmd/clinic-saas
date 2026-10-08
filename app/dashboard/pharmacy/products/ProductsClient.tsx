@@ -126,7 +126,7 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
             <p className="mt-1 text-sm text-brand-muted">{money(products.length)} منتج · قيمة المخزون بسعر الشراء {money(counts.value)} د.ع</p>
           </div>
           <button type="button" onClick={() => { setError(""); setEditing({ id: null, draft: EMPTY }); }}
-            className="flex min-h-12 items-center gap-2 rounded-2xl bg-brand-navy px-5 font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-navy-2">
+            className="flex min-h-12 items-center gap-2 rounded-2xl bg-brand-gold px-5 font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover">
             + منتج جديد
           </button>
         </header>

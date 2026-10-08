@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BrandMark, BRAND_NAME } from "@/components/BrandLogo";
 import { auth, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import AdminNav from "./AdminNav";
@@ -36,14 +37,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt="الشعار" className="h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-white/20" />
             ) : (
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500 shadow-lg shadow-blue-500/30">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="h-5 w-5">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-                </svg>
-              </div>
+              <BrandMark size={44} />
             )}
             <div className="min-w-0">
-              <p className="truncate text-sm font-black text-white">Clinic AI Pro</p>
+              <p className="truncate text-sm font-black text-white">{BRAND_NAME}</p>
               <p className="mt-0.5 text-[11px] font-bold text-slate-400">Super Admin Console</p>
             </div>
           </div>

@@ -219,7 +219,7 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
                   type="button"
                   disabled={out}
                   onClick={() => add(product)}
-                  className="relative flex flex-col gap-2 rounded-3xl border border-brand-border bg-white p-3 text-right transition hover:-translate-y-0.5 hover:border-brand-mint active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                  className="relative flex flex-col gap-2 rounded-3xl border border-brand-border bg-white p-3 text-right transition hover:-translate-y-0.5 hover:border-brand-gold active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   {product.requiresRx && <span className="absolute left-3 top-3 rounded-md bg-brand-soft px-1.5 py-0.5 text-[10px] font-bold text-brand-on-soft">بوصفة</span>}
                   <span className={`flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold ${CATEGORY_TONE[product.category] ?? CATEGORY_TONE["أخرى"]}`}>
@@ -318,7 +318,7 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
           {error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
 
           <button type="button" onClick={checkout} disabled={!cart.length || busy}
-            className="min-h-14 w-full rounded-2xl bg-brand-mint text-lg font-bold text-brand-mint-ink transition hover:-translate-y-0.5 hover:bg-brand-mint-hover active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45">
+            className="min-h-14 w-full rounded-2xl bg-brand-gold text-lg font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover active:translate-y-0 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45">
             {busy ? "جاري الحفظ..." : "إتمام البيع"}
           </button>
         </div>
@@ -327,7 +327,7 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
       {receipt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-navy/55 p-4" role="dialog" aria-modal="true" aria-label="إيصال البيع">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-mint text-brand-mint-ink">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-gold text-brand-gold-ink">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" className="h-7 w-7" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
             </div>
             <h3 className="mt-3 text-center text-xl font-bold text-brand-ink">تم البيع</h3>
@@ -347,7 +347,7 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
                 <span className="flex min-h-11 items-center justify-center rounded-xl bg-brand-bg text-xs text-brand-muted">بلا رقم زبون</span>
               )}
             </div>
-            <button type="button" onClick={closeReceipt} autoFocus className="mt-3 min-h-12 w-full rounded-2xl bg-brand-mint font-bold text-brand-mint-ink">فاتورة جديدة</button>
+            <button type="button" onClick={closeReceipt} autoFocus className="mt-3 min-h-12 w-full rounded-2xl bg-brand-gold font-bold text-brand-gold-ink">فاتورة جديدة</button>
           </div>
         </div>
       )}

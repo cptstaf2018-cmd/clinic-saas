@@ -5,13 +5,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction } from "./actions";
 import GoogleButton from "./GoogleButton";
+import BrandLogo from "@/components/BrandLogo";
 
 type ForgotStep = "input" | "otp" | "password" | "done";
 
 const INPUT_CLASS =
   "w-full min-h-12 rounded-2xl border border-brand-border bg-white px-4 text-[15px] text-brand-ink outline-none transition placeholder:text-brand-muted/60 focus:border-brand-blue focus:ring-4 focus:ring-brand-soft";
 const PRIMARY_BTN =
-  "flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-navy text-[15px] font-bold text-white transition hover:-translate-y-0.5 hover:bg-brand-navy-2 active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
+  "flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-gold text-[15px] font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
 const GHOST_BTN =
   "flex min-h-11 w-full items-center justify-center rounded-2xl text-sm font-semibold text-brand-muted transition hover:bg-brand-line hover:text-brand-ink";
 
@@ -39,19 +40,6 @@ function ErrorBox({ message }: { message: string }) {
   );
 }
 
-function BrandMark({ tone }: { tone: "light" | "dark" }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-mint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" className="h-5 w-5 text-brand-mint-ink" aria-hidden>
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </div>
-      <span className={`text-xl font-bold tracking-tight ${tone === "dark" ? "text-white" : "text-brand-navy"}`}>Clinic AI Pro</span>
-    </div>
-  );
-}
-
 /** قرص يوم العيادة: كل قطعة موعد، والنعناعي المنتهي، والمتوهّج هو الحالي */
 function DayDial() {
   const radius = 120;
@@ -71,7 +59,7 @@ function DayDial() {
               r={radius}
               fill="none"
               strokeWidth={current ? 26 : 18}
-              stroke={done ? "#7CE0C3" : current ? "#FFFFFF" : "#2A4B78"}
+              stroke={done ? "#E4B04A" : current ? "#FFFFFF" : "#2A4B78"}
               strokeDasharray={`${segment - 5} ${circumference}`}
               transform={`rotate(${-90 + (i * 360) / DAY_SEGMENTS} 150 150)`}
               className={current ? "dial-current" : undefined}
@@ -82,7 +70,7 @@ function DayDial() {
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <span className="text-xs tracking-widest text-brand-side-muted">الدور الآن</span>
         <span className="text-7xl font-bold leading-none text-white">٠٧</span>
-        <span className="mt-1 text-sm text-brand-mint">زينب حسن</span>
+        <span className="mt-1 text-sm text-brand-gold">زينب حسن</span>
       </div>
     </div>
   );
@@ -97,14 +85,14 @@ function BotChat() {
   return (
     <div className="space-y-2 rounded-3xl border border-white/10 bg-white/[0.06] p-4" aria-hidden>
       <div className="mb-1 flex items-center gap-2 text-xs text-brand-side-muted">
-        <span className="h-2 w-2 rounded-full bg-brand-mint" />
+        <span className="h-2 w-2 rounded-full bg-brand-gold" />
         البوت يرد على المرضى وأنت في الكشف
       </div>
       {bubbles.map((b) => (
         <div key={b.text} className={`flex ${b.mine ? "justify-start" : "justify-end"}`}>
           <span
             className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${
-              b.mine ? "bg-white/10 text-white" : "bg-brand-mint text-brand-mint-ink font-semibold"
+              b.mine ? "bg-white/10 text-white" : "bg-brand-gold text-brand-gold-ink font-semibold"
             }`}
           >
             {b.text}
@@ -119,10 +107,10 @@ function BrandPanel() {
   return (
     <div className="relative hidden flex-col justify-between overflow-hidden bg-brand-navy p-10 text-white lg:flex lg:w-[54%] xl:p-14">
       <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full border-[56px] border-white/[0.04]" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-32 -right-20 h-[26rem] w-[26rem] rounded-full border-[56px] border-brand-mint/[0.07]" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-32 -right-20 h-[26rem] w-[26rem] rounded-full border-[56px] border-brand-gold/[0.07]" />
 
       <div className="relative">
-        <BrandMark tone="dark" />
+        <BrandLogo tone="dark" size={72} />
       </div>
 
       <div className="relative space-y-8">
@@ -130,7 +118,7 @@ function BrandPanel() {
           <h1 className="text-4xl font-bold leading-[1.25] xl:text-5xl">
             عيادتك تعمل
             <br />
-            <span className="text-brand-mint">حتى وأنت في الكشف.</span>
+            <span className="text-brand-gold">حتى وأنت في الكشف.</span>
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-brand-side-muted">
             المريض يحجز عبر واتساب، وأنت تنادي التالي بضغطة واحدة، وشاشة الانتظار تنطق اسمه. كل شيء في مكان واحد.
@@ -261,7 +249,7 @@ function LoginForm() {
       <main className="flex flex-1 flex-col">
         {/* شريط الهوية للموبايل */}
         <div className="flex items-center justify-between bg-brand-navy px-5 py-4 lg:hidden">
-          <BrandMark tone="dark" />
+          <BrandLogo tone="dark" size={34} stacked={false} />
           <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-brand-side-muted">١٤ يوماً مجاناً</span>
         </div>
 

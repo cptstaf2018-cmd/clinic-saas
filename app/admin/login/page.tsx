@@ -1,5 +1,6 @@
 "use client";
 
+import BrandLogo from "@/components/BrandLogo";
 import { useState } from "react";
 import { loginAction } from "@/app/login/actions";
 
@@ -40,26 +41,14 @@ export default function AdminLoginPage() {
           <div className="order-2 border-t border-slate-200 bg-slate-50 p-5 sm:p-8 lg:order-1 lg:border-r lg:border-t-0">
             <div className="flex h-full flex-col justify-between gap-8">
               <div>
-                <div className="mb-7 flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-600 shadow-sm">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} className="h-5 w-5">
-                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                      <path d="M2 17l10 5 10-5" />
-                      <path d="M2 12l10 5 10-5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-black">عيادتي</p>
-                    <p className="text-[11px] font-bold text-slate-400">منصة إدارة العيادات</p>
-                  </div>
-                </div>
+                <div className="mb-7"><BrandLogo tone="light" size={64} /></div>
 
                 <p className="text-xs font-black text-blue-600">نظام متكامل للعيادات الحديثة</p>
                 <h1 className="mt-3 max-w-sm text-4xl font-black leading-tight tracking-tight text-slate-950">
                   إدارة عيادتك تصبح أسهل وأسرع
                 </h1>
                 <p className="mt-4 max-w-md text-sm font-semibold leading-7 text-slate-500">
-                  عيادتي يساعدك على تنظيم الحجوزات، ملفات المرضى، المدفوعات، والتذكيرات التلقائية من شاشة واحدة واضحة.
+                  الهلال الذهبي يساعدك على تنظيم الحجوزات، ملفات المرضى، المدفوعات، والتذكيرات التلقائية من شاشة واحدة واضحة.
                 </p>
               </div>
 
