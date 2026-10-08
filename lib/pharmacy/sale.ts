@@ -89,3 +89,16 @@ export function validatePayment(
   }
   return { ok: true, method };
 }
+
+const MAX_VOID_REASON = 120;
+
+/** A sale is never deleted: voiding keeps the record and puts the stock back, once. */
+export function canVoidSale(sale: { voidedAt: Date | null }): boolean {
+  return sale.voidedAt === null;
+}
+
+export function parseVoidReason(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  return trimmed ? trimmed.slice(0, MAX_VOID_REASON) : null;
+}

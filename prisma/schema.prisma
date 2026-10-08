@@ -355,6 +355,7 @@ model PharmacyProduct {
   minStock    Int       @default(0)
   requiresRx  Boolean   @default(false)
   expiresAt   DateTime?
+  imagePath   String?
   active      Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -376,6 +377,8 @@ model PharmacySale {
   paymentMethod String   // cash | zaincash | debt
   customerName  String?
   customerPhone String?
+  voidedAt      DateTime?
+  voidReason    String?
   createdAt     DateTime @default(now())
   clinic        Clinic   @relation(fields: [clinicId], references: [id])
   items         PharmacySaleItem[]
@@ -413,6 +416,7 @@ model LabTest {
   refHighF  Float?
   critLow   Float?
   critHigh  Float?
+  imagePath String?
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

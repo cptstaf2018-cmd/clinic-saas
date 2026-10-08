@@ -11,6 +11,7 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 
 export const TEST_CATEGORIES = ["دم", "كيمياء حيوية", "هرمونات", "فيتامينات", "بول وبراز", "مناعة", "أخرى"] as const;
 
+// done -> review is the "reopen for correction" step; every other move leaves a finished order alone.
 const FORWARD: Record<string, OrderStatus> = { new: "in_progress", in_progress: "review", review: "done" };
 const OPEN = new Set(["new", "in_progress", "review"]);
 
@@ -23,6 +24,7 @@ type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 export function canTransition(from: string, to: string): boolean {
   if (!(ORDER_STATUSES as readonly string[]).includes(to)) return false;
   if (to === "cancelled") return OPEN.has(from);
+  if (from === "done" && to === "review") return true;
   return FORWARD[from] === to;
 }
 
@@ -53,34 +55,67 @@ export type OrderInput = {
   testIds: string[];
 };
 
+export type OrderDetails = Omit<OrderInput, "testIds">;
+
+const PHONE_PATTERN = /^(\+?964|0)?7\d{8,9}$/;
+
+/** Validates the patient-facing fields of an order. With `partial`, only the keys present are checked. */
+function parseDetails(body: Record<string, unknown>, partial: boolean): Result<Partial<OrderDetails>> {
+  const out: Partial<OrderDetails> = {};
+  const has = (key: string) => !partial || key in body;
+
+  if (has("patientName")) {
+    const patientName = text(body.patientName, 80);
+    if (!patientName) return { ok: false, error: "اسم المراجع مطلوب" };
+    out.patientName = patientName;
+  }
+  if (has("sex")) {
+    if (body.sex !== "m" && body.sex !== "f") return { ok: false, error: "اختر الجنس" };
+    out.sex = body.sex;
+  }
+  if (has("patientPhone")) {
+    const phone = text(body.patientPhone, 20)?.replace(/\s|-/g, "") ?? null;
+    if (phone && !PHONE_PATTERN.test(phone)) return { ok: false, error: "رقم الهاتف غير صحيح" };
+    out.patientPhone = phone;
+  }
+  if (has("age")) {
+    const age = numberOrNull(body.age, 0, 120);
+    if (age === "bad" || (age !== null && !Number.isInteger(age))) return { ok: false, error: "العمر غير صحيح" };
+    out.age = age;
+  }
+  if (has("doctorName")) out.doctorName = text(body.doctorName, 80);
+  if (has("notes")) out.notes = text(body.notes, 300);
+  if (has("urgent")) out.urgent = body.urgent === true;
+
+  if (partial && Object.keys(out).length === 0) return { ok: false, error: "لا توجد تعديلات" };
+  return { ok: true, value: out };
+}
+
 export function parseOrderInput(body: Record<string, unknown>): Result<OrderInput> {
-  const patientName = text(body.patientName, 80);
-  if (!patientName) return { ok: false, error: "اسم المراجع مطلوب" };
-  if (body.sex !== "m" && body.sex !== "f") return { ok: false, error: "اختر الجنس" };
-
-  const phoneRaw = text(body.patientPhone, 20);
-  if (phoneRaw && !/^(\+?964|0)?7\d{8,9}$/.test(phoneRaw.replace(/\s|-/g, ""))) return { ok: false, error: "رقم الهاتف غير صحيح" };
-
-  const age = numberOrNull(body.age, 0, 120);
-  if (age === "bad" || (age !== null && !Number.isInteger(age))) return { ok: false, error: "العمر غير صحيح" };
+  const details = parseDetails(body, false);
+  if (!details.ok) return details;
 
   if (!Array.isArray(body.testIds)) return { ok: false, error: "اختر تحليلاً واحداً على الأقل" };
   const testIds = [...new Set(body.testIds.filter((id): id is string => typeof id === "string" && id.length > 0))];
   if (testIds.length === 0) return { ok: false, error: "اختر تحليلاً واحداً على الأقل" };
   if (testIds.length > MAX_TESTS_PER_ORDER) return { ok: false, error: "عدد التحاليل كبير جداً في طلب واحد" };
 
+  return { ok: true, value: { ...(details.value as OrderDetails), testIds } };
+}
+
+/** Correcting a mistake in an existing order: only the fields sent are changed. */
+export function parseOrderDetails(body: Record<string, unknown>): Result<Partial<OrderDetails>> {
+  return parseDetails(body, true);
+}
+
+/** What must change to turn an order's current tests into the picked selection. */
+export function planTestChanges(items: { id: string; testId: string | null }[], pickedTestIds: string[]) {
+  const picked = new Set(pickedTestIds);
+  const have = new Set(items.map((item) => item.testId).filter((id): id is string => id !== null));
   return {
-    ok: true,
-    value: {
-      patientName,
-      patientPhone: phoneRaw ? phoneRaw.replace(/\s|-/g, "") : null,
-      sex: body.sex,
-      age,
-      doctorName: text(body.doctorName, 80),
-      urgent: body.urgent === true,
-      notes: text(body.notes, 300),
-      testIds,
-    },
+    add: [...picked].filter((id) => !have.has(id)),
+    // items whose catalog test no longer exists cannot be unticked in the picker, so they are kept
+    removeItemIds: items.filter((item) => item.testId !== null && !picked.has(item.testId)).map((item) => item.id),
   };
 }
 

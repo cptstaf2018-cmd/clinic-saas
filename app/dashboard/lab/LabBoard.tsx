@@ -21,6 +21,7 @@ export default function LabBoard({ initialOrders, tests }: { initialOrders: LabO
   const [orders, setOrders] = useState(initialOrders);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<LabOrderView | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
@@ -126,6 +127,8 @@ export default function LabBoard({ initialOrders, tests }: { initialOrders: LabO
               error={error}
               onClose={() => setSelectedId(null)}
               onPaid={(paid) => patch({ paid })}
+              onEdit={() => setEditingOrder(selected)}
+              onReopen={() => patch({ status: "review" })}
               onStatus={(status) => patch({ status })}
               onSave={(values) => patch({ results: Object.entries(values).map(([itemId, value]) => ({ itemId, value })) })}
               onSend={async () => {
@@ -141,6 +144,19 @@ export default function LabBoard({ initialOrders, tests }: { initialOrders: LabO
           )}
         </div>
       </div>
+
+      {editingOrder && (
+        <NewOrderModal
+          key={editingOrder.id}
+          tests={tests}
+          order={editingOrder}
+          onClose={() => setEditingOrder(null)}
+          onCreated={(updated) => {
+            replace(updated);
+            setEditingOrder(null);
+          }}
+        />
+      )}
 
       {creating && (
         <NewOrderModal

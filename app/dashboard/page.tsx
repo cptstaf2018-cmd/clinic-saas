@@ -8,6 +8,8 @@ import { canUseFeature } from "@/lib/feature-gates";
 import PharmacyPOS from "./pharmacy/PharmacyPOS";
 import LabBoard from "./lab/LabBoard";
 import { toOrderView } from "@/lib/lab/types";
+import { testImageUrl } from "@/lib/lab/image-url";
+import { listBoardOrders } from "@/lib/lab/queries";
 import { getPharmacyToday, listPosProducts } from "@/lib/pharmacy/queries";
 
 const ARABIC_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -170,20 +172,14 @@ export default async function DashboardPage() {
     return <PharmacyPOS initialProducts={products} initialToday={today} />;
   }
   if (facility?.facilityType === "lab") {
-    const since = new Date(Date.now() - 24 * 3_600_000);
     const [orders, tests] = await Promise.all([
-      db.labOrder.findMany({
-        where: { clinicId, OR: [{ status: { in: ["new", "in_progress", "review"] } }, { status: "done", completedAt: { gte: since } }] },
-        orderBy: { createdAt: "asc" },
-        take: 300,
-        include: { items: { orderBy: { name: "asc" } } },
-      }),
+      listBoardOrders(clinicId),
       db.labTest.findMany({ where: { clinicId, active: true }, orderBy: [{ category: "asc" }, { name: "asc" }] }),
     ]);
     return (
       <LabBoard
         initialOrders={orders.map(toOrderView)}
-        tests={tests.map(({ id, name, nameEn, category, unit, price, refLowM, refHighM, refLowF, refHighF, critLow, critHigh }) => ({ id, name, nameEn, category, unit, price, refLowM, refHighM, refLowF, refHighF, critLow, critHigh }))}
+        tests={tests.map(({ id, name, nameEn, category, unit, price, refLowM, refHighM, refLowF, refHighF, critLow, critHigh, imagePath, updatedAt }) => ({ id, name, nameEn, category, unit, price, refLowM, refHighM, refLowF, refHighF, critLow, critHigh, imageUrl: testImageUrl(id, imagePath, updatedAt) }))}
       />
     );
   }

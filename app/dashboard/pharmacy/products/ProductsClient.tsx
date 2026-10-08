@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { PRODUCT_CATEGORIES } from "@/lib/pharmacy/product";
+import { uploadEntityImage } from "@/lib/client-image";
+import { usePendingImage } from "@/lib/use-pending-image";
 
 type Product = {
   id: string;
@@ -16,9 +18,10 @@ type Product = {
   minStock: number;
   requiresRx: boolean;
   expiresAt: string | null;
+  imageUrl?: string | null;
 };
 
-type Draft = Omit<Product, "id" | "price" | "cost" | "stock" | "minStock"> & { price: string; cost: string; stock: string; minStock: string };
+type Draft = Omit<Product, "id" | "price" | "cost" | "stock" | "minStock" | "imageUrl"> & { price: string; cost: string; stock: string; minStock: string };
 
 const EXPIRY_WARNING_DAYS = 180;
 const DAY_MS = 86_400_000;
@@ -66,6 +69,10 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
   const [editing, setEditing] = useState<{ id: string | null; draft: Draft } | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const picked = usePendingImage();
+  const pendingImage = picked.file;
+  const setPendingImage = picked.choose;
+  const [imageBusy, setImageBusy] = useState(false);
 
   const counts = useMemo(() => ({
     low: products.filter((product) => product.stock <= product.minStock).length,
@@ -102,8 +109,24 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
       setError(data.error ?? "تعذر الحفظ، تحقق من الاتصال");
       return;
     }
-    const saved: Product = { ...data, expiresAt: data.expiresAt ? String(data.expiresAt).slice(0, 10) : null };
-    setProducts((prev) => (id ? prev.map((product) => (product.id === id ? saved : product)) : [...prev, saved].sort((a, b) => a.name.localeCompare(b.name, "ar"))));
+    const saved: Product = {
+      ...data,
+      expiresAt: data.expiresAt ? String(data.expiresAt).slice(0, 10) : null,
+      imageUrl: id ? products.find((product) => product.id === id)?.imageUrl ?? null : null,
+    };
+    let imageError: string | null = null;
+    if (pendingImage) {
+      imageError = await uploadEntityImage(`/api/pharmacy/products/${saved.id}/image`, pendingImage);
+      if (!imageError) saved.imageUrl = `/api/pharmacy/products/${saved.id}/image?v=${Date.now()}`;
+    }
+    setProducts((prev) => (prev.some((product) => product.id === saved.id) ? prev.map((product) => (product.id === saved.id ? saved : product)) : [...prev, saved].sort((a, b) => a.name.localeCompare(b.name, "ar"))));
+    setPendingImage(null);
+    if (imageError) {
+      // keep the dialog open on the saved product so the picture can be retried
+      setEditing({ id: saved.id, draft: editing.draft });
+      setError(`حُفظ المنتج لكن الصورة لم تُرفع: ${imageError}`);
+      return;
+    }
     setEditing(null);
   }
 
@@ -115,6 +138,20 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
     setEditing(null);
   }
 
+  async function removeImage(productId: string) {
+    setImageBusy(true);
+    const res = await fetch(`/api/pharmacy/products/${productId}/image`, { method: "DELETE" }).catch(() => null);
+    setImageBusy(false);
+    if (!res?.ok) {
+      setError("تعذر حذف الصورة");
+      return;
+    }
+    setProducts((prev) => prev.map((product) => (product.id === productId ? { ...product, imageUrl: null } : product)));
+  }
+
+  const current = editing?.id ? products.find((product) => product.id === editing.id) : undefined;
+  const previewUrl = picked.previewUrl ?? current?.imageUrl ?? null;
+
   const margin = editing ? (parseInt(editing.draft.price) || 0) - (parseInt(editing.draft.cost) || 0) : 0;
 
   return (
@@ -125,7 +162,7 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
             <h1 className="text-3xl font-bold text-brand-ink">المنتجات والمخزون</h1>
             <p className="mt-1 text-sm text-brand-muted">{money(products.length)} منتج · قيمة المخزون بسعر الشراء {money(counts.value)} د.ع</p>
           </div>
-          <button type="button" onClick={() => { setError(""); setEditing({ id: null, draft: EMPTY }); }}
+          <button type="button" onClick={() => { setError(""); setPendingImage(null); setEditing({ id: null, draft: EMPTY }); }}
             className="flex min-h-12 items-center gap-2 rounded-2xl bg-brand-gold px-5 font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover">
             + منتج جديد
           </button>
@@ -168,10 +205,20 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
                     const days = daysUntil(product.expiresAt);
                     const low = product.stock <= product.minStock;
                     return (
-                      <tr key={product.id} onClick={() => { setError(""); setEditing({ id: product.id, draft: toDraft(product) }); }} className="cursor-pointer transition hover:bg-brand-bg">
+                      <tr key={product.id} onClick={() => { setError(""); setPendingImage(null); setEditing({ id: product.id, draft: toDraft(product) }); }} className="cursor-pointer transition hover:bg-brand-bg">
                         <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                          {product.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={product.imageUrl} alt="" loading="lazy" className="h-11 w-11 shrink-0 rounded-xl bg-brand-bg object-cover" />
+                          ) : (
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-bg text-sm font-bold text-brand-muted">{product.name.trim().charAt(0)}</span>
+                          )}
+                          <div>
                           <p className="font-bold text-brand-ink">{product.name} {product.requiresRx && <span className="mr-1 rounded bg-brand-soft px-1.5 text-[10px] text-brand-on-soft">بوصفة</span>}</p>
                           <p className="text-xs text-brand-muted">{[product.form, product.genericName].filter(Boolean).join(" · ")}</p>
+                          </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-brand-muted">{product.category}</td>
                         <td className="px-4 py-3 font-semibold">{money(product.price)}</td>
@@ -202,6 +249,23 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-bold text-brand-ink">{editing.id ? "تعديل منتج" : "منتج جديد"}</h2>
               <button type="button" onClick={() => setEditing(null)} aria-label="إغلاق" className="h-9 w-9 rounded-xl bg-brand-line text-lg">×</button>
+            </div>
+            <div className="mb-4 flex items-center gap-4 rounded-2xl bg-brand-bg p-3">
+              {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewUrl} alt="صورة المنتج" className="h-20 w-20 shrink-0 rounded-2xl bg-white object-cover" />
+              ) : (
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-xs text-brand-muted">بدون صورة</span>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <label className="flex min-h-10 cursor-pointer items-center rounded-xl bg-white px-4 text-sm font-semibold text-brand-ink ring-1 ring-brand-border hover:bg-brand-soft">
+                  {previewUrl ? "تغيير الصورة" : "إضافة صورة"}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => { setPendingImage(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+                </label>
+                {(pendingImage || current?.imageUrl) && (
+                  <button type="button" disabled={imageBusy} onClick={() => (pendingImage ? setPendingImage(null) : current && removeImage(current.id))} className="min-h-10 rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-700 disabled:opacity-50">حذف الصورة</button>
+                )}
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2"><Field label="اسم المنتج *"><input className={INPUT} value={editing.draft.name} onChange={(e) => setDraft("name", e.target.value)} autoFocus /></Field></div>

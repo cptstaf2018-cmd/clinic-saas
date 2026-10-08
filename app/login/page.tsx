@@ -6,6 +6,7 @@ import Link from "next/link";
 import { loginAction } from "./actions";
 import GoogleButton from "./GoogleButton";
 import BrandLogo from "@/components/BrandLogo";
+import AuthBrandPanel from "@/components/AuthBrandPanel";
 
 type ForgotStep = "input" | "otp" | "password" | "done";
 
@@ -15,9 +16,6 @@ const PRIMARY_BTN =
   "flex min-h-12 w-full items-center justify-center rounded-2xl bg-brand-gold text-[15px] font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
 const GHOST_BTN =
   "flex min-h-11 w-full items-center justify-center rounded-2xl text-sm font-semibold text-brand-muted transition hover:bg-brand-line hover:text-brand-ink";
-
-const DAY_SEGMENTS = 16;
-const CURRENT_SEGMENT = 6;
 
 function Field({ label, aside, children }: { label: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -36,105 +34,6 @@ function ErrorBox({ message }: { message: string }) {
   return (
     <div role="alert" className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
       {message}
-    </div>
-  );
-}
-
-/** قرص يوم العيادة: كل قطعة موعد، والنعناعي المنتهي، والمتوهّج هو الحالي */
-function DayDial() {
-  const radius = 120;
-  const circumference = 2 * Math.PI * radius;
-  const segment = circumference / DAY_SEGMENTS;
-  return (
-    <div className="relative mx-auto aspect-square w-[min(300px,100%)]" aria-hidden>
-      <svg viewBox="0 0 300 300" className="absolute inset-0 h-full w-full">
-        {Array.from({ length: DAY_SEGMENTS }, (_, i) => {
-          const done = i < CURRENT_SEGMENT;
-          const current = i === CURRENT_SEGMENT;
-          return (
-            <circle
-              key={i}
-              cx="150"
-              cy="150"
-              r={radius}
-              fill="none"
-              strokeWidth={current ? 26 : 18}
-              stroke={done ? "#E4B04A" : current ? "#FFFFFF" : "#2A4B78"}
-              strokeDasharray={`${segment - 5} ${circumference}`}
-              transform={`rotate(${-90 + (i * 360) / DAY_SEGMENTS} 150 150)`}
-              className={current ? "dial-current" : undefined}
-            />
-          );
-        })}
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-xs tracking-widest text-brand-side-muted">الدور الآن</span>
-        <span className="text-7xl font-bold leading-none text-white">٠٧</span>
-        <span className="mt-1 text-sm text-brand-gold">زينب حسن</span>
-      </div>
-    </div>
-  );
-}
-
-function BotChat() {
-  const bubbles = [
-    { mine: true, text: "السلام عليكم، أريد موعد" },
-    { mine: false, text: "أهلاً بك، اكتب اسمك الكريم" },
-    { mine: false, text: "تم حجزك الأربعاء 11:40 ✓" },
-  ];
-  return (
-    <div className="space-y-2 rounded-3xl border border-white/10 bg-white/[0.06] p-4" aria-hidden>
-      <div className="mb-1 flex items-center gap-2 text-xs text-brand-side-muted">
-        <span className="h-2 w-2 rounded-full bg-brand-gold" />
-        البوت يرد على المرضى وأنت في الكشف
-      </div>
-      {bubbles.map((b) => (
-        <div key={b.text} className={`flex ${b.mine ? "justify-start" : "justify-end"}`}>
-          <span
-            className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${
-              b.mine ? "bg-white/10 text-white" : "bg-brand-gold text-brand-gold-ink font-semibold"
-            }`}
-          >
-            {b.text}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function BrandPanel() {
-  return (
-    <div className="relative hidden flex-col justify-between overflow-hidden bg-brand-navy p-10 text-white lg:flex lg:w-[54%] xl:p-14">
-      <div aria-hidden className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full border-[56px] border-white/[0.04]" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-32 -right-20 h-[26rem] w-[26rem] rounded-full border-[56px] border-brand-gold/[0.07]" />
-
-      <div className="relative">
-        <BrandLogo tone="dark" size={72} />
-      </div>
-
-      <div className="relative space-y-8">
-        <div>
-          <h1 className="text-4xl font-bold leading-[1.25] xl:text-5xl">
-            عيادتك تعمل
-            <br />
-            <span className="text-brand-gold">حتى وأنت في الكشف.</span>
-          </h1>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-brand-side-muted">
-            المريض يحجز عبر واتساب، وأنت تنادي التالي بضغطة واحدة، وشاشة الانتظار تنطق اسمه. كل شيء في مكان واحد.
-          </p>
-        </div>
-        <div className="grid items-center gap-6 xl:grid-cols-[auto_1fr]">
-          <DayDial />
-          <BotChat />
-        </div>
-      </div>
-
-      <div className="relative flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-brand-side-muted">
-        <span>٤ باقات تبدأ من ٣٥٬٠٠٠ دينار</span>
-        <span aria-hidden className="h-1 w-1 rounded-full bg-brand-side-dot" />
-        <span>١٤ يوماً تجربة مجانية كاملة</span>
-      </div>
     </div>
   );
 }
@@ -238,13 +137,7 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen bg-brand-bg" dir="rtl">
-      <style>{`
-        @keyframes dial-glow { 0%,100% { opacity: 1 } 50% { opacity: .55 } }
-        .dial-current { animation: dial-glow 2.4s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .dial-current { animation: none; } }
-      `}</style>
-
-      <BrandPanel />
+      <AuthBrandPanel variant="login" />
 
       <main className="flex flex-1 flex-col">
         {/* شريط الهوية للموبايل */}
@@ -349,7 +242,7 @@ function LoginForm() {
             </div>
 
             <p className="mt-8 text-center text-sm text-brand-muted">
-              عيادة جديدة؟{" "}
+              منشأة جديدة؟{" "}
               <Link href="/register" className="font-bold text-brand-blue hover:underline">ابدأ تجربتك المجانية</Link>
             </p>
           </div>

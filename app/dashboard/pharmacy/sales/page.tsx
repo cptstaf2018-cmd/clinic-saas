@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getPharmacyToday } from "@/lib/pharmacy/queries";
+import SaleRow from "./SaleRow";
 
 const PAYMENT_LABEL: Record<string, string> = { cash: "نقداً", zaincash: "زين كاش", debt: "دين" };
 const PAGE_SIZE = 100;
@@ -26,7 +27,7 @@ export default async function PharmacySalesPage() {
       take: PAGE_SIZE,
       include: { items: { select: { id: true, name: true, qty: true } } },
     }),
-    db.pharmacySale.aggregate({ where: { clinicId, paymentMethod: "debt" }, _sum: { total: true }, _count: true }),
+    db.pharmacySale.aggregate({ where: { clinicId, paymentMethod: "debt", voidedAt: null }, _sum: { total: true }, _count: true }),
   ]);
 
   return (
@@ -50,14 +51,21 @@ export default async function PharmacySalesPage() {
           ) : (
             <ul className="divide-y divide-brand-line">
               {sales.map((sale) => (
-                <li key={sale.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3.5">
-                  <span className="w-16 text-sm font-bold text-brand-on-soft">#{sale.number}</span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-brand-ink">{sale.items.map((item) => `${item.name} × ${item.qty}`).join("، ")}</span>
-                  {sale.customerName && <span className="text-xs text-brand-muted">{sale.customerName}</span>}
-                  <span className={`rounded-lg px-2 py-0.5 text-xs font-semibold ${sale.paymentMethod === "debt" ? "bg-amber-50 text-amber-800" : "bg-brand-line text-brand-muted"}`}>{PAYMENT_LABEL[sale.paymentMethod] ?? sale.paymentMethod}</span>
-                  <span className="w-24 text-left font-bold text-brand-ink">{money(sale.total)}</span>
-                  <span className="w-28 text-left text-xs text-brand-muted">{sale.createdAt.toLocaleString("ar-IQ", { timeZone: "Asia/Baghdad", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
-                </li>
+                <SaleRow
+                  key={sale.id}
+                  sale={{
+                    id: sale.id,
+                    number: sale.number,
+                    summary: sale.items.map((item) => `${item.name} × ${item.qty}`).join("، "),
+                    customerName: sale.customerName,
+                    paymentLabel: PAYMENT_LABEL[sale.paymentMethod] ?? sale.paymentMethod,
+                    isDebt: sale.paymentMethod === "debt",
+                    total: sale.total,
+                    when: sale.createdAt.toLocaleString("ar-IQ", { timeZone: "Asia/Baghdad", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+                    voided: sale.voidedAt !== null,
+                    voidReason: sale.voidReason,
+                  }}
+                />
               ))}
             </ul>
           )}

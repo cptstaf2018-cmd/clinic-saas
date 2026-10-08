@@ -4,25 +4,15 @@ import { db } from "@/lib/db";
 import { isUniqueViolation, requireLab } from "@/lib/lab/access";
 import { parseOrderInput } from "@/lib/lab/order";
 import { orderTotal } from "@/lib/lab/result";
+import { listBoardOrders } from "@/lib/lab/queries";
 
 const NUMBER_RETRIES = 3;
-const BOARD_LIMIT = 300;
-const DONE_VISIBLE_HOURS = 24;
 
 export async function GET() {
   const access = await requireLab();
   if (access instanceof NextResponse) return access;
 
-  const since = new Date(Date.now() - DONE_VISIBLE_HOURS * 3_600_000);
-  const orders = await db.labOrder.findMany({
-    where: {
-      clinicId: access.clinicId,
-      OR: [{ status: { in: ["new", "in_progress", "review"] } }, { status: "done", completedAt: { gte: since } }],
-    },
-    orderBy: { createdAt: "asc" },
-    take: BOARD_LIMIT,
-    include: { items: { orderBy: { name: "asc" } } },
-  });
+  const orders = await listBoardOrders(access.clinicId);
   return NextResponse.json(orders);
 }
 

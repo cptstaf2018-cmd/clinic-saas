@@ -30,10 +30,12 @@ type Props = {
   onStatus: (status: string) => Promise<boolean>;
   onSend: () => Promise<void>;
   onPaid: (paid: boolean) => void;
+  onEdit: () => void;
+  onReopen: () => Promise<boolean>;
   onClose: () => void;
 };
 
-export default function ResultPanel({ order, busy, error, onSave, onStatus, onSend, onPaid, onClose }: Props) {
+export default function ResultPanel({ order, busy, error, onSave, onStatus, onSend, onPaid, onEdit, onReopen, onClose }: Props) {
   const editable = order.status === "in_progress" || order.status === "review";
   // The parent keys this panel by order id, so the draft is re-initialised per order.
   const [autoSend, setAutoSend] = useState(true);
@@ -73,6 +75,9 @@ export default function ResultPanel({ order, busy, error, onSave, onStatus, onSe
           </div>
           <button type="button" onClick={onClose} aria-label="إغلاق" className="h-9 w-9 shrink-0 rounded-xl bg-white/10 text-lg lg:hidden">×</button>
         </div>
+        {order.status !== "cancelled" && (
+          <button type="button" onClick={onEdit} className="mt-3 ml-2 inline-flex min-h-9 items-center rounded-full bg-white/10 px-4 text-xs font-semibold text-white transition hover:bg-white/15">تعديل بيانات الطلب</button>
+        )}
         {order.urgent && <span className="mt-3 inline-block rounded-full bg-red-500/90 px-3 py-0.5 text-xs font-semibold">مستعجل</span>}
         {order.notes && <p className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs text-brand-side-muted">{order.notes}</p>}
       </div>
@@ -194,6 +199,9 @@ export default function ResultPanel({ order, busy, error, onSave, onStatus, onSe
             <a href={`/result/${order.publicToken}`} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center rounded-2xl bg-white text-sm font-semibold text-brand-ink ring-1 ring-brand-border">
               فتح صفحة النتيجة للطباعة
             </a>
+            <button type="button" disabled={busy} onClick={() => { if (confirm("إعادة فتح النتيجة للتصحيح؟ ستُسحب صفحة النتيجة من المراجع حتى تعتمدها من جديد.")) onReopen(); }} className="min-h-11 w-full rounded-2xl bg-amber-50 text-sm font-semibold text-amber-800 transition hover:bg-amber-100 disabled:opacity-50">
+              إعادة فتح للتصحيح
+            </button>
           </>
         )}
       </div>

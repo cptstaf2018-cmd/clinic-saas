@@ -10,12 +10,12 @@ export default async function SpecialtyOnboardingPage() {
 
   const clinic = await db.clinic.findUnique({
     where: { id: session.user.clinicId },
-    select: { specialty: true, specialtyOnboardingRequired: true },
+    select: { name: true, specialty: true, specialtyOnboardingRequired: true },
   });
 
   if (!clinic?.specialtyOnboardingRequired || clinic.specialty) {
     redirect("/dashboard");
   }
 
-  return <SpecialtyOnboardingClient />;
+  return <SpecialtyOnboardingClient initialName={clinic.name} />;
 }

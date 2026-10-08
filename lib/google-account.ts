@@ -35,7 +35,7 @@ export async function findOrCreateGoogleUser(
   if (existingClinic) return null;
 
   const firstName = (displayName ?? "").trim().split(/\s+/)[0];
-  const clinicName = firstName ? `عيادة ${firstName}` : "عيادتي";
+  const clinicName = firstName ? `منشأة ${firstName}` : "منشأتي";
   const passwordHash = await bcrypt.hash(randomBytes(32).toString("hex"), 10);
 
   const clinic = await db.clinic.create({

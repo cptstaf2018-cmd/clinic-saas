@@ -15,6 +15,7 @@ export type PosProduct = {
   stock: number;
   minStock: number;
   requiresRx: boolean;
+  imageUrl: string | null;
 };
 
 type Today = { sales: number; invoices: number; profit: number };
@@ -222,9 +223,14 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
                   className="relative flex flex-col gap-2 rounded-3xl border border-brand-border bg-white p-3 text-right transition hover:-translate-y-0.5 hover:border-brand-gold active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                   {product.requiresRx && <span className="absolute left-3 top-3 rounded-md bg-brand-soft px-1.5 py-0.5 text-[10px] font-bold text-brand-on-soft">بوصفة</span>}
-                  <span className={`flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold ${CATEGORY_TONE[product.category] ?? CATEGORY_TONE["أخرى"]}`}>
-                    {product.name.trim().charAt(0)}
-                  </span>
+                  {product.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={product.imageUrl} alt="" loading="lazy" className="h-20 w-full rounded-2xl bg-brand-bg object-cover" />
+                  ) : (
+                    <span className={`flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold ${CATEGORY_TONE[product.category] ?? CATEGORY_TONE["أخرى"]}`}>
+                      {product.name.trim().charAt(0)}
+                    </span>
+                  )}
                   <span className="font-bold leading-snug text-brand-ink">{product.name}</span>
                   <span className="text-xs text-brand-muted">{[product.form, product.genericName].filter(Boolean).join(" · ") || product.category}</span>
                   <span className="mt-auto flex items-center justify-between gap-2">

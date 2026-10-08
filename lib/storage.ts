@@ -79,3 +79,16 @@ export async function deleteFile(fileUrlOrPath: string): Promise<void> {
 export function isStorageConfigured(): boolean {
   return !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY);
 }
+
+export async function downloadFile(fileUrlOrPath: string): Promise<Buffer | null> {
+  const supabase = getClient();
+  const path = getStoragePath(fileUrlOrPath);
+  if (!supabase || !path) return null;
+
+  const { data, error } = await supabase.storage.from(BUCKET).download(path);
+  if (error || !data) {
+    console.error("[Storage] Download error:", error?.message);
+    return null;
+  }
+  return Buffer.from(await data.arrayBuffer());
+}

@@ -30,7 +30,8 @@ function countFor(filter: Filter): number {
   return filter === "الكل" ? MEDICAL_SPECIALTIES.length : MEDICAL_SPECIALTIES.filter((s) => s.category === filter).length;
 }
 
-export default function SpecialtyOnboardingClient() {
+export default function SpecialtyOnboardingClient({ initialName }: { initialName: string }) {
+  const [facilityName, setFacilityName] = useState(initialName);
   const [step, setStep] = useState<"type" | "specialty">("type");
   const [savingType, setSavingType] = useState<FacilityTypeKey | null>(null);
   const [selected, setSelected] = useState<MedicalSpecialtyKey>(MEDICAL_SPECIALTIES[0].key);
@@ -55,23 +56,24 @@ export default function SpecialtyOnboardingClient() {
   async function chooseFacility(type: FacilityTypeKey) {
     if (savingType) return;
     setError("");
-    if (type === "clinic") {
-      setStep("specialty");
+    if (facilityName.trim().length < 2) {
+      setError("اكتب اسم منشأتك أولاً");
       return;
     }
     setSavingType(type);
     const res = await fetch("/api/clinic/facility", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ facilityType: type }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setError(data.error ?? "تعذر حفظ النوع");
-      setSavingType(null);
+      body: JSON.stringify({ facilityType: type, name: facilityName }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
+    setSavingType(null);
+    if (!res?.ok) {
+      setError(data.error ?? "تعذر الحفظ، تحقق من الاتصال");
       return;
     }
-    window.location.href = "/dashboard";
+    if (type === "clinic") setStep("specialty");
+    else window.location.assign("/dashboard");
   }
 
   async function submit() {
@@ -90,7 +92,7 @@ export default function SpecialtyOnboardingClient() {
       setLoading(false);
       return;
     }
-    window.location.href = "/dashboard";
+    window.location.assign("/dashboard");
   }
 
   if (step === "type") {
@@ -112,6 +114,17 @@ export default function SpecialtyOnboardingClient() {
         </header>
 
         <main className="mx-auto max-w-5xl px-5 py-8 md:px-10">
+          <label className="mb-6 block max-w-xl">
+            <span className="mb-1.5 block text-sm font-semibold text-brand-ink">اسم منشأتك</span>
+            <input
+              value={facilityName}
+              onChange={(event) => setFacilityName(event.target.value)}
+              maxLength={80}
+              placeholder="مثال: مختبر النور، صيدلية الشفاء، عيادة د. أحمد"
+              className="min-h-12 w-full rounded-2xl border border-brand-border bg-white px-4 text-[15px] text-brand-ink outline-none transition focus:border-brand-blue focus:ring-4 focus:ring-brand-soft"
+            />
+            <span className="mt-1 block text-xs text-brand-muted">يظهر في واجهة النظام وفي رسائل المراجعين، ويمكنك تغييره لاحقاً من الإعدادات.</span>
+          </label>
           <div className="grid gap-4 md:grid-cols-3">
             {FACILITY_TYPES.map((type) => {
               const busy = savingType === type.key;

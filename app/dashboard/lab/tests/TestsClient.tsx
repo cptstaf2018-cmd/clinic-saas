@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { TEST_CATEGORIES } from "@/lib/lab/order";
 import { STARTER_TESTS } from "@/lib/lab/starter-tests";
+import { uploadEntityImage } from "@/lib/client-image";
+import { usePendingImage } from "@/lib/use-pending-image";
 import type { LabTestView } from "@/lib/lab/types";
 
 type Draft = { name: string; nameEn: string; category: string; unit: string; price: string; refLowM: string; refHighM: string; refLowF: string; refHighF: string; critLow: string; critHigh: string };
@@ -42,6 +44,10 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
   const [importing, setImporting] = useState(false);
   const [notice, setNotice] = useState("");
   const [suggestionPicked, setSuggestionPicked] = useState(false);
+  const picked = usePendingImage();
+  const pendingImage = picked.file;
+  const setPendingImage = picked.choose;
+  const [imageBusy, setImageBusy] = useState(false);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,7 +83,24 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
     const data = res ? await res.json().catch(() => ({})) : {};
     setSaving(false);
     if (!res?.ok) { setError(data.error ?? "تعذر الحفظ، تحقق من الاتصال"); return; }
+    let imageError: string | null = null;
+    if (pendingImage && data.id) imageError = await uploadEntityImage(`/api/lab/tests/${data.id}/image`, pendingImage);
+    setPendingImage(null);
+    await reload();
+    if (imageError && data.id) {
+      // keep the dialog open on the saved test so the picture can be retried
+      setEditing({ id: data.id, draft: editing.draft });
+      setError(`حُفظ التحليل لكن الصورة لم تُرفع: ${imageError}`);
+      return;
+    }
     setEditing(null);
+  }
+
+  async function removeImage(testId: string) {
+    setImageBusy(true);
+    const res = await fetch(`/api/lab/tests/${testId}/image`, { method: "DELETE" }).catch(() => null);
+    setImageBusy(false);
+    if (!res?.ok) { setError("تعذر حذف الصورة"); return; }
     await reload();
   }
 
@@ -98,6 +121,9 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
     return STARTER_TESTS.filter((test) => !have.has(test.name) && (test.name.toLowerCase().includes(q) || test.nameEn?.toLowerCase().includes(q))).slice(0, SUGGESTION_LIMIT);
   }, [editing, tests, suggestionPicked]);
 
+  const currentTest = editing?.id ? tests.find((test) => test.id === editing.id) : undefined;
+  const previewUrl = picked.previewUrl ?? currentTest?.imageUrl ?? null;
+
   const set = (key: keyof Draft, value: string) => setEditing((prev) => (prev ? { ...prev, draft: { ...prev.draft, [key]: value } } : prev));
 
   return (
@@ -110,7 +136,7 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={importStarter} disabled={importing} className="min-h-12 rounded-2xl bg-white px-5 text-sm font-semibold text-brand-ink ring-1 ring-brand-border disabled:opacity-50">{importing ? "جاري الإضافة..." : "إضافة التحاليل الشائعة"}</button>
-            <button type="button" onClick={() => { setError(""); setSuggestionPicked(false); setEditing({ id: null, draft: EMPTY }); }} className="min-h-12 rounded-2xl bg-brand-gold px-5 font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover">+ تحليل جديد</button>
+            <button type="button" onClick={() => { setError(""); setSuggestionPicked(false); setPendingImage(null); setEditing({ id: null, draft: EMPTY }); }} className="min-h-12 rounded-2xl bg-brand-gold px-5 font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover">+ تحليل جديد</button>
           </div>
         </header>
 
@@ -133,8 +159,13 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
                 </thead>
                 <tbody className="divide-y divide-brand-line">
                   {visible.map((test) => (
-                    <tr key={test.id} onClick={() => { setError(""); setEditing({ id: test.id, draft: toDraft(test) }); }} className="cursor-pointer transition hover:bg-brand-bg">
-                      <td className="px-4 py-3"><p className="font-bold text-brand-ink">{test.name}</p><p className="text-xs text-brand-muted" dir="ltr" style={{ textAlign: "right" }}>{test.nameEn} {test.unit && `· ${test.unit}`}</p></td>
+                    <tr key={test.id} onClick={() => { setError(""); setPendingImage(null); setEditing({ id: test.id, draft: toDraft(test) }); }} className="cursor-pointer transition hover:bg-brand-bg">
+                      <td className="px-4 py-3"><div className="flex items-center gap-3">{test.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={test.imageUrl} alt="" loading="lazy" className="h-11 w-11 shrink-0 rounded-xl bg-brand-bg object-cover" />
+                      ) : (
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-bg text-sm font-bold text-brand-muted">{test.name.trim().charAt(0)}</span>
+                      )}<div><p className="font-bold text-brand-ink">{test.name}</p><p className="text-xs text-brand-muted" dir="ltr" style={{ textAlign: "right" }}>{test.nameEn} {test.unit && `· ${test.unit}`}</p></div></div></td>
                       <td className="px-4 py-3 text-brand-muted">{test.category}</td>
                       <td className="px-4 py-3" dir="ltr" style={{ textAlign: "right" }}>{test.refLowM ?? "—"} – {test.refHighM ?? "—"}</td>
                       <td className="px-4 py-3" dir="ltr" style={{ textAlign: "right" }}>{test.refLowF ?? "—"} – {test.refHighF ?? "—"}</td>
@@ -154,6 +185,23 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-bold text-brand-ink">{editing.id ? "تعديل تحليل" : "تحليل جديد"}</h2>
               <button type="button" onClick={() => setEditing(null)} aria-label="إغلاق" className="h-9 w-9 rounded-xl bg-brand-line text-lg">×</button>
+            </div>
+            <div className="mb-4 flex items-center gap-4 rounded-2xl bg-brand-bg p-3">
+              {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewUrl} alt="صورة التحليل" className="h-20 w-20 shrink-0 rounded-2xl bg-white object-cover" />
+              ) : (
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-white text-xs text-brand-muted">بدون صورة</span>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <label className="flex min-h-10 cursor-pointer items-center rounded-xl bg-white px-4 text-sm font-semibold text-brand-ink ring-1 ring-brand-border hover:bg-brand-soft">
+                  {previewUrl ? "تغيير الصورة" : "إضافة صورة"}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => { setPendingImage(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+                </label>
+                {(pendingImage || currentTest?.imageUrl) && (
+                  <button type="button" disabled={imageBusy} onClick={() => (pendingImage ? setPendingImage(null) : currentTest && removeImage(currentTest.id))} className="min-h-10 rounded-xl bg-red-50 px-4 text-sm font-semibold text-red-700 disabled:opacity-50">حذف الصورة</button>
+                )}
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="relative sm:col-span-2">

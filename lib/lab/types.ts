@@ -3,6 +3,7 @@ import type { Flag } from "./result";
 
 export type LabItemView = {
   id: string;
+  testId: string | null;
   name: string;
   unit: string | null;
   price: number;
@@ -48,6 +49,7 @@ export type LabTestView = {
   refHighF: number | null;
   critLow: number | null;
   critHigh: number | null;
+  imageUrl?: string | null;
 };
 
 type DbItem = Omit<LabItemView, "flag"> & { flag: string | null };
@@ -79,6 +81,7 @@ export function toOrderView(order: DbOrder): LabOrderView {
     createdAt: order.createdAt.toISOString(),
     items: order.items.map((item) => ({
       id: item.id,
+      testId: item.testId,
       name: item.name,
       unit: item.unit,
       price: item.price,

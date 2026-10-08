@@ -10,7 +10,7 @@ export function startOfBaghdadDay(now = new Date()) {
 
 export async function getPharmacyToday(clinicId: string) {
   const today = await db.pharmacySale.aggregate({
-    where: { clinicId, createdAt: { gte: startOfBaghdadDay() } },
+    where: { clinicId, voidedAt: null, createdAt: { gte: startOfBaghdadDay() } },
     _sum: { total: true, cost: true },
     _count: true,
   });
@@ -18,10 +18,15 @@ export async function getPharmacyToday(clinicId: string) {
   return { sales, invoices: today._count, profit: sales - (today._sum.cost ?? 0) };
 }
 
-export function listPosProducts(clinicId: string) {
-  return db.pharmacyProduct.findMany({
+export function imageUrl(id: string, imagePath: string | null, updatedAt: Date): string | null {
+  return imagePath ? `/api/pharmacy/products/${id}/image?v=${updatedAt.getTime()}` : null;
+}
+
+export async function listPosProducts(clinicId: string) {
+  const rows = await db.pharmacyProduct.findMany({
     where: { clinicId, active: true },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, genericName: true, category: true, form: true, barcode: true, price: true, stock: true, minStock: true, requiresRx: true },
+    select: { id: true, name: true, genericName: true, category: true, form: true, barcode: true, price: true, stock: true, minStock: true, requiresRx: true, imagePath: true, updatedAt: true },
   });
+  return rows.map(({ imagePath, updatedAt, ...product }) => ({ ...product, imageUrl: imageUrl(product.id, imagePath, updatedAt) }));
 }
