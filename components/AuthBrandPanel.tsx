@@ -9,7 +9,7 @@ const FACILITIES = [
 ] as const;
 
 const STEPS = [
-  { title: "سجّل بحساب Google", desc: "ضغطة واحدة، بدون كلمة مرور ولا رموز تحقق." },
+  { title: "تابع بحساب Google", desc: "يدخل للحساب الموجود أو ينشئ حسابك تلقائياً." },
   { title: "اختر نوع منشأتك", desc: "عيادة بكل الاختصاصات، أو مختبر، أو صيدلية." },
   { title: "جهّز بياناتك", desc: "اختصاص العيادة، أو تحاليل المختبر، أو أدوية الصيدلية." },
   { title: "ابدأ العمل", desc: `${FREE_PERIOD_LABEL}، بكل المزايا وبدون بطاقة ائتمان.` },
@@ -36,7 +36,7 @@ export default function AuthBrandPanel({ variant }: { variant: "login" | "regist
           <p className="mt-4 max-w-md text-base leading-relaxed text-brand-side-muted">
             {variant === "login"
               ? "عيادة أو مختبر أو صيدلية: كل ما تحتاجه لإدارة عملك ومراجعيك من مكان واحد، وعلى واتساب الذي يستخدمونه أصلاً."
-              : "لا حاجة لتحميل شيء ولا لحفظ كلمة مرور جديدة. سجّل بحساب Google وجهّز منشأتك."}
+              : "لا حاجة لتحميل شيء ولا لحفظ كلمة مرور جديدة. تابع بحساب Google وجهّز منشأتك."}
           </p>
         </div>
 

@@ -28,7 +28,10 @@ export default function RegisterPage() {
             <p className="mt-2 text-sm text-brand-muted">لعيادتك أو مختبرك أو صيدليتك. دقيقتان وتبدأ العمل.</p>
 
             <div className="mt-8">
-              <GoogleButton label="التسجيل بحساب Google" divider={false} size="large" />
+              <GoogleButton divider={false} size="large" />
+              <p className="mt-3 text-center text-xs font-medium text-brand-muted">
+                إذا لم يكن لديك حساب، سننشئه تلقائياً عند المتابعة.
+              </p>
             </div>
 
             <ul className="mt-8 space-y-3">

@@ -238,6 +238,9 @@ function LoginForm() {
                     <button type="submit" disabled={loading} className={PRIMARY_BTN}>{loading ? "جاري الدخول..." : "تسجيل الدخول"}</button>
                   </form>
                   <GoogleButton />
+                  <p className="mt-3 text-center text-xs font-medium text-brand-muted">
+                    يدخل لحسابك الموجود أو ينشئ حساباً جديداً عند الحاجة.
+                  </p>
                 </>
               )}
             </div>
