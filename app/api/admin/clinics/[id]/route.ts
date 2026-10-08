@@ -140,6 +140,11 @@ export async function DELETE(
     db.clinicFeatureTrial.deleteMany({ where: { clinicId: id } }),
     db.whatsappSession.deleteMany({ where: { clinicId: id } }),
     db.incomingMessage.deleteMany({ where: { clinicId: id } }),
+    // Sales/orders first: their items cascade, and items block deleting products/tests
+    db.pharmacySale.deleteMany({ where: { clinicId: id } }),
+    db.pharmacyProduct.deleteMany({ where: { clinicId: id } }),
+    db.labOrder.deleteMany({ where: { clinicId: id } }),
+    db.labTest.deleteMany({ where: { clinicId: id } }),
     db.specialtyAnnotation.deleteMany({ where: { clinicId: id } }),
     db.toothTreatment.deleteMany({ where: { clinicId: id } }),
     db.patientPayment.deleteMany({ where: { clinicId: id } }),
