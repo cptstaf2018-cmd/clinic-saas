@@ -228,7 +228,7 @@ export default async function ReportsPage({
           {/* عنوان التقرير */}
           <div className="mt-4 text-center border-t border-slate-300 pt-3">
             <h1 className="text-xl font-black text-slate-900">التقرير اليومي الرسمي للعيادة</h1>
-            <p className="text-sm text-slate-500">وثيقة رسمية صادرة عن نظام الهلال الذهبي</p>
+            <p className="text-sm text-slate-500">وثيقة رسمية صادرة عن نظام الذهبي</p>
           </div>
         </div>
 

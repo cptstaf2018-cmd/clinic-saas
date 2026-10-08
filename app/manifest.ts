@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "الهلال الذهبي",
-    short_name: "الهلال الذهبي",
+    name: "الذهبي",
+    short_name: "الذهبي",
     description: "نظام متكامل لإدارة العيادات والصيدليات والمختبرات",
     start_url: "/dashboard",
     display: "standalone",

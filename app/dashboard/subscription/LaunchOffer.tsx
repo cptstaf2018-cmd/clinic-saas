@@ -32,7 +32,7 @@ export default function LaunchOffer() {
               <span className="text-brand-gold">حتى نهاية ٢٠٢٦.</span>
             </h1>
             <p className="mt-4 max-w-xl text-base leading-8 text-brand-side-muted">
-              نطلق معك الهلال الذهبي، ونريدك أن تعمل به أولاً وتتعوّد عليه في عملك اليومي. لا بطاقة ائتمان، ولا باقات، ولا أي دفع الآن.
+              اشتغل على الذهبي براحتك وتعوّد عليه في شغلك اليومي. لا نطلب منك بطاقة، ولا اشتراكاً، ولا أي مبلغ الآن.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <span className="rounded-2xl bg-white/10 px-5 py-3 text-sm">

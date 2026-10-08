@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   await sendWhatsApp(
     cleanPhone,
-    `مرحباً بك في الهلال الذهبي 🏥\n\nكود التحقق الخاص بك:\n\n*${code}*\n\nصالح لمدة 5 دقائق. لا تشاركه مع أحد.`,
+    `مرحباً بك في الذهبي 🏥\n\nكود التحقق الخاص بك:\n\n*${code}*\n\nصالح لمدة 5 دقائق. لا تشاركه مع أحد.`,
     adminKey ?? undefined
   );
 

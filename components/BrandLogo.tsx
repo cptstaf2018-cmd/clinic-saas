@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-export const BRAND_NAME = "الهلال الذهبي";
+export const BRAND_NAME = "الذهبي";
 
 type Tone = "dark" | "light";
 

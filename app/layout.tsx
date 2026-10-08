@@ -14,13 +14,13 @@ const plexArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "الهلال الذهبي — نظام إدارة العيادات والصيدليات والمختبرات",
+  title: "الذهبي — نظام إدارة العيادات والصيدليات والمختبرات",
   description: "نظام متكامل لإدارة العيادات والصيدليات والمختبرات",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "الهلال الذهبي",
+    title: "الذهبي",
   },
   verification: {
     google: "kaJq6Uri2UG16KiQPnlgnviCwnzz-8myJlKaXIdLMfE",

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FREE_PERIOD_LABEL, isFreePeriodOpen } from "@/lib/free-period";
 
 export const metadata = {
-  title: "الهلال الذهبي — نظام إدارة العيادات والصيدليات والمختبرات",
+  title: "الذهبي — نظام إدارة العيادات والصيدليات والمختبرات",
   description: "منصة SaaS متكاملة لإدارة العيادات الطبية في العراق. بوت واتساب ذكي، تذكيرات تلقائية، سجلات طبية، وشاشة انتظار. تطوير بغداد المستقبل AI.",
 };
 
@@ -273,7 +273,7 @@ export default function AboutPage() {
                 <span style={{ color: "var(--teal)" }}>التخصصات الطبية</span>
               </h2>
               <p style={{ color: "var(--gray)", lineHeight: 1.9, marginBottom: 32, fontSize: 16 }}>
-                سواء كنت طبيب أسنان، أو نساء وتوليد، أو باطنية، أو أطفال — الهلال الذهبي يتكيّف مع تخصصك ويعطيك الأدوات الصحيحة لإدارة عيادتك بكفاءة عالية.
+                سواء كنت طبيب أسنان، أو نساء وتوليد، أو باطنية، أو أطفال — الذهبي يتكيّف مع تخصصك ويعطيك الأدوات الصحيحة لإدارة عيادتك بكفاءة عالية.
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 36 }}>
                 {["أسنان","نسائية","أطفال","جلدية","قلب","عيون","عظام","باطنية"].map(s => (
@@ -518,7 +518,7 @@ export default function AboutPage() {
                 <span style={{ color: "var(--teal)" }}>للذكاء الاصطناعي</span>
               </h2>
               <p style={{ color: "var(--gray)", lineHeight: 1.9, marginBottom: 32, fontSize: 15, fontWeight: 500 }}>
-                شركة تقنية عراقية متخصصة في حلول الذكاء الاصطناعي والأنظمة المؤسسية. طوّرت منصة <strong style={{ color: "var(--teal)" }}>الهلال الذهبي</strong> لرفع مستوى الرعاية الصحية في العراق من خلال أحدث التقنيات.
+                شركة تقنية عراقية متخصصة في حلول الذكاء الاصطناعي والأنظمة المؤسسية. طوّرت منصة <strong style={{ color: "var(--teal)" }}>الذهبي</strong> لرفع مستوى الرعاية الصحية في العراق من خلال أحدث التقنيات.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 32 }}>
                 {["ذكاء اصطناعي","حلول مؤسسية","تطوير SaaS","العراق"].map(t => (
@@ -561,7 +561,7 @@ export default function AboutPage() {
             <BrandLogo tone="dark" size={40} stacked={false} />
             <div style={{ fontSize: 11, color: "rgba(248,250,252,.35)", fontWeight: 600 }}>تطوير بغداد المستقبل AI</div>
           </div>
-          <p style={{ color: "rgba(248,250,252,.25)", fontSize: 13, fontWeight: 600 }}>© ٢٠٢٦ الهلال الذهبي — جميع الحقوق محفوظة</p>
+          <p style={{ color: "rgba(248,250,252,.25)", fontSize: 13, fontWeight: 600 }}>© ٢٠٢٦ الذهبي — جميع الحقوق محفوظة</p>
           <div style={{ display: "flex", gap: 24, fontSize: 13, fontWeight: 700 }}>
             <Link href="/login" className="footer-link" style={{ color: "rgba(248,250,252,.4)" }}>دخول</Link>
             <Link href="/register" style={{ color: "var(--teal2)" }}>تسجيل مجاني</Link>
