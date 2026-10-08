@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { verifyImpersonateToken } from "@/lib/impersonate";
 import { findOrCreateGoogleUser } from "@/lib/google-account";
+import { clientIp, isLoginBlocked, recordLoginFailure } from "@/lib/login-throttle";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
@@ -21,7 +22,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password:          { label: "Password",          type: "password" },
         impersonateToken:  { label: "Impersonate Token", type: "text"     },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         try {
           // Impersonation path — super admin entering a clinic
           const impersonateToken = credentials?.impersonateToken as string | undefined;
@@ -43,6 +44,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const password   = credentials?.password as string;
           if (!identifier || !password) return null;
 
+          // Too many recent failures for this e-mail or from this address: refuse without checking the password
+          const ip = clientIp(request.headers);
+          if (await isLoginBlocked(identifier, ip)) return null;
+
           // Email login — try superadmin first, then clinic backupEmail
           let user = await db.user.findUnique({ where: { email: identifier } });
 
@@ -55,10 +60,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (clinic?.users.length) user = clinic.users[0];
           }
 
-          if (!user) return null;
-
-          const valid = await bcrypt.compare(password, user.passwordHash);
-          if (!valid) return null;
+          const valid = user ? await bcrypt.compare(password, user.passwordHash) : false;
+          if (!user || !valid) {
+            await recordLoginFailure(identifier, ip);
+            return null;
+          }
 
           return {
             id: user.id,

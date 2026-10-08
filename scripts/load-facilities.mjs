@@ -149,7 +149,7 @@ try {
     await b.login(ph.phone, "wrong-pass");
     return { status: "tried", ms: performance.now() - t };
   });
-  console.log(`  -> correct password still works after 30 failures: ${!!(await client().login(ph.phone))} (true = no lockout)`);
+  console.log(`  -> correct password after 30 failures: ${(await client().login(ph.phone)) ? "STILL WORKS (no lockout)" : "BLOCKED (lockout works)"}`);
 } finally {
   console.log("cleanup: removed", await cleanup(), "load-test clinic(s)");
   await pool.end();

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { loadArabicVoice, synthesizeArabic } from "@/lib/tts/piper";
+import BrandLogo from "@/components/BrandLogo";
 
 interface DisplayData {
   clinicName: string;
@@ -356,6 +357,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           70%{box-shadow:0 0 0 14px rgba(59,130,246,0);}
           100%{box-shadow:0 0 0 0 rgba(59,130,246,0);}
         }
+        /* وسط — شعار الذهبي فوق اسم العيادة */
+        .dp-center { display:flex; flex-direction:column; align-items:center; gap:6px; }
         /* وسط — اسم العيادة */
         .dp-clinic {
           display:flex; align-items:center; gap:14px;
@@ -533,7 +536,9 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
             <span className="dp-live">مباشر</span>
           </div>
 
-          {/* وسط — اسم العيادة */}
+          {/* وسط — شعار الذهبي ثم اسم العيادة */}
+          <div className="dp-center">
+          <BrandLogo tone="light" size={34} stacked={false} />
           <div className="dp-clinic">
             {data.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -546,6 +551,7 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
               <div className="dp-logo">🏥</div>
             )}
             <div className="dp-cname">{data.clinicName || "نظام الانتظار"}</div>
+          </div>
           </div>
 
           {/* يسار — التاريخ */}

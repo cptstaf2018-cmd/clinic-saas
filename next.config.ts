@@ -19,8 +19,12 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "upgrade-insecure-requests",
+            // frame-ancestors/object-src/base-uri close clickjacking and plugin/base-tag tricks without restricting scripts
+            value: "upgrade-insecure-requests; frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
           },
+          { key: "X-Frame-Options", value: "DENY" },
+          // The pharmacy barcode scanner needs this site's own camera; nothing else is used
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=()" },
           {
             key: "X-Content-Type-Options",
             value: "nosniff",
