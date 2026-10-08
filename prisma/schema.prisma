@@ -50,6 +50,8 @@ model Clinic {
   workingHours           WorkingHours[]
   pharmacyProducts       PharmacyProduct[]
   pharmacySales          PharmacySale[]
+  labTests               LabTest[]
+  labOrders              LabOrder[]
 }
 
 model User {
@@ -395,4 +397,77 @@ model PharmacySaleItem {
 
   @@index([saleId])
   @@index([productId])
+}
+
+model LabTest {
+  id        String   @id @default(cuid())
+  clinicId  String
+  name      String
+  nameEn    String?
+  category  String   @default("أخرى")
+  unit      String?
+  price     Int      @default(0)
+  refLowM   Float?
+  refHighM  Float?
+  refLowF   Float?
+  refHighF  Float?
+  critLow   Float?
+  critHigh  Float?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  items     LabOrderItem[]
+
+  @@index([clinicId, active])
+}
+
+model LabOrder {
+  id           String    @id @default(cuid())
+  clinicId     String
+  number       Int
+  patientName  String
+  patientPhone String?
+  sex          String    // m | f
+  age          Int?
+  doctorName   String?
+  urgent       Boolean   @default(false)
+  status       String    @default("new") // new | in_progress | review | done | cancelled
+  total        Int       @default(0)
+  paid         Boolean   @default(false)
+  notes        String?
+  publicToken  String    @unique
+  sentAt       DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  clinic       Clinic    @relation(fields: [clinicId], references: [id])
+  items        LabOrderItem[]
+
+  @@unique([clinicId, number])
+  @@index([clinicId, status])
+  @@index([clinicId, createdAt])
+}
+
+model LabOrderItem {
+  id        String    @id @default(cuid())
+  orderId   String
+  testId    String?
+  name      String
+  unit      String?
+  price     Int       @default(0)
+  refLowM   Float?
+  refHighM  Float?
+  refLowF   Float?
+  refHighF  Float?
+  critLow   Float?
+  critHigh  Float?
+  result    Float?
+  flag      String?   // normal | low | high | critical_low | critical_high | none
+  enteredAt DateTime?
+  order     LabOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  test      LabTest?  @relation(fields: [testId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([testId])
 }

@@ -6,6 +6,8 @@ import TodayAppointmentsClient from "./TodayAppointmentsClient";
 import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import { canUseFeature } from "@/lib/feature-gates";
 import PharmacyPOS from "./pharmacy/PharmacyPOS";
+import LabBoard from "./lab/LabBoard";
+import { toOrderView } from "@/lib/lab/types";
 import { getPharmacyToday, listPosProducts } from "@/lib/pharmacy/queries";
 
 const ARABIC_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -166,6 +168,24 @@ export default async function DashboardPage() {
   if (facility?.facilityType === "pharmacy") {
     const [products, today] = await Promise.all([listPosProducts(clinicId), getPharmacyToday(clinicId)]);
     return <PharmacyPOS initialProducts={products} initialToday={today} />;
+  }
+  if (facility?.facilityType === "lab") {
+    const since = new Date(Date.now() - 24 * 3_600_000);
+    const [orders, tests] = await Promise.all([
+      db.labOrder.findMany({
+        where: { clinicId, OR: [{ status: { in: ["new", "in_progress", "review"] } }, { status: "done", completedAt: { gte: since } }] },
+        orderBy: { createdAt: "asc" },
+        take: 300,
+        include: { items: { orderBy: { name: "asc" } } },
+      }),
+      db.labTest.findMany({ where: { clinicId, active: true }, orderBy: [{ category: "asc" }, { name: "asc" }] }),
+    ]);
+    return (
+      <LabBoard
+        initialOrders={orders.map(toOrderView)}
+        tests={tests.map(({ id, name, nameEn, category, unit, price, refLowM, refHighM, refLowF, refHighF, critLow, critHigh }) => ({ id, name, nameEn, category, unit, price, refLowM, refHighM, refLowF, refHighF, critLow, critHigh }))}
+      />
+    );
   }
 
   const today = new Date();

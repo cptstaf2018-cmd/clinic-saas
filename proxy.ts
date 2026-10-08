@@ -27,6 +27,7 @@ export async function proxy(req: NextRequest) {
     "/login",
     "/register",
     "/about",
+    "/result",
     "/impersonate",
     "/admin/login",
     "/display",
