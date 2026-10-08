@@ -5,6 +5,7 @@ import { getClinicSpecialtyConfig } from "@/lib/clinic-settings";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import PrintButton from "./PrintButton";
+import BrandLogo from "@/components/BrandLogo";
 import ToothChartReport from "./ToothChartReport";
 import PediatricBodyReport from "./PediatricBodyReport";
 import BodyAnnotationReport from "./BodyAnnotationReport";
@@ -137,6 +138,9 @@ export default async function PatientReportPage({
         </div>
 
         <header className="border-b-2 border-slate-200 pb-6">
+          <div className="mb-5 flex justify-center">
+            <BrandLogo tone="light" size={34} stacked={false} />
+          </div>
           <div className="flex flex-wrap items-start justify-between gap-4">
             {/* شعار + معلومات العيادة */}
             <div className="flex items-start gap-4">

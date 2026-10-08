@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import BrandLogo from "@/components/BrandLogo";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import MedicalRecordsClient from "./MedicalRecordsClient";
@@ -149,6 +150,7 @@ export default async function PatientProfilePage({
             <Link href="/dashboard/patients" className="flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-slate-900">
               ← قائمة المرضى
             </Link>
+            <BrandLogo tone="light" size={26} stacked={false} />
             <div className="flex flex-wrap items-center gap-2">
               <a
                 href={`https://wa.me/${waNumber}`}

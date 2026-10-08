@@ -11,7 +11,7 @@ import { getSubscriptionNotice, isSubscriptionHardLocked, subscriptionDaysLeft }
 import { PLAN_LABELS, isPlanId } from "@/lib/plans";
 import Link from "next/link";
 import OfflineStatus from "./OfflineStatus";
-import { BrandMark, BRAND_NAME } from "@/components/BrandLogo";
+import BrandLogo, { BrandMark } from "@/components/BrandLogo";
 
 async function getClinicData(clinicId: string) {
   return db.clinic.findUnique({
@@ -76,16 +76,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           {/* Logo */}
           <div className="px-5 py-6 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              {clinic?.logoUrl ? (
+            {/* The platform brand is always visible; the facility's own logo and name sit under it */}
+            <BrandLogo tone="dark" size={40} stacked={false} />
+            <div className="mt-5 flex items-center gap-3">
+              {clinic?.logoUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={clinic.logoUrl} alt={name} className="w-11 h-11 object-contain rounded-2xl shrink-0 bg-white/95 p-1" />
-              ) : (
-                <BrandMark size={44} />
               )}
               <div className="min-w-0">
                 <p className="text-white font-bold text-base leading-tight truncate">{name}</p>
-                <p className="text-brand-gold text-xs mt-1 font-semibold">{BRAND_NAME}</p>
                 <span className={`inline-flex mt-2 text-[10px] font-semibold border rounded-full px-2 py-0.5 ${badge.cls}`}>
                   {badge.label}
                 </span>
@@ -152,12 +151,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             {/* زر ☰ + الدرج */}
             <MobileDrawer signOutForm={signOutForm} role={session.user.role} facilityType={clinic.facilityType} />
 
-            {clinic?.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={clinic.logoUrl} alt={name} className="w-8 h-8 object-contain rounded-lg shrink-0" />
-            ) : (
-              <BrandMark size={32} />
-            )}
+            <BrandMark size={32} />
             <span className="text-white font-bold text-sm truncate max-w-[140px]">{name}</span>
           </div>
 

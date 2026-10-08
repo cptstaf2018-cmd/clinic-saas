@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import BrandLogo from "@/components/BrandLogo";
 
 type Props = {
   patientId: string;
@@ -108,6 +109,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
                   {clinicName.slice(0, 1)}
                 </div>
               )}
+              <BrandLogo tone="light" size={22} stacked={false} className="mt-2" />
             </div>
 
             {/* يسار — التاريخ والوقت */}
@@ -189,6 +191,7 @@ export default function PrescriptionClient({ patientId, patientName, clinicName,
 
           <div className="mt-6 text-center border-t border-slate-200 pt-3">
             <p className="text-[10px] font-bold text-slate-400">{clinicName} · {specialty} · {phone}</p>
+            <BrandLogo tone="light" size={16} stacked={false} className="mt-2 opacity-70" />
           </div>
         </div>
 
