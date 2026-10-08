@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { dateAfterDays, TRIAL_PERIOD_DAYS } from "@/lib/subscription-durations";
+import { trialEndsAt } from "@/lib/free-period";
 
 export type GoogleAccountUser = { id: string; role: string; clinicId: string | null };
 
@@ -45,7 +45,7 @@ export async function findOrCreateGoogleUser(
       specialtyOnboardingRequired: true,
       users: { create: { passwordHash, role: "doctor" } },
       subscription: {
-        create: { plan: "trial", status: "trial", expiresAt: dateAfterDays(TRIAL_PERIOD_DAYS) },
+        create: { plan: "trial", status: "trial", expiresAt: trialEndsAt() },
       },
     },
     include: { users: { take: 1 } },

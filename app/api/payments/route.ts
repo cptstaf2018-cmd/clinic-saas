@@ -5,11 +5,16 @@ import { encodePaymentReference, isPlanId, isSubscriptionDurationId } from "@/li
 import { PaymentMethodId, validatePaymentReference } from "@/lib/payment-reference";
 import { getAllowedPlansForSpecialty, getSpecialtyPlanDurationPrice, getSubscriptionRuleForSpecialty } from "@/lib/specialty-subscriptions";
 import { logSystemEvent } from "@/lib/system-events";
+import { isFreePeriodOpen } from "@/lib/free-period";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.clinicId) {
     return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  }
+
+  if (isFreePeriodOpen()) {
+    return NextResponse.json({ error: "الاشتراكات مغلقة حالياً: النظام مجاني لكل المستخدمين حتى نهاية العام." }, { status: 403 });
   }
 
   const clinicId = session.user.clinicId;

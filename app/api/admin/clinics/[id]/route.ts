@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { logSystemEvent } from "@/lib/system-events";
-import { dateAfterDays, PAID_SUBSCRIPTION_DAYS, TRIAL_PERIOD_DAYS } from "@/lib/subscription-durations";
+import { dateAfterDays, PAID_SUBSCRIPTION_DAYS } from "@/lib/subscription-durations";
+import { trialEndsAt } from "@/lib/free-period";
 
 type AdminSession = {
   user?: {
@@ -71,7 +72,7 @@ export async function PATCH(
   if (body.action === "activate") {
     const plan = body.plan ?? "basic";
     const isTrialPlan = plan === "trial";
-    const expiresAt = dateAfterDays(isTrialPlan ? TRIAL_PERIOD_DAYS : PAID_SUBSCRIPTION_DAYS);
+    const expiresAt = isTrialPlan ? trialEndsAt() : dateAfterDays(PAID_SUBSCRIPTION_DAYS);
     const status = isTrialPlan ? "trial" : "active";
     await db.subscription.upsert({
       where: { clinicId: id },

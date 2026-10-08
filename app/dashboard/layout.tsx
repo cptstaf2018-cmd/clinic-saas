@@ -6,6 +6,7 @@ import { getAssistantAccess } from "@/lib/assistant-access";
 import DashboardAssistantFloating from "./DashboardAssistantFloating";
 import MobileDrawer from "./MobileDrawer";
 import SubscriptionNotice from "./SubscriptionNotice";
+import { FREE_PERIOD_END, FREE_PERIOD_LABEL, isFreePeriodOpen } from "@/lib/free-period";
 import { getSubscriptionNotice, isSubscriptionHardLocked, subscriptionDaysLeft } from "@/lib/subscription-status";
 import { PLAN_LABELS, isPlanId } from "@/lib/plans";
 import Link from "next/link";
@@ -46,7 +47,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const subStatus = clinic?.subscription?.status ?? "trial";
   const badge = STATUS_BADGE[subStatus] ?? STATUS_BADGE.inactive;
   const assistantAccess = await getAssistantAccess(clinicId, clinic?.subscription ?? null, false);
-  const subscriptionNotice = getSubscriptionNotice(clinic?.subscription ?? null);
+  // Launch offer: no payment screens, prices or expiry warnings are shown while everything is free.
+  const freePeriod = isFreePeriodOpen();
+  const subscriptionNotice = freePeriod ? null : getSubscriptionNotice(clinic?.subscription ?? null);
   const daysLeft = Math.max(0, subscriptionDaysLeft(clinic?.subscription ?? null));
   const isTrial = subStatus === "trial";
   const trialProgress = isTrial ? Math.min(100, Math.max(4, Math.round(((14 - daysLeft) / 14) * 100))) : 0;
@@ -93,7 +96,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {/* Nav */}
           <DashboardNav role={session.user.role} facilityType={clinic.facilityType} />
 
-          {/* Subscription card */}
+          {/* Subscription card, or the launch offer while everything is free */}
+          {freePeriod ? (
+            <div className="mx-3 mb-3 rounded-2xl border border-brand-navy-line bg-brand-navy-3 p-4">
+              <p className="text-xs text-brand-gold">عرض الإطلاق</p>
+              <p className="mt-1 text-lg font-bold text-white">{FREE_PERIOD_LABEL}</p>
+              <p className="mt-1 text-xs leading-6 text-brand-side-muted">
+                كل المزايا مفتوحة حتى {FREE_PERIOD_END.toLocaleDateString("ar-IQ", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Baghdad" })}.
+              </p>
+              <Link href="/dashboard/subscription" className="mt-3 flex min-h-10 items-center justify-center rounded-xl bg-white/10 text-xs font-semibold text-white transition hover:bg-white/15">تفاصيل العرض</Link>
+            </div>
+          ) : (
+            <>
           <div className="mx-3 mb-3 rounded-2xl border border-brand-navy-line bg-brand-navy-3 p-4">
             {isTrial ? (
               <>
@@ -117,6 +131,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
               {isTrial ? "اشترك الآن" : "إدارة الاشتراك"}
             </Link>
           </div>
+
+            </>
+          )}
 
           {/* Logout */}
           <div className="px-3 py-4 border-t border-white/10">

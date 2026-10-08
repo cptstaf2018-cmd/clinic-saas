@@ -142,6 +142,10 @@ async function main() {
   const registerHtml = (await anon.page("/register")).html;
   check("register page is Google only: no form fields, no code step", registerHtml.includes("التسجيل بحساب Google") && !/<input(?![^>]*type="hidden")/i.test(registerHtml) && !registerHtml.includes("إرسال الكود"));
   check("register page speaks for all three facility types", registerHtml.includes("مختبر") && registerHtml.includes("صيدلية") && registerHtml.includes("عيادة"));
+  const aboutHtml = (await anon.page("/about")).html;
+  check("public about page shows the launch offer", aboutHtml.includes("مجاناً حتى نهاية ٢٠٢٦"));
+  check("public about page shows no prices or payment names", !/35,000|45,000|55,000|65,000|75,000|SuperKey|سوبر ?كي|د\.ع \/ شهر/.test(aboutHtml));
+  check("login and register show the offer, not prices", loginHtml.includes("مجاناً حتى نهاية ٢٠٢٦") && registerHtml.includes("مجاناً حتى نهاية ٢٠٢٦") && !/35[,٬]000|٣٥٬٠٠٠/.test(loginHtml + registerHtml));
   check("dashboard needs a login", [302, 307, 308].includes((await anon.page("/dashboard")).status));
   for (const path of ["/api/pharmacy/products", "/api/lab/tests", "/api/lab/orders"]) {
     const r = await anon.get(path);
@@ -169,6 +173,21 @@ async function main() {
   check("pharmacy cannot use lab orders API", (await ph.get("/api/lab/orders")).status === 403);
   check("clinic cannot use pharmacy API", (await clinic.get("/api/pharmacy/products")).status === 403);
   check("clinic cannot use lab API", (await clinic.get("/api/lab/tests")).status === 403);
+
+  // ───────── the Subscription section during the launch offer ─────────
+  for (const [who, c] of [["clinic", clinic], ["lab", lab], ["pharmacy", ph]]) {
+    const sub = await c.page("/dashboard/subscription");
+    check(`${who}: subscription section shows the launch message`, sub.status === 200 && sub.html.includes("عرض الإطلاق") && sub.html.includes("حتى نهاية ٢٠٢٦"), `HTTP ${sub.status}`);
+    check(`${who}: subscription section shows no price, QR or payment method`, !/د\.ع|SuperKey|Zain Cash|Binance|payments\/|باركود|رقم العملية/.test(sub.html));
+    const home = await c.page("/dashboard");
+    check(`${who}: the menu keeps the Subscription entry`, home.html.includes("/dashboard/subscription"));
+    check(`${who}: no expiry warning is shown during the offer`, !home.html.includes("ينتهي اشتراكك") && !home.html.includes("اشترك الآن"));
+  }
+  check("payment requests are closed during the offer", (await clinic.post("/api/payments", { amount: 35000, method: "superkey", plan: "basic", reference: "SK-123456" })).status === 403);
+  const { rows: oldTrials } = await pool.query(`SELECT count(*)::int n FROM "Subscription" s JOIN "Clinic" c ON c.id = s."clinicId" WHERE s.status = 'trial' AND s."expiresAt" < '2026-12-31T20:59:00Z' AND c.name NOT LIKE $1`, [`${PREFIX}%`]);
+  check("no real trial ends before the end of the offer", oldTrials[0].n === 0, String(oldTrials[0].n));
+  const { rows: vipRows } = await pool.query(`SELECT count(*)::int n FROM "Subscription" s JOIN "Clinic" c ON c.id = s."clinicId" WHERE s.status = 'active' AND c.name NOT LIKE $1`, [`${PREFIX}%`]);
+  check("paid subscriptions are untouched", vipRows[0].n >= 10, String(vipRows[0].n));
 
   // ───────── clinic regression ─────────
   for (const path of ["/dashboard", "/dashboard/patients", "/dashboard/appointments", "/dashboard/settings", "/dashboard/subscription", "/dashboard/reports", "/dashboard/support", "/dashboard/working-hours", "/dashboard/messages"]) {
@@ -290,6 +309,13 @@ async function main() {
     check("image is gone after delete", (await ph.request(`/api/pharmacy/products/${pid1}/image`)).status === 404);
   }
 
+  const inv = await ph.page(`/invoice/pharmacy/${debt.data.id}`);
+  check("pharmacy invoice page", inv.status === 200 && inv.html.includes("بنادول") && inv.html.includes("أبو علي") && inv.html.includes("دين") && inv.html.includes("ZZTEST pharmacy-A"), `HTTP ${inv.status} ${inv.location}`);
+  check("pharmacy invoice shows the total", inv.html.includes("٣٬٥٠٠") || inv.html.includes("3,500") || inv.html.includes("٣,٥٠٠"));
+  check("voided invoice is stamped", (await ph.page(`/invoice/pharmacy/${s1.data.id}`)).html.includes("ملغاة"));
+  check("other pharmacy cannot open my invoice", (await phB.page(`/invoice/pharmacy/${debt.data.id}`)).status === 404);
+  check("a lab cannot open a pharmacy invoice", (await lab.page(`/invoice/pharmacy/${debt.data.id}`)).status === 404);
+  check("invoices need a login", [302, 307, 308].includes((await anon.page(`/invoice/pharmacy/${debt.data.id}`)).status));
   const posPage = await ph.page("/dashboard");
   check("pharmacy home is the POS", posPage.status === 200 && posPage.html.includes("بنادول") && !posPage.html.includes("مواعيد اليوم"));
   for (const path of ["/dashboard/pharmacy/products", "/dashboard/pharmacy/sales", "/dashboard/settings"]) check(`pharmacy page ${path}`, (await ph.page(path)).status === 200);
@@ -395,6 +421,14 @@ async function main() {
   check("re-approve", (await lab.patch(`/api/lab/orders/${oid}`, { status: "done" })).status === 200);
   const pub2 = await anon.page(`/result/${token}`);
   check("public result is back and shows the corrected value", pub2.status === 200 && pub2.html.includes("13.1"));
+
+  const labInv = await lab.page(`/invoice/lab/${oid}`);
+  check("lab invoice page", labInv.status === 200 && labInv.html.includes("زينب حسن علي") && labInv.html.includes("الهيموغلوبين") && labInv.html.includes("سكر الصيام") && labInv.html.includes("غير مدفوع") && labInv.html.includes("ZZTEST lab-A"), `HTTP ${labInv.status}`);
+  await lab.patch(`/api/lab/orders/${oid}`, { paid: true });
+  check("lab invoice reflects payment", (await lab.page(`/invoice/lab/${oid}`)).html.includes("مدفوع"));
+  check("other lab cannot open my invoice", (await labB.page(`/invoice/lab/${oid}`)).status === 404);
+  check("a pharmacy cannot open a lab invoice", (await ph.page(`/invoice/lab/${oid}`)).status === 404);
+  check("lab invoice needs a login", [302, 307, 308].includes((await anon.page(`/invoice/lab/${oid}`)).status));
 
   // order without a phone, cancelled order
   const o2 = await lab.post("/api/lab/orders", { patientName: "كرار علاء", sex: "m", testIds: [T("سكر الصيام").id] });

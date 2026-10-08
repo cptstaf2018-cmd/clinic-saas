@@ -63,6 +63,7 @@ export default function ArchiveRow({ order }: { order: Row }) {
 
       <div className="flex gap-2">
         <a href={`/result/${order.token}`} target="_blank" rel="noreferrer" className="flex min-h-10 items-center rounded-xl bg-brand-bg px-4 text-xs font-semibold text-brand-ink ring-1 ring-brand-border hover:bg-white">فتح النسخة</a>
+        <a href={`/invoice/lab/${order.id}`} target="_blank" rel="noreferrer" className="flex min-h-10 items-center rounded-xl bg-brand-bg px-4 text-xs font-semibold text-brand-ink ring-1 ring-brand-border hover:bg-white">الفاتورة</a>
         <button type="button" onClick={copyLink} className="min-h-10 rounded-xl bg-brand-bg px-4 text-xs font-semibold text-brand-ink ring-1 ring-brand-border hover:bg-white">{state === "copied" ? "نُسخ ✓" : "نسخ الرابط"}</button>
         {order.patientPhone && (
           <button type="button" onClick={resend} disabled={state === "sending"} className="min-h-10 rounded-xl bg-brand-gold px-4 text-xs font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:opacity-50">

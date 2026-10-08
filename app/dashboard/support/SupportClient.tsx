@@ -1,5 +1,6 @@
 "use client";
 
+import { FREE_PERIOD_LABEL, isFreePeriodOpen } from "@/lib/free-period";
 import { useCallback, useEffect, useState } from "react";
 
 type HealthData = {
@@ -98,12 +99,16 @@ export default function SupportClient() {
 
       <section className="grid gap-4 md:grid-cols-3">
         <HealthCard title="قاعدة البيانات" value={health.db ? "تعمل" : "خطأ"} ok={health.db} detail={health.db ? "الاتصال مستقر" : "يوجد خلل في الاتصال"} />
-        <HealthCard
-          title="الاشتراك"
-          value={STATUS_LABELS[health.subscription.status] ?? health.subscription.status}
-          ok={subOk}
-          detail={`${PLAN_LABELS[health.subscription.plan] ?? health.subscription.plan} · ${arabicNumber(health.subscription.daysLeft)} يوم متبقي`}
-        />
+        {isFreePeriodOpen() ? (
+          <HealthCard title="الحساب" value="نشط" ok detail={FREE_PERIOD_LABEL} />
+        ) : (
+          <HealthCard
+            title="الاشتراك"
+            value={STATUS_LABELS[health.subscription.status] ?? health.subscription.status}
+            ok={subOk}
+            detail={`${PLAN_LABELS[health.subscription.plan] ?? health.subscription.plan} · ${arabicNumber(health.subscription.daysLeft)} يوم متبقي`}
+          />
+        )}
         <HealthCard
           title="طابور اليوم"
           value={`${arabicNumber(health.queue.total)} موعد`}

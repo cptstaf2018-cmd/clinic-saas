@@ -1,3 +1,4 @@
+import { isFreePeriodOpen } from "@/lib/free-period";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { canUseFeature } from "@/lib/feature-gates";
@@ -132,7 +133,9 @@ export default async function ReportsPage({
       items: [
         { label: "إيراد اليوم من المرضى", value: `${formatMoney(todayRevenue)} د.ع`, hint: "ما دفعه المرضى اليوم" },
         { label: "إيراد الشهر من المرضى", value: `${formatMoney(monthRevenue)} د.ع`, hint: "من بداية الشهر" },
+        ...(isFreePeriodOpen() ? [] : [
         { label: "اشتراك المنصة", value: lastSubscription ? `${formatMoney(lastSubscription.amount)} د.ع` : "—", hint: lastSubscription ? `آخر دفعة: ${formatDate(new Date(lastSubscription.createdAt))}` : "لا توجد دفعات" },
+        ]),
       ],
       actions: [],
     },

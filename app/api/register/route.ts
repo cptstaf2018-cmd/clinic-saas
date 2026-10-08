@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { dateAfterDays, TRIAL_PERIOD_DAYS } from "@/lib/subscription-durations";
+import { trialEndsAt } from "@/lib/free-period";
 import { sendWhatsApp } from "@/lib/whatsapp";
 
 const attempts = new Map<string, { count: number; resetAt: number }>();
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
-      const trialExpiresAt = dateAfterDays(TRIAL_PERIOD_DAYS);
+      const trialExpiresAt = trialEndsAt();
       const clinic = await db.clinic.create({
         data: {
           name: clinicName,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
         if (settings?.adminWasenderKey) {
           await sendWhatsApp(
             phone.trim(),
-            `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nلديك فترة تجريبية مجانية لمدة 14 يوم.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق الهلال الذهبي`,
+            `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nالنظام مجاني لك حتى نهاية ٢٠٢٦.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق الهلال الذهبي`,
             settings.adminWasenderKey
           );
         }
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     await db.otpCode.update({ where: { id: otpRecord.id }, data: { used: true } });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const trialExpiresAt = dateAfterDays(TRIAL_PERIOD_DAYS);
+    const trialExpiresAt = trialEndsAt();
     const clinic = await db.clinic.create({
       data: {
         name: clinicName,
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       if (settings?.adminWasenderKey) {
         await sendWhatsApp(
           phone.trim(),
-          `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nلديك فترة تجريبية مجانية لمدة 14 يوم.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق الهلال الذهبي`,
+          `مرحباً بعيادة ${clinicName} 🏥\n\nتم تفعيل حسابك بنجاح.\nالنظام مجاني لك حتى نهاية ٢٠٢٦.\n\nسجّل دخولك الآن:\nwww.clinic-ai-pro.com/login\n\nفريق الهلال الذهبي`,
           settings.adminWasenderKey
         );
       }
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
   await db.otpCode.update({ where: { id: otpRecord.id }, data: { used: true } });
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const trialExpiresAt = dateAfterDays(TRIAL_PERIOD_DAYS);
+  const trialExpiresAt = trialEndsAt();
 
   const clinic = await db.clinic.create({
     data: {
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
       subject: "مرحباً بعيادتك في منصة الهلال الذهبي",
       html: `<div dir="rtl" style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:32px">
         <h2 style="color:#1e293b">مرحباً بعيادة ${clinicName} 🏥</h2>
-        <p style="color:#475569">تم تفعيل حسابك بنجاح. لديك فترة تجريبية مجانية لمدة 14 يوم.</p>
+        <p style="color:#475569">تم تفعيل حسابك بنجاح. النظام مجاني لك حتى نهاية ٢٠٢٦.</p>
         <a href="https://www.clinic-ai-pro.com/login" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin-top:16px">سجّل دخولك الآن</a>
       </div>`,
     });

@@ -1,5 +1,6 @@
 import BrandLogo from "@/components/BrandLogo";
 import Link from "next/link";
+import { FREE_PERIOD_LABEL, isFreePeriodOpen } from "@/lib/free-period";
 
 export const metadata = {
   title: "الهلال الذهبي — نظام إدارة العيادات والصيدليات والمختبرات",
@@ -23,6 +24,7 @@ const IMGS = {
 };
 
 export default function AboutPage() {
+  const freeOffer = isFreePeriodOpen();
   return (
     <main dir="rtl" style={{ fontFamily: "'Tajawal',sans-serif", background: "#FFFFFF", color: "#0A1628", overflowX: "hidden" }}>
 
@@ -153,7 +155,7 @@ export default function AboutPage() {
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 24px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <BrandLogo tone="light" size={40} stacked={false} />
           <div className="hide-mobile" style={{ display: "flex", gap: 32 }}>
-            {[["#services","الخدمات"],["#dental","طب الأسنان"],["#plans","الباقات"],["#company","الشركة"]].map(([h,l]) => (
+            {[["#services","الخدمات"],["#dental","طب الأسنان"],["#plans", freeOffer ? "العرض" : "الباقات"],["#company","الشركة"]].map(([h,l]) => (
               <a key={h} href={h} className="nav-link">{l}</a>
             ))}
           </div>
@@ -182,7 +184,7 @@ export default function AboutPage() {
           </p>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 52 }}>
             <Link href="/register" className="btn-primary" style={{ padding: "15px 36px", fontSize: 16 }}>
-              ابدأ تجربة 14 يوم مجاناً
+              ابدأ مجاناً الآن
             </Link>
             <a href="#services" className="btn-outline" style={{ padding: "14px 30px", fontSize: 15 }}>
               استعرض المميزات
@@ -231,7 +233,7 @@ export default function AboutPage() {
               { icon: "📺", title: "شاشة الانتظار",   desc: "شاشة TV عامة في غرفة الانتظار تعرض اسم المريض الحالي والقادمين تلقائياً — تُحدَّث فورياً عند الضغط على التالي.", color: "#FFF7ED", border: "#FED7AA" },
               { icon: "📋", title: "السجل الطبي",     desc: "شكاوى، تشخيص، وصفات، وملاحظات لكل مريض. تاريخ طبي كامل محفوظ وآمن قابل للبحث في أي وقت.", color: "#F0FDF4", border: "#BBF7D0" },
               { icon: "🖨️", title: "وصفة طبية رسمية",desc: "وصفة احترافية بشعار العيادة وبيانات الطبيب وشهاداته. طباعة مباشرة على A4 بضغطة واحدة.", color: "#FDF4FF", border: "#E9D5FF" },
-              { icon: "💳", title: "إدارة الاشتراكات",desc: "نظام دفع مرن عبر SuperKey أو يدوياً. السوبر أدمن يتحكم بكل العيادات من لوحة إدارة مركزية واحدة.", color: "#FFFBEB", border: "#FDE68A" },
+              ...(freeOffer ? [] : [{ icon: "💳", title: "إدارة الاشتراكات",desc: "نظام دفع مرن عبر SuperKey أو يدوياً. السوبر أدمن يتحكم بكل العيادات من لوحة إدارة مركزية واحدة.", color: "#FFFBEB", border: "#FDE68A" }]),
             ].map((s, i) => (
               <div key={i} className="card" style={{ padding: "28px 24px" }}>
                 <div className="service-icon" style={{ background: s.color, border: `1px solid ${s.border}`, marginBottom: 18 }}>{s.icon}</div>
@@ -406,7 +408,33 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ══ PLANS ══ */}
+      {/* ══ LAUNCH OFFER (shown while everything is free) ══ */}
+      {freeOffer && (
+        <section id="plans" style={{ padding: "100px 24px" }}>
+          <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+            <span className="section-tag">عرض الإطلاق</span>
+            <h2 style={{ fontSize: "clamp(30px,4vw,52px)", fontWeight: 900, color: "var(--navy)", margin: "14px 0" }}>{FREE_PERIOD_LABEL}</h2>
+            <p style={{ color: "var(--gray)", fontSize: 18, lineHeight: 1.9, maxWidth: 640, margin: "0 auto 36px" }}>
+              لعيادتك أو مختبرك أو صيدليتك: كل المزايا بلا استثناء، بلا بطاقة ائتمان، وبلا أي التزام. جرّب النظام في عملك الحقيقي أولاً.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 16, marginBottom: 40 }}>
+              {[
+                { t: "كل المزايا مفتوحة", d: "حجز واتساب، سجلات، نتائج تحاليل، مخزون وفواتير." },
+                { t: "بياناتك لك دائماً", d: "كل ما تدخله يبقى محفوظاً ومتاحاً لك." },
+                { t: "تسجيل في دقيقة", d: "بحساب Google فقط، بدون كلمة مرور جديدة." },
+              ].map((item) => (
+                <div key={item.t} className="card" style={{ padding: "24px 20px", textAlign: "right" }}>
+                  <div style={{ fontWeight: 900, fontSize: 17, color: "var(--navy)", marginBottom: 8 }}>{item.t}</div>
+                  <div style={{ color: "var(--gray)", fontSize: 14, lineHeight: 1.8, fontWeight: 500 }}>{item.d}</div>
+                </div>
+              ))}
+            </div>
+            <Link href="/register" className="btn-primary" style={{ padding: "17px 44px", fontSize: 18 }}>ابدأ مجاناً الآن</Link>
+          </div>
+        </section>
+      )}
+
+      {!freeOffer && (
       <section id="plans" style={{ padding: "100px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
@@ -465,6 +493,7 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ══ BAGHDAD FUTURE AI ══ */}
       <section id="company" style={{ padding: "100px 24px", background: "var(--light)" }}>
@@ -516,7 +545,7 @@ export default function AboutPage() {
             <span style={{ color: "var(--teal)" }}>اليوم مجاناً</span>
           </h2>
           <p style={{ color: "var(--gray)", fontSize: 18, marginBottom: 44, lineHeight: 1.75 }}>
-            14 يوم تجريبي مجاناً — بدون بطاقة ائتمان — إلغاء في أي وقت
+            {FREE_PERIOD_LABEL} — بدون بطاقة ائتمان — بلا أي التزام
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" className="btn-primary" style={{ padding: "17px 44px", fontSize: 18 }}>سجّل عيادتك الآن</Link>

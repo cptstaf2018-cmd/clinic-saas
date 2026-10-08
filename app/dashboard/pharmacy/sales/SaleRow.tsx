@@ -54,6 +54,7 @@ export default function SaleRow({ sale }: { sale: Sale }) {
         )}
         <span className={`w-24 text-left font-bold ${sale.voided ? "text-brand-muted line-through" : "text-brand-ink"}`}>{sale.total.toLocaleString("ar-IQ")}</span>
         <span className="w-28 text-left text-xs text-brand-muted">{sale.when}</span>
+        <a href={`/invoice/pharmacy/${sale.id}`} target="_blank" rel="noreferrer" className="flex min-h-9 items-center rounded-xl px-3 text-xs font-semibold text-brand-blue hover:bg-brand-soft">الفاتورة</a>
         {!sale.voided && !asking && (
           <button type="button" onClick={() => setAsking(true)} className="min-h-9 rounded-xl px-3 text-xs font-semibold text-red-700 hover:bg-red-50">إلغاء الفاتورة</button>
         )}

@@ -1,3 +1,4 @@
+import { FREE_PERIOD_LABEL } from "@/lib/free-period";
 import BrandLogo from "@/components/BrandLogo";
 import { FacilityArt } from "@/components/FacilityArt";
 
@@ -11,7 +12,7 @@ const STEPS = [
   { title: "سجّل بحساب Google", desc: "ضغطة واحدة، بدون كلمة مرور ولا رموز تحقق." },
   { title: "اختر نوع منشأتك", desc: "عيادة بكل الاختصاصات، أو مختبر، أو صيدلية." },
   { title: "جهّز بياناتك", desc: "اختصاص العيادة، أو تحاليل المختبر، أو أدوية الصيدلية." },
-  { title: "ابدأ العمل", desc: "١٤ يوماً تجربة مجانية كاملة، بدون بطاقة ائتمان." },
+  { title: "ابدأ العمل", desc: `${FREE_PERIOD_LABEL}، بكل المزايا وبدون بطاقة ائتمان.` },
 ] as const;
 
 /** The navy side of the sign-in and sign-up pages. It speaks for clinics, labs and pharmacies alike. */
@@ -75,7 +76,7 @@ export default function AuthBrandPanel({ variant }: { variant: "login" | "regist
         )}
       </div>
 
-      <p className="relative text-sm text-brand-side-muted">١٤ يوماً تجربة مجانية كاملة · بدون بطاقة ائتمان</p>
+      <p className="relative text-sm text-brand-side-muted">{FREE_PERIOD_LABEL} · بدون بطاقة ائتمان</p>
     </div>
   );
 }

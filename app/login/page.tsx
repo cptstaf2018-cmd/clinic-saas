@@ -1,5 +1,6 @@
 "use client";
 
+import { FREE_PERIOD_LABEL } from "@/lib/free-period";
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -143,7 +144,7 @@ function LoginForm() {
         {/* شريط الهوية للموبايل */}
         <div className="flex items-center justify-between bg-brand-navy px-5 py-4 lg:hidden">
           <BrandLogo tone="dark" size={34} stacked={false} />
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-brand-side-muted">١٤ يوماً مجاناً</span>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-brand-side-muted">{FREE_PERIOD_LABEL}</span>
         </div>
 
         <div className="flex flex-1 items-center justify-center px-5 py-10 lg:px-10">

@@ -120,8 +120,8 @@ export async function proxy(req: NextRequest) {
         return NextResponse.redirect(new URL("/dashboard/appointments", req.url));
       }
     }
-    // ✅ Clinic staff can use dashboard, onboarding, and clinic APIs
-    if (!pathname.startsWith("/dashboard") && !pathname.startsWith("/onboarding") && !pathname.startsWith("/api/")) {
+    // ✅ Clinic staff can use dashboard, onboarding, printable invoices, and clinic APIs
+    if (!pathname.startsWith("/dashboard") && !pathname.startsWith("/onboarding") && !pathname.startsWith("/invoice") && !pathname.startsWith("/api/")) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();

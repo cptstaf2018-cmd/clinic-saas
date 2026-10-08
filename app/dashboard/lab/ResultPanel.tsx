@@ -142,6 +142,9 @@ export default function ResultPanel({ order, busy, error, onSave, onStatus, onSe
       {error && <p role="alert" className="mx-4 mb-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
 
       <div className="space-y-2 border-t border-brand-border bg-brand-bg/60 p-4">
+        <a href={`/invoice/lab/${order.id}`} target="_blank" rel="noreferrer" className="flex min-h-10 items-center justify-center rounded-xl bg-white text-sm font-semibold text-brand-ink ring-1 ring-brand-border transition hover:bg-brand-soft">
+          طباعة الفاتورة
+        </a>
         <div className="flex items-center justify-between text-sm">
           <span className="text-brand-muted">المبلغ</span>
           <label className="flex items-center gap-2 font-bold text-brand-ink">

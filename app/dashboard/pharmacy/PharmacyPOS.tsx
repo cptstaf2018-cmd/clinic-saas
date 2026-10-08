@@ -21,7 +21,7 @@ export type PosProduct = {
 type Today = { sales: number; invoices: number; profit: number };
 type CartLine = { productId: string; qty: number };
 type Payment = "cash" | "zaincash" | "debt";
-type Receipt = { number: number; total: number; discount: number; paymentMethod: Payment; customerPhone: string | null; items: { name: string; qty: number; price: number }[] };
+type Receipt = { id: string; number: number; total: number; discount: number; paymentMethod: Payment; customerPhone: string | null; items: { name: string; qty: number; price: number }[] };
 
 const PAYMENTS: { id: Payment; label: string }[] = [
   { id: "cash", label: "نقداً" },
@@ -135,7 +135,7 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
     const sold = new Map(cart.map((line) => [line.productId, line.qty]));
     setProducts((prev) => prev.map((product) => (sold.has(product.id) ? { ...product, stock: product.stock - (sold.get(product.id) ?? 0) } : product)));
     setToday((prev) => ({ sales: prev.sales + data.total, invoices: prev.invoices + 1, profit: prev.profit + data.total - data.cost }));
-    setReceipt({ number: data.number, total: data.total, discount: data.discount, paymentMethod: data.paymentMethod, customerPhone: data.customerPhone, items: data.items });
+    setReceipt({ id: data.id, number: data.number, total: data.total, discount: data.discount, paymentMethod: data.paymentMethod, customerPhone: data.customerPhone, items: data.items });
     setCart([]);
     setDiscount("");
     setCustomerName("");
@@ -346,7 +346,7 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
             </div>
             <div className="mt-3 flex justify-between text-lg font-bold"><span>الإجمالي</span><span>{money(receipt.total)} د.ع</span></div>
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => window.print()} className="min-h-11 rounded-xl bg-brand-line text-sm font-semibold text-brand-ink">طباعة</button>
+              <a href={`/invoice/pharmacy/${receipt.id}?print=1`} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center rounded-xl bg-brand-line text-sm font-semibold text-brand-ink">طباعة الفاتورة</a>
               {receipt.customerPhone ? (
                 <a href={waLink(receipt.customerPhone, receiptText)} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center rounded-xl bg-[#075E54] text-sm font-semibold text-white">واتساب</a>
               ) : (

@@ -98,6 +98,17 @@ Rejected → no activation, clinic notified
 
 ---
 
+## Launch Offer (free period) — temporary
+
+Until **2026-12-31 23:59 Baghdad time** every account is free with every feature (`lib/free-period.ts`).
+- Customers see no prices or payment methods: the Subscription section shows a launch message
+  (`app/dashboard/subscription/LaunchOffer.tsx`), `/api/payments` returns 403, public pages show the offer.
+- New trials end at `FREE_PERIOD_END` (`trialEndsAt()`); paid (active) subscriptions are never touched.
+- **It switches itself off after the end date**: the real subscription page (`page.tsx`), expiry warnings, the
+  pricing section of `/about` and payments all return without code changes.
+- Before the end date: decide the lab and pharmacy plans, update `FREE_PERIOD_LABEL`, and redeploy
+  (static pages such as /login and /register bake the date in at build time).
+
 ## Subscription Rules
 
 - New clinic → 14 days free trial → `status: trial`, `expiresAt: now + 14 days`

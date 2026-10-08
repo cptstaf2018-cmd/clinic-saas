@@ -1,3 +1,4 @@
+import { FREE_PERIOD_LABEL } from "@/lib/free-period";
 import Link from "next/link";
 import AuthBrandPanel from "@/components/AuthBrandPanel";
 import BrandLogo from "@/components/BrandLogo";
@@ -5,7 +6,7 @@ import GoogleButton from "../login/GoogleButton";
 
 const BENEFITS = [
   "بدون كلمة مرور جديدة تحفظها",
-  "تجربة مجانية كاملة لمدة ١٤ يوماً",
+  `${FREE_PERIOD_LABEL}، بكل المزايا`,
   "تختار نوع منشأتك بعد الدخول مباشرة",
 ] as const;
 
@@ -18,12 +19,12 @@ export default function RegisterPage() {
       <main className="flex flex-1 flex-col">
         <div className="flex items-center justify-between bg-brand-navy px-5 py-4 lg:hidden">
           <BrandLogo tone="dark" size={34} stacked={false} />
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-brand-side-muted">١٤ يوماً مجاناً</span>
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-brand-side-muted">{FREE_PERIOD_LABEL}</span>
         </div>
 
         <div className="flex flex-1 items-center justify-center px-5 py-10 lg:px-10">
           <div className="w-full max-w-[440px]">
-            <h2 className="text-3xl font-bold text-brand-ink">ابدأ تجربتك المجانية</h2>
+            <h2 className="text-3xl font-bold text-brand-ink">ابدأ مجاناً</h2>
             <p className="mt-2 text-sm text-brand-muted">لعيادتك أو مختبرك أو صيدليتك. دقيقتان وتبدأ العمل.</p>
 
             <div className="mt-8">
