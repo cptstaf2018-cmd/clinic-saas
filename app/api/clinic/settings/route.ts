@@ -29,6 +29,7 @@ export async function GET() {
       doctorUniversity: true,
       doctorBoard: true,
       specialty: true,
+      facilityType: true,
       settings: true,
     },
   });

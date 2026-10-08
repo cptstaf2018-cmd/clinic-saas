@@ -23,10 +23,14 @@ interface Settings {
   doctorDegree: string | null;
   doctorUniversity: string | null;
   doctorBoard: string | null;
+  facilityType?: string;
 }
 
 type TeamUser = { id: string; email: string | null; active: boolean; createdAt: string };
 type Tab = "profile" | "whatsapp" | "reminders" | "team" | "security";
+
+const FACILITY_NOUN: Record<string, string> = { clinic: "العيادة", lab: "المختبر", pharmacy: "الصيدلية" };
+const CLINIC_ONLY_TABS = new Set<Tab>(["reminders", "team"]);
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "profile",   label: "ملف العيادة",     icon: "ع" },
@@ -262,6 +266,10 @@ export default function SettingsPage() {
   if (!settings) return <div className="p-8 text-center text-sm font-bold text-red-500">خطأ في تحميل الإعدادات</div>;
 
   const webhookUrl = `${officialAppUrl}/api/whatsapp/${settings.id}`;
+  const facility = settings.facilityType ?? "clinic";
+  const isClinic = facility === "clinic";
+  const noun = FACILITY_NOUN[facility] ?? "العيادة";
+  const tabs = TABS.filter((item) => isClinic || !CLINIC_ONLY_TABS.has(item.id)).map((item) => (item.id === "profile" ? { ...item, label: `ملف ${noun}`, icon: noun.charAt(2) } : item));
 
   return (
     <div className="p-4 md:p-8" dir="rtl">
@@ -270,13 +278,13 @@ export default function SettingsPage() {
         <p className="text-sm font-black text-brand-blue">إدارة النظام</p>
         <h1 className="mt-2 text-3xl font-black md:text-4xl">الإعدادات</h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-          تحكم بملف العيادة، واتساب، التذكيرات، والأمان من واجهة واحدة مرتبة.
+          {isClinic ? "تحكم بملف العيادة، واتساب، التذكيرات، والأمان من واجهة واحدة مرتبة." : `تحكم بملف ${noun}، واتساب، والأمان من واجهة واحدة مرتبة.`}
         </p>
       </section>
 
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto rounded-[26px] bg-white p-2 shadow-[0_14px_38px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => { setTab(t.id); setSaved(""); setError(""); }}
@@ -297,7 +305,7 @@ export default function SettingsPage() {
       {/* ── PROFILE TAB ── */}
       {tab === "profile" && (
         <>
-          <Section title="شعار العيادة" description="يظهر في واجهة النظام ورسائل الواتساب">
+          <Section title={`شعار ${noun}`} description={isClinic ? "يظهر في واجهة النظام ورسائل الواتساب" : "يظهر في واجهة النظام وفي المطبوعات"}>
             <div className="flex items-center gap-5">
               <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden bg-gray-50 shrink-0">
                 {logoPreview ? (
@@ -321,15 +329,15 @@ export default function SettingsPage() {
             </div>
           </Section>
 
-          <Section title="معلومات العيادة">
-            <Field label="اسم العيادة">
+          <Section title={`معلومات ${noun}`}>
+            <Field label={`اسم ${noun}`}>
               <input
                 className={inputCls}
                 value={settings.name}
                 onChange={(e) => setSettings({ ...settings, name: e.target.value })}
               />
             </Field>
-            <Field label="رقم واتساب العيادة">
+            <Field label={`رقم واتساب ${noun}`}>
               <div className="flex items-center gap-2">
                 <input
                   className={`${inputCls} bg-gray-50 text-gray-500 cursor-not-allowed`}
@@ -349,6 +357,7 @@ export default function SettingsPage() {
             </button>
           </Section>
 
+          {isClinic && (
           <Section title="بيانات الطبيب" description="تظهر تلقائياً في الوصفة الطبية عند الطباعة">
             <Field label="الدرجة العلمية">
               <input
@@ -382,9 +391,10 @@ export default function SettingsPage() {
               {saving ? "جاري الحفظ..." : "حفظ بيانات الطبيب"}
             </button>
           </Section>
+          )}
 
-          <Section title="موقع العيادة" description="يستخدمه البوت فقط عند تفعيل خيار عرض الموقع للمرضى">
-            <Field label="عنوان العيادة">
+          <Section title={`موقع ${noun}`} description={isClinic ? "يستخدمه البوت فقط عند تفعيل خيار عرض الموقع للمرضى" : "يظهر في المطبوعات والنتائج"}>
+            <Field label={`عنوان ${noun}`}>
               <input
                 className={inputCls}
                 value={settings.address ?? ""}
@@ -409,10 +419,11 @@ export default function SettingsPage() {
               disabled={saving}
               className="w-full bg-brand-gold hover:bg-brand-gold-hover text-brand-gold-ink font-semibold py-2.5 rounded-xl text-sm disabled:opacity-50 transition-colors"
             >
-              {saving ? "جاري الحفظ..." : "حفظ موقع العيادة"}
+              {saving ? "جاري الحفظ..." : `حفظ موقع ${noun}`}
             </button>
           </Section>
 
+          {isClinic && (
           <Section title="شاشة الانتظار" description="افتح هذا الرابط على تلفزيون غرفة الانتظار">
             <div className="bg-gray-900 rounded-xl p-3">
               <code className="text-xs text-brand-muted break-all font-mono block mb-2">
@@ -436,7 +447,9 @@ export default function SettingsPage() {
               </div>
             </div>
           </Section>
+          )}
 
+          {isClinic && (
           <Section title="صور الدعاية في شاشة الانتظار" description="تظهر عند السكون — حتى 5 صور تتبدل تلقائياً">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 mb-4">
               {slides.map((src, i) => (
@@ -465,12 +478,14 @@ export default function SettingsPage() {
             <p className="text-xs font-bold text-slate-400">{slides.length}/5 صور — JPG, PNG, WEBP — حد أقصى 1MB للصورة</p>
             <input ref={slideRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleSlideUpload} />
           </Section>
+          )}
         </>
       )}
 
       {/* ── WHATSAPP TAB ── */}
       {tab === "whatsapp" && (
         <>
+          {isClinic && (
           <Section title="حالة البوت">
             <div className="flex items-center justify-between">
               <div>
@@ -492,7 +507,9 @@ export default function SettingsPage() {
               </button>
             </div>
           </Section>
+          )}
 
+          {isClinic && (
           <Section title="رسالة الترحيب" description="تُرسل لكل مريض جديد يتواصل مع البوت">
             <Field label="نص الرسالة">
               <textarea
@@ -511,7 +528,9 @@ export default function SettingsPage() {
               {saving ? "جاري الحفظ..." : "حفظ رسالة الترحيب"}
             </button>
           </Section>
+          )}
 
+          {isClinic && (
           <Section title="حدود البوت وردوده" description="اضبط ما يقوله البوت عند طلب الموقع، الدوام، الأسئلة الطبية، أو المواضيع غير المتعلقة بالعيادة">
             <div className="mb-4 grid gap-3 sm:grid-cols-2">
               <label className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -577,8 +596,10 @@ export default function SettingsPage() {
               {saving ? "جاري الحفظ..." : "حفظ حدود البوت"}
             </button>
           </Section>
+          )}
 
-          <Section title="إعدادات WasenderAPI" description="اربط رقم الواتساب الخاص بعيادتك عبر WasenderAPI">
+          <Section title="إعدادات WasenderAPI" description={isClinic ? "اربط رقم الواتساب الخاص بعيادتك عبر WasenderAPI" : `اربط رقم الواتساب الخاص ب${noun} لإرسال الرسائل${facility === "lab" ? " ونتائج التحاليل" : ""}`}>
+            {isClinic && (
             <div className="space-y-2 mb-4">
               <div className="bg-gray-900 rounded-xl p-3">
                 <p className="text-xs text-gray-400 mb-1">رابط الـ Webhook — أدخله في لوحة WasenderAPI:</p>
@@ -596,6 +617,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+            )}
             <div className="bg-brand-soft border border-brand-border rounded-xl p-3 mb-4 text-xs text-brand-blue">
               للحصول على API Key: سجّل في{" "}
               <a href="https://wasenderapi.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
@@ -623,7 +645,7 @@ export default function SettingsPage() {
                 : "bg-gray-50 border border-gray-200 text-gray-500"
             }`}>
               <span className={`h-2.5 w-2.5 rounded-full ${settings.whatsappAccessToken ? "bg-brand-gold" : "bg-slate-300"}`} />
-              <span>{settings.whatsappAccessToken ? "API Key محفوظ — البوت جاهز للإرسال" : "لم يتم إدخال API Key بعد"}</span>
+              <span>{settings.whatsappAccessToken ? (isClinic ? "API Key محفوظ — البوت جاهز للإرسال" : "API Key محفوظ — واتساب جاهز للإرسال") : "لم يتم إدخال API Key بعد"}</span>
             </div>
             <button
               onClick={() => saveSettings({ whatsappAccessToken: settings.whatsappAccessToken })}
@@ -729,7 +751,7 @@ export default function SettingsPage() {
       {/* ── SECURITY TAB ── */}
       {tab === "security" && (
         <>
-        <Section title="📦 النسخ الاحتياطي التلقائي" description="أدخل إيميلك وسنرسل لك نسخة احتياطية كاملة ببيانات العيادة كل أول الشهر تلقائياً.">
+        <Section title="📦 النسخ الاحتياطي التلقائي" description={`أدخل إيميلك وسنرسل لك نسخة احتياطية كاملة ببيانات ${noun} كل أول الشهر تلقائياً.`}>
           <Field label="البريد الإلكتروني للنسخ الاحتياطي">
             <input
               className={inputCls}

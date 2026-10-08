@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { LabOrderView, LabTestView } from "@/lib/lab/types";
+
+type KnownPatient = { patientName: string; patientPhone: string | null; sex: string; age: number | null; doctorName: string | null };
+const SUGGEST_DELAY_MS = 250;
 
 const INPUT = "h-11 w-full rounded-xl border border-brand-border bg-white px-3 text-sm text-brand-ink outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-soft";
 
@@ -18,6 +21,18 @@ export default function NewOrderModal({ tests, onClose, onCreated }: { tests: La
   const [category, setCategory] = useState("الكل");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [known, setKnown] = useState<KnownPatient[]>([]);
+
+  // Suggest earlier patients while the name or phone is typed, so repeat visitors are one tap.
+  useEffect(() => {
+    const q = (name.trim().length >= phone.trim().length ? name : phone).trim();
+    if (q.length < 2) return;
+    const timer = setTimeout(async () => {
+      const res = await fetch(`/api/lab/patients?q=${encodeURIComponent(q)}`).catch(() => null);
+      setKnown(res?.ok ? await res.json() : []);
+    }, SUGGEST_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [name, phone]);
 
   const categories = useMemo(() => ["الكل", ...new Set(tests.map((test) => test.category))], [tests]);
   const visible = useMemo(() => {
@@ -62,7 +77,28 @@ export default function NewOrderModal({ tests, onClose, onCreated }: { tests: La
 
         <div className="grid flex-1 gap-5 overflow-y-auto p-6 md:grid-cols-2">
           <div className="space-y-3">
-            <label className="block"><span className="mb-1 block text-xs font-semibold text-brand-muted">اسم المراجع *</span><input className={INPUT} value={name} onChange={(e) => setName(e.target.value)} autoFocus /></label>
+            <div className="relative">
+              <label className="block"><span className="mb-1 block text-xs font-semibold text-brand-muted">اسم المراجع *</span><input className={INPUT} value={name} onChange={(e) => { setName(e.target.value); if (e.target.value.trim().length < 2) setKnown([]); }} autoFocus autoComplete="off" /></label>
+              {known.length > 0 && name.trim().length >= 2 && (
+                <ul role="listbox" aria-label="مراجعون سابقون" className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-2xl border border-brand-border bg-white p-1 shadow-[0_18px_40px_-20px_rgba(14,36,64,0.45)]">
+                  {known.map((patient) => (
+                    <li key={`${patient.patientName}-${patient.patientPhone}`} role="option" aria-selected={false}>
+                      <button type="button" className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right hover:bg-brand-bg" onClick={() => {
+                        setName(patient.patientName);
+                        setPhone(patient.patientPhone ?? "");
+                        setSex(patient.sex === "f" ? "f" : "m");
+                        setAge(patient.age === null ? "" : String(patient.age));
+                        if (patient.doctorName) setDoctor(patient.doctorName);
+                        setKnown([]);
+                      }}>
+                        <span className="font-semibold text-brand-ink">{patient.patientName}</span>
+                        <span className="text-xs text-brand-muted" dir="ltr">{patient.patientPhone ?? "بدون رقم"}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <label className="block"><span className="mb-1 block text-xs font-semibold text-brand-muted">رقم واتساب لإرسال النتيجة</span><input className={INPUT} value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" inputMode="tel" placeholder="07701234567" /></label>
             <div className="grid grid-cols-2 gap-3">
               <div>

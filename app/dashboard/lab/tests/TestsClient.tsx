@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { TEST_CATEGORIES } from "@/lib/lab/order";
+import { STARTER_TESTS } from "@/lib/lab/starter-tests";
 import type { LabTestView } from "@/lib/lab/types";
 
 type Draft = { name: string; nameEn: string; category: string; unit: string; price: string; refLowM: string; refHighM: string; refLowF: string; refHighF: string; critLow: string; critHigh: string };
@@ -17,6 +18,16 @@ const REF_FIELDS = [
   ["critHigh", "حرج: أكثر من أو يساوي"],
 ] as const;
 
+const SUGGESTION_LIMIT = 6;
+
+function numStr(value: number | null) {
+  return value === null ? "" : String(value);
+}
+
+function suggestionDraft(test: (typeof STARTER_TESTS)[number], price: string): Draft {
+  return { name: test.name, nameEn: test.nameEn ?? "", category: test.category, unit: test.unit ?? "", price, refLowM: numStr(test.refLowM), refHighM: numStr(test.refHighM), refLowF: numStr(test.refLowF), refHighF: numStr(test.refHighF), critLow: numStr(test.critLow), critHigh: numStr(test.critHigh) };
+}
+
 function toDraft(test: LabTestView): Draft {
   const str = (value: number | null) => (value === null ? "" : String(value));
   return { name: test.name, nameEn: test.nameEn ?? "", category: test.category, unit: test.unit ?? "", price: String(test.price), refLowM: str(test.refLowM), refHighM: str(test.refHighM), refLowF: str(test.refLowF), refHighF: str(test.refHighF), critLow: str(test.critLow), critHigh: str(test.critHigh) };
@@ -30,6 +41,7 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
   const [error, setError] = useState("");
   const [importing, setImporting] = useState(false);
   const [notice, setNotice] = useState("");
+  const [suggestionPicked, setSuggestionPicked] = useState(false);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,6 +89,15 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
     await reload();
   }
 
+  // Common tests the lab does not have yet, matched against what is being typed in the name field.
+  const suggestions = useMemo(() => {
+    if (!editing || editing.id || suggestionPicked) return [];
+    const q = editing.draft.name.trim().toLowerCase();
+    if (q.length < 1) return [];
+    const have = new Set(tests.map((test) => test.name));
+    return STARTER_TESTS.filter((test) => !have.has(test.name) && (test.name.toLowerCase().includes(q) || test.nameEn?.toLowerCase().includes(q))).slice(0, SUGGESTION_LIMIT);
+  }, [editing, tests, suggestionPicked]);
+
   const set = (key: keyof Draft, value: string) => setEditing((prev) => (prev ? { ...prev, draft: { ...prev.draft, [key]: value } } : prev));
 
   return (
@@ -89,7 +110,7 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={importStarter} disabled={importing} className="min-h-12 rounded-2xl bg-white px-5 text-sm font-semibold text-brand-ink ring-1 ring-brand-border disabled:opacity-50">{importing ? "جاري الإضافة..." : "إضافة التحاليل الشائعة"}</button>
-            <button type="button" onClick={() => { setError(""); setEditing({ id: null, draft: EMPTY }); }} className="min-h-12 rounded-2xl bg-brand-gold px-5 font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover">+ تحليل جديد</button>
+            <button type="button" onClick={() => { setError(""); setSuggestionPicked(false); setEditing({ id: null, draft: EMPTY }); }} className="min-h-12 rounded-2xl bg-brand-gold px-5 font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover">+ تحليل جديد</button>
           </div>
         </header>
 
@@ -135,7 +156,22 @@ export default function TestsClient({ initialTests }: { initialTests: LabTestVie
               <button type="button" onClick={() => setEditing(null)} aria-label="إغلاق" className="h-9 w-9 rounded-xl bg-brand-line text-lg">×</button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block sm:col-span-2"><span className="mb-1 block text-xs font-semibold text-brand-muted">اسم التحليل *</span><input className={INPUT} value={editing.draft.name} onChange={(e) => set("name", e.target.value)} autoFocus /></label>
+              <div className="relative sm:col-span-2">
+                <label className="block"><span className="mb-1 block text-xs font-semibold text-brand-muted">اسم التحليل *</span><input className={INPUT} value={editing.draft.name} onChange={(e) => { setSuggestionPicked(false); set("name", e.target.value); }} autoFocus autoComplete="off" placeholder="ابدأ بالكتابة: هيموغلوبين، سكر، TSH..." /></label>
+                {suggestions.length > 0 && (
+                  <ul role="listbox" aria-label="اقتراحات التحاليل" className="absolute inset-x-0 top-full z-10 mt-1 max-h-60 overflow-y-auto rounded-2xl border border-brand-border bg-white p-1 shadow-[0_18px_40px_-20px_rgba(14,36,64,0.45)]">
+                    {suggestions.map((test) => (
+                      <li key={test.name} role="option" aria-selected={false}>
+                        <button type="button" onClick={() => { setSuggestionPicked(true); setEditing((prev) => (prev ? { ...prev, draft: suggestionDraft(test, prev.draft.price) } : prev)); }} className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-right hover:bg-brand-bg">
+                          <span className="font-semibold text-brand-ink">{test.name}</span>
+                          <span className="text-xs text-brand-muted" dir="ltr">{test.nameEn} · {test.unit}</span>
+                        </button>
+                      </li>
+                    ))}
+                    <li className="px-3 py-1.5 text-[11px] text-brand-muted">اختر اسماً لتُملأ الوحدة والقيم المرجعية تلقائياً، ثم عدّلها إن لزم.</li>
+                  </ul>
+                )}
+              </div>
               <label className="block"><span className="mb-1 block text-xs font-semibold text-brand-muted">الاسم بالإنجليزية</span><input className={INPUT} dir="ltr" value={editing.draft.nameEn} onChange={(e) => set("nameEn", e.target.value)} /></label>
               <label className="block"><span className="mb-1 block text-xs font-semibold text-brand-muted">الوحدة</span><input className={INPUT} dir="ltr" value={editing.draft.unit} onChange={(e) => set("unit", e.target.value)} placeholder="mg/dL" /></label>
               <label className="block"><span className="mb-1 block text-xs font-semibold text-brand-muted">التصنيف</span><select className={INPUT} value={editing.draft.category} onChange={(e) => set("category", e.target.value)}>{TEST_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></label>

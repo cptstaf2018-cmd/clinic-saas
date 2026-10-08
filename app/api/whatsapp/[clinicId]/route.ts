@@ -176,6 +176,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ cli
 
   await db.incomingMessage.create({ data: { clinicId, phone, body: msgBody } });
 
+  // The appointment-booking bot is for clinics; labs and pharmacies only use WhatsApp for sending.
+  if (clinic.facilityType !== "clinic") return NextResponse.json({ ok:true });
   if (!clinic.botEnabled) return NextResponse.json({ ok:true });
 
   const sub = clinic.subscription;

@@ -36,6 +36,7 @@ type Props = {
 export default function ResultPanel({ order, busy, error, onSave, onStatus, onSend, onPaid, onClose }: Props) {
   const editable = order.status === "in_progress" || order.status === "review";
   // The parent keys this panel by order id, so the draft is re-initialised per order.
+  const [autoSend, setAutoSend] = useState(true);
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(order.items.map((item) => [item.id, item.result === null ? "" : String(item.result)]))
   );
@@ -46,10 +47,13 @@ export default function ResultPanel({ order, busy, error, onSave, onStatus, onSe
   const allFilled = live.length > 0 && live.every((row) => row.value !== null);
   const filled = live.filter((row) => row.value !== null).length;
 
+  // Critical values are never sent automatically: the doctor must hear about them first.
+  const willAutoSend = autoSend && !!order.patientPhone && critical.length === 0;
+
   async function finish(target: "review" | "done") {
     if (!(await onSave(values))) return;
     if (order.status === "in_progress" && !(await onStatus("review"))) return;
-    if (target === "done") await onStatus("done");
+    if (target === "done" && (await onStatus("done")) && willAutoSend) await onSend();
   }
 
   return (
@@ -157,8 +161,19 @@ export default function ResultPanel({ order, busy, error, onSave, onStatus, onSe
         {editable && (
           <>
             <p className="text-center text-xs text-brand-muted">{filled} من {live.length} نتيجة مُدخلة</p>
+            {order.patientPhone ? (
+              <label className="flex items-start gap-2.5 rounded-xl bg-white px-3 py-2.5 text-xs leading-6 text-brand-ink ring-1 ring-brand-border">
+                <input type="checkbox" checked={autoSend && critical.length === 0} disabled={critical.length > 0} onChange={(e) => setAutoSend(e.target.checked)} className="mt-1 h-4 w-4 accent-[#0E2440]" />
+                <span>
+                  أرسل النتيجة للمراجع على واتساب فور الاعتماد
+                  {critical.length > 0 && <b className="block text-red-700">توجد قيمة حرجة: أبلغ الطبيب ثم أرسل يدوياً بعد الإصدار.</b>}
+                </span>
+              </label>
+            ) : (
+              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">لا يوجد رقم واتساب لهذا المراجع، لن تُرسل النتيجة تلقائياً.</p>
+            )}
             <button type="button" disabled={busy || !allFilled || hasBad} onClick={() => finish("done")} className="min-h-12 w-full rounded-2xl bg-brand-gold font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover disabled:cursor-not-allowed disabled:opacity-45">
-              {busy ? "جاري الحفظ..." : order.status === "review" ? "اعتماد وإصدار النتيجة" : "اعتماد وإصدار مباشرة"}
+              {busy ? "جاري الحفظ..." : `${order.status === "review" ? "اعتماد وإصدار النتيجة" : "اعتماد وإصدار مباشرة"}${willAutoSend ? " وإرسالها" : ""}`}
             </button>
             <div className="flex gap-2">
               <button type="button" disabled={busy || hasBad} onClick={() => onSave(values)} className="min-h-11 flex-1 rounded-2xl bg-white text-sm font-semibold text-brand-ink ring-1 ring-brand-border disabled:opacity-50">حفظ مسودة</button>
