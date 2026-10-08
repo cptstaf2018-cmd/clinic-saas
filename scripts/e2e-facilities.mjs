@@ -18,6 +18,8 @@ const BASE = process.argv[2] ?? "http://localhost:3101";
 const FORWARD_HTTPS = process.env.E2E_HTTPS === "1";
 const PASSWORD = "Zz-Test-98765";
 const PREFIX = "ZZTEST";
+// Login is by e-mail only (no phone login), so every throw-away account gets a backup e-mail.
+const emailOf = (phone) => `zz${phone}@zztest.test`;
 const pool = new pg.Pool({ connectionString: process.env.DIRECT_URL, max: 3 });
 
 let passed = 0;
@@ -58,8 +60,8 @@ async function makeAccount(label, facilityType, phone, { onboarding = false } = 
   const name = `${PREFIX} ${label}`;
   const specialty = facilityType === "clinic" ? "general_medicine" : null;
   await pool.query(
-    `INSERT INTO "Clinic" (id, name, "whatsappNumber", "facilityType", specialty, "specialtyOnboardingRequired", address) VALUES ($1,$2,$3,$4,$5,$6,'عنوان تجريبي')`,
-    [clinicId, name, phone, facilityType, onboarding ? null : specialty, onboarding]
+    `INSERT INTO "Clinic" (id, name, "whatsappNumber", "facilityType", specialty, "specialtyOnboardingRequired", address, "backupEmail") VALUES ($1,$2,$3,$4,$5,$6,'عنوان تجريبي',$7)`,
+    [clinicId, name, phone, facilityType, onboarding ? null : specialty, onboarding, emailOf(phone)]
   );
   await pool.query(`INSERT INTO "User" (id, "clinicId", "passwordHash", role) VALUES ($1,$2,$3,'doctor')`, [id(`u${label}`), clinicId, hash]);
   await pool.query(
@@ -100,7 +102,7 @@ function client() {
     del: (p) => json(p, "DELETE"),
     async login(phone) {
       const csrf = await (await request("/api/auth/csrf")).json();
-      const body = new URLSearchParams({ csrfToken: csrf.csrfToken, identifier: phone, password: PASSWORD, redirect: "false", json: "true" });
+      const body = new URLSearchParams({ csrfToken: csrf.csrfToken, identifier: emailOf(phone), password: PASSWORD, redirect: "false", json: "true" });
       await request("/api/auth/callback/credentials", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body });
       const session = await (await request("/api/auth/session")).json();
       return session?.user ?? null;
@@ -177,7 +179,7 @@ async function main() {
   check("wrong password is refused", await (async () => {
     const x = client();
     const csrf = await (await x.request("/api/auth/csrf")).json();
-    await x.request("/api/auth/callback/credentials", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ csrfToken: csrf.csrfToken, identifier: A.phone, password: "wrong-password", redirect: "false", json: "true" }) });
+    await x.request("/api/auth/callback/credentials", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ csrfToken: csrf.csrfToken, identifier: emailOf(A.phone), password: "wrong-password", redirect: "false", json: "true" }) });
     return !(await (await x.request("/api/auth/session")).json())?.user;
   })());
 
