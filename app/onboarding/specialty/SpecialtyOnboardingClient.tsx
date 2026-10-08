@@ -30,8 +30,14 @@ function countFor(filter: Filter): number {
   return filter === "الكل" ? MEDICAL_SPECIALTIES.length : MEDICAL_SPECIALTIES.filter((s) => s.category === filter).length;
 }
 
+/** Sign-up gives every account a placeholder name ("منشأة Ahmed"); that is not a real facility name. */
+const PLACEHOLDER_NAME = /^(منشأة|منشأتي)/;
+
 export default function SpecialtyOnboardingClient({ initialName }: { initialName: string }) {
-  const [facilityName, setFacilityName] = useState(initialName);
+  const isPlaceholder = PLACEHOLDER_NAME.test(initialName.trim());
+  // The owner's own name from the placeholder, offered as a suggestion after picking a kind.
+  const ownerName = isPlaceholder ? initialName.replace(PLACEHOLDER_NAME, "").trim() : "";
+  const [facilityName, setFacilityName] = useState(isPlaceholder ? "" : initialName);
   const [step, setStep] = useState<"type" | "specialty">("type");
   const [savingType, setSavingType] = useState<FacilityTypeKey | null>(null);
   const [selected, setSelected] = useState<MedicalSpecialtyKey>(MEDICAL_SPECIALTIES[0].key);
@@ -123,6 +129,19 @@ export default function SpecialtyOnboardingClient({ initialName }: { initialName
               placeholder="مثال: مختبر النور، صيدلية الشفاء، عيادة د. أحمد"
               className="min-h-12 w-full rounded-2xl border border-brand-border bg-white px-4 text-[15px] text-brand-ink outline-none transition focus:border-brand-blue focus:ring-4 focus:ring-brand-soft"
             />
+            <span className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-brand-muted">اختر ثم عدّل الاسم:</span>
+              {FACILITY_TYPES.map((kind) => (
+                <button
+                  key={kind.key}
+                  type="button"
+                  onClick={() => setFacilityName(`${kind.name} ${ownerName}`.trimEnd() + " ")}
+                  className="min-h-9 rounded-full border border-brand-border bg-white px-4 text-sm font-semibold text-brand-ink transition hover:border-brand-blue hover:text-brand-blue"
+                >
+                  {kind.name}
+                </button>
+              ))}
+            </span>
             <span className="mt-1 block text-xs text-brand-muted">يظهر في واجهة النظام وفي رسائل المراجعين، ويمكنك تغييره لاحقاً من الإعدادات.</span>
           </label>
           <div className="grid gap-4 md:grid-cols-3">
