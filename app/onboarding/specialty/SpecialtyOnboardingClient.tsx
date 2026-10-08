@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { FlaskConical, Pill, Stethoscope } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
+import { FacilityArt } from "@/components/FacilityArt";
 import { FACILITY_TYPES } from "@/lib/facility-types";
 import type { FacilityTypeKey } from "@/lib/facility-types";
 import { MEDICAL_SPECIALTIES } from "@/lib/medical-specialties";
@@ -24,8 +25,6 @@ const specialtyIconSrc: Record<MedicalSpecialtyKey, string> = {
   internal_medicine: "/specialty-icons-v2/internal-medicine.png",
   surgery: "/specialty-icons-v2/surgery.png",
 };
-
-const facilityIcons = { clinic: Stethoscope, lab: FlaskConical, pharmacy: Pill } as const;
 
 function countFor(filter: Filter): number {
   return filter === "الكل" ? MEDICAL_SPECIALTIES.length : MEDICAL_SPECIALTIES.filter((s) => s.category === filter).length;
@@ -100,6 +99,7 @@ export default function SpecialtyOnboardingClient() {
         <header className="relative overflow-hidden bg-brand-navy px-5 py-10 text-white md:px-10 md:py-14">
           <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-80 w-80 rounded-full border-[48px] border-white/[0.05]" />
           <div className="relative mx-auto max-w-5xl">
+            <BrandLogo tone="dark" size={76} className="mb-6" />
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-gold/15 px-3.5 py-1.5 text-xs font-semibold text-brand-gold">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
               الخطوة الأخيرة قبل البدء
@@ -114,7 +114,6 @@ export default function SpecialtyOnboardingClient() {
         <main className="mx-auto max-w-5xl px-5 py-8 md:px-10">
           <div className="grid gap-4 md:grid-cols-3">
             {FACILITY_TYPES.map((type) => {
-              const Icon = facilityIcons[type.key];
               const busy = savingType === type.key;
               return (
                 <button
@@ -122,12 +121,16 @@ export default function SpecialtyOnboardingClient() {
                   type="button"
                   disabled={savingType !== null}
                   onClick={() => chooseFacility(type.key)}
-                  className="group flex flex-col rounded-3xl bg-white p-6 text-right ring-2 ring-transparent transition hover:-translate-y-0.5 hover:ring-brand-gold disabled:opacity-60"
+                  className="group flex flex-col overflow-hidden rounded-3xl bg-white text-right ring-2 ring-transparent transition hover:-translate-y-0.5 hover:ring-brand-gold disabled:opacity-60"
                 >
-                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-gold">
-                    <Icon className="h-7 w-7" aria-hidden />
+                  <span className="relative block h-44 w-full overflow-hidden bg-gradient-to-b from-[#EAF1FD] to-[#F7F1E1]">
+                    <span aria-hidden className="absolute -bottom-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-brand-gold/25 blur-2xl" />
+                    <span className="relative mx-auto block h-full w-56 transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:scale-105 motion-reduce:transition-none">
+                      <FacilityArt type={type.key} />
+                    </span>
                   </span>
-                  <h2 className="mt-5 text-2xl font-bold text-brand-ink">{type.name}</h2>
+                  <span className="flex flex-1 flex-col p-6">
+                  <h2 className="text-2xl font-bold text-brand-ink">{type.name}</h2>
                   <p className="mt-1.5 text-sm leading-6 text-brand-muted">{type.description}</p>
                   <ul className="mt-5 space-y-2 text-sm font-medium text-brand-ink">
                     {type.highlights.map((item) => (
@@ -139,6 +142,7 @@ export default function SpecialtyOnboardingClient() {
                   </ul>
                   <span className="mt-6 text-sm font-bold text-brand-blue">
                     {busy ? "جاري الحفظ..." : type.key === "clinic" ? "اختيار الاختصاص ←" : "متابعة ←"}
+                  </span>
                   </span>
                 </button>
               );
@@ -156,6 +160,7 @@ export default function SpecialtyOnboardingClient() {
         <div aria-hidden className="pointer-events-none absolute -left-20 -top-24 h-80 w-80 rounded-full border-[48px] border-white/[0.05]" />
         <div aria-hidden className="pointer-events-none absolute -bottom-28 right-10 h-72 w-72 rounded-full border-[48px] border-brand-gold/[0.07]" />
         <div className="relative mx-auto max-w-6xl">
+          <BrandLogo tone="dark" size={56} className="mb-5" />
           <button
             type="button"
             onClick={() => setStep("type")}
