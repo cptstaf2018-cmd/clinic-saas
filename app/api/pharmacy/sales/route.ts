@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requirePharmacy } from "@/lib/pharmacy/access";
 import { computeSale, validatePayment, type SaleLineInput } from "@/lib/pharmacy/sale";
 import { getPharmacyToday } from "@/lib/pharmacy/queries";
+import { lockNumbering, NUMBERED_TRANSACTION } from "@/lib/number-lock";
 
 const NUMBER_RETRIES = 3;
 
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
           if (updated.count === 0) throw new SaleError(`نفدت كمية ${item.name} أثناء البيع، حدّث الصفحة`);
         }
 
+        await lockNumbering(tx, "pharmacy-sale", clinicId);
         const last = await tx.pharmacySale.aggregate({ where: { clinicId }, _max: { number: true } });
         return tx.pharmacySale.create({
           data: {
@@ -77,7 +79,7 @@ export async function POST(req: Request) {
           },
           include: { items: true },
         });
-      });
+      }, NUMBERED_TRANSACTION);
       return NextResponse.json(sale, { status: 201 });
     } catch (error: unknown) {
       if (error instanceof SaleError) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -5,6 +5,7 @@ import { isUniqueViolation, requireLab } from "@/lib/lab/access";
 import { parseOrderInput } from "@/lib/lab/order";
 import { orderTotal } from "@/lib/lab/result";
 import { listBoardOrders } from "@/lib/lab/queries";
+import { lockNumbering, NUMBERED_TRANSACTION } from "@/lib/number-lock";
 
 const NUMBER_RETRIES = 3;
 
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
   for (let attempt = 1; attempt <= NUMBER_RETRIES; attempt++) {
     try {
       const created = await db.$transaction(async (tx) => {
+        await lockNumbering(tx, "lab-order", clinicId);
         const last = await tx.labOrder.aggregate({ where: { clinicId }, _max: { number: true } });
         return tx.labOrder.create({
           data: {
@@ -60,7 +62,7 @@ export async function POST(req: Request) {
           },
           include: { items: true },
         });
-      });
+      }, NUMBERED_TRANSACTION);
       return NextResponse.json(created, { status: 201 });
     } catch (error: unknown) {
       if (isUniqueViolation(error) && attempt < NUMBER_RETRIES) continue;
