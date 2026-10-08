@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Piper (browser text-to-speech) ships Node-only branches that bundlers cannot resolve in the browser.
+  turbopack: {
+    resolveAlias: {
+      fs: { browser: "./lib/tts/empty-module.ts" },
+      path: { browser: "./lib/tts/empty-module.ts" },
+    },
+  },
   async headers() {
     return [
       {

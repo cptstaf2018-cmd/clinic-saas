@@ -112,9 +112,9 @@ export default function SpecialtyOnboardingClient({ initialName }: { initialName
               <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
               الخطوة الأخيرة قبل البدء
             </span>
-            <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">ما نوع منشأتك؟</h1>
+            <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">ما نوع عملك؟</h1>
             <p className="mt-3 max-w-xl text-sm leading-7 text-brand-side-muted md:text-base">
-              نجهّز لك النظام المناسب لعملك. اختر نوع منشأتك لنبدأ.
+              نجهّز لك النظام المناسب لعملك. اختر صيدلية أو عيادة أو مختبر لنبدأ.
             </p>
           </div>
         </header>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { loadArabicVoice, synthesizeArabic } from "@/lib/tts/piper";
 
 interface DisplayData {
   clinicName: string;
@@ -129,6 +130,10 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const currentBlobUrl = useRef<string | null>(null);
   const [audioStatus, setAudioStatus] = useState<"waiting" | "unlocked" | "playing">("waiting");
+  // The Arabic voice (Piper) downloads once in the background; until it is ready the browser's own voice is used.
+  const voiceReadyRef = useRef(false);
+  const [voiceStatus, setVoiceStatus] = useState<"loading" | "ready" | "fallback">("loading");
+  const [voiceProgress, setVoiceProgress] = useState(0);
 
   useEffect(() => { params.then((p) => setClinicId(p.clinicId)); }, [params]);
 
@@ -156,6 +161,15 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
       document.removeEventListener("touchstart", unlockOnInteraction);
       document.removeEventListener("keydown", unlockOnInteraction);
     };
+  }, []);
+
+  useEffect(() => {
+    loadArabicVoice(setVoiceProgress)
+      .then(() => {
+        voiceReadyRef.current = true;
+        setVoiceStatus("ready");
+      })
+      .catch(() => setVoiceStatus("fallback"));
   }, []);
 
   useEffect(() => {
@@ -200,10 +214,9 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
 
     const text = buildAnnouncementText(current);
 
-    try {
-      const res = await fetch(`/api/tts?text=${encodeURIComponent(text)}`);
-      if (res.ok) {
-        const blob = await res.blob();
+    if (voiceReadyRef.current) {
+      try {
+        const blob = await synthesizeArabic(text);
         const url = URL.createObjectURL(blob);
         currentBlobUrl.current = url;
         audio.src = url;
@@ -215,8 +228,8 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
         setAudioStatus("playing");
         await audio.play();
         return;
-      }
-    } catch {}
+      } catch {}
+    }
 
     // Fallback: browser TTS
     if ("speechSynthesis" in window) {
@@ -655,6 +668,10 @@ export default function DisplayPage({ params }: { params: Promise<{ clinicId: st
           }}>
             {audioStatus === "waiting" ? "🔇 انقر لتفعيل الصوت" : audioStatus === "playing" ? "🔊 يُشغَّل الآن" : "🔈 الصوت فعّال"}
           </span>
+          {voiceStatus === "loading" && voiceProgress > 0 && voiceProgress < 100 && (
+            <span style={{ fontSize: 11, color: "#64748b" }}>جاري تجهيز الصوت العربي {voiceProgress}%</span>
+          )}
+          {voiceStatus === "fallback" && <span style={{ fontSize: 11, color: "#64748b" }}>صوت المتصفح</span>}
         </div>
       </div>
     </>

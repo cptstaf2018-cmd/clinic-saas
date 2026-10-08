@@ -37,7 +37,6 @@ export async function proxy(req: NextRequest) {
     "/api/payments/superkey-webhook",
     "/api/display",
     "/api/cron",
-    "/api/tts",
     "/api/ping",
   ];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
