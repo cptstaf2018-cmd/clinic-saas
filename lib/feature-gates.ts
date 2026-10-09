@@ -1,4 +1,5 @@
 import { isPlanId, PlanId } from "@/lib/plans";
+import { isFreePeriodOpen } from "@/lib/free-period";
 
 export type FeatureKey =
   | "appointments"
@@ -121,8 +122,11 @@ export function normalizePlan(plan: string | null | undefined): PlanWithTrial {
   return isPlanId(plan) ? plan : "basic";
 }
 
+/** During the launch offer every account has every feature, whatever its plan. */
+const EVERY_FEATURE: FeatureKey[] = PLAN_FEATURES.vip;
+
 export function getPlanFeatures(plan: string | null | undefined) {
-  return PLAN_FEATURES[normalizePlan(plan)];
+  return isFreePeriodOpen() ? EVERY_FEATURE : PLAN_FEATURES[normalizePlan(plan)];
 }
 
 export function canUseFeature(plan: string | null | undefined, feature: FeatureKey) {
@@ -149,7 +153,7 @@ export function getEntitlements(plan: string | null | undefined) {
   return {
     plan: normalized,
     display: PLAN_DISPLAY[normalized],
-    features: PLAN_FEATURES[normalized],
-    limits: PLAN_LIMITS[normalized],
+    features: getPlanFeatures(plan),
+    limits: PLAN_LIMITS[isFreePeriodOpen() ? "vip" : normalized],
   };
 }

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { isFreePeriodOpen } from "@/lib/free-period";
 
 export const ASSISTANT_FEATURE = "clinicAssistant";
 export const ASSISTANT_TRIAL_DAYS = 3;
@@ -32,7 +33,7 @@ function trialEndsAt(startedAt: Date) {
 }
 
 export async function getAssistantAccess(clinicId: string, subscription: SubscriptionLike, startTrial: boolean): Promise<AssistantAccess> {
-  if (isPaidAssistantPlan(subscription)) {
+  if (isFreePeriodOpen() || isPaidAssistantPlan(subscription)) {
     return { allowed: true, source: "plan", daysLeft: null, trialEndsAt: null };
   }
 

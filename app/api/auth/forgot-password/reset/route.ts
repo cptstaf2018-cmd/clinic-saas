@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   // backupEmail has no unique constraint; findFirst returns the first match which is acceptable
   // for the current scale. A future migration should add @unique to backupEmail.
   const clinic = await db.clinic.findFirst({
-    where: { backupEmail: sendTo },
+    where: { backupEmail: { equals: sendTo, mode: "insensitive" } },
     include: { users: { take: 1 } },
   });
   const userId = clinic?.users[0]?.id ?? null;

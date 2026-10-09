@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   }
 
   const clinic = await db.clinic.findFirst({
-    where: { backupEmail: sendTo },
+    where: { backupEmail: { equals: sendTo, mode: "insensitive" } },
     select: { id: true },
   });
 
@@ -43,13 +43,13 @@ export async function POST(req: NextRequest) {
   });
 
   const code = generate6();
-  await db.otpCode.create({
+  const otp = await db.otpCode.create({
     data: { phone: sendTo, code, expiresAt: new Date(Date.now() + 10 * 60 * 1000) },
   });
 
   const { Resend } = await import("resend");
   const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
+  const { error: sendError } = await resend.emails.send({
     from: "الذهبي <noreply@clinic-ai-pro.com>",
     to: sendTo,
     subject: "كود إعادة تعيين كلمة المرور",
@@ -60,6 +60,11 @@ export async function POST(req: NextRequest) {
       <p style="color:#94a3b8;font-size:13px">صالح لمدة 10 دقائق. إذا لم تطلب هذا، تجاهل الرسالة.</p>
     </div>`,
   });
+  if (sendError) {
+    console.error("Forgot-password email failed:", sendError);
+    await db.otpCode.delete({ where: { id: otp.id } });
+    return NextResponse.json({ error: "تعذّر إرسال الكود الآن، حاول بعد قليل" }, { status: 502 });
+  }
   return NextResponse.json({ success: true, method: "email", masked: maskEmail(sendTo) });
 }
 

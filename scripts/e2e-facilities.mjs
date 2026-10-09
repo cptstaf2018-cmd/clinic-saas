@@ -199,6 +199,8 @@ async function main() {
     check(`${who}: the menu keeps the Subscription entry`, home.html.includes("/dashboard/subscription"));
     check(`${who}: no expiry warning is shown during the offer`, !home.html.includes("ينتهي اشتراكك") && !home.html.includes("اشترك الآن"));
   }
+  const ent = (await clinic.get("/api/subscription")).data?.entitlements;
+  check("every feature is open during the offer: dental chart, body maps, full file, assistant", ["dentalChart", "specialtyMap", "fullMedicalFile", "clinicAssistant", "autoReminders", "backupRestore"].every((f) => ent?.features?.includes(f)), JSON.stringify(ent?.features));
   check("payment requests are closed during the offer", (await clinic.post("/api/payments", { amount: 35000, method: "superkey", plan: "basic", reference: "SK-123456" })).status === 403);
   const { rows: oldTrials } = await pool.query(`SELECT count(*)::int n FROM "Subscription" s JOIN "Clinic" c ON c.id = s."clinicId" WHERE s.status = 'trial' AND s."expiresAt" < '2026-12-31T20:59:00Z' AND c.name NOT LIKE $1`, [`${PREFIX}%`]);
   check("no real trial ends before the end of the offer", oldTrials[0].n === 0, String(oldTrials[0].n));
@@ -221,7 +223,7 @@ async function main() {
   await na.login(NA.phone);
   await nb.login(NB.phone);
   const ob = await na.page("/onboarding/specialty");
-  check("onboarding page shows the type step with the name prefilled", ob.status === 200 && ob.html.includes("ما نوع منشأتك") && ob.html.includes(`value="${NA.name}"`));
+  check("onboarding page asks for the facility name and type, with an empty name field", ob.status === 200 && ob.html.includes("اسم منشأتك") && ob.html.includes("اختر صيدلية أو عيادة أو مختبر") && !ob.html.includes(`value="${NA.name}"`));
   check("a new account is sent to onboarding", /NEXT_REDIRECT|onboarding/.test((await na.page("/dashboard")).html + (await na.page("/dashboard")).location));
   check("facility choice needs a login", [401, 307].includes((await anon.post("/api/clinic/facility", { facilityType: "lab", name: "ZZTEST x" })).status));
   check("facility choice rejects a bad type", (await na.post("/api/clinic/facility", { facilityType: "hospital", name: "ZZTEST x" })).status === 400);
