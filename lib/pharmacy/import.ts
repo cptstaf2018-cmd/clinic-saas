@@ -365,6 +365,127 @@ export function sanitizeImportRow(input: unknown): { row: ImportRow | null; issu
   );
 }
 
+// ───────── Purchase receipt text (OCR output) ─────────
+
+const RECEIPT_SKIP = /المجموع|الاجمالي|اجمالي|الصافي|خصم|ضريبه|التوصيل|المدفوع|المتبقي|الباقي|فاتوره|التاريخ|هاتف|موبايل|شكرا|اسم الماده|الكميه|\b(?:total|subtotal|discount|tax|vat|invoice|date|phone|tel|cash|balance|paid|thank)\b/;
+const UNIT_WORD = /^(?:mg|mcg|g|gm|ml|iu|l|%|مل|ملغ|ملغم|ملغرام|غم|غرام|مج|مكغ)\.?$/i;
+const CURRENCY_WORD = /^(?:د\.?ع|iqd|دينار)$/i;
+const NUMBER_TOKEN = /^(?:\d{1,3}(?:[,٬.]\d{3})+|\d+(?:[.,]\d{1,2})?)$/;
+const BONUS_TOKEN = /^(\d{1,4})\+(\d{1,4})$/;
+const EXPIRY_IN_LINE = /(?<![\d/.-])(?:\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{4}[/.-]\d{1,2}(?:[/.-]\d{1,2})?|\d{1,2}[/.-]\d{4})(?![\d/.-])/;
+const BARCODE_IN_LINE = /(?<!\d)\d{8,14}(?!\d)/;
+const MAX_RECEIPT_QUANTITY = 9999;
+
+type ReceiptToken = { text: string; value: number | null; dropped: boolean };
+
+function receiptNumber(token: string): number | null {
+  const plain = /^\d{1,3}(?:[,٬.]\d{3})+$/.test(token) ? token.replace(/[,٬.]/g, "") : token.replace(",", ".");
+  const value = Number(plain);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function isQuantity(value: number): boolean {
+  return Number.isInteger(value) && value >= 1 && value <= MAX_RECEIPT_QUANTITY;
+}
+
+/**
+ * Which numbers on a line are the quantity and the unit cost. The order of the columns is unknown
+ * (right-to-left receipts, OCR reading order), so the line total is found by arithmetic first:
+ * quantity × unit cost = total. Without it, the smallest whole number is the quantity.
+ */
+function pickQuantityAndCost(values: number[]): { quantity?: number; cost?: number; used: number[] } {
+  const count = values.length;
+  const byValueDesc = values.map((_, index) => index).sort((a, b) => values[b] - values[a]);
+  if (count >= 3) {
+    for (const strict of [true, false]) {
+      for (const total of byValueDesc) {
+        for (let q = 0; q < count; q++) {
+          for (let u = 0; u < count; u++) {
+            if (q === u || q === total || u === total || !isQuantity(values[q]) || (strict && values[q] > values[u])) continue;
+            if (Math.abs(values[q] * values[u] - values[total]) <= Math.max(1, values[total] * 0.005)) {
+              return { quantity: values[q], cost: values[u], used: [q, u, total] };
+            }
+          }
+        }
+      }
+    }
+  }
+  const ascending = [...byValueDesc].reverse();
+  if (count === 0) return { used: [] };
+  if (count === 1) {
+    return isQuantity(values[0]) ? { quantity: values[0], used: [0] } : { cost: values[0], used: [0] };
+  }
+  const first = ascending[0];
+  const cost = count >= 3 ? ascending[count - 2] : ascending[count - 1];
+  return isQuantity(values[first]) ? { quantity: values[first], cost: values[cost], used: [first, cost] } : { cost: values[first], used: [first] };
+}
+
+function receiptTokens(text: string): ReceiptToken[] {
+  const words = text
+    .split(/\s+/)
+    .map((word) => word.replace(/^[^\p{L}\p{N}%]+|[^\p{L}\p{N}%]+$/gu, ""))
+    .filter((word) => word && !CURRENCY_WORD.test(word));
+  const tokens = words.map((word, index): ReceiptToken => {
+    const bonus = BONUS_TOKEN.exec(word);
+    if (bonus) return { text: word, value: Number(bonus[1]) + Number(bonus[2]), dropped: false };
+    const isNumber = NUMBER_TOKEN.test(word) && !UNIT_WORD.test(words[index + 1] ?? "");
+    return { text: word, value: isNumber ? receiptNumber(word) : null, dropped: false };
+  });
+  // "1 Amoxil 500 12 3000 36000": a leading row number is not a quantity
+  const first = tokens[0];
+  if (first?.value !== null && first && tokens.filter((token) => token.value !== null).length >= 4 && Number.isInteger(first.value) && first.text.length <= 3) {
+    first.value = null;
+    first.dropped = true;
+  }
+  return tokens;
+}
+
+/** Turns the text lines of a purchase receipt into product rows for review. Never invents a product: a line needs a name and a number. */
+export function parseReceiptText(lines: string[]): ImportRow[] {
+  const rows: ImportRow[] = [];
+  for (const raw of lines) {
+    if (RECEIPT_SKIP.test(normalizeText(raw))) continue;
+    let text = digitsToAscii(raw);
+    let expiresAt: string | null = null;
+    let barcode: string | undefined;
+
+    const expiry = EXPIRY_IN_LINE.exec(text);
+    if (expiry) {
+      expiresAt = parseExpiry(expiry[0]);
+      if (expiresAt) text = text.replace(expiry[0], " ");
+    }
+    const code = BARCODE_IN_LINE.exec(text);
+    if (code) {
+      barcode = code[0];
+      text = text.replace(code[0], " ");
+    }
+
+    const tokens = receiptTokens(text);
+    const numeric = tokens.map((token, index) => ({ index, value: token.value })).filter((item): item is { index: number; value: number } => item.value !== null);
+    const picked = pickQuantityAndCost(numeric.map((item) => item.value));
+    const used = new Set(picked.used.map((position) => numeric[position].index));
+
+    const isNameText = (token: ReceiptToken) => token.value === null && !token.dropped;
+    const nameTokens = tokens.filter((token, index) => {
+      if (token.dropped || used.has(index)) return false;
+      if (isNameText(token)) return true;
+      // a leftover number such as the strength in "Amoxil 500" belongs to the name when it sits next to name text
+      return (tokens[index - 1] && isNameText(tokens[index - 1])) || (tokens[index + 1] && isNameText(tokens[index + 1]));
+    });
+    const name = nameTokens.map((token) => token.text).join(" ").replace(/[|[\]{}_=~*#]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+    if (!/\p{L}{2}/u.test(name)) continue;
+    if (picked.quantity === undefined && picked.cost === undefined && !barcode) continue;
+
+    const row: ImportRow = { name };
+    if (picked.quantity !== undefined) row.stock = Math.round(picked.quantity);
+    if (picked.cost !== undefined) row.cost = Math.round(picked.cost);
+    if (barcode) row.barcode = barcode;
+    if (expiresAt) row.expiresAt = expiresAt;
+    rows.push(row);
+  }
+  return rows;
+}
+
 /** A selling price from the purchase cost plus a margin, rounded up to the next 250 IQD. */
 export function suggestPrice(cost: number | null | undefined, marginPercent: number): number | null {
   if (!cost || cost <= 0) return null;

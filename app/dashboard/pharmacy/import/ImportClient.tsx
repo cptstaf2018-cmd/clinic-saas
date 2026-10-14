@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { shrinkImage } from "@/lib/client-image";
-import { FIELD_LABELS, IMPORT_FIELDS, suggestPrice, type ColumnMapping, type ImportRow, type StockMode } from "@/lib/pharmacy/import";
+import { FIELD_LABELS, IMPORT_FIELDS, parseReceiptText, suggestPrice, type ColumnMapping, type ImportRow, type StockMode } from "@/lib/pharmacy/import";
 import ImportTable, { lineFromRow, lineToRow, type Line, type LineStatus } from "./ImportTable";
 
 type Source = "excel" | "receipt";
@@ -60,6 +60,8 @@ export default function ImportClient({ receiptEnabled }: { receiptEnabled: boole
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [showMapping, setShowMapping] = useState(false);
   const [margin, setMargin] = useState(DEFAULT_MARGIN);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [lastReceipt, setLastReceipt] = useState<File | null>(null);
   const nextId = useRef(1);
   const ticket = useRef(0);
 
@@ -90,7 +92,32 @@ export default function ImportClient({ receiptEnabled }: { receiptEnabled: boole
     } else if (data.items.length === 0) setError("لم أجد أي دواء في الملف.");
   }
 
-  async function readReceiptFile(file: File) {
+  /** Free path: the receipt is read on this device (Tesseract / PDF text), nothing is uploaded. */
+  async function readReceiptOnDevice(file: File) {
+    setBusy("reading");
+    setError("");
+    setProgress(0);
+    setLastReceipt(file);
+    try {
+      const { readReceiptOnDevice: read } = await import("@/lib/pharmacy/receipt-ocr");
+      const rows = parseReceiptText(await read(file, setProgress));
+      setSheet(null);
+      loadRows(rows.map((row) => ({ row })));
+      if (rows.length === 0) {
+        setError(receiptEnabled
+          ? "لم أجد أدوية في الصورة. جرّب صورة أوضح، أو اضغط «قراءة أدق بالذكاء الاصطناعي»."
+          : "لم أجد أدوية في الصورة. صوّر الوصل مستوياً وفي ضوء جيد وتظهر فيه الأسطر كاملة، أو استخدم ملف Excel.");
+      }
+    } catch {
+      setError("تعذرت قراءة الوصل على هذا الجهاز. تأكد من الاتصال بالإنترنت وجرّب صورة أوضح.");
+    } finally {
+      setProgress(null);
+      setBusy(null);
+    }
+  }
+
+  /** Optional path for hard receipts: the file is sent to the server and read with AI (only when it is configured). */
+  async function readReceiptWithAi(file: File) {
     setBusy("reading");
     setError("");
     const body = new FormData();
@@ -160,6 +187,7 @@ export default function ImportClient({ receiptEnabled }: { receiptEnabled: boole
     setShowMapping(false);
     setError("");
     setDone(null);
+    setLastReceipt(null);
   }
 
   async function commit() {
@@ -225,10 +253,7 @@ export default function ImportClient({ receiptEnabled }: { receiptEnabled: boole
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {!receiptEnabled && (
-                      <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">قراءة الوصل التلقائية قيد التفعيل ولم تعمل بعد. استخدم ملف Excel أو الباركود في الوقت الحالي.</p>
-                    )}
-                    <DropZone accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" title={busy === "reading" ? "جاري قراءة الوصل..." : "صوّر وصل الشراء أو اختر صورة / PDF"} hint="يقرأ النظام الأسماء والكميات وسعر الشراء من الوصل. صوّر الوصل مستوياً وفي ضوء جيد، ثم راجع الأرقام قبل الإضافة." disabled={!receiptEnabled || busy === "reading"} onFile={readReceiptFile} />
+                    <DropZone accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" title={busy === "reading" ? `جاري قراءة الوصل... ${progress !== null && progress > 0 ? `${progress.toLocaleString("ar-IQ")}٪` : ""}` : "صوّر وصل الشراء أو اختر صورة / PDF"} hint="تتم القراءة على جهازك مجاناً، ولا يُرفع الوصل إلى أي مكان. صوّر الوصل مستوياً وفي ضوء جيد، ثم راجع الأسماء والأرقام قبل الإضافة. أول مرة قد تحتاج لحظات لتحميل أداة القراءة." disabled={busy === "reading"} onFile={readReceiptOnDevice} />
                   </div>
                 )}
               </>
@@ -302,6 +327,14 @@ export default function ImportClient({ receiptEnabled }: { receiptEnabled: boole
                   )}
                 </section>
 
+                {receiptEnabled && lastReceipt && source === "receipt" && (
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-brand-soft px-4 py-3">
+                    <p className="text-sm text-brand-on-soft">الأسماء أو الأرقام غير صحيحة؟ جرّب قراءة أدق للوصل نفسه.</p>
+                    <button type="button" disabled={busy === "reading"} onClick={() => readReceiptWithAi(lastReceipt)} className={BUTTON_SECONDARY}>
+                      {busy === "reading" ? "جاري القراءة..." : "قراءة أدق بالذكاء الاصطناعي"}
+                    </button>
+                  </div>
+                )}
                 <ImportTable lines={lines} statuses={statuses} onChange={changeLine} onRemove={removeLine} />
 
                 <div className="sticky bottom-3 flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-brand-navy p-4 text-white shadow-lg">
