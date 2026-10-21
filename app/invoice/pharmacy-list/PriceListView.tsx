@@ -12,7 +12,7 @@ type Props = {
   printedAt: string;
 };
 
-const money = (value: number) => value.toLocaleString("ar-IQ");
+const money = (value: number) => value.toLocaleString("en-US");
 const CHECK = "h-5 w-5 accent-[#0E2440]";
 
 /** A printable medicines and price list. A4, with options for what to show. */
@@ -25,7 +25,7 @@ export default function PriceListView({ pharmacy, products, printedAt }: Props) 
     () => products.filter((product) => (!category || product.category === category) && (!onlyAvailable || product.stock > 0)),
     [products, category, onlyAvailable]
   );
-  const date = new Date(printedAt).toLocaleDateString("ar-IQ", { timeZone: "Asia/Baghdad", day: "numeric", month: "long", year: "numeric" });
+  const date = new Date(printedAt).toLocaleDateString("ar-IQ-u-nu-latn", { timeZone: "Asia/Baghdad", day: "numeric", month: "long", year: "numeric" });
 
   return (
     <div className="min-h-screen bg-brand-bg py-6 print:bg-white print:py-0" dir="rtl">

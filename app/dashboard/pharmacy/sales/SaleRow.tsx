@@ -52,7 +52,7 @@ export default function SaleRow({ sale }: { sale: Sale }) {
         ) : (
           <span className={`rounded-lg px-2 py-0.5 text-xs font-semibold ${sale.isDebt ? "bg-amber-50 text-amber-800" : "bg-brand-line text-brand-muted"}`}>{sale.paymentLabel}</span>
         )}
-        <span className={`w-24 text-left font-bold ${sale.voided ? "text-brand-muted line-through" : "text-brand-ink"}`}>{sale.total.toLocaleString("ar-IQ")}</span>
+        <span className={`w-24 text-left font-bold ${sale.voided ? "text-brand-muted line-through" : "text-brand-ink"}`}>{sale.total.toLocaleString("en-US")}</span>
         <span className="w-28 text-left text-xs text-brand-muted">{sale.when}</span>
         <a href={`/invoice/pharmacy/${sale.id}`} target="_blank" rel="noreferrer" className="flex min-h-9 items-center rounded-xl px-3 text-xs font-semibold text-brand-blue hover:bg-brand-soft">الفاتورة</a>
         {!sale.voided && !asking && (

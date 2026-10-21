@@ -18,7 +18,7 @@ const MAX_PROBLEMS_SHOWN = 20;
 const BUTTON_PRIMARY = "min-h-12 rounded-2xl bg-brand-gold px-6 font-bold text-brand-gold-ink transition hover:-translate-y-0.5 hover:bg-brand-gold-hover disabled:opacity-50 disabled:hover:translate-y-0";
 const BUTTON_SECONDARY = "min-h-12 rounded-2xl bg-white px-5 text-sm font-semibold text-brand-ink ring-1 ring-brand-border transition hover:bg-brand-soft";
 
-const n = (value: number) => value.toLocaleString("ar-IQ");
+const n = (value: number) => value.toLocaleString("en-US");
 
 async function postJson(url: string, body: unknown) {
   const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => null);
@@ -253,7 +253,7 @@ export default function ImportClient({ receiptEnabled }: { receiptEnabled: boole
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <DropZone accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" title={busy === "reading" ? `جاري قراءة الوصل... ${progress !== null && progress > 0 ? `${progress.toLocaleString("ar-IQ")}٪` : ""}` : "صوّر وصل الشراء أو اختر صورة / PDF"} hint="تتم القراءة على جهازك مجاناً، ولا يُرفع الوصل إلى أي مكان. صوّر الوصل مستوياً وفي ضوء جيد، ثم راجع الأسماء والأرقام قبل الإضافة. أول مرة قد تحتاج لحظات لتحميل أداة القراءة." disabled={busy === "reading"} onFile={readReceiptOnDevice} />
+                    <DropZone accept="image/jpeg,image/png,image/webp,application/pdf" capture="environment" title={busy === "reading" ? `جاري قراءة الوصل... ${progress !== null && progress > 0 ? `${progress.toLocaleString("en-US")}%` : ""}` : "صوّر وصل الشراء أو اختر صورة / PDF"} hint="تتم القراءة على جهازك مجاناً، ولا يُرفع الوصل إلى أي مكان. صوّر الوصل مستوياً وفي ضوء جيد، ثم راجع الأسماء والأرقام قبل الإضافة. أول مرة قد تحتاج لحظات لتحميل أداة القراءة." disabled={busy === "reading"} onFile={readReceiptOnDevice} />
                   </div>
                 )}
               </>

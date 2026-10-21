@@ -8,7 +8,7 @@ const PAYMENT_LABEL: Record<string, string> = { cash: "نقداً", zaincash: "�
 const PAGE_SIZE = 100;
 
 function money(value: number) {
-  return value.toLocaleString("ar-IQ");
+  return value.toLocaleString("en-US");
 }
 
 export default async function PharmacySalesPage() {
@@ -61,7 +61,7 @@ export default async function PharmacySalesPage() {
                     paymentLabel: PAYMENT_LABEL[sale.paymentMethod] ?? sale.paymentMethod,
                     isDebt: sale.paymentMethod === "debt",
                     total: sale.total,
-                    when: sale.createdAt.toLocaleString("ar-IQ", { timeZone: "Asia/Baghdad", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+                    when: sale.createdAt.toLocaleString("ar-IQ-u-nu-latn", { timeZone: "Asia/Baghdad", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
                     voided: sale.voidedAt !== null,
                     voidReason: sale.voidReason,
                   }}

@@ -35,7 +35,7 @@ const EMPTY: Draft = { name: "", genericName: "", category: "أدوية", form: 
 const INPUT = "h-11 w-full rounded-xl border border-brand-border bg-white px-3 text-sm text-brand-ink outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-soft";
 
 function money(value: number) {
-  return value.toLocaleString("ar-IQ");
+  return value.toLocaleString("en-US");
 }
 
 function daysUntil(date: string | null) {
@@ -165,7 +165,7 @@ export default function ProductsClient({ initialProducts, initialFilter }: { ini
       return;
     }
     setProducts((prev) => prev.map((product) => (product.id === data.id ? { ...product, stock: data.stock, cost: data.cost } : product)));
-    setScanNotice(`أُضيف ${qty.toLocaleString("ar-IQ")} إلى "${receive.product.name}" · الرصيد الآن ${money(data.stock)}`);
+    setScanNotice(`أُضيف ${qty.toLocaleString("en-US")} إلى "${receive.product.name}" · الرصيد الآن ${money(data.stock)}`);
     setReceive(null);
     scanRef.current?.focus();
   }

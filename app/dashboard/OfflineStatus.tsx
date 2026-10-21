@@ -15,10 +15,10 @@ function arabicNumber(value: number) {
 }
 
 export default function OfflineStatus() {
-  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
-  const [queue, setQueue] = useState<OfflineAction[]>(() =>
-    typeof window === "undefined" ? [] : getOfflineQueue()
-  );
+  // Start as the server renders (online, nothing queued) and read the browser after mounting. Node has its own
+  // `navigator` without `onLine`, so reading it here showed the offline banner to everyone and broke hydration.
+  const [online, setOnline] = useState(true);
+  const [queue, setQueue] = useState<OfflineAction[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -60,6 +60,7 @@ export default function OfflineStatus() {
 
   useEffect(() => {
     const unsub = subscribeOfflineQueue(refresh);
+    const first = window.setTimeout(refresh, 0);
     window.addEventListener("online", refresh);
     window.addEventListener("offline", refresh);
     window.addEventListener("online", syncQueue);
@@ -67,6 +68,7 @@ export default function OfflineStatus() {
 
     return () => {
       unsub();
+      window.clearTimeout(first);
       window.removeEventListener("online", refresh);
       window.removeEventListener("offline", refresh);
       window.removeEventListener("online", syncQueue);

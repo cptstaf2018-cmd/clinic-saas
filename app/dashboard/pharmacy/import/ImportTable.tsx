@@ -97,7 +97,7 @@ export default function ImportTable({ lines, statuses, onChange, onRemove }: Pro
             const status = statuses[line.id];
             return (
               <tr key={line.id} className={status?.kind === "needsPrice" ? "bg-amber-50/40" : status?.kind === "merged" ? "opacity-70" : ""}>
-                <td className="px-3 py-2 text-xs text-brand-muted">{(line.sheetRow ?? index + 1).toLocaleString("ar-IQ")}</td>
+                <td className="px-3 py-2 text-xs text-brand-muted">{(line.sheetRow ?? index + 1).toLocaleString("en-US")}</td>
                 <td className="px-3 py-2">
                   <input aria-label="اسم الدواء" className={CELL} value={line.name} onChange={(e) => onChange(line.id, { name: e.target.value })} />
                   {line.barcode && <span className="mt-0.5 block text-[11px] text-brand-muted" dir="ltr">{line.barcode}</span>}
