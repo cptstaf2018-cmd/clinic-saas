@@ -1,8 +1,10 @@
 "use client";
 import { useEffect } from "react";
+import { captureInstallPrompt } from "@/lib/install-prompt";
 
 export default function RegisterSW() {
   useEffect(() => {
+    captureInstallPrompt();
     if (!("serviceWorker" in navigator)) return;
 
     if (process.env.NODE_ENV !== "production") {

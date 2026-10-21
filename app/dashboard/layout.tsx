@@ -11,6 +11,7 @@ import { getSubscriptionNotice, isSubscriptionHardLocked, subscriptionDaysLeft }
 import { PLAN_LABELS, isPlanId } from "@/lib/plans";
 import Link from "next/link";
 import OfflineStatus from "./OfflineStatus";
+import InstallAppButton from "@/components/InstallAppButton";
 import BrandLogo, { BrandMark } from "@/components/BrandLogo";
 
 async function getClinicData(clinicId: string) {
@@ -95,6 +96,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {/* Nav */}
           <DashboardNav role={session.user.role} facilityType={clinic.facilityType} />
 
+          <InstallAppButton variant="card" />
+
           {/* Subscription card, or the launch offer while everything is free */}
           {freePeriod ? (
             <div className="mx-3 mb-3 rounded-2xl border border-brand-navy-line bg-brand-navy-3 p-4">
@@ -152,12 +155,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <MobileDrawer signOutForm={signOutForm} role={session.user.role} facilityType={clinic.facilityType} />
 
             <BrandMark size={32} />
-            <span className="text-white font-bold text-sm truncate max-w-[140px]">{name}</span>
+            <span className="text-white font-bold text-sm truncate max-w-[110px]">{name}</span>
           </div>
 
-          <span className={`text-[10px] font-bold border rounded-full px-2.5 py-1 ${badge.cls}`}>
-            {badge.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <InstallAppButton variant="compact" />
+            <span className={`text-[10px] font-bold border rounded-full px-2.5 py-1 ${badge.cls}`}>
+              {badge.label}
+            </span>
+          </div>
         </header>
 
         {/* Main */}
