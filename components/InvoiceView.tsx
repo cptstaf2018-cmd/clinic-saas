@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BRAND_NAME, BrandMark } from "@/components/BrandLogo";
 import { dateTime, money } from "@/lib/format";
 
@@ -20,27 +20,41 @@ export type InvoiceData = {
   note: string | null;
 };
 
-type Format = "a4" | "thermal";
+export type InvoiceFormat = "a4" | "thermal";
+
+const PX_PER_MM = 96 / 25.4;
 
 /**
  * A printable invoice. A4 for the desk, or an 80 mm receipt for a thermal printer.
- * With ?print=1 the print dialog opens by itself, so one tap from the till prints it.
+ * With ?print=1 the print dialog opens by itself, so one tap from the till prints it; ?format=thermal picks the receipt.
+ * Pages have no margin, so the browser prints no date / title / address line of its own; the spacing is inside.
  */
-export default function InvoiceView({ invoice, autoPrint }: { invoice: InvoiceData; autoPrint: boolean }) {
-  const [format, setFormat] = useState<Format>("a4");
+export default function InvoiceView({ invoice, autoPrint, initialFormat = "a4" }: { invoice: InvoiceData; autoPrint: boolean; initialFormat?: InvoiceFormat }) {
+  const [format, setFormat] = useState<InvoiceFormat>(initialFormat);
+  // A receipt roll has no fixed page length: the page is as long as the receipt, in whole millimetres.
+  const [receiptMm, setReceiptMm] = useState(200);
+  const receiptRef = useRef<HTMLElement>(null);
+  const thermal = format === "thermal";
+
+  useEffect(() => {
+    const receipt = receiptRef.current;
+    if (!thermal || !receipt) return;
+    const observer = new ResizeObserver(() => setReceiptMm(Math.ceil(receipt.offsetHeight / PX_PER_MM) + 4));
+    observer.observe(receipt);
+    return () => observer.disconnect();
+  }, [thermal]);
 
   useEffect(() => {
     if (!autoPrint) return;
-    const timer = setTimeout(() => window.print(), 400);
+    const timer = setTimeout(() => window.print(), 600);
     return () => clearTimeout(timer);
   }, [autoPrint]);
 
-  const thermal = format === "thermal";
   const title = invoice.kind === "pharmacy" ? "فاتورة بيع" : "فاتورة تحاليل";
 
   return (
     <div className="min-h-screen bg-brand-bg py-6 print:bg-white print:py-0" dir="rtl">
-      <style>{`@media print { @page { size: ${thermal ? "80mm auto" : "A4"}; margin: ${thermal ? "2mm" : "12mm"}; } body { background: #fff !important; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }`}</style>
+      <style>{`@media print { @page { size: ${thermal ? `80mm ${receiptMm}mm` : "A4"}; margin: 0; } body { background: #fff !important; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }`}</style>
 
       <div className="mx-auto mb-4 flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 print:hidden">
         <div className="grid grid-cols-2 gap-1 rounded-2xl bg-white p-1 ring-1 ring-brand-border" role="group" aria-label="حجم الورق">
@@ -51,7 +65,7 @@ export default function InvoiceView({ invoice, autoPrint }: { invoice: InvoiceDa
         <button type="button" onClick={() => window.print()} className="min-h-11 rounded-2xl bg-brand-gold px-8 text-sm font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover">طباعة</button>
       </div>
 
-      {thermal ? <ThermalReceipt invoice={invoice} title={title} /> : <A4Invoice invoice={invoice} title={title} />}
+      {thermal ? <ThermalReceipt invoice={invoice} title={title} receiptRef={receiptRef} /> : <A4Invoice invoice={invoice} title={title} />}
     </div>
   );
 }
@@ -78,8 +92,9 @@ function A4Invoice({ invoice, title }: { invoice: InvoiceData; title: string }) 
       {invoice.voided && <VoidStamp large />}
       <div className="h-2 bg-brand-navy" />
 
-      <div className="p-8 print:px-0">
-        <header className="flex items-start justify-between gap-6">
+      <div className="p-8 print:px-[14mm] print:py-[12mm]">
+        {/* div, not <header>: the global print CSS hides every header (the dashboard's top bar) */}
+        <div className="flex items-start justify-between gap-6">
           <div className="flex items-center gap-4">
             {invoice.issuer.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -99,7 +114,7 @@ function A4Invoice({ invoice, title }: { invoice: InvoiceData; title: string }) 
               {invoice.paid ? "مدفوعة" : "غير مدفوعة"}
             </p>
           </div>
-        </header>
+        </div>
 
         <dl className="mt-7 grid grid-cols-4 overflow-hidden rounded-2xl border border-brand-border">
           {meta.map(([label, value], index) => (
@@ -171,12 +186,12 @@ function A4Invoice({ invoice, title }: { invoice: InvoiceData; title: string }) 
 }
 
 /** 80 mm thermal paper: pure black on white (thermal heads print greys as smudges), one column, dashed rules. */
-function ThermalReceipt({ invoice, title }: { invoice: InvoiceData; title: string }) {
+function ThermalReceipt({ invoice, title, receiptRef }: { invoice: InvoiceData; title: string; receiptRef: React.Ref<HTMLElement> }) {
   const rule = "my-2 border-t border-dashed border-black";
   return (
-    <article className="relative mx-auto w-[80mm] bg-white px-3 py-4 font-medium text-[12px] leading-5 text-black shadow-[0_12px_32px_-12px_rgba(14,36,64,0.25)] print:w-full print:p-0 print:shadow-none">
+    <article ref={receiptRef} className="relative mx-auto w-[80mm] bg-white p-[4mm] font-medium text-[12px] leading-5 text-black shadow-[0_12px_32px_-12px_rgba(14,36,64,0.25)] print:shadow-none">
       {invoice.voided && <VoidStamp large={false} />}
-      <header className="text-center">
+      <div className="text-center">
         {invoice.issuer.logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={invoice.issuer.logoUrl} alt="" className="mx-auto mb-1 h-12 w-12 object-contain grayscale" />
@@ -184,7 +199,7 @@ function ThermalReceipt({ invoice, title }: { invoice: InvoiceData; title: strin
         <h1 className="text-[16px] font-bold leading-6">{invoice.issuer.name}</h1>
         {invoice.issuer.address && <p>{invoice.issuer.address}</p>}
         {invoice.issuer.phone && <p dir="ltr">{invoice.issuer.phone}</p>}
-      </header>
+      </div>
 
       <div className={rule} />
       <div className="tabular-nums">

@@ -9,12 +9,13 @@ export const metadata: Metadata = { title: "فاتورة بيع", robots: { inde
 
 const PAYMENT_LABEL: Record<string, string> = { cash: "نقداً", zaincash: "زين كاش", debt: "دين (غير مدفوع)" };
 
-export default async function PharmacyInvoicePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ print?: string }> }) {
+export default async function PharmacyInvoicePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ print?: string; format?: string }> }) {
   const session = await auth();
   const clinicId = session?.user?.clinicId;
   if (!clinicId) redirect("/login");
 
   const { id } = await params;
+  const query = await searchParams;
   const sale = await db.pharmacySale.findFirst({
     where: { id, clinicId },
     include: { items: true, clinic: { select: { name: true, address: true, whatsappNumber: true, logoUrl: true, facilityType: true } } },
@@ -23,7 +24,8 @@ export default async function PharmacyInvoicePage({ params, searchParams }: { pa
 
   return (
     <InvoiceView
-      autoPrint={(await searchParams).print === "1"}
+      autoPrint={query.print === "1"}
+      initialFormat={query.format === "thermal" ? "thermal" : "a4"}
       invoice={{
         kind: "pharmacy",
         issuer: { name: sale.clinic.name, address: sale.clinic.address, phone: sale.clinic.whatsappNumber, logoUrl: sale.clinic.logoUrl },

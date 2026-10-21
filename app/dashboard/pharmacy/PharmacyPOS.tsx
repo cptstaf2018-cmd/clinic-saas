@@ -387,13 +387,17 @@ export default function PharmacyPOS({ initialProducts, initialToday }: { initial
 
             <div className="space-y-2 border-t border-brand-line bg-brand-bg/60 px-6 py-4">
               <button type="button" onClick={closeReceipt} autoFocus className="min-h-12 w-full rounded-2xl bg-brand-gold font-bold text-brand-gold-ink transition hover:bg-brand-gold-hover">فاتورة جديدة</button>
-              <div className={`grid gap-2 ${receipt.customerPhone ? "grid-cols-2" : "grid-cols-1"}`}>
+              <div className="grid grid-cols-2 gap-2">
+                <a href={`/invoice/pharmacy/${receipt.id}?print=1&format=thermal`} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-brand-ink ring-1 ring-brand-border transition hover:ring-brand-navy/30">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden><path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z" /><path d="M10 8h4M10 12h4" /></svg>
+                  إيصال صغير
+                </a>
                 <a href={`/invoice/pharmacy/${receipt.id}?print=1`} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-brand-ink ring-1 ring-brand-border transition hover:ring-brand-navy/30">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z" /></svg>
-                  طباعة الفاتورة
+                  فاتورة A4
                 </a>
                 {receipt.customerPhone && (
-                  <a href={waLink(receipt.customerPhone, receiptText)} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center rounded-xl bg-[#075E54] text-sm font-semibold text-white">إرسال على واتساب</a>
+                  <a href={waLink(receipt.customerPhone, receiptText)} target="_blank" rel="noreferrer" className="col-span-2 flex min-h-11 items-center justify-center rounded-xl bg-[#075E54] text-sm font-semibold text-white">إرسال على واتساب</a>
                 )}
               </div>
             </div>
